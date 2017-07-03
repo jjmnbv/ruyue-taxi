@@ -1,0 +1,53 @@
+h2 {
+	line-height: 250%;
+	border-bottom: 1px solid #dbdbdb;
+	margin: 0px -20px 20px -20px;
+	padding-left: 20px;
+}
+
+.tabmenu {
+	margin-top: 40px;
+	margin-bottom: 40px;
+}
+
+.quan {
+	background: url(../../content/instruction_img/bg_1.png);
+	height: 70px;
+	width: 70px;
+	color: #fff;
+	text-align: center;
+	padding-top: 19px;
+	line-height: 120%;
+	margin: 6px auto;
+	z-index: 999;
+}
+
+.ing {
+	background: url(../../content/instruction_img/bg_2.png) !important;
+}
+
+.quantext {
+	font-size: .9em;
+	border: 1px solid #929292;
+	padding: 10px;
+	display: none;
+	background: #fff;
+	line-height: 180%;
+}
+
+.timeaxis {
+	margin: 0px auto 45px auto;
+	border-bottom: 1px solid #929292;
+	position: relative;
+	height: 43px;
+}
+
+.timeaxis>li {
+	display: inline-block;
+	width: 14%;
+	vertical-align: top;
+}
+
+.timeaxis>li:hover .quantext {
+	display: block;
+}

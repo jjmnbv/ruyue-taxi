@@ -1,0 +1,41 @@
+@media screen and (min-width: 790px) and (max-width: 1140px) {
+  .orgorgan_css_body .form label {
+    padding-right: 0;
+  }
+  .orgorgan_css_label_1 {
+    width: 35% !important;
+  }
+  .orgorgan_css_select_1 {
+    width: 65% !important;
+  }
+  .orgorgan_css_input_2 {
+    width: 31.5% !important;
+  }
+  .orgorgan_css_input_3 {
+    width: 15% !important;
+  }
+}
+@media screen and (min-width: 1140px) and (max-width: 1440px) {
+  .orgorgan_css_input_2 {
+    width: 37% !important;
+  }
+  .orgorgan_css_input_3 {
+    width: 10% !important;
+  }
+}
+@media screen and (min-width: 790px) and (max-width: 1100px) {
+  .orgorgan_css_select_1 {
+    width: 65% !important;
+  }
+  .orgorgan_css_label_1 {
+    width: 35% !important;
+  }
+}
+.orgorgan_css_body .orgorgan_css_input_1 {
+  width: 60% !important;
+}
+.orgorgan_css_body .orgorgan_css_span_1 {
+  position: relative;
+  top: 4px;
+}
+/*# sourceMappingURL=orgorgan_media.css.map */

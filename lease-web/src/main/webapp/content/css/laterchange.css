@@ -1,0 +1,586 @@
+.form select{
+  padding-right: 0;
+  padding-top: 0;
+}
+.col-1-origin{
+  width: 7.8%;
+}
+.form .label-late{
+  width: 32%;
+}
+.select2-container{
+  width: 66.4%;
+}
+.form-yueche label.error{
+  padding-left: 34% !important;
+}
+.form-yueche label[for=onAddress]{
+  padding-left: 25% !important;
+}
+.form-yueche label[for=offAddress]{
+  padding-left: 25% !important;
+}
+.form-yueche [for=vehiclessubject]{
+  padding-left: 14% !important;
+}
+/*********租赁端-我要下单-约车**********/
+.form-yueche .ztimepicker {
+  width: 66.4%;
+  position: relative;
+  display: inline-block;
+  margin-left: 0;
+}
+.form-yueche .travel-note{
+  width:50%;
+}
+.form-yueche .tripremark{
+  width:50%;
+}
+@media screen and (max-width: 1350px){
+  .form-yueche .label-width{
+    width: 59%;
+  }
+  .form-yueche #s2id_passengerphone{
+    width: 38.4%;
+  }
+  .form-yueche label[for=passengerphone]{
+    padding-left: 0 !important;
+    margin-left: 61%;
+  }
+}
+@media screen and (max-width: 1170px){
+  .form-yueche .col-3-usetype{
+    width: 44%;
+  }
+  .form-yueche .col-9-usetype{
+    width: 56%;
+  }
+  .form-yueche .row-user{
+    margin-left: -2px;
+  }
+  .form-yueche .genre{
+    width: 27%;
+  }
+  .form-yueche .select2-container{
+    width: 41.4%;
+  }
+  .form-yueche .col-3-person{
+    width: 20%;
+  }
+  .form-yueche .label-person{
+    width: 55% !important;
+  }
+  .form-yueche .label-transport{
+    width: 50% !important;
+  }
+  .form-yueche .ztimepicker {
+    width: 47.4%;
+  }
+  .form-yueche .col-1-none{
+    width: 3%;
+  }
+  .form-yueche .col-7-up{
+    width: 54%;
+  }
+  .form-yueche .col-7-up #onAddress{
+    width:68% !important;
+  }
+  .form-yueche .col-7-up .address{
+    width: 21% !important;
+  }
+  .form-yueche .col-7-up .dizhibox{
+    left: 32.9% !important;
+    width: 64% !important;
+  }
+  .form-yueche .col-7-up [for=onAddress]{
+    padding-left: 32% !important;
+  }
+  .form-yueche .col-7-valid [for=offAddress]{
+    padding-left: 34% !important;
+  }
+  .form-yueche .col-7-valid{
+    width: 49.33333333%;
+  }
+  .form-yueche .col-7-valid .address{
+    width: 23% !important;
+  }
+  .form-yueche .col-7-valid #offAddress{
+    width:65% !important;
+  }
+  .form-yueche .col-7-valid .dizhibox{
+    left: 35.9% !important;
+    width: 61% !important;
+  }
+  .form-yueche .col-7-cause .address{
+    width: 20.333% !important;
+  }
+  .form-yueche .col-7-cause textarea{
+    width: 78% !important;
+  }
+  .form-yueche #vehiclessubjecttype{
+    width: 51% !important;
+  }
+  .form-yueche .travel-note{
+    width: 32%;
+  }
+  .form-yueche #tripremark{
+    width: 40%;
+  }
+  .form-yueche .col-3-person label.error{
+    padding-left: 0 !important;
+    margin-left: 58%;
+  }
+  .form-yueche .vehiclessubjectstyle label.error{
+    padding-left: 20% !important;
+  }
+
+}
+@media screen and (max-width: 1040px){
+  .form-yueche .col-1-btn{
+    width: 11.333333333% !important;
+  }
+  .form-yueche .col-1-none{
+    width: 5.7%;
+  }
+  .form-yueche .col-7-up .address{
+    width: 21% !important;
+  }
+  .form-yueche .col-7-up{
+    width: 57.33333333333%;
+  }
+  .form-yueche .col-7-valid{
+    width: 52.33333333%;
+  }
+  .form-yueche .col-7-valid .address{
+    width: 23.4%;
+  }
+  .form-yueche .travel-note{
+    width: 51%;
+  }
+  .form-yueche #tripremark{
+    width: 40%;
+  }
+}
+@media screen and (min-width: 1060px) and (max-width: 1170px){
+  .form-yueche .row-transport{
+    margin-left: -22px;
+  }
+}
+/*********租赁端-我要下单-接机**********/
+.form-jieji .ztimepicker {
+  width: 66.4%;
+  position: relative;
+  display: inline-block;
+  margin-left: 0;
+}
+@media screen and (max-width: 1350px){
+  .form-jieji .label-width{
+    width: 59%;
+  }
+  .form-jieji #s2id_passengerphone{
+    width: 38.4%;
+  }
+  .form-jieji label[for=passengerphone]{
+    padding-left: 0;
+    margin-left: 61%;
+  }
+  .form-jieji .label-descent{
+    width: 56% !important;
+  }
+  .form-jieji .ztimepicker-descent {
+    width: 42%;
+  }
+}
+@media screen and (max-width: 1170px){
+  .form-jieji .col-3-usetype{
+    width: 44%;
+  }
+  .form-jieji .col-9-usetype{
+    width: 56%;
+  }
+  .form-jieji .row-user{
+    margin-left: -2px;
+  }
+  .form-jieji .genre{
+    width: 27%;
+  }
+  .form-jieji .select2-container{
+    width: 42.4%;
+  }
+  .form-jieji .col-3-person{
+    width: 20%;
+  }
+  .form-jieji .label-person{
+    width: 54% !important;
+  }
+  .form-jieji .label-flight{
+    width: 47%;
+  }
+  .form-jieji #fltno{
+    width: 50% !important;
+  }
+  .form-jieji .label-transport{
+    width: 50% !important;
+  }
+  .form-jieji .ztimepicker {
+    width: 47.4%;
+  }
+  .form-jieji .label-descent{
+    width: 53% !important;
+  }
+  .form-jieji .ztimepicker-descent {
+    width: 39.4%;
+  }
+  .form-jieji .col-1-none{
+    width: 3%;
+  }
+  .form-jieji .col-1-origin{
+    width: 0;
+    padding: 0;
+  }
+  .form-jieji .col-1-descent{
+    width: 5%;
+  }
+  .form-jieji .col-1-airport{
+    width: 7%;
+  }
+  .form-jieji .airport-address{
+    width: 50% !important;
+  }
+  .form-jieji .debus{
+    width: 21.8% !important;
+  }
+  .form-jieji .col-3-person label.error{
+    padding-left: 0;
+    margin-left: 56%;
+  }
+  .form-jieji .col-3-flight label.error{
+    padding-left: 0;
+    margin-left: 50%;
+  }
+  .form-jieji #onAddress{
+    width: 23% !important;;
+  }
+  .form-jieji [for=onAddress]{
+    padding: 0!important;
+    margin-left: 50%;
+  }
+  .form-jieji .col-7-down{
+    width: 54%;
+  }
+  .form-jieji .col-7-down #offAddress{
+    width: 66% !important;
+  }
+  .form-jieji .col-7-down .dizhibox{
+    left: 32.9% !important;
+    width: 61% !important;
+  }
+  .form-jieji .col-7-down label.error{
+    padding-left: 32% !important;
+  }
+  .form-jieji .col-7-origin label.error{
+    padding-left: 25%;
+  }
+  .form-jieji .origin{
+    width: 50% !important;
+  }
+  .form-jieji .select-origin{
+    width: 50% !important;
+  }
+  .form-jieji .col-7-origin .explain{
+    width: 25% !important;
+  }
+  .form-jieji .col-7-origin textarea{
+    width: 70% !important;
+  }
+  .form-jieji .remark{
+    width: 11% !important;
+  }
+}
+@media screen and (min-width: 1171px)and (max-width: 1470px){
+  .form-jieji .col-1-origin{
+    width: 0;
+    padding: 0;
+  }
+  .form-jieji .col-7-origin .explain{
+    width:27.6% !important;
+  }
+  .form-jieji .col-7-origin textarea{
+    width: 70% !important;
+  }
+  .form-jieji .col-7-origin label.error{
+    padding-left: 28% !important;
+  }
+}
+@media screen and (max-width: 1040px){
+  .form-jieji .col-1-btn{
+    width: 11.333333333% !important;
+  }
+  .form-jieji .col-1-none{
+    width: 5.7%;
+  }
+  .form-jieji .col-7-up .address{
+    width: 20% !important;
+  }
+  .form-jieji .col-7-up{
+    width: 57.33333333333%;
+  }
+  .form-jieji .col-7-valid{
+    width: 52.33333333%;
+  }
+  .form-jieji .col-7-valid .address{
+    width: 23.4%;
+  }
+  .form-jieji .travel-note{
+    width: 51%;
+  }
+  .form-jieji #tripremark{
+    width: 40%;
+  }
+  .form-jieji .col-1-descent{
+    width: 8%;
+  }
+  .form-jieji .col-7-down{
+    width: 57%;
+  }
+  .form-jieji .col-7-origin .explain{
+    width: 30% !important;
+  }
+  .form-jieji .col-7-origin label.error{
+    padding-left: 30% !important;
+  }
+}
+@media screen and (min-width: 1040px) and (max-width: 1170px){
+  .form-jieji .row-transport{
+    margin-left: -22px;
+  }
+  .form-jieji .col-1-airport{
+    width: 4%;
+  }
+  .form-jieji .debus{
+    width: 22.5% !important;
+  }
+}
+/*********租赁端-我要下单-送机**********/
+.form-songji .vehiclessubjectstyle label.error{
+  padding-left: 14% !important;
+}
+.form-songji .ztimepicker {
+  width: 66.4%;
+  position: relative;
+  display: inline-block;
+  margin-left: 0;
+}
+@media screen and (max-width: 1350px){
+  .form-songji .label-width{
+    width: 59%;
+  }
+  .form-songji #s2id_passengerphone{
+    width: 38.4%;
+  }
+  .form-songji label[for=passengerphone]{
+    padding-left: 0;
+    margin-left: 61%;
+  }
+  .form-songji .label-descent{
+    width: 56% !important;
+  }
+  .form-songji .ztimepicker-descent {
+    width: 42%;
+  }
+}
+@media screen and (max-width: 1170px){
+  .form-songji .col-3-usetype{
+    width: 44%;
+  }
+  .form-songji .col-9-usetype{
+    width: 56%;
+  }
+  .form-songji .row-user{
+    margin-left: -2px;
+  }
+  .form-songji .genre{
+    width: 27%;
+  }
+  .form-songji .select2-container{
+    width: 42.4%;
+  }
+  .form-songji .col-3-person{
+    width: 20%;
+  }
+  .form-songji .label-person{
+    width: 54% !important;
+  }
+  .form-songji .label-flight{
+    width: 47%;
+  }
+  .form-songji #fltno{
+    width: 50% !important;
+  }
+  .form-songji .label-transport{
+    width: 50% !important;
+  }
+  .form-songji .ztimepicker {
+    width: 47.4%;
+  }
+  .form-songji .label-descent{
+    width: 53% !important;
+  }
+  .form-songji .ztimepicker-descent {
+    width: 39.4%;
+  }
+  .form-songji .col-1-none{
+    width: 3%;
+  }
+  .form-songji .col-1-origin{
+    width: 0;
+    padding: 0;
+  }
+  .form-songji .col-1-descent{
+    width: 5%;
+  }
+  .form-songji .col-1-airport{
+    width: 7%;
+  }
+  .form-songji #offAddress{
+    width: 22% !important;
+  }
+  .form-songji .col-7-up{
+    width: 54%;
+  }
+  .form-songji .col-7-up .address{
+    width: 21% !important;
+  }
+  .form-songji .col-7-up #onAddress{
+    width: 68% !important;
+  }
+  .form-songji .col-7-up .dizhibox{
+    left: 32.9% !important;
+    width: 64% !important;
+  }
+  .form-songji .col-7-up [for=onAddress]{
+    padding-left: 31% !important;
+  }
+  .form-songji .airport-address{
+    width: 50% !important;
+  }
+  .form-songji .debus{
+    width: 21.8% !important;
+  }
+  .form-songji .col-3-person label.error{
+    padding-left: 0;
+    margin-left: 57%;
+  }
+  .form-songji .col-3-flight label.error{
+    padding-left: 0;
+    margin-left: 50%;
+  }
+  .form-songji .col-7-origin label.error{
+    padding-left: 25% !important;
+  }
+  .form-songji .origin{
+    width: 50% !important;
+  }
+  .form-songji .select-origin{
+    width: 50% !important;
+  }
+  .form-songji .col-7-origin .explain{
+    width: 25% !important;
+  }
+  .form-songji .col-7-origin textarea{
+    width: 70% !important;
+  }
+  .form-songji [for=offAddress]{
+    padding: 0!important;
+    margin-left: 50% !important;
+  }
+  .form-songji .col-7-remark .remark{
+    width: 20% !important;
+  }
+  .form-songji .col-7-remark #tripremark{
+    width: 80% !important;
+  }
+}
+@media screen and (min-width: 1171px)and (max-width: 1470px){
+  .form-songji .col-1-origin{
+    width: 0;
+    padding: 0;
+  }
+  .form-songji .col-7-origin .explain{
+    width:28% !important;
+  }
+  .form-songji .col-7-origin textarea{
+    width: 70% !important;
+  }
+  .form-songji .col-7-origin label.error{
+    padding-left: 28% !important;
+  }
+}
+@media screen and (max-width: 1040px){
+  .form-songji .col-1-btn{
+    width: 11.333333333% !important;
+  }
+  .form-songji .col-1-none{
+    width: 5.7%;
+  }
+  .form-songji .col-7-up .address{
+    width: 21% !important;
+  }
+  .form-songji .col-7-up{
+    width: 57.33333333333%;
+  }
+
+  .form-songji .col-7-valid{
+    width: 52.33333333%;
+  }
+  .form-songji .col-7-valid .address{
+    width: 23.4%;
+  }
+  .form-songji .travel-note{
+    width: 51%;
+  }
+  .form-songji #tripremark{
+    width: 40%;
+  }
+  .form-songji .col-1-descent{
+    width: 8%;
+  }
+  .form-songji .col-7-remark{
+    width: 57%;
+  }
+  .form-songji .col-7-origin .explain{
+    width: 30% !important;
+  }
+  .form-songji .col-7-origin label.error{
+    padding-left: 30% !important;
+  }
+}
+@media screen and (min-width: 1040px) and (max-width: 1170px){
+  .form-songji .row-transport{
+    margin-left: -22px;
+  }
+  .form-songji .col-1-airport{
+    width: 4%;
+  }
+  .form-songji .col-7-remark .remark{
+    width: 19.5% !important;
+  }
+  .form-songji .col-7-remark #tripremark{
+    width: 73% !important;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

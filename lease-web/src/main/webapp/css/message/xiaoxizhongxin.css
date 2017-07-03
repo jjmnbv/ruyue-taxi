@@ -1,0 +1,117 @@
+.info_box {
+  margin-top:22px;
+  background: #fff;
+  padding: 0em 20px;
+  /* overflow: hidden; */
+  height:100%;
+}
+.info_box #example {
+  background-color: white;
+}
+.info_box #example .sorting_disabled {
+  background: none;
+  height: 34px;
+  text-align: right;
+  padding-left: 20px;
+  font-weight: 500;
+  color: #0167DA;
+  cursor: hand;
+  cursor: pointer;
+}
+.info_box #example tr {
+  border-bottom: 1px solid #e8e8e8;
+}
+.info_box #example tr:hover {
+  background: white;
+}
+.info_box #example td,
+.info_box #example th {
+  border: none;
+  font-size: 13px;
+}
+.info_box #example td {
+  line-height: normal;
+}
+.info_box #example tbody tr {
+  height: 80px;
+  cursor: hand;
+  cursor: pointer;
+}
+.info_box #example tbody tr:hover {
+  background-color: #f5f5f5;
+}
+.info_box #example tbody td {
+  vertical-align: sub;
+  padding: 18px 20px 20px 38px;
+  position: relative;
+  font-size: 14px;
+}
+.info_box #example tbody .span_1 {
+  position: absolute;
+  left: 38px;
+  top: 45px;
+  color: #585858;
+}
+.info_box #example tbody .span_2 {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  color: #888888;
+  font-size: 13px;
+}
+.info_box #example tbody .span_3 {
+  position: absolute;
+  left: 20px;
+  top: 23px;
+  color: #888888;
+  font-size: 13px;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: url(../img/icon_hongdian.png) no-repeat;
+}
+.info_box #example .sorting_1 {
+  width: 30px;
+}
+.info_content {
+  overflow: hidden;
+  margin: 25px 0px 10px 0px;
+  padding: 0px 20px;
+}
+.info_content .back_box {
+  margin-bottom: 25px;
+  background: #f1f1f1;
+  height: 30px;
+  line-height: 30px;
+  padding-left: 20px;
+}
+.info_content .back_box .back {
+  background: url(../img/bnt_fh.png) no-repeat;
+  text-align: center;
+  display: inline-block;
+  width: 60px;
+  height: 26px;
+  color: #fff;
+  position: relative;
+  left: 1250px;
+  line-height: 26px;
+}
+.info_content .info_con {
+  border: 1px solid #e8e8e8;
+  min-height: 500px;
+  padding: 30px 15px;
+}
+.info_content .info_con .span_1 {
+  font-size: 16px;
+}
+.info_content .info_con .span_2 {
+  font-size: 13px;
+  color: #888888;
+  margin-left: 18px;
+}
+.info_content .info_con .inner {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #585858;
+}
+/*# sourceMappingURL=xiaoxizhongxin.css.map */

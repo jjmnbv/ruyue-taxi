@@ -1,0 +1,38 @@
+
+/**
+ *	租赁端查询出有权限的机构id sql
+ *	需要传递租赁端的登录名和租赁端的公司id以及用户身份是否是超管
+ *  由各自sql加入限定条件即可
+ */
+<choose>
+	 <!-- 普通 -->
+     <when test="specialstate != 1">
+         SELECT
+			le_roledataauthority.dynamicid
+		FROM
+			le_roledataauthority,
+			le_roleuser,
+			le_user
+		WHERE
+		le_roledataauthority.status=1
+		and le_roleuser.status=1
+		and le_user.status=1
+		and le_user.id = le_roleuser.userid
+		and le_roleuser.roleid = le_roledataauthority.roleid
+		and le_user.account=#{account}
+		and le_user.leasescompanyid = #{leasescompanyid}
+     </when>
+     <otherwise>
+     	<!-- 超管 -->
+		SELECT
+			org_organ.id
+		FROM
+			org_organ,
+			org_organ_company_ref
+		WHERE
+		org_organ.status=1
+		and org_organ_company_ref.status=1
+		and org_organ_company_ref.organid = org_organ.id
+		and org_organ_company_ref.companyid = #{leasescompanyid}
+     </otherwise>
+</choose>

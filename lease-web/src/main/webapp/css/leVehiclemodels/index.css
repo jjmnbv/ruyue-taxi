@@ -1,0 +1,199 @@
+.cantainer #content {
+  font-family: "microsoft yahei";
+  width: 900px;
+  border: 2px solid #666;
+  background: #fff;
+  position: fixed;
+  left: 265px;
+  top: 50px;
+  display: none;
+}
+.cantainer #content p,
+.cantainer #content input {
+  margin: 0;
+  padding: 0;
+}
+.cantainer #content i {
+  font-style: normal;
+}
+.cantainer #content .title {
+  height: 55px;
+  border-bottom: 1px solid #666;
+  padding: 15px 0 0 25px;
+}
+.cantainer #content .title p {
+  font-weight: bold;
+  color: #333;
+  font-size: 18px;
+}
+.cantainer #content .box {
+  padding: 0 40px 0 35px;
+  overflow: hidden;
+  font-size: 12px;
+}
+.cantainer #content .box .box_title {
+  color: #8d3732;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 45px;
+}
+.cantainer #content .box .left {
+  float: left;
+  width: 380px;
+  height: 430px;
+}
+.cantainer #content .box .left .left_title {
+  width: 100%;
+  height: 25px;
+  background: white;
+  line-height: 25px;
+  font-size:14px;
+  font-weight: bold;
+}
+.cantainer #content .box .left .left_content {
+  height: 405px;
+  overflow-y: auto;
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+.cantainer #content .box .left .left_content .type {
+  width: 100%;
+  height: 18px;
+  line-height: 18px;
+  background: #ddd;
+  text-indent: 8px;
+}
+.cantainer #content .box .left .left_content .items {
+  padding: 0 10px;
+  min-height: 35px;
+}
+.cantainer #content .box .left .left_content .items .item {
+  line-height: 35px;
+  padding-right: 10px;
+  cursor: pointer;
+}
+.cantainer #content .box .left .left_content .items .item:hover {
+  color: red !important;
+}
+.cantainer #content .box .left .left_content .items .all_brand {
+  line-height: 35px;
+}
+.cantainer #content .box .right {
+  width: 380px;
+  height: 430px;
+  float: right;
+}
+.cantainer #content .box .right .right_title {
+  width: 100%;
+  height: 25px;
+  background: white;
+  line-height: 25px;
+  font-size:14px;
+  font-weight: bold;
+  
+}
+.cantainer #content .box .right .right_content {
+  height: 405px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
+.cantainer #content .box .right .right_content .fl {
+  float: left;
+}
+.cantainer #content .box .right .right_content .head {
+  height: 40px;
+  padding-top: 11px;
+  border-bottom: 1px solid #ccc;
+  margin-left: 8px;
+}
+.cantainer #content .box .right .right_content .head input {
+  margin-left: 12px;
+  position: relative;
+  top: 2px;
+}
+.cantainer #content .box .right .right_content .head span {
+  margin-left: 4px;
+}
+.cantainer #content .box .right .right_content .right_list {
+  padding-left: 30px;
+}
+.cantainer #content .box .right .right_content .right_list .right_items div {
+  height: 30px;
+  line-height: 30px;
+}
+.cantainer #content .box .right .right_content .right_list .right_items div input {
+  position: relative;
+  top: 3px;
+}
+.cantainer #content .box .right .right_content .right_list .item_head {
+  display: none;
+}
+.cantainer #content .box .right .right_content .right_list .item_head .minus {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #999;
+  line-height: 14px;
+  text-align: center;
+}
+.cantainer #content .box .right .right_content .right_list .item_head input {
+  margin-left: 10px;
+}
+.cantainer #content .box .right .right_content .right_list .item_head img {
+  width: 17px;
+  height: 14px;
+  display: inline-block;
+  position: relative;
+  top: 3px;
+  margin: 0 5px;
+}
+.cantainer #content .box .right .right_content .right_list .item_head span {
+  margin-left: 2px;
+}
+.cantainer #content .box .right .right_content .right_list .item {
+  display: none;
+  height: 27px;
+  line-height: 27px;
+  padding-left: 53px;
+}
+.cantainer #content .box .right .right_content .right_list .item .label {
+  color: #999;
+}
+.cantainer #content .box .right .right_content .right_list .item img {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  position: relative;
+  top: 5px;
+  margin: 0 5px;
+}
+.cantainer #content .box .right .right_content .right_list .item .item_type {
+  margin-left: 14px;
+  color: red;
+}
+.cantainer #content .box .footer {
+  clear: both;
+  height: 52px;
+  padding-top: 18px;
+  width:290px;
+}
+.cantainer #content .box .footer div {
+  width: 100px;
+  height: 35px;
+  text-align: center;
+  line-height: 35px;
+  float: right;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 4px;
+}
+.cantainer #content .box .footer .sure {
+  background: red;
+  margin-right: 30px;
+  float:left;
+}
+.cantainer #content .box .footer .cancel {
+  background: #999999;
+}
+/*# sourceMappingURL=index.css.map */

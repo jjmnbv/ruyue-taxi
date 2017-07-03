@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="网站内容描述，后台记得改！">
+  <meta name="keywords" content="网页关键字，后台记得换掉">
+  <meta name="author" content="好约车">
+  <title>登录</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css"/>
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript"  src="plugins/jquery-validate/js/jquery.validate.min.js"></script>
+</head>
+<body>
+<div class="login_page">
+<img src="img/bg_login.png" class="bg">
+<div class="login_logo"></div>
+    <form id="loginform">
+       <ul class="login_box">
+           <li><em class="ico_user"></em> <input type="text" name="username" placeholder="帐号" required></li>
+           <li><em class="ico_lock"></em> <input type="password" name="password" placeholder="密码" required></li>
+           <button type="submit" class="login_btn">登录</button>
+       </ul>
+    </form>
+</div>
+<script>
+    $("#loginform").validate({
+        rules: {
+            username: {
+                required: true,
+                minlength: 2
+            },
+            password: {
+                required: true,
+                minlength: 5
+            }
+        },
+        messages: {
+            username: {
+                required: "请输入帐号",
+                minlength: "字符长度需大于2"
+            },
+            password: {
+                required: "请输入密码",
+                minlength: "字符长度需大于5"
+            }
+        }
+    })
+</script>
+</body>
+</html>
