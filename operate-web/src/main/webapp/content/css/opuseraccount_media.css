@@ -1,0 +1,37 @@
+.opuseraccount_css_body .table-bordered thead tr th {
+  border-bottom-width: 1px;
+}
+.opuseraccount_css_body .green_a {
+  position: relative;
+  bottom: 2px;
+}
+/*媒体查询*/
+@media screen and (min-width: 790px) and (max-width: 1080px) {
+  .opuseraccount_css_col_1 {
+    width: 31%;
+  }
+  .opuseraccount_css_col_2 {
+    width: 11%;
+  }
+  .opuseraccount_css_col_3 {
+    float: right;
+    width: 21%;
+    position: relative;
+    bottom: 2px;
+  }
+  .opuseraccount_css_col_4 {
+    width: 37%;
+  }
+  .opuseraccount_css_col_4 label {
+    width: 15%;
+    padding-right: 5px;
+  }
+  .opuseraccount_css_col_4 input {
+    width: 36% !important;
+    margin-right: 5px;
+  }
+}
+.opuseraccount_css_col_4 input {
+  margin-right: 5px;
+}
+/*# sourceMappingURL=opuseraccount_media.css.map */

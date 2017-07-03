@@ -1,0 +1,56 @@
+/*¿Ø¼þÑùÊ½*/
+.city_container{
+	min-width:350px;
+	height:210px;
+	position:absolute;
+	z-index: 9999;
+	background: white;
+	border:1px solid #e1e1e1;
+	font-size: 14px;
+	color:#333;
+	display: none;
+}
+.city_container .province_con{
+	min-width:70px;
+	height:100%;
+	border-right:1px solid #e1e1e1;
+	background: #e8e8e8;
+	float:left;
+	overflow: hidden;
+	overflow-y: scroll;
+}
+.city_container .province_con span{
+	display: block;
+	height:30px;
+	line-height: 30px;
+	text-align: left;
+	cursor: pointer;
+	cursor:hand;
+	padding-left:10px;
+	padding-right:10px;
+}
+.city_container .province_con .span_active{
+	background: #f33;
+	color:white;
+}
+.city_container .city_con{
+	position:absolute;
+	left:70px;
+	top:0;
+	right:0;
+	bottom:0;
+	height:100%;
+	float:left;
+	overflow: hidden;
+	overflow-y: auto;
+}
+.city_container .city_con span{
+	float:left;
+	display: block;
+	height:30px;
+	line-height: 30px;
+	padding:0 10px;
+	text-align: center;
+	cursor: pointer;
+	cursor:hand;
+}

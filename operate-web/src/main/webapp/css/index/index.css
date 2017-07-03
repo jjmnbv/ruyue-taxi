@@ -1,0 +1,295 @@
+/*������ʽ*/
+/* .side_bar>li {
+    position: relative;
+    height: 90px;
+    padding: 14px 0px;
+    border-bottom: 1px solid #dadada;
+} */
+.ico{
+	width:26px;
+	height:26px;
+	display: block;
+	margin:10px auto;
+	margin-bottom: 10px;
+}
+.jichushuju {
+	background-image: url('../../img/index/btn_jichushuju_def.png')
+}
+.current .jichushuju ,.on .jichushuju {
+	background-image: url('../../img/index/btn_jichushuju_press.png')
+}
+
+/*ͼ����ʽ*/
+/* .shouye {
+	background-image: url('../../img/index/btn_shouye_def.png')
+}
+
+.current .shouye ,.on .shouye {
+	background-image: url('../../img/index/btn_shouye_press.png')
+}
+.woyaoxiadan {
+	background-image: url('../../img/index/btn_woyaoxiadan_def.png')
+}
+
+.current .woyaoxiadan ,.on .woyaoxiadan {
+	background-image: url('../../img/index/btn_woyaoxiadan_press.png')
+}
+.dingdanguanli {
+	background-image: url('../../img/index/btn_dingdanguanli_def.png')
+}
+
+.current .dingdanguanli ,.on .dingdanguanli {
+	background-image: url('../../img/index/btn_dingdanguanli_press.png')
+}
+.jichushuju {
+	background-image: url('../../img/index/btn_jichushuju_def.png')
+}
+
+.current .jichushuju ,.on .jichushuju {
+	background-image: url('../../img/index/btn_jichushuju_press.png')
+}
+.fuwuguize {
+	background-image: url('../../img/index/btn_fuwuguize_def.png')
+}
+
+.current .fuwuguize ,.on .fuwuguize {
+	background-image: url('../../img/index/btn_fuwuguize_press.png')
+}
+.caiwuguanli {
+	background-image: url('../../img/index/btn_caiwuguanli_def.png')
+}
+
+.current .caiwuguanli ,.on .caiwuguanli {
+	background-image: url('../../img/index/btn_caiwuguanli_press.png')
+}
+.xitongshezhi {
+	background-image: url('../../img/index/btn_xitongshezhi_def.png')
+}
+
+.current .xitongshezhi ,.on .xitongshezhi {
+	background-image: url('../../img/index/btn_xitongshezhi_press.png')
+} */
+
+
+.baobiaoguanli {
+	background-image: url('../../img/index/btn_baobiaoguanli_def.png')
+}
+
+.current .baobiaoguanli ,.on .baobiaoguanli {
+	background-image: url('../../img/index/btn_baobiaoguanli_press.png')
+}
+.gerenzhongxin {
+	background-image: url('../../img/index/btn_gerenzhongxin_def.png')
+}
+
+.current .gerenzhongxin ,.on .gerenzhongxin {
+	background-image: url('../../img/index/btn_gerenzhongxin_press.png')
+}
+
+.woyaoxiadan {
+	background-image: url('../../img/index/btn_woyaoxiadan_def.png')
+}
+
+.current .woyaoxiadan ,.on .woyaoxiadan {
+	background-image: url('../../img/index/btn_woyaoxiadan_press.png')
+}
+
+.dingdanguanli {
+	background-image: url('../../img/index/btn_dingdanguanli_def.png')
+}
+
+.current .dingdanguanli ,.on .dingdanguanli {
+	background-image: url('../../img/index/btn_dingdanguanli_press.png')
+}
+
+.gerendingdan {
+	background-image: url('../../img/index/btn_gerendingdan_def.png')
+}
+
+.submenu .on .gerendingdan {
+	background-image: url('../../img/index/btn_gerendingdan_press.png')
+}
+
+/* .kehuguanli {
+	background-image: url('../../img/index/btn_kehuguanli_def.png')
+}
+
+.current .kehuguanli ,.on .kehuguanli {
+	background-image: url('../../img/index/btn_kehuguanli_press.png')
+} */
+
+/* .yonghuguanli {
+	background-image: url('../../img/index/btn_yonghuguanli_def.png')
+}
+
+.current .yonghuguanli ,.on .yonghuguanli {
+	background-image: url('../../img/index/btn_yonghuguanli_press.png')
+}
+ */
+.xiaoshouguanli {
+	background-image: url('../../img/index/btn_xiaoshouguanli_def.png')
+}
+
+.current .xiaoshouguanli ,.on .xiaoshouguanli {
+	background-image: url('../../img/index/btn_xiaoshouguanli_press.png')
+}
+
+.caiwuguanli {
+	background-image: url('../../img/index/btn_caiwuguanli_def.png')
+}
+
+.current .caiwuguanli ,.on .caiwuguanli {
+	background-image: url('../../img/index/btn_caiwuguanli_press.png')
+}
+
+/* .zhanghuguanli {
+	background-image: url('../../img/index/btn_zhanghuguanli_def.png')
+}
+
+.submenu .on .zhanghuguanli {
+	background-image: url('../../img/index/btn_zhanghuguanli_press.png')
+} */
+
+.tuikuanguanli {
+	background-image: url('../../img/index/btn_tuikuanguanli_def.png')
+}
+
+.submenu .on .tuikuanguanli {
+	background-image: url('../../img/index/btn_tuikuanguanli_press.png')
+}
+
+.fuwuguize {
+	background-image: url('../../img/index/btn_fuwuguize_def.png')
+}
+
+.current .fuwuguize ,.on .fuwuguize {
+	background-image: url('../../img/index/btn_fuwuguize_press.png')
+}
+
+/* .paidanguize {
+	background-image: url('../../img/index/btn_paidanguize_def.png')
+}
+
+.submenu .on .paidanguize {
+	background-image: url('../../img/index/btn_paidanguize_press.png')
+} */
+
+/* .jifeiguize {
+	background-image: url('../../img/index/btn_jifeiguize_def.png')
+}
+
+.submenu .on .jifeiguize {
+	background-image: url('../../img/index/btn_jifeiguize_press.png')
+} */
+
+/* .fuwuchexing {
+	background-image: url('../../img/index/btn_fuwuchexing_def.png')
+}
+
+.submenu .on .fuwuchexing {
+	background-image: url('../../img/index/btn_fuwuchexing_press.png')
+} */
+
+.xitongshezhi {
+	background-image: url('../../img/index/btn_xitongshezhi_def.png')
+}
+
+.current .xitongshezhi ,.on .xitongshezhi {
+	background-image: url('../../img/index/btn_xitongshezhi_press.png')
+}
+
+/* .zhanghaoguanli {
+	background-image: url('../../img/index/btn_zhanghaoguanli_def.png')
+}
+
+.submenu .on .zhanghaoguanli {
+	background-image: url('../../img/index/btn_zhanghaoguanli_press.png')
+} */
+
+.jueseguanli {
+	background-image: url('../../img/index/btn_jueseguanli_def.png')
+}
+
+.submenu .on .jueseguanli {
+	background-image: url('../../img/index/btn_jueseguanli_press.png')
+}
+
+/* .xinxishezhi {
+	background-image: url('../../img/index/btn_xinxishezhi_def.png')
+}
+
+.submenu .on .xinxishezhi {
+	background-image: url('../../img/index/btn_xinxishezhi_press.png')
+} */
+
+/* .xieyitiaokuan {
+	background-image: url('../../img/index/btn_xieyitiaokuan_def.png')
+}
+
+.submenu .on .xieyitiaokuan {
+	background-image: url('../../img/index/btn_xieyitiaokuan_press.png')
+} */
+
+/* .apppeizhi {
+	background-image: url('../../img/index/btn_apppeizhi_def.png')
+}
+
+.submenu .on .apppeizhi {
+	background-image: url('../../img/index/btn_apppeizhi_press.png')
+} */
+
+/* .xiugaimima {
+	background-image: url('../../img/index/btn_xiugaimima_def.png')
+}
+
+.submenu .on .xiugaimima {
+	background-image: url('../../img/index/btn_xiugaimima_press.png')
+} */
+.jiaojiebanguanli{
+	background-image: url('../../img/index/btn_jiaojiebanguanli_def.png')
+}
+
+.submenu .on .jiaojiebanguanli {
+	background-image: url('../../img/index/btn_jiaojiebanguanli_press.png')
+}
+.fuwujiankong{
+	background-image: url('../../img/index/btn_fuwujiankong_def.png')
+}
+
+.submenu .on .fuwujiankong {
+	background-image: url('../../img/index/btn_fuwujiankong_press.png')
+}
+
+
+
+/*
+.header_bar{
+	position: absolute;
+    top: 0px;
+    width: 100%;
+    z-index:1;
+}
+
+.side_bar{
+	position: absolute;
+    top: 60px;
+    bottom: 0px;
+    z-index:1;
+}
+
+.main{
+	position: absolute;
+    top: 60px;
+    bottom: 0px;
+}
+
+.footer{
+	position: absolute;
+    width: 100%;
+    top: 1008px;
+    z-index: 2;
+}
+#iframebox{
+	height:1000px;
+}
+*/

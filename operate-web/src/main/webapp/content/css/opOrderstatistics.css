@@ -1,0 +1,40 @@
+.opOrderstatistics_css_body .table-bordered thead tr th {
+  border-bottom-width: 1px;
+}
+.opOrderstatistics_css_body #startTime {
+  width: 68% !important;
+}
+.opOrderstatistics_css_body .opOrderstatistics_css_row_1 {
+  position: relative;
+}
+/*媒体查询*/
+@media screen and (min-width: 790px) and (max-width: 1024px) {
+  .opOrderstatistics_css_body .opOrderstatistics_css_col_1 {
+    position: absolute;
+    width: inherit;
+    text-align: center;
+    bottom: 0;
+    right: 10px;
+  }
+  .opOrderstatistics_css_body .opOrderstatistics_css_col_2 {
+    padding-left: 0;
+    white-space: nowrap;
+    position: relative;
+    right: 20px;
+  }
+}
+@media screen and (min-width: 1024px) and (max-width: 1280px) {
+  .opOrderstatistics_css_body .order_tittle {
+    width: 40%;
+  }
+  .opOrderstatistics_css_body .order_num1,
+  .opOrderstatistics_css_body .order_num2 {
+    width: 60%;
+    float: right;
+  }
+  .opOrderstatistics_css_body .opOrderstatistics_css_col_3 {
+    width: 40%;
+    float: left;
+  }
+}
+/*# sourceMappingURL=opOrderstatistics.css.map */

@@ -1,0 +1,54 @@
+/*媒体查询*/
+@media screen and (min-width: 790px) and (max-width: 1024px) {
+  .peuser_css_body .peuser_css_col_1 {
+    width: 12% !important;
+  }
+  .peuser_css_body .peuser_css_col_2 {
+    width: 48% !important;
+  }
+  .peuser_css_body .peuser_css_col_3 {
+    width: 20% !important;
+  }
+  .peuser_css_body .peuser_css_col_4 {
+    width: 20% !important;
+  }
+}
+.peuser_css_body .table-bordered thead tr th {
+  border-bottom-width: 1px;
+}
+.peuser_css_body .peuser_css_col_1 {
+  text-align: right;
+  width: 10%;
+  float: right;
+}
+.peuser_css_body .peuser_css_btn_1 {
+  position: relative;
+  left: 14px;
+}
+.peuser_css_body .peuser_css_input_1 {
+  width: 68% !important;
+}
+.peuser_css_body .peuser_css_col_2 {
+  width: 40%;
+}
+.peuser_css_body .peuser_css_col_2 .peuser_css_time_1 {
+  width: 22%;
+}
+.peuser_css_body .peuser_css_input_2 {
+  width: 35% !important;
+}
+.peuser_css_body .peuser_css_label_2 {
+  width: 25px !important;
+  padding-right: 0;
+}
+.peuser_css_body .crumbs .back {
+  margin-top: -1px;
+  position: relative;
+  left: 5px;
+}
+.peuser_css_body .peuser_css_account_1 {
+  width: 101% !important;
+  position: relative !important;
+  left: -0.5% !important;
+}
+/*# sourceMappingURL=peuser_css_media.css.map */

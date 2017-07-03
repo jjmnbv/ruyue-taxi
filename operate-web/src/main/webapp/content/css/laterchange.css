@@ -1,0 +1,355 @@
+/*********运管端-我要下单-约车**********/
+.form_yueche .ztimepicker{
+  width: auto;
+  position: relative;
+  display: inline-block;
+  margin-left: 0;
+}
+.form_yueche .col-4-label{
+  width:14% !important;
+  margin-left: -5px !important;
+  margin-right: 5px;
+}
+.form_yueche .col-1-yueche{
+  width: 11.333333333%;
+}
+.form_yueche .Mbtn{
+  padding: 6px 16px;
+}
+.form_yueche .select2-container,
+.form_yueche #company{
+  width: 57.4%;
+}
+.form_yueche .validatecustomstyle label.error,
+.form_jieji .validatecustomstyle label.error{
+  padding-left: 24%;
+}
+@media screen and (max-width: 800px){
+  .form_yueche .col-4-label{
+    width:21% !important;
+    margin-left: -5px !important;
+  }
+  .form_yueche .col-12-label{
+    width: 12.2% !important;
+    float:left;
+    margin-left: -14px !important;
+  }
+  .form_yueche .col-12-label+textarea{
+    margin-left: 21px !important;
+  }
+}
+@media screen and (min-width: 800px) and (max-width: 1240px){
+  .form_yueche .col-12-label{
+    width: 12.2% !important;
+    float:left;
+    margin-left: -19px !important;
+  }
+  .form_yueche .col-12-label+textarea{
+    margin-left: 27px !important;
+  }
+
+}
+@media screen and (max-width: 1240px){
+  .form_yueche .col-4-label{
+    width: 23% !important;
+    /* margin-left: 3px !important;
+    margin-right: 6px; */
+  }
+  .form_yueche .error:last-child{
+    padding-left: 42% !important;
+  }
+  .form_yueche .validatecustomstyle label.error{
+    padding-left: 22.5% !important;
+  }
+  .form_yueche .validatecustomstyle .onAddress{
+    width: 65% !important;
+  }
+  .form_yueche .dizhibox{
+    left: 36.8% !important;
+    width: 60% !important;
+  }
+}
+@media screen and (min-width: 1241px){
+  .form_yueche .col-yueche label:first-child{
+    width: 26% !important;
+  }
+  .form_yueche .error:last-child{
+    padding-left: 25% !important;
+  }
+  .form_yueche .col-12-label{
+    width: 7.6% !important;
+    float:left;
+    margin-left: -19px !important;
+    margin-right: 1px;
+  }
+  .form_yueche .validatecustomstyle label.error{
+    padding-left: 14.5% !important;
+  }
+}
+
+/******运管端-我要下单-接机************/
+.form_jieji .ztimepicker{
+  width: 68.4%;
+  display: inline-block;
+  margin-left: 0;
+}
+.form_jieji [for=onAddress]{
+  padding-left: 58% !important;
+}
+.form_jieji label.error{
+  padding-left: 32% !important;
+}
+.form_jieji label[for=offAddress] {
+  padding-left: 13.5% !important;
+}
+.form_jieji #company{
+  width: 68.4%;
+}
+@media screen and (max-width: 1350px){
+  .form_jieji .col-1-none{
+    width: 0;
+    padding: 0;
+  }
+  .form_jieji .col-1-width,
+  .form_jieji .col-1-jieji{
+    width: 11.333333333% !important;
+  }
+  .form_jieji .col-1-offMap{
+  	margin-left:3%;
+  }
+  .form_jieji .jieji-item{
+    width: 54% !important;
+  }
+  .form_jieji .jieji-item-phone{
+  	width: 58% !important;
+  }
+  .form_jieji .get-off{
+    width: 23.5% !important;
+    margin-left: -10px !important;
+  }
+  .form_jieji .select2-container,
+  .form_jieji .ztimepicker,
+  .form_jieji .fltno,
+  .form_jieji #company{
+    width: 40% !important;
+  }
+  .form_jieji .ztimepicker-landing,
+  .form_jieji #s2id_passengerphone{
+  	width: 39% !important;
+  }
+  .form_jieji .select-address{
+    width: 16% !important;
+  }
+  .form_jieji #offAddress{
+    margin-left: 0!important;
+    width: 65% !important;
+  }
+  .form_jieji label.error{
+    margin-left: 57% !important;
+    padding-left: 0 !important;
+  }
+  .form_jieji .travel-notes{
+    width: 12.5% !important;
+  }
+  .form_jieji #tripremark{
+  	width: 72% !important;
+  }
+  .form_jieji label[for=offAddress] {
+    margin-left: 23.5% !important;
+  }
+  .form_jieji .dizhibox{
+    left: 36.3% !important;
+    width: 60.5% !important;
+  }
+}
+/******运管端-我要下单-送机************/
+.form_songji .ztimepicker{
+  width: 68.4%;
+  display: inline-block;
+  margin-left: 0;
+}
+.form_songji .error{
+  padding-left: 32% !important;
+}
+.form_songji [for=onAddress]{
+  padding-left: 15.7% !important;
+}
+.form_songji #company{
+	width:68.4%;
+}
+@media screen and (max-width: 1030px){
+  .form_songji .col-1-songji{
+    width: 11.333333%;
+  }
+}
+@media screen and (max-width: 1350px){
+  .form_songji .songji-item{
+    width: 54% !important;
+    margin-left: 0 !important;
+  }
+  .form_songji .songji-item-passenger{
+  	width: 58% !important;
+  }
+  .form_songji .select2-container,
+  .form_songji .ztimepicker,
+  .form_songji #company{
+    width: 43.4% !important;
+  }
+  .form_songji #s2id_passengerphone,
+  .form_songji #s2id_passengers{
+  	width: 39.4% !important;
+  }
+  .form_songji .car-address{
+    width: 29% !important;
+  }
+  .form_songji #onAddress{
+    margin-left: 0!important;
+    width: 60% !important;
+  }
+  .form_songji #offAddress{
+    margin-left: 0!important;
+    width: 16% !important;
+  }
+  .form_songji .error{
+    margin-left: 56% !important;
+    padding-left: 0 !important;
+  }
+  .form_songji .travel-notes{
+    width: 22.7% !important;
+  }
+  .form_songji [for=onAddress] {
+    margin-left: 27% !important;
+  }
+  .form_songji .dizhibox {
+    top: 36px !important;
+    left: 27.2% !important;
+  }
+}
+@media screen and (max-width: 1351px) {
+  .form_songji .dizhibox {
+    left: 40.2% !important;
+    width: 57% !important;
+  }
+}
+
+/*运管端-服务规则-派单规则*/
+@media screen and (max-width: 840px){
+  .form-send .col-1-city{
+    width: 32%;
+  }
+}
+@media screen and (max-width: 1030px){
+  .form-send  .col-1-demand{
+    width: 11.333333%;
+  }
+  .form-send .col-7-addBtn{
+    width: 55.33333333%;
+  }
+}
+
+
+/*运管端-服务规则-派单规则-修改*/
+@media screen and (max-width: 1350px){
+  .form-edit .edit-items{
+    width: 54% !important;
+  }
+  .form-edit .col-4 input,
+  .form-edit .col-4 select,
+  .form-edit #inp_box1{
+    width: 30% !important;
+   }
+  .form-edit label.error{
+    padding-left: 0;
+    margin-left:55%;
+  }
+}
+/*运管端-服务规则-计费规则-新增弹窗*/
+.tip_box_b label.error{
+  margin-left: 28% !important;
+}
+/*运管端-服务规则-计费规则-修改*/
+@media screen and (max-width: 970px){
+  .form-account .account-items{
+    width: 38% !important;
+  }
+  .form-account .col-4 input,
+  .form-account .col-4 select,
+  .form-account #inp_box1{
+    width: 29% !important;
+   }
+  .form-account label.error{
+    padding-left: 0;
+    margin-left: 36%;
+  }
+  .form-account .accoune-price{
+    width: 66% !important;
+  }
+}
+.table-bordered thead tr th{
+  border-bottom-width: 1px;
+}
+/*运管端-系统管理-信息设置*/
+@media screen and (max-width: 1250px){
+  .form-information .col-3{
+    width: 46%;
+  }
+  .form-information label.error{
+    margin-left: 41.5%;
+  }
+}
+
+/*运管端-系统管理-App设置-版本说明-维护版本说明*/
+@media screen and (max-width: 1190px){
+  .form-imprint .col-4 .imprint-items {
+    width: 50% !important;
+   }
+  .form-imprint .col-4 input,
+  .form-imprint .col-4 select{
+    width: 48% !important;
+   }
+   .form-imprint label.error{
+    padding-left: 0;
+    margin-left: 51%;
+  }
+  .form-imprint .col-6 label {
+    width: 32%;
+  }
+  label[for='changelog'] {
+  	 margin-left: 0 !important;
+  }
+}
+/*运管端-系统管理-App设置-版本说明-广告页配置-维护广告配置*/
+@media screen and (max-width: 1010px){
+  .form-configuration .col-4 .col-4-label,
+  .form-guide .col-4 label{
+    width: 39%;
+  }
+  .form-configuration #apptype,
+  .form-configuration .userName{
+    width: 60% !important;
+  }
+  .form-configuration label[for=apptype],
+  .form-configuration label[for=name]{
+    padding-left: 39% !important;
+  }
+  .form-configuration label[for=endtime]{
+    padding-left: 0 !important;
+    margin-left: 32%;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

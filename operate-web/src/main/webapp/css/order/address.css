@@ -1,0 +1,18 @@
+.select2-container{width:68.4%;}
+.stab{border-bottom:2px solid #ededed;}
+.stabox{width:100%;border:1px solid #ededed;}
+.stabox>li{padding:4px 10px}
+.stabox>li:hover{background:#ededed;}
+.stab>div{display:inline-block;padding:4px 14px;text-align:center;}
+.shen_on{background:#ededed;}
+.bhide{display:none;}
+.route-icon{font-style:normal;line-height:200%;background-position-y:-13px !important;background-position-x:10px !important;padding-left:30 !important;}
+.route-icon>b{color:#f33333;}
+.dizhibox{display:none;}
+.hiddenCol{display:none;}
+tr.selected{background:#A1BCEC;}
+.ztimepicker {
+    position: relative;
+    width: 360px;
+    margin-left: -15px;
+}

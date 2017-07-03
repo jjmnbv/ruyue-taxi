@@ -1,0 +1,54 @@
+package com.szyciov.operate.vo.request;
+
+import com.szyciov.dto.PagingRequest;
+
+/**
+ * Created by ZF on 2017/5/24.
+ */
+public class GetTaxiManualSelectDriverRequest extends PagingRequest {
+    private String keyword;
+    private String phone; // 司机手机号
+    private String jobNum; // 资格证号
+    private String plateNo; // 车牌号
+    private String leaseCompanyId; // 所属车企
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getJobNum() {
+        return jobNum;
+    }
+
+    public void setJobNum(String jobNum) {
+        this.jobNum = jobNum;
+    }
+
+    public String getPlateNo() {
+        return plateNo;
+    }
+
+    public void setPlateNo(String plateNo) {
+        this.plateNo = plateNo;
+    }
+
+    public String getLeaseCompanyId() {
+        return leaseCompanyId;
+    }
+
+    public void setLeaseCompanyId(String leaseCompanyId) {
+        this.leaseCompanyId = leaseCompanyId;
+    }
+}

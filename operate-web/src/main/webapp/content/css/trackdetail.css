@@ -1,0 +1,437 @@
+.dashboard {
+    height: 250px;
+    width:1024px;
+    background-size:64%;
+    background-color:red;
+    background-image: url(../../img/trafficflux/track/dashboard.png);
+}
+.img_frame {
+    font-size: 14px;
+    text-align: center;
+    font-weight: bold;
+    color: #FEFEFE;
+    line-height: 24px;
+    height: 24px;
+    width: 60px;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/img_frame.png);
+}
+
+.track_bg_1 {
+    font-size: 16px;
+    text-align: center;
+    font-weight: bold;
+    color: #FEFEFE;
+    line-height: 40px;
+    height: 40px;
+    width: 90px;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/bg.png);
+}
+.track_bg_1_1 {
+    font-size: 16px;
+    text-align: center;
+    font-weight: bold;
+    color: #333333;
+    vertical-align:middle;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.track_bgda_number {
+    font-weight: bold;
+    color: #333333;
+    font-size: 16px;
+    padding-top: 15px;
+    line-height: 34px;
+    letter-spacing: -1px;
+    margin-bottom: 5px;
+}
+.track_bgda_desc {
+    font-weight: bold;
+    color: #333333;
+    font-size: 16px;
+    letter-spacing: 0px;
+}
+
+.track_bg_number {
+    font-weight: bold;
+    color: #333333;
+    font-size: 16px;
+    padding-top: 0px;
+    line-height: 34px;
+    letter-spacing: -1px;
+    margin-bottom: 5px;
+}
+.track_bg_desc {
+    font-weight: bold;
+    color: #333333;
+    font-size: 16px;
+    letter-spacing: 0px;
+}
+
+.img_obd {
+    float: right;
+    line-height: 46px;
+    height: 46px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 46px;
+    background-image: url(../../img/trafficflux/track/img_obd.png);
+}
+
+.img_gps {
+    float: right;
+    line-height: 46px;
+    height: 46px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 46px;
+    background-image: url(../../img/trafficflux/track/img_gps.png);
+}
+
+.img_oil{
+   
+    height: auto;
+    float: right;
+    line-height: 101px;
+    height: 101px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 100px;
+    background-image: url(../../img/trafficflux/track/img_oil.png);
+}
+
+.img_oil_mail {
+    float: right;
+    line-height: 101px;
+    height: 101px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 100px;
+    background-image: url(../../img/trafficflux/track/img_oil_mail.png);
+}
+
+.img_oil_dai {
+    float: right;
+    line-height: 101px;
+    height: 101px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 100px;
+    background-image: url(../../img/trafficflux/track/img_oil_dai.png);
+}
+.img_electron {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_electron.png);
+}
+.img_location {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_location.png);
+}
+.img_idling {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_idling.png);
+}
+.img_speedover {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_speedover.png);
+}
+.img_time {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_time.png);
+}
+.img_tire {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_tire.png);
+}
+.img_twocar {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_twocar.png);
+}
+.img_water {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_water.png);
+}
+.img_carside {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_carside.png);
+}
+.img_outage {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_outage.png);
+}
+.img_co2 {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_co2.png);
+}
+.img_speed_slow {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_speed_slow.png);
+}
+.img_guaiwan {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_guaiwan.png);
+}
+.img_kuaisubiandao {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_kuaisubiandao.png);
+}
+.img_jijiasu {
+    float: right;
+    line-height: 64px;
+    height: 64px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 64px;
+    background-image: url(../../img/trafficflux/track/img_jijiasu.png);
+}
+.car_icon {
+    height: 50px;
+    width: 50px;
+    float: right;
+    background-image: url(../../img/trafficflux/track/car_icon.png);
+}
+
+.people {
+    height: 50px;
+    width: 50px;
+    float: right;
+    background-image: url(../../img/trafficflux/track/people.png);
+}
+
+.img_trave {
+    height: 50px;
+    width: 50px;
+    float: right;
+    background-image: url(../../img/trafficflux/track/img_trave.png);
+}
+
+.time {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/time.png);
+}
+.icon_dai {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_dai.png);
+}
+.icon_trive {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_trive.png);
+}
+.icon_yuxing {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_yuxing.png);
+}
+.icon_warn {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_warn.png);
+}
+.car {
+    height: 61px;
+    width: 128px;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/car.png);
+}
+
+.destination_icon {
+    height: 66px;
+    width: 66px;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/destination_icon.png);
+}
+
+.location_icon {
+    height: 66px;
+    width: 66px;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/location_icon.png);
+}
+
+.mileage {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/mileage.png);
+}
+
+.oil {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/oil.png);
+}
+
+.speed {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/speed.png);
+}
+
+.history_route {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/history_route.png);
+}
+.icon_trive_light {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_trive_light.png);
+}
+.icon_warn_light {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_warn_light.png);
+}
+.icon_yuxing_light {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_yuxing_light.png);
+}
+.btn_boul_light {
+    height: 8px;
+    width: 8px;
+    background-image: url(../../img/trafficflux/track/btn_boul_light.png);
+}
+.icon_carlook_light {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_carlook_light.png);
+}
+.icon_yuxing_light {
+    height: 16px;
+    width: 16px;
+    background-image: url(../../img/trafficflux/track/icon_yuxing_light.png);
+}
+.line_green {
+    height: 12px;
+    line-height: 25px;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/line_green.png);
+}
+
+.line_blue {
+    height: 12px;
+    line-height: 25px;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/img_blue.png);
+}
+
+.line_red {
+    height: 12px;
+    line-height: 25px;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(../../img/trafficflux/track/img_red.png);
+}
+
+.img_time_spent {
+  
+    line-height: 26px;
+    height: 26px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 26px;
+    background-image: url(../../img/trafficflux/track/img_time_spent.png);
+}
+.img_update {
+   
+    line-height: 26px;
+    height: 26px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 26px;
+    background-image: url(../../img/trafficflux/track/img_update.png);
+}
+.img_timestar {
+ 
+    line-height: 26px;
+    height: 26px;
+    margin-bottom: auto;
+    margin-top: auto;
+    width: 26px;
+    background-image: url(../../img/trafficflux/track/img_timestar.png);
+}

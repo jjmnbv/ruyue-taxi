@@ -1,0 +1,83 @@
+/*濯掍綋鏌ヨ*/
+@media screen and (min-width: 790px) and (max-width: 1024px) {
+  .ordermanage_css_body .ordermanage_css_col_2 {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .ordermanage_css_body .ordermanage_css_col_3 {
+    margin-left: 0 !important;
+    padding-right: 0;
+  }
+}
+@media screen and (min-width: 790px) and (max-width: 1100px) {
+  .ordermanage_css_body .ordermanage_css_col_1 #minUseTime {
+    width: 35% !important;
+  }
+  .ordermanage_css_body .ordermanage_css_col_1 #maxUseTime {
+    width: 35% !important;
+  }
+}
+/*寰呬汉宸ユ淳鍗�*/
+.ordermanage_css_body {
+  overflow: hidden;
+}
+.ordermanage_css_body .table-bordered thead tr th {
+  border-bottom-width: 1px;
+}
+.ordermanage_css_body #s2id_orderperson {
+  float: right;
+}
+.ordermanage_css_body .ordermanage_css_label_1 {
+  position: relative;
+  top: 4px;
+}
+.ordermanage_css_body #orderno,
+.ordermanage_css_body #orderNo {
+  width: 68%;
+}
+.ordermanage_css_body .ordermanage_css_col_1 {
+  white-space: nowrap;
+}
+/*璁㈠崟澶嶆牳*/
+.ordermanage_css_body .ordermanage_css_table_a td {
+  padding: 6px 0;
+  text-align: center;
+}
+.ordermanage_css_body .quantext {
+  width: 110%;
+  left: -5%;
+}
+.ordermanage_css_body .timeaxis {
+  padding-left: 5%;
+}
+.ordermanage_css_body #orderCostTable td {
+  padding: 6px 0;
+}
+.ordermanage_css_body #changeDriverRecorddataGrid thead tr th {
+  border-bottom-width: 0;
+}
+.ordermanage_css_body .ordermanage_css_row_1 tr td .col-6 {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ordermanage_css_body .ordermanage_css_row_1 .table-bordered thead tr th {
+  border-bottom-width: 0;
+}
+.ordermanage_css_body .ordermanage_css_row_1 button {
+  float: right;
+}
+.ordermanage_css_body .ordermanage_css_row_1 .col-sm-5 {
+  width: 100%;
+}
+.ordermanage_css_body .ordermanage_css_row_1 .col-sm-7 {
+  width: 100%;
+}
+.ordermanage_css_body .ordermanage_css_row_2 {
+  overflow-x: auto;
+}
+.ordermanage_css_body .crumbs .back {
+  position: relative;
+  top: 2px;
+}
+/*# sourceMappingURL=ordermanage_media.css.map */

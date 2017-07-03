@@ -1,0 +1,71 @@
+@media screen and (min-width: 790px) and (max-width: 1100px) {
+  .leLeasescompany_css_body .leLeasescompany_css_col_1 #startTime {
+    width: 42% !important;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_col_1 #endTime {
+    width: 42% !important;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_col_2 label {
+    width: 40%;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_col_2 select {
+    width: 60%;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_col_2 #queryKeyword {
+    width: 60%;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_col_3 {
+    width: 20%;
+    float: right;
+  }
+  .leLeasescompany_css_body .asterisk {
+    position: relative;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_row_1 label.error {
+    padding-left: 40%;
+    white-space: nowrap;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_label_1 {
+    width: 40%;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_input_1 {
+    width: 60% !important;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_label_2 {
+    width: 40%;
+  }
+  .leLeasescompany_css_body .leLeasescompany_css_inp_2 {
+    width: 60% !important;
+  }
+}
+.leLeasescompany_css_body {
+  overflow: hidden;
+}
+.leLeasescompany_css_body .leLeasescompany_css_col_1 {
+  white-space: nowrap;
+}
+.leLeasescompany_css_body .table-bordered thead tr th {
+  border-bottom-width: 1px;
+}
+.leLeasescompany_css_body .leLeasescompany_css_col_2 {
+  padding-right: 0;
+  position: relative;
+  left: 4px;
+}
+.leLeasescompany_css_body .leLeasescompany_css_col_2 .blue {
+  margin-right: 8px;
+}
+.leLeasescompany_css_body .leLeasescompany_css_back {
+  margin-top: -31px !important;
+  margin-right: 15px;
+}
+.leLeasescompany_css_body .asterisk {
+  position: relative;
+  top: 2px;
+}
+.leLeasescompany_css_body .leLeasescompany_css_edit {
+  position: absolute;
+  top: 19px;
+  right: 60px;
+}
+/*# sourceMappingURL=leLeasescompany_css_media.css.map */
