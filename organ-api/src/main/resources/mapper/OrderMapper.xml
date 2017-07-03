@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.OrderMapper">
+	<!-- All Select -->
+	<select id="getOrgUserById" parameterType="OrgUserParam" resultType="OrgUser">
+		SELECT 
+		(
+			SELECT
+				COUNT(ourr.id)
+			FROM
+				org_user_rules_ref ourr,
+				org_usecarrules oucr
+			WHERE 1=1
+			AND ourr.`status` = 1
+			AND oucr.`status` = 1
+			AND ourr.userulesid = oucr.id
+			AND ourr.userid = ou.id
+		) >0 hasrule,
+		(
+			SELECT
+				COUNT(oo.orderno)
+			FROM
+				org_order oo
+			WHERE
+				oo.`status` = 1
+			AND oo.userid = ou.id
+			AND oo.orderstatus = #{orderstatus}
+			AND (
+				oo.paymentstatus = #{paymentstatus}
+				OR ISNULL(oo.paymentstatus)
+			)
+		) > 0 notpay,
+		(
+			SELECT
+				COUNT(oo.orderno)
+			FROM
+				org_order oo
+			WHERE
+				oo.`status` = 1
+			AND oo.userid = ou.id
+			AND oo.orderstatus IN (#{orderstatuslist})
+		) notdone,
+		ou.*
+		FROM
+			org_user ou
+		WHERE 1=1
+		AND ou.`status` = 1
+		AND ou.id = #{userid}
+	</select>
+	
+	<select id="getOrgOrder" parameterType="String" resultType="OrgOrder">
+		SELECT oo.* FROM org_order oo WHERE oo.`status` = 1 AND oo.orderno = #{orderno}
+	</select>
+	
+	<select id="getLeaseList" resultType="LeLeasescompany" parameterType="String">
+		<!-- SELECT
+			llc.*
+		FROM
+			le_leasescompany llc,
+			org_organ_company_ref oocr
+		WHERE
+			1 = 1
+		AND llc.`Status` = 1
+		AND oocr.`Status` = 1
+		AND oocr.bindstate = 1
+		AND oocr.companyid = llc.id
+		AND oocr.organid IN (
+			SELECT
+				org.id
+			FROM
+				org_organ org
+			WHERE
+				org.creditcode = (
+					SELECT
+						org2.creditcode
+					FROM
+						org_organ org2
+					WHERE
+						org2. STATUS = 1
+					AND org2.id = #{organid}
+				)
+				and org.customertype!=1
+		) -->
+		SELECT
+			llc.*
+		FROM
+			le_leasescompany llc
+		WHERE
+			1 = 1
+		AND llc.`Status` = 1
+		ORDER BY llc.CreateTime
+		LIMIT 1
+	</select>
+	
+	<select id="getOrgBalance" parameterType="OrderCostParam" resultType="OrgOrganCompanyRef">
+		SELECT 
+			oocr.* 
+		FROM 
+			org_organ_company_ref oocr,
+			org_user ou
+		WHERE 1=1
+		AND ou.`Status` = 1
+		AND oocr.`Status` = 1
+		AND oocr.bindstate = 1
+		AND oocr.organid IN (
+			SELECT
+				org.id
+			FROM
+				org_organ org
+			WHERE
+				org.creditcode = (
+					SELECT
+						org2.creditcode
+					FROM
+						org_organ org2
+					WHERE
+						org2. STATUS = 1
+					AND org2.id = ou.organid
+				)
+				and org.customertype!=1
+		)
+		AND oocr.companyid = #{companyid}
+		AND ou.id = #{userid}
+	</select>
+	
+	<select id="getCarTypes" resultType="LeVehiclemodels" parameterType="GetCarTypesParam">
+		SELECT
+			la.startprice,
+			la.rangeprice,
+			la.timeprice,
+			lv.*
+		FROM
+			le_vehiclemodels lv,
+			le_accountrules la,
+			le_company_rules_ref lcrr
+		WHERE 1=1
+		AND lcrr.`Status` = 1
+		AND lv.`Status` = 1
+		and lv.modelstatus = "0"
+		AND la.`Status` = 1
+		AND lcrr.rulestate = 1
+		AND la.type = 1
+		AND la.rulesstate = 0
+		AND la.cartype = lv.Id
+		AND la.rulesrefid = lcrr.id
+		AND lcrr.organid IN (
+			SELECT
+				org.id
+			FROM
+				org_organ org,
+				org_user ou
+			WHERE
+				org.creditcode = (
+					SELECT
+						org2.creditcode
+					FROM
+						org_organ org2
+					WHERE
+						org2. STATUS = 1
+					AND org2.id = ou.organid
+					AND ou.id = #{userid}
+				)
+				and org.customertype!=1
+		)
+		AND lcrr.leasescompanyid = #{companyid}
+		AND la.city = #{city}
+		AND la.rulestype = #{ordertype}
+		AND lv.Id IN (
+			SELECT
+				oucr.vehiclemodels
+			FROM
+				org_user ou,
+				org_usecarrules oucr,
+				org_user_rules_ref ourr
+			WHERE 1=1
+			AND	ou.`Status` = 1
+			AND oucr.`status` = 1
+			AND ourr.`status` = 1
+			AND ourr.userid = ou.id
+			AND ourr.userulesid = oucr.id
+			AND oucr.usetype = #{ordertype}
+			AND ou.id = #{userid}
+		)
+		ORDER BY lv.`level`
+	</select>
+	
+	<select id="getMostContact" resultType="OrgMostContact" parameterType="BaseOrgParam">
+		SELECT
+			fav.*,CONCAT(fav.name,fav.phone) namephone
+		FROM
+		(
+			(
+				SELECT
+					NULL id,
+					ou.id userid,
+					ou.nickname `name`,
+					ou.account phone,
+					ou.createtime,
+					ou.updatetime,
+					ou.id creater,
+					ou.id updater,
+					ou.`Status`
+				FROM
+					org_user ou
+				WHERE
+				 	ou.`status` = 1
+					AND ou.account = (select account from org_user where id = #{userid})
+			)
+			UNION
+			(
+				SELECT
+						om.*
+					FROM
+						pub_mostcontact om,
+						org_user ou
+			  	WHERE
+						om.`status` = 1
+					AND ou.`status` = 1
+					AND om.userphone = ou.account
+					AND ou.account = (select account from org_user where id = #{userid})
+			)
+		) fav 
+		<if test="sSearch != null and sSearch != ''">
+		WHERE
+			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
+		</if>group by CONCAT(fav.name,fav.phone)
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getMostAddress" resultType="OrgMostAddress" parameterType="BaseOrgParam">
+		SELECT
+			om.*,pca.city citycaption
+		FROM
+			pub_mostaddress om,
+			pub_cityaddr pca
+		WHERE 1=1
+		AND pca.`status` = 1 
+		AND om.`status` = 1
+		AND pca.id = om.city 
+		AND om.userphone = (select account from org_user where id = #{userid})
+		AND (
+			pca.city LIKE '%${sSearch}%'
+			OR om.address LIKE '%${sSearch}%'
+		)
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<!-- 查询因公用车业务城市 -->
+	<select id="getOrgUserPubBusCity" resultType="PubCityAddr" parameterType="map">
+		select * from pub_cityaddr
+		where
+			id in (
+				select le_accountrules.city from le_accountrules 
+				left join le_company_rules_ref on le_accountrules.rulesrefid = le_company_rules_ref.id
+				left join org_organ on le_company_rules_ref.organid = org_organ.id
+				left join org_organ_company_ref on org_organ.id = org_organ_company_ref.organid
+				where le_company_rules_ref.leasescompanyid = #{companyid} and org_organ_company_ref.companyid = #{companyid}
+				and org_organ.creditcode = (select org_organ.creditcode from org_user left join org_organ on org_user.organid = org_organ.id where org_user.id = #{userid})
+				and org_organ.customertype!=1
+				and le_company_rules_ref.rulestate = '1' and le_accountrules.leasescompanyid = #{companyid}
+				and le_accountrules.rulestype = #{ordertype} and le_accountrules.type = '1'
+				and le_accountrules.cartype in (
+					select org_usecarrules.vehiclemodels from org_usecarrules left join org_user_rules_ref on org_usecarrules.id = org_user_rules_ref.userulesid and org_user_rules_ref.userid = #{userid}
+					and org_usecarrules.usetype = #{ordertype} and org_usecarrules.leasescompanyid = #{companyid} and org_usecarrules.status = 1 and org_user_rules_ref.status = 1
+				)
+				and le_accountrules.status = 1 and le_accountrules.status = 1 and le_company_rules_ref.status = 1 and org_organ.status = 1 and org_organ_company_ref.status = 1
+			)
+			and id in (
+				select city from pub_sendrules where leasescompanyid = #{companyid} and platformtype = "1" and vehicletype = 0 and status = 1
+			)
+			and status = 1
+			<if test='null != city and "" != city'>
+				and id = #{city}
+			</if>
+		order by fullnameinitials
+	</select>
+	
+	<!-- All Update -->
+	<update id="updateOrgOrder" parameterType="OrgOrder">
+		UPDATE org_order SET 
+			usetype=#{usetype},
+			companyid=#{companyid},
+			ordertype=#{ordertype},
+			userid=#{userid},
+			passengers=#{passengers},
+			passengerphone=#{passengerphone},
+			driverid=#{driverid},
+			vehicleid=#{vehicleid},
+			selectedmodel=#{selectedmodel},
+			oncity=#{oncity},
+			onaddress=#{onaddress},
+			offcity=#{offcity},
+			cancelparty=#{cancelparty},
+			offaddress=#{offaddress},
+			onaddrlng=#{onaddrlng},
+			onaddrlat=#{onaddrlat},
+			offaddrlng=#{offaddrlng},
+			offaddrlat=#{offaddrlat},
+			usetime=#{usetime},
+			vehiclessubjecttype=#{vehiclessubjecttype},
+			vehiclessubject=#{vehiclessubject},
+			tripremark=#{tripremark},
+			orderstatus=#{orderstatus},
+			paymentstatus=#{paymentstatus},
+			reviewstatus=#{reviewstatus},
+			paymethod=#{paymethod},
+			estimatedtime=#{estimatedtime},
+			estimatedmileage=#{estimatedmileage},
+			estimatedcost=#{estimatedcost},
+			paytype=#{paytype},
+			mileage=#{mileage},
+			orderamount=#{orderamount},
+			undertime=#{undertime},
+			ordertime=#{ordertime},
+			departuretime=#{departuretime},
+			arrivaltime=#{arrivaltime},
+			starttime=#{starttime},
+			endtime=#{endtime},
+			completetime=#{completetime},
+			canceltime=#{canceltime},
+			pricecopy=#{pricecopy},
+			fltno=#{fltno},
+			falltime=#{falltime},
+			orderreason=#{orderreason},
+			ordersource=#{ordersource},
+			userrate=#{userrate},
+			usercomment=#{usercomment},
+			createtime=#{createtime},
+			updatetime=NOW(),
+			status=#{status},
+			organid=#{organid},
+			userhidden=#{userhidden},
+			pushnumber=#{pushnumber}
+		WHERE orderno=#{orderno}
+	</update>
+	
+	<update id="delMostContact" parameterType="OrgMostContact">
+		UPDATE pub_mostcontact SET 
+			updatetime=NOW(),
+			status=#{status}
+		WHERE id=#{id} AND userphone = (select account from org_user where id = #{userid})
+	</update>
+	<!-- All Insert -->
+	<insert id="addMostContact" parameterType="OrgMostContact">
+		INSERT INTO pub_mostcontact(
+			id,
+<!-- 			userid, -->
+			name,
+			userphone,
+			phone,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status
+		) VALUES(
+			#{id},
+			<!-- #{userid}, -->
+			#{name},
+			(select account from org_user where id = #{userid}),
+			#{phone},
+			#{createtime},
+			#{updatetime},
+			#{creater},
+			#{updater},
+			#{status}
+		)
+	</insert>
+	<!-- All Delete -->
+<!-- 	<delete id="delMostContact" parameterType="OrgMostContact"> -->
+<!-- 		DELETE FROM org_mostcontact WHERE org_mostcontact.`status` = 1 AND id=#{id} AND userid=#{userid} -->
+<!-- 	</delete> -->
+</mapper>

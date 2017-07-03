@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.MyRuleMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOrgUsecarrules" resultType="map" parameterType="map">
+		SELECT
+			org_usecarrules.*, 
+			le_leasescompany.shortname leasesCompanyName,
+			le_vehiclemodels.`name` vehicleModelsName
+			FROM
+				org_usecarrules,
+				le_leasescompany,
+				le_vehiclemodels,
+				org_user_rules_ref,
+				le_accountrules,
+				le_company_rules_ref
+			WHERE
+			org_usecarrules.leasescompanyid = le_leasescompany.id
+			AND org_usecarrules.vehiclemodels = le_vehiclemodels.Id
+			AND org_user_rules_ref.userulesid = org_usecarrules.id
+			AND org_usecarrules.`status` = 1
+			AND le_leasescompany.`Status` = 1
+			AND le_vehiclemodels.`Status` = 1
+			AND org_user_rules_ref.`status`=1
+			AND org_user_rules_ref.userid = #{id}
+			AND org_usecarrules.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organId}
+			)
+			and organ.customertype!=1
+			)
+			AND le_company_rules_ref.id = le_accountrules.rulesrefid
+			AND le_company_rules_ref.rulestate = '1'
+			AND le_accountrules.`Status`=1
+			AND	le_company_rules_ref.`Status`=1
+			AND le_accountrules.leasescompanyid = org_usecarrules.leasescompanyid
+			AND le_accountrules.cartype = org_usecarrules.vehiclemodels
+			AND org_usecarrules.usetype = le_accountrules.rulestype
+			AND le_company_rules_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organId}
+				)
+				and organ.customertype!=1
+			)
+	
+			GROUP BY org_usecarrules.id
+	</select>
+</mapper>

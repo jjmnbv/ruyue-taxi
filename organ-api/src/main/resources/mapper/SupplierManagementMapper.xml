@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.SupplierManagementMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 根据id查  当前 账号 -->
+	<select id="getById" resultType="OrgUser" parameterType="map">
+		<!-- SELECT
+			org_user.id,
+			org_organ_company_ref.id as orgOrganCompanyRefId,
+			org_user.organid,
+			org_user.account,
+			org_user.usertype,
+			org_user.createtime,
+			org_user.updatetime,
+			org_user.logontimes,
+		le_leasescompany.`name`,
+		org_organ_company_ref.mainaccount,
+		org_organ_company_ref.bindstate
+		FROM
+			org_user,
+			org_organ_company_ref,
+			le_leasescompany
+		WHERE
+			org_user.`Status` = 1
+		AND org_organ_company_ref.`Status` = 1
+		AND le_leasescompany.`Status` = 1
+		AND org_organ_company_ref.userid = org_user.id
+		AND org_organ_company_ref.companyid = le_leasescompany.id
+		AND org_organ_company_ref.organid = org_user.organid
+		AND org_user.id = #{id} -->
+		SELECT
+		org_user.id,
+		org_user.organid,
+		org_user.account,
+		org_user.usertype,
+		org_user.createtime,
+		org_user.updatetime,
+		org_user.logontimes,
+		(
+			SELECT
+				le_leasescompany.`name`
+			FROM
+				le_leasescompany,
+				org_organ_company_ref
+			WHERE
+				le_leasescompany.`Status` = 1
+			AND org_organ_company_ref.`Status` = 1
+			AND org_organ_company_ref.companyid = le_leasescompany.id
+			AND org_organ_company_ref.userid = org_user.id
+			AND org_organ_company_ref.userid = org_user.id
+		) AS `name` ,
+	(
+			SELECT
+				org_organ_company_ref.id
+			FROM
+				le_leasescompany,
+				org_organ_company_ref
+			WHERE
+				le_leasescompany.`Status` = 1
+			AND org_organ_company_ref.`Status` = 1
+			AND org_organ_company_ref.companyid = le_leasescompany.id
+			AND org_organ_company_ref.userid = org_user.id
+			AND org_organ_company_ref.userid = org_user.id
+		)AS orgOrganCompanyRefId,
+	(
+			SELECT
+				org_organ_company_ref.mainaccount
+			FROM
+				le_leasescompany,
+				org_organ_company_ref
+			WHERE
+				le_leasescompany.`Status` = 1
+			AND org_organ_company_ref.`Status` = 1
+			AND org_organ_company_ref.companyid = le_leasescompany.id
+			AND org_organ_company_ref.userid = org_user.id
+			AND org_organ_company_ref.userid = org_user.id
+		) as mainaccount,
+	(
+			SELECT
+				org_organ_company_ref.bindstate
+			FROM
+				le_leasescompany,
+				org_organ_company_ref
+			WHERE
+				le_leasescompany.`Status` = 1
+			AND org_organ_company_ref.`Status` = 1
+			AND org_organ_company_ref.companyid = le_leasescompany.id
+			AND org_organ_company_ref.userid = org_user.id
+			AND org_organ_company_ref.userid = org_user.id
+		) as bindstate
+	FROM
+		org_user
+	WHERE
+		org_user.`Status` = 1
+	AND org_user.id = #{id}
+	</select>
+	<!--  查询id 不等于的 -->
+	<select id="getByList" resultType="OrgUser" parameterType="map">
+		SELECT
+			org_user.id,
+			org_organ_company_ref.id as orgOrganCompanyRefId,
+			org_user.organid,
+			org_user.account,
+			org_user.usertype,
+			org_user.createtime,
+		le_leasescompany.`name`,
+		org_organ_company_ref.mainaccount,
+		org_organ_company_ref.bindstate
+		FROM
+			org_user,
+			org_organ_company_ref,
+			le_leasescompany
+		WHERE
+			org_user.`Status` = 1
+		AND org_organ_company_ref.`Status` = 1
+		AND le_leasescompany.`Status` = 1
+		AND org_organ_company_ref.userid = org_user.id
+		AND org_organ_company_ref.companyid = le_leasescompany.id
+		AND org_organ_company_ref.organid = org_user.organid
+		AND org_user.id != #{id}
+		AND org_user.usertype = '1'
+		AND org_organ_company_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ.status = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype!=1
+			)
+			GROUP BY org_user.createtime DESC
+	</select>
+	<!-- 查询关联的  子账号 -->
+	<select id="getChildCccount" resultType="OrgUser" parameterType="map">
+		SELECT
+			org_user.id,
+			org_organ_company_ref.id as orgOrganCompanyRefId,
+			org_user.organid,
+			org_user.account,
+			org_user.usertype,
+			org_user.createtime,
+		le_leasescompany.`name`,
+		org_organ_company_ref.mainaccount,
+		org_organ_company_ref.bindstate
+		FROM
+			org_user,
+			org_organ_company_ref,
+			le_leasescompany
+		WHERE
+			org_user.`Status` = 1
+		AND org_organ_company_ref.`Status` = 1
+		AND le_leasescompany.`Status` = 1
+		AND org_organ_company_ref.userid = org_user.id
+		AND org_organ_company_ref.companyid = le_leasescompany.id
+		AND org_organ_company_ref.organid = org_user.organid
+		AND org_user.id != #{id}
+		AND org_organ_company_ref.bindstate = '1' 
+		AND org_user.usertype = '1'
+		AND org_organ_company_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ.status = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype!=1
+			)
+			GROUP BY org_user.createtime DESC
+	</select>
+	<!-- bindstate  0-未关联，1-已关联 关联状态     mainaccount  0-主账号，1-子账号   是否主账号-->
+	<update id="addLink" parameterType="string">
+		update org_organ_company_ref set org_organ_company_ref.bindstate = '1' where org_organ_company_ref.id = #{id}
+	</update>
+	<update id="removeLink" parameterType="string">
+		update org_organ_company_ref set org_organ_company_ref.bindstate = '0' where org_organ_company_ref.id = #{id}
+	</update>
+	<!-- 验证 密码 -->
+	<select id="checkPassword" resultType="int" parameterType="OrgUser">
+		SELECT count(*) FROM org_user WHERE org_user.id=#{id}  AND org_user.userpassword=#{userPassword}  AND org_user.`Status`=1
+	</select>
+	<update id="updatePassword" parameterType="OrgUser">
+		update org_user set org_user.userpassword=#{userPassword},updatetime=now() where id=#{id}
+	</update>
+	<update id="updatePePassword" parameterType="OrgUser">
+		update pe_user set pe_user.userpassword=#{userPassword},updatetime=now() where pe_user.account = (select org_user.account from org_user where org_user.id = #{id})
+	</update>
+	<!--  解除主账号  关联的时候 要修改 为子账号 -->
+	<update id="updateMainaccount" parameterType="string">
+		update org_organ_company_ref set org_organ_company_ref.mainaccount = '1',org_organ_company_ref.bindstate = '0' where id = #{id}
+	</update>
+	<!-- 同时指定   一个主账号  -->
+	<update id="updateChildMainaccount" parameterType="string">
+		update org_organ_company_ref set org_organ_company_ref.mainaccount = '0' where id = #{id}
+	</update>
+	<!-- 修改登陆次数 -->
+	<update id="addLogontimes" parameterType="OrgUser">
+		update org_user set updatetime=now(),logontimes=#{logontimes} where id = #{id}
+	</update>
+	<!-- 重置登陆次数 -->
+	<update id="resetLogontimes" parameterType="OrgUser">
+		update org_user set updatetime=now(),logontimes=#{logontimes} where id = #{id}
+	</update>
+	<!-- 修改联系方式  的查询  orgorgan  -->
+	<select id="getOrgorganPhone" parameterType="string" resultType="OrgOrgan">
+		select org_organ.* from org_organ,org_user where org_organ.id = org_user.organid and org_user.id = #{id}
+	</select>
+	<!-- 修改机构的那边的电话 -->
+	<update id="updateOrg" parameterType="OrgOrgan">
+		update org_organ set updatetime=now(),phone=#{phone} where id=#{id}
+	</update>
+	<!-- 根据org id userid 查租赁公司的 id -->
+	<select id="getCmpId" parameterType="OrgOrganCompanyRef" resultType="OrgOrganCompanyRef">
+		select * from org_organ_company_ref where organid=#{organId} and userid = #{userId}
+	</select>
+	<!-- 修改 租赁那边的电话 -->
+	<update id="updateCmp" parameterType="LeLeasescompany">
+		update le_leasescompany set updatetime=now(),phone=#{phone} where id=#{id}
+	</update>
+	<!-- 查询租赁公司的超管 -->
+	<select id="getLeuser" resultType="OrgOrgan" parameterType="string">
+		SELECT
+			org_organ.fullname,le_user.id as userId
+		FROM
+			
+			org_organ,
+			org_organ_company_ref,
+			le_user
+		WHERE
+		le_user.`status`=1
+		and	org_organ.`Status`=1
+		and	org_organ_company_ref.`Status`=1
+		and org_organ_company_ref.organid = org_organ.id
+		and	org_organ_company_ref.organid = #{id}
+		and le_user.leasescompanyid = org_organ_company_ref.companyid
+		and le_user.specialstate = '1'
+	</select>
+	<!-- 解除绑定的同时，用车规则，有这个租赁公司下车型的用车规则删除（作废） 传一个租赁公司的id-->
+	<update id="deleteRuleByLeasesCompanyId" parameterType="string">
+		update org_usecarrules set status = '2' where leasescompanyid = #{id}
+	</update>
+	<!-- 根据关联表 org_organ_company_ref  得到租赁公司id-->
+	<select id="getLeasesCompanyId" resultType="OrgOrganCompanyRef" parameterType="string">
+		select * from org_organ_company_ref where id = #{id}
+	</select>
+</mapper>

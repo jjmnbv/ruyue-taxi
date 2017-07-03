@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!--整合Spring的时候 只有 settings typeAliases mapper 三个属性有用, 其余的要在spring总配置文件中会覆盖 -->
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="defaultExecutorType" value="REUSE" /> <!-- 使用预处理执行器 -->
+		<setting name="defaultStatementTimeout" value="25" />
+		<setting name="localCacheScope" value="SESSION" />
+		<setting name="callSettersOnNulls" value="true"/>
+	</settings>
+	<typeAliases>
+		<typeAlias type="com.szyciov.param.QueryParam" alias="QueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.OrganAccountQueryParam" alias="OrganAccountQueryParam"/>
+		<typeAlias type="com.szyciov.org.param.FinancialManagementQueryParam" alias="FinancialManagementQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.OrganBillQueryParam" alias="OrganBillQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.GetSendInfoParam" alias="GetSendInfoParam"/>
+		<typeAlias type="com.szyciov.org.param.UserQueryParam" alias="UserQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.GetCarTypesParam" alias="GetCarTypesParam"/>
+		<typeAlias type="com.szyciov.org.param.BaseOrgParam" alias="BaseOrgParam"/>
+		<typeAlias type="com.szyciov.driver.param.OrderCostParam" alias="OrderCostParam"/>
+		<typeAlias type="com.szyciov.org.param.ReportStatisticsParam" alias="ReportStatisticsParam"/>
+		<typeAlias type="com.szyciov.org.param.OrgUserParam" alias="OrgUserParam"/>
+		
+		
+		<typeAlias type="com.szyciov.org.entity.OrgUsecarrules" alias="OrgUsecarrules"/>
+		<typeAlias type="com.szyciov.org.entity.OrgUserRulesRef" alias="OrgUserRulesRef"/>
+		<typeAlias type="com.szyciov.lease.entity.LeVehiclemodels" alias="LeVehiclemodels"/>
+		<typeAlias type="com.szyciov.lease.entity.LeLeasescompany" alias="LeLeasescompany"/>
+		<typeAlias type="com.szyciov.org.entity.OrgUser" alias="OrgUser"/>
+		<typeAlias type="com.szyciov.op.entity.PeUser" alias="PeUser"/>
+		<typeAlias type="com.szyciov.org.entity.OrgOrder" alias="OrgOrder"/>
+		<typeAlias type="com.szyciov.org.entity.TreeNode" alias="TreeNode"/>
+		<typeAlias type="com.szyciov.org.entity.OrgOrderDetails" alias="OrgOrderDetails"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrgan" alias="OrgOrgan"/>
+		<typeAlias type="com.szyciov.lease.entity.User" alias="User"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganCompanyRef" alias="OrgOrganCompanyRef"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganExpenses" alias="OrgOrganExpenses"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganBill" alias="OrgOrganBill"/>
+		<typeAlias type="com.szyciov.org.entity.OrgUserNews" alias="OrgUserNews"/>
+		<typeAlias type="com.szyciov.org.entity.OrgMostContact" alias="OrgMostContact"/>
+		<typeAlias type="com.szyciov.org.entity.OrgMostAddress" alias="OrgMostAddress"/>
+		<typeAlias type="com.szyciov.lease.entity.PubDictionary" alias="PubDictionary"/>
+		
+		<typeAlias type="com.szyciov.lease.entity.LeAccountRules" alias="LeAccountRules"/>
+		<typeAlias type="com.szyciov.entity.UserNews" alias="UserNews"/>
+		
+		<typeAlias type="com.szyciov.org.entity.OrgOrganPaymentRecord" alias="OrgOrganPaymentRecord"/>
+		<typeAlias type="com.szyciov.org.entity.PubWithdraw" alias="PubWithdraw"/>
+		<typeAlias type="com.szyciov.org.entity.OrgInformation" alias="OrgInformation"/>
+		<typeAlias type="com.szyciov.lease.entity.PubCityAddr" alias="PubCityAddr"/>
+		
+	</typeAliases>
+</configuration>

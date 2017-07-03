@@ -1,0 +1,1688 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.UserMapper">
+	<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getPasswordByName" resultType="string" parameterType="string">
+		SELECT userpassword from org_user where account = #{loginname} and customertype!=1 and status=1 ORDER BY org_user.createtime desc LIMIT 0,1
+	</select>
+	
+	<!-- 根据用户名获取用户信息 -->
+	<select id="getByLoginName" parameterType="String" resultType="OrgUser">
+		SELECT
+			ou.*
+		FROM
+			org_user ou
+		WHERE
+			ou.account = #{loginname} and ou.status=1
+			and ou.customertype!=1
+			ORDER BY ou.createtime desc LIMIT 0,1
+	</select>
+	
+	<!-- 根据用户信息查询用户的菜单信息 -->
+	<select id="getMenuInfo" parameterType="OrgUser" resultType="Map">
+		SELECT
+			CONCAT(le_applicationmodule.applicationDomain,org_functionmanagement.url) as href,
+			menu.menuname as menuname,
+			menu.cssclass as cssclass
+		FROM
+			le_applicationmodule,
+			org_functionmanagement,
+			(
+				<if test="userType==1">
+					SELECT
+						*
+					FROM
+						org_menu
+					WHERE
+						STATUS = 1
+					AND notassign != 1
+					AND menutype = 2
+					ORDER BY
+						sequence
+				</if>
+				<if test="userType!=1">
+					SELECT
+						org_menu.*
+					FROM
+						org_menu,
+						org_roleuser,
+						org_rolefunction
+					WHERE
+						org_menu.status = 1
+					AND org_roleuser.status = 1
+					AND org_rolefunction.status = 1
+					AND org_menu.menutype = 2
+					AND org_menu.functionid = org_rolefunction.dynamicid
+					AND org_rolefunction.roleid = org_roleuser.roleid
+					AND org_roleuser.userid = #{id}
+					ORDER BY
+						sequence
+				</if>
+			) menu
+		WHERE
+			le_applicationmodule.status=1
+		and org_functionmanagement.status=1
+		and menu.status=1
+		and le_applicationmodule.id=org_functionmanagement.applicationid
+		and org_functionmanagement.id=menu.functionid
+		ORDER BY menu.sequence
+	</select>
+	
+	<!-- 根据用户信息获取导航信息 -->
+	<select id="getNavInfo" parameterType="OrgUser" resultType="Map">
+		SELECT
+			CONCAT(le_applicationmodule.applicationDomain,org_functionmanagement.url) as href,
+			menu.menuname as menuname,
+			menu.cssclass as cssclass
+		FROM
+			le_applicationmodule,
+			org_functionmanagement,
+			<!-- (
+				SELECT
+					*
+				FROM
+					org_menu
+				WHERE
+					STATUS = 1
+				<if test="specialState==1">
+					AND notassign != 1
+				</if>
+				AND menutype = 3
+				ORDER BY
+					sequence
+			) menu -->
+			(
+				<if test="userType==1">
+					SELECT
+						*
+					FROM
+						org_menu
+					WHERE
+						STATUS = 1
+					AND notassign != 1
+					AND menutype = 3
+					ORDER BY
+						sequence
+				</if>
+				<if test="userType!=1">
+					SELECT
+						org_menu.*
+					FROM
+						org_menu,
+						org_roleuser,
+						org_rolefunction
+					WHERE
+						org_menu.status = 1
+					AND org_roleuser.status = 1
+					AND org_rolefunction.status = 1
+					AND org_menu.menutype = 3
+					AND org_menu.functionid = org_rolefunction.dynamicid
+					AND org_rolefunction.roleid = org_roleuser.roleid
+					AND org_roleuser.userid = #{id}
+					ORDER BY
+						sequence
+				</if>
+			) menu
+		WHERE
+			le_applicationmodule.status=1
+		and org_functionmanagement.status=1
+		and menu.status=1
+		and le_applicationmodule.id=org_functionmanagement.applicationid
+		and org_functionmanagement.id=menu.functionid
+		ORDER BY menu.sequence
+	</select>
+	
+	<!-- 判断用户有没有功能权限 -->
+	<select id="hasFeature" parameterType="HashMap" resultType="boolean">
+		SELECT
+			(
+				CASE org_user.specialstate
+				WHEN 1 THEN
+					(
+						SELECT 
+							count(*)>0
+						FROM
+						org_functionmanagement,
+						org_menu
+						where 
+							org_menu.status=1
+						AND	org_functionmanagement.status=1
+						AND	org_menu.notassign!=1
+						AND	org_menu.functionid=org_functionmanagement.id
+						AND org_functionmanagement.controllername=#{controllerName}
+						AND org_functionmanagement.actionname=#{actionName}
+					)
+				ELSE
+					(
+						SELECT
+							count(*) > 0
+						FROM
+							org_user,
+							org_roleuser,
+							org_rolefunction,
+							org_functionmanagement
+						WHERE
+							org_user.status = 1
+						AND org_roleuser.status = 1
+						AND org_rolefunction.status = 1
+						AND org_functionmanagement.status = 1
+						AND org_user.id = org_roleuser.userid
+						AND org_roleuser.roleid = org_rolefunction.roleid
+						AND org_rolefunction.dynamicid = org_functionmanagement.id
+						AND org_user.account = #{loginName}
+						AND org_user.customertype != 1
+						AND org_functionmanagement.controllername = #{controllerName}
+						AND org_functionmanagement.actionname = #{actionName}
+					)
+				END
+			) hasfeature
+		FROM
+			org_user
+		WHERE
+			org_user.status = 1
+		AND org_user.account = #{loginName}
+		AND org_user.customertype != 1
+	</select>
+	
+	
+	<!-- 根据部门的资源id获取可以查看的部门的信息集合 -->
+	<select id="getValiableDepts" parameterType="String" resultType="String">
+		SELECT
+			org_dept.id
+		FROM
+			org_dept
+		WHERE
+			org_dept.status = 1
+		AND org_dept.resid LIKE #{resid}"%"
+	</select>
+	
+	<!-- 根据账户信息获取能查看到的部门的资源id的根，部门管理员才有权限查看 -->
+	<select id="getValiableDeptResid" parameterType="String" resultType="String">
+		SELECT
+			org_dept.resid
+		FROM
+			org_user,
+			org_roleuser,
+			org_rolemanagement,
+			org_dept
+		WHERE
+			org_roleuser.status = 1
+		AND org_user.status = 1
+		AND org_rolemanagement.status = 1
+		AND org_dept.status=1
+		AND org_user.id = org_roleuser.userid
+		AND org_rolemanagement.id = org_roleuser.roleid
+		AND org_dept.id = org_user.dpetid
+		AND org_rolemanagement.id IN ('004', '002')
+		AND org_user.account = #{account}
+		AND org_user.customertype!=1
+	</select>
+	
+	<!-- 根据用户信息获取部门及员工树形结构信息 -->
+	<select id="getDeptUserTreeNodes" parameterType="HashMap" resultType="TreeNode">
+		 SELECT
+		 	'1' as type,
+		 	'-1' as id,
+		 	null as pId,
+		 	org_organ.fullname as name,
+		 	null as usercount,
+		 	1 as nocheck
+		 FROM
+		 	org_organ
+		 WHERE
+		 	org_organ.status=1
+		 and org_organ.id=#{organId}
+		 
+		 <if test="iscombo!=1">
+			UNION
+			SELECT
+			 	'3' as type,
+			 	org_user.id as id,
+			 	org_user.dpetid as pId,
+			 	org_user.nickname as name,
+			 	NULL as usercount,
+			 	0 as nocheck
+			FROM
+				org_user
+			WHERE
+				org_user.status = 1
+			and org_user.usertype='0'
+			<!-- and org_user.organid=#{organId} -->
+			and org_user.organid in (SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = #{organId}
+					)
+			 		AND organ.customertype!=1
+				)
+		</if>
+		 
+		 UNION
+			  SELECT
+			 	'2' as type,
+			 	org_dept.id as id,
+			 	CASE WHEN (ISNULL(org_dept.parentid) or LENGTH(trim(org_dept.parentid))&lt;1) THEN '-1' ELSE org_dept.parentid END as pId,
+			 	org_dept.deptname as name,
+			    <!-- (SELECT count(*) from org_user where org_user.status=1 and org_user.dpetid=org_dept.id and org_user.organid in (SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = #{organId}
+					)
+				)) as usercount, -->
+				(SELECT count(*) from org_user 
+					where 
+						org_user.status=1 
+					and org_user.dpetid in (
+						select cdept.id from org_dept cdept where cdept.status=1 and cdept.resid like CONCAT(org_dept.resid,'%')
+					)
+					and org_user.usertype='0'
+					and org_user.organid in (
+						SELECT
+							organ.id
+						FROM
+							org_organ organ
+						WHERE
+							organ. STATUS = 1
+						AND organ.creditcode = (
+							SELECT
+								org_organ.creditcode
+							FROM
+								org_organ
+							WHERE
+								org_organ. STATUS = 1
+							AND org_organ.id = #{organId}
+						)
+						AND organ.customertype!=1
+					)
+				) as usercount,
+			 	1 as nocheck
+			 FROM
+			 	org_dept
+			 WHERE
+			 	org_dept.status = 1
+			<!--  AND org_dept.organid = #{organId} -->
+				AND org_dept.organid in (SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = #{organId}
+					)
+					AND organ.customertype!=1
+				)
+	</select>
+	
+	<resultMap type="HashMap" id="userinfo">
+		<id property="userid" column="userid"></id>
+		<result property="organid" column="organid"></result>
+		<result property="nickname" column="nickname"></result>
+		<result property="account" column="account"></result>
+		<result property="sex" column="sex"></result>
+		<result property="sexcaption" column="sexcaption"></result>
+		<result property="deptname" column="deptname"></result>
+		<result property="deptid" column="deptid"></result>
+		<result property="type" column="type"></result>
+		<result property="typecaption" column="typecaption"></result>
+		<result property="rolename" column="rolename"></result>
+		<result property="roleid" column="roleid"></result>
+		<result property="img" column="img"></result>
+		<association property="rules" column="{userid=userid,organid=organid}" select="getrules"></association>
+	</resultMap>
+	<select id="getrules"  parameterType="hashmap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			org_usecarrules,
+			org_user_rules_ref
+		WHERE
+			org_usecarrules.status = 1
+		AND org_user_rules_ref.status = 1
+		AND org_usecarrules.id = org_user_rules_ref.userulesid
+		AND org_user_rules_ref.userid = #{userid}
+		
+		and org_usecarrules.leasescompanyid in(
+			SELECT
+				le_company_rules_ref.leasescompanyid
+			FROM
+				le_company_rules_ref,
+				le_accountrules
+			WHERE
+				le_company_rules_ref. STATUS = 1
+			AND le_accountrules.Status=1
+			AND le_accountrules.rulesrefid = le_company_rules_ref.id
+			AND le_company_rules_ref.rulestate=1
+ 			<![CDATA[
+			AND le_company_rules_ref.starttime<now()
+			AND le_company_rules_ref.endtime>now()
+ 			]]>
+			AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+ 					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+ 						AND org_organ.id =#{organid}
+					)
+					AND organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+			)
+		)
+	</select>
+	<!-- 员工管理界面查询员工信息 -->
+	<select id="getUserInfo" parameterType="String" resultMap="userinfo">
+		SELECT
+			org_user.id as userid,
+			org_user.organid as organid,
+			org_user.nickname as nickname,
+			org_user.account as account,
+			org_user.sex as sex,
+			CASE WHEN org_user.sex='0' THEN '男' ELSE '女' END as sexcaption,
+			 CASE WHEN org_user.specialstate='0' THEN '普通' ELSE '特殊' END as typecaption,
+			(SELECT org_dept.deptname from org_dept where org_dept.status=1 and org_dept.id=org_user.dpetid) as deptname,
+			org_user.dpetid as deptid,
+			org_user.specialstate as type,
+			(SELECT org_rolemanagement.name from org_rolemanagement,org_roleuser where org_roleuser.status=1 and org_rolemanagement.status=1 and org_rolemanagement.id=org_roleuser.roleid and org_roleuser.userid=org_user.id) as rolename,
+			(select org_rolemanagement.id from org_roleuser,org_rolemanagement where org_roleuser.status=1 and org_rolemanagement.status=1 and org_rolemanagement.id=org_roleuser.roleid and org_roleuser.userid=org_user.id) as roleid,
+		  	org_user.headportraitmin as img
+		FROM
+			org_user
+		WHERE
+			org_user.status=1
+		and org_user.id = #{userid} 
+		<!-- SELECT
+			org_user.nickname as nickname,
+			org_user.account as account,
+			CASE WHEN org_user.sex='0' THEN '男' ELSE '女' END as sex,
+			(SELECT org_dept.deptname from org_dept where org_dept.status=1 and org_dept.id=org_user.dpetid) as deptname,
+			 CASE WHEN org_user.specialstate='0' THEN '普通' ELSE '特殊' END as type,
+			(SELECT org_rolemanagement.name from org_rolemanagement,org_roleuser where org_roleuser.status=1 and org_rolemanagement.status=1 and org_rolemanagement.id=org_roleuser.roleid and org_roleuser.userid=org_user.id) as rolename,
+		  org_user.headportraitmin as img,
+			(SELECT GROUP_CONCAT(org_usecarrules.name) from org_usecarrules,org_user_rules_ref where org_usecarrules.status=1 and org_user_rules_ref.status=1 and org_usecarrules.id=org_user_rules_ref.userulesid and org_user_rules_ref.userid=org_user.id) as rules
+		FROM
+			org_user
+		WHERE
+			org_user.status=1
+		and org_user.id = #{userid} -->
+	</select>
+	
+	<!-- 查看部门下是否有子部门 -->
+	<select id="hasChildDept" parameterType="String" resultType="boolean">
+		SELECT
+			count(*)
+		FROM
+			org_dept
+		WHERE
+			org_dept.status = 1
+		AND org_dept.parentid = #{deptid}
+	</select>
+	
+	<!-- 根据部门id获取用户信息 -->
+	<select id="getUserListByQuery" parameterType="UserQueryParam" resultMap="userinfo">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS rownum,
+					org_user.id as userid,
+					org_user.organid as organid,
+					org_user.nickname as nickname,
+					org_user.account as account,
+					org_user.sex as sex,
+					CASE WHEN org_user.sex='0' THEN '男' ELSE '女' END as sexcaption,
+					CASE WHEN org_user.specialstate='0' THEN '普通' ELSE '特殊' END as typecaption,
+					(SELECT org_dept.deptname from org_dept where org_dept.status=1 and org_dept.id=org_user.dpetid) as deptname,
+					org_user.dpetid as deptid,
+					org_user.specialstate='0' as type,
+					(SELECT org_rolemanagement.name from org_rolemanagement,org_roleuser where org_roleuser.status=1 and org_rolemanagement.status=1 and org_rolemanagement.id=org_roleuser.roleid and org_roleuser.userid=org_user.id) as rolename,
+					(select org_roleuser.id from org_roleuser where org_roleuser.status=1 and org_roleuser.userid=org_user.id) as roleid,
+					org_user.headportraitmin as img
+				FROM
+					org_user,
+					(SELECT @rownum := 0) r
+				WHERE
+					org_user.status = 1
+				AND org_user.usertype='0'
+				AND org_user.dpetid = #{deptid}
+				AND org_user.organid in (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = #{organid}
+					)
+					AND organ.customertype!=1
+				)
+				ORDER BY
+					updatetime DESC
+			) t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 根据用户部门查询人员个数 -->
+	<select id="getUserListCountByQuery" parameterType="UserQueryParam" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			org_user
+		WHERE
+			org_user.status = 1
+		AND org_user.usertype='0'
+		AND org_user.dpetid = #{deptid}
+		AND org_user.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype!=1
+		)
+		ORDER BY
+			updatetime DESC
+	</select>
+	
+	
+	<resultMap type="HashMap" id="deptinfo">
+		<id property="deptid" column="deptid"></id>
+		<result property="deptname" column="deptname"></result>
+		<result property="deptusercount" column="deptusercount"></result>
+		<association property="deptmanager" column="deptid" select="getmanagers"></association>
+	</resultMap>
+	<select id="getmanagers"  parameterType="hashmap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			org_user
+		WHERE
+			org_user.status = 1
+		AND org_user.dpetid=#{deptid}
+		AND org_user.id IN (
+			SELECT
+				org_roleuser.userid
+			FROM
+				org_roleuser
+			WHERE
+				org_roleuser.status = 1
+			<!-- 部门管理员的角色id -->
+			AND org_roleuser.roleid IN ('002', '004')
+		)
+	</select>
+	
+	<!-- 根据部门id查询部门信息 -->
+	<select id="getDeptListByQuery" parameterType="UserQueryParam" resultMap="deptinfo">
+		SELECT
+			t.*
+		FROM(
+			 SELECT
+			 	(@rownum := @rownum + 1) AS rownum,
+			 	id as deptid,
+			 	deptname as deptname,
+			 	<!-- (SELECT count(*) from org_user where org_user.status=1 and org_user.dpetid=org_dept.id) as deptusercount -->
+			 	(SELECT count(*) from org_user where org_user.status=1 and org_user.dpetid in (select cdept.id from org_dept cdept where cdept.status=1 and cdept.resid like CONCAT(org_dept.resid,'%'))) as deptusercount
+			 FROM
+			 	org_dept,
+			 	(SELECT @rownum := 0) r
+			 WHERE
+			 	org_dept. STATUS = 1
+			 AND org_dept.parentid = #{deptid}
+			 AND org_dept.organid in (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = #{organid}
+					)
+					AND organ.customertype!=1
+				)
+			 ORDER BY
+				org_dept.updatetime DESC
+		) t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 根据部门id获取子部门的列表 -->
+	<select id="getDeptListCountByQuery" parameterType="UserQueryParam" resultType="int">
+		SELECT
+		 	count(*)
+		 FROM
+		 	org_dept
+		 WHERE
+		 	org_dept. STATUS = 1
+		 AND org_dept.parentid = #{deptid}
+		 AND org_dept.organid in (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype!=1
+		)
+	</select>
+	
+	<!-- 判断部门在父级下是否已经存在 -->
+	<select id="existDept" parameterType="HashMap" resultType="boolean">
+		SELECT
+			count(*)
+		FROM
+			org_dept
+		WHERE
+			org_dept. STATUS = 1
+		<if test="parentid!=null and parentid!=''">
+			AND org_dept.parentid = #{parentid}
+		</if>
+		<if test="parentid==null or parentid==''">
+			AND (
+				org_dept.parentid IS NULL
+				OR org_dept.parentid = ''
+			)
+		</if>
+		AND org_dept.organid in (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ.status = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype!=1
+		)
+		AND org_dept.deptname = #{deptname}
+		AND org_dept.id != #{deptid}
+	</select>
+	
+	<!-- 判断是否已经存在某个资源id -->
+	<select id="hasResId" parameterType="String" resultType="boolean">
+		SELECT
+			count(*)
+		FROM
+			org_dept
+		WHERE
+			org_dept.status = 1
+		AND org_dept.resid = #{resid}
+	</select>
+	
+	<!-- 获取部门的资源id -->
+	<select id="getParentResid" parameterType="HashMap" resultType="String">
+		SELECT
+			org_dept.resid
+		FROM
+			org_dept
+		WHERE
+			org_dept.status = 1
+		AND org_dept.id = #{parentid}
+		AND org_dept.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ.status = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ.status = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype!=1
+		)
+	</select>
+	
+	
+	<insert id="addDept" parameterType="HashMap">
+		INSERT INTO org_dept (
+			id,
+			organid,
+			parentid,
+			resid,
+			deptname,
+			LEVEL,
+			createtime,
+			creater,
+			updatetime,
+			updater,
+			sequence,
+			status
+		)
+		VALUES
+		(
+			#{id},
+			#{organid},
+			#{parentid},
+			#{resid},
+			#{deptname},
+			#{level},
+			now(),
+			#{userid},
+			now(),
+			#{userid},
+			1,
+			1
+		)
+	</insert>
+	
+	<!-- 获取角色信息 -->
+	<select id="getRoles" resultType="HashMap">
+		SELECT
+			org_rolemanagement.id AS id,
+			org_rolemanagement.name AS name
+		FROM
+			org_rolemanagement
+		WHERE
+			org_rolemanagement.status = 1
+		ORDER BY
+			org_rolemanagement.createtime
+	</select>
+	
+	<!-- 获取可用的租赁公司的列表 -->
+	<select id="getValiableCompanyInfo" parameterType="OrgUser" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.status = 1
+		and  le_leasescompany.id in(
+			SELECT
+				org_organ_company_ref.companyid
+			FROM
+				org_organ_company_ref
+			WHERE
+				org_organ_company_ref. STATUS = 1
+			AND (org_organ_company_ref.mainaccount='0'
+			or org_organ_company_ref.bindstate='1')
+			<!-- AND org_organ_company_ref.accountstatus != 0 -->
+			AND org_organ_company_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ.status = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ.status = 1
+						AND org_organ.id = #{organId}
+					)
+					AND organ.customertype!=1
+				)
+		)
+	</select>
+	
+	<!-- 获取租赁公司的特殊司机 -->
+	<select id="getSpecialstateDrivers" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			pub_driver
+		WHERE
+			pub_driver.status=1
+		and pub_driver.identitytype='1'
+		and pub_driver.leasescompanyid=#{companyid}
+		AND pub_driver.id IN (
+			SELECT
+				org_organ_driver_ref.driverid
+			FROM
+				org_organ_driver_ref
+			WHERE
+				org_organ_driver_ref.status = 1
+			AND org_organ_driver_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ.status = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype!=1
+			)
+		)
+	</select>
+	
+	<!-- 根据用户所在的机构获取机构的用车规则 -->
+	<select id="getUseCarRules" parameterType="String" resultType="HashMap">
+		SELECT
+			org_usecarrules.id,
+			org_usecarrules.name
+		FROM
+			org_usecarrules
+		WHERE
+			org_usecarrules.status = 1
+		and org_usecarrules.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ.status = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype!=1
+			)
+		and org_usecarrules.leasescompanyid in(
+			SELECT
+				le_company_rules_ref.leasescompanyid
+			FROM
+				le_company_rules_ref,
+				le_accountrules
+			WHERE
+				le_company_rules_ref. STATUS = 1
+			AND le_accountrules.Status=1
+			AND le_accountrules.rulesrefid = le_company_rules_ref.id
+			AND le_company_rules_ref.rulestate=1
+ 			<![CDATA[
+			AND le_company_rules_ref.starttime<now()
+			AND le_company_rules_ref.endtime>now()
+ 			]]>
+			AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+ 					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+ 						AND org_organ.id =#{organid}
+					)
+					AND organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+			)
+		)
+	</select>
+	
+	
+	<!-- 判断用户账号在机构表中存在不存在，离职的员工认为是不存在 -->
+	<select id="existUser" parameterType="String" resultType="boolean">
+		SELECT
+			count(*)
+		FROM
+			org_user
+		WHERE
+			org_user.status = 1
+		and org_user.account=#{account}
+		and org_user.customertype!=1
+	</select>
+	
+	<!-- 判断账户是否存在，离职的不认为存在，并且除开指定useyrid，因为更新的时候useid的电话是可以不变的 -->
+	<select id="existUserExceptSelf" parameterType="HashMap" resultType="boolean">
+		SELECT
+			count(*)
+		FROM
+			org_user
+		WHERE
+			org_user.status = 1
+		and org_user.account=#{account}
+		and org_user.id != #{userid}
+		and org_user.customertype!=1
+	</select>
+	
+	
+	<!-- 为机构端添加一个机构员工 -->
+	<insert id="addUser" parameterType="HashMap">
+		INSERT INTO org_user(
+			id,
+			organid,
+			dpetid,
+			usertype,
+			account,
+			email,
+			nickname,
+			userpassword,
+			sex,
+			specialstate,
+			headportraitmin,
+			headportraitmax,
+			registertime,
+			disablestate,
+			disablehis,
+			usetimes,
+			gpsspeed,
+			gpsdirection,
+			lng,
+			lat,
+			createtime,
+			updatetime,
+			wdpwdchangestate,
+			customertype,
+			Status
+		) VALUES(
+			#{userid},
+			#{organid},
+			#{deptid},
+			'0',
+			#{phone},
+			null,
+			#{nickname},
+			#{password},
+			#{sex},
+			#{specialstate},
+			#{imgpath},
+			#{imgpath},
+			now(),
+			null,
+			null,
+			0,
+			null,
+			null,
+			null,
+			null,
+			now(),
+			now(),
+			'0',
+			'0',
+			1
+		)
+	</insert>
+	
+	<!-- 添加员工的时候，添加角色 -->
+	<insert id="addRole" parameterType="HashMap">
+		INSERT INTO org_roleuser (
+			id,
+			userid,
+			roleid,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+			#{userroleid},
+			#{userid},
+			#{role},
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<insert id="addUserRole" parameterType="HashMap">
+		INSERT INTO org_roleuser (
+			id,
+			userid,
+			roleid,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+			#{userroleid},
+			#{userid},
+			#{role},
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<!-- 删除用户角色 -->
+	<update id="deleteUserRole" parameterType="HashMap">
+		UPDATE org_roleuser SET 
+			updatetime=now(),
+			status=0
+		WHERE userid=#{userid}
+	</update>
+	
+	<!-- 添加员工的时候，添加用车规则 -->
+	<insert id="addCarRules" parameterType="list">
+		INSERT INTO org_user_rules_ref(
+			id,
+			userid,
+			userulesid,
+			createtime,
+			updatetime,
+			status
+		) VALUES
+		<foreach collection="list" item="item" index="index" separator="," >  
+			(
+				#{item.id},
+				#{item.userid},
+				#{item.userulesid},
+				now(),
+				now(),
+				1
+			)
+    	</foreach>  
+	</insert>
+	
+	<!-- 添加员工的时候，添加特殊司机 -->
+	<insert id="addDrivers" parameterType="list">
+		INSERT INTO org_user_driver_ref(
+			id,
+			userid,
+			driverid,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status
+		) VALUES
+		<foreach collection="list" item="item" index="index" separator="," >  
+			(
+				#{item.id},
+				#{item.userid},
+				#{item.driverid},
+				now(),
+				now(),
+				#{item.updater},
+				#{item.updater},
+				1
+			)
+    	</foreach>
+	</insert>
+	
+	<!-- 根据用户信息更新用户表 -->
+	<update id="updateUser" parameterType="HashMap">
+		UPDATE org_user SET
+			dpetid=#{deptid},
+			usertype='0',
+			account=#{phone},
+			email=null,
+			nickname=#{nickname},
+			sex=#{sex},
+			specialstate=#{specialstate},
+			headportraitmin=#{imgpath},
+			headportraitmax=#{imgpath},
+			updatetime=now()
+		WHERE id=#{userid}
+	</update>
+	
+	<!-- 根据用户信息更新用户角色 -->
+	<update id="updateRole" parameterType="HashMap">
+		UPDATE org_roleuser SET 
+			roleid=#{role},
+			updatetime=now()
+		WHERE userid=#{userid}
+		AND status=1
+	</update>
+	
+	<!-- 删除之前的用车规则 -->
+	<update id="deleteCarRules" parameterType="HashMap">
+		UPDATE org_user_rules_ref SET 
+			updatetime=now(),
+			status=0
+		WHERE userid=#{userid}
+	</update>
+	
+	<!-- 部门下是否含有人员 -->
+	<select id="hasUser" parameterType="HashMap" resultType="boolean">
+		SELECT
+			count(*)
+		FROM
+			org_user
+		WHERE
+			org_user.status = 1
+		and org_user.dpetid = #{deptid}
+	</select>
+	
+	<!-- 删除部门 -->
+	<update id="deleteDept" parameterType="HashMap">
+		UPDATE org_dept
+		SET org_dept. STATUS = 0,
+		 org_dept.updatetime = now(),
+		 org_dept.updater = #{updater}
+		WHERE
+			org_dept.id = #{deptid}
+	</update>
+	
+	<!-- 删除用户 -->
+	<update id="deleteUser" parameterType="HashMap">
+		UPDATE org_user
+		SET org_user.status = 0,
+		 org_user.updatetime = now()
+		WHERE
+			org_user.id = #{userid}
+	</update>
+	
+	<!-- 根据部门id获取部门信息 -->
+	<select id="getDept" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			org_dept
+		WHERE
+			org_dept.status = 1
+		AND org_dept.id = #{deptid}
+	</select>
+	
+	<!-- 更新部门 -->
+	<select id="updateDept" parameterType="HashMap">
+		UPDATE org_dept
+		SET 
+		 <if test="deptname!=null and deptname!='' ">
+			org_dept.deptname = #{deptname},
+		 </if>
+		 <if test="updater!=null and updater!='' ">
+		 	org_dept.updater = #{updater},
+		 </if>
+		 
+		 org_dept.parentid = #{parentid},
+		 
+		 <if test="resid!=null and resid!='' ">
+		 	org_dept.resid = #{resid},
+		 </if>
+		 <if test="level!=null and level!='' ">
+		 	org_dept.level = #{level},
+		 </if>
+		 org_dept.updatetime = now()
+		WHERE
+			org_dept.id = #{deptid}
+	</select>
+	
+	<!-- 查询所有的子部门，需要更新level和resid -->
+	<select id="getDeptChildren" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			org_dept
+		WHERE
+			org_dept.status = 1
+		and org_dept.resid like #{startresid}
+	</select>
+	
+	<!-- 删除用户的所有的特殊司机 -->
+	<update id="deleteDrivers" parameterType="HashMap">
+		UPDATE org_user_driver_ref
+		SET 
+			updater=#{updater},
+			updatetime=now(),
+			status = 0
+		WHERE
+			userid = #{userid}
+	</update>
+	
+	<!-- 获取用户可用的司机列表包括租赁公司了 -->
+	<select id="getUserDrivers" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			org_user_driver_ref.*,
+			(select pub_driver.leasescompanyid from pub_driver where pub_driver.status=1 and pub_driver.id=org_user_driver_ref.driverid) as companyid
+		FROM
+			org_user_driver_ref
+		WHERE
+			org_user_driver_ref.STATUS = 1
+		AND org_user_driver_ref.userid = #{userid}
+		AND org_user_driver_ref.driverid IN (
+			SELECT
+				org_organ_driver_ref.driverid
+			FROM
+				org_organ_driver_ref
+			WHERE
+				org_organ_driver_ref. STATUS = 1
+			AND org_organ_driver_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype!=1
+			)
+		)
+	</select>
+	
+	<!-- 根据机构id获取机构的信息-->
+	<select id="getOrgOrgan" parameterType="String" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			org_organ
+		WHERE
+			org_organ. STATUS = 1
+		AND org_organ.id = #{organid}
+	</select>
+	
+	<!-- 根据用户信息更新用户密码 -->
+	<update id="resetPwd" parameterType="HashMap">
+		UPDATE org_user
+		SET org_user.userpassword = #{password}
+		WHERE
+			org_user.status = 1
+		AND org_user.id = #{userid}
+	</update>
+
+	<!-- 根据用户信息更新个人用户密码 -->
+	<update id="resetPwd4PeUser" parameterType="HashMap">
+		update pe_user
+			set pe_user.userpassword = #{password}
+		where
+			pe_user.status = 1
+		and pe_user.account=#{account}
+	</update>
+	
+	<update id="resetPwd4OrgUser" parameterType="HashMap">
+		update org_user
+			set org_user.userpassword = #{password}
+		where
+			org_user.status = 1
+		and org_user.account=#{account}
+	</update>
+	
+	<!-- 批量更改部门 -->
+	<update id="changeUserDept" parameterType="HashMap">
+        UPDATE org_user
+		SET org_user.dpetid = #{deptid},
+		 org_user.updatetime = now()
+		WHERE
+		org_user.id = #{userid} 
+	</update>
+	
+	<!-- 判断账户是否是超管并且关联 -->
+	<select id="isUnbindAccount" parameterType="String" resultType="boolean">
+		SELECT
+			CASE
+		WHEN count(*) > 0 THEN
+			1
+		ELSE
+			0
+		END AS bindflag
+		FROM
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.bindstate='0'
+		AND (org_organ_company_ref.mainaccount!='0' or org_organ_company_ref.mainaccount is NULL)
+		AND org_organ_company_ref.userid IN (
+			SELECT
+				org_user.id
+			FROM
+				org_user
+			WHERE
+				org_user. STATUS = 1
+			AND org_user.usertype = '1'
+			AND org_user.account = #{userName}
+			AND org_user.customertype != 1
+		)
+	</select>
+	
+	<!-- 根据用户账户判断该机构是否已经有主账号 -->
+	<select id="hasMainAccount" parameterType="String" resultType="boolean">
+		SELECT
+			case when count(*)>0 then 1 else 0 END as flag
+		FROM
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.mainaccount = '0'
+		AND org_organ_company_ref.organid IN (
+			SELECT
+				org_organ.id
+			FROM
+				org_organ
+			WHERE
+				org_organ. STATUS = 1
+			AND org_organ.creditcode IN (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ.id IN (
+						SELECT
+							org_user.organid
+						FROM
+							org_user
+						WHERE
+							org_user. STATUS = 1
+						AND org_user.account = #{userName}
+						AND org_user.customertype!=1
+					)
+			)
+			AND org_organ.customertype!=1
+		)
+	</select>
+	
+	<!-- 设置该账户为主账户 -->
+	<update id="setAsMainAccount" parameterType="String">
+		UPDATE org_organ_company_ref
+		SET org_organ_company_ref.mainaccount = '0',
+		 org_organ_company_ref.bindstate = '1',
+		 org_organ_company_ref.parentid = (
+			SELECT
+				org_user.id
+			FROM
+				org_user
+			WHERE
+				org_user. STATUS = 1
+			AND org_user.usertype='1'
+			AND org_user.account = #{userName}
+			AND org_user.customertype!=1
+			LIMIT 0,
+			1
+		),
+		 org_organ_company_ref.UpdateTime = now()
+		WHERE
+			org_organ_company_ref.userid = (
+				SELECT
+					org_user.id
+				FROM
+					org_user
+				WHERE
+					org_user. STATUS = 1
+				AND org_user.usertype='1'
+				AND org_user.account = #{userName}
+				AND org_user.customertype!=1
+				LIMIT 0,
+				1
+			)
+	</update>
+	
+	<!-- 更新超管是否是第一次登陆 -->
+	<update id="updateFirstLogin" parameterType="OrgUser">
+		UPDATE org_organ_company_ref
+		SET org_organ_company_ref.firsttime = '1',
+		 org_organ_company_ref.UpdateTime = now()
+		WHERE
+			org_organ_company_ref.userid = #{id}
+		AND org_organ_company_ref.organid = #{organId}
+	</update>
+	
+	<!-- 根据用户角色名称获取角色id导入时需要 -->
+	<select id="getRoleIdByRoleName" parameterType="String" resultType="String">
+		SELECT org_rolemanagement.id from org_rolemanagement where org_rolemanagement.status=1 and org_rolemanagement.name=#{rolecaption}
+	</select>
+	
+	<!-- 添加登录日志 -->
+	<insert id="addUserLoginLog" parameterType="HashMap">
+		INSERT INTO org_userloginlog (
+			id,
+			userid,
+			ipaddr,
+			device,
+			version,
+			phonebrand,
+			phonemodel,
+			browserversion,
+			browsertype,
+			loginstatus,
+			logintime,
+			loginmessage,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{ipaddr},
+				#{device},
+				#{version},
+				#{phonebrand},
+				#{phonemodel},
+				#{browserversion},
+				#{browsertype},
+				#{loginstatus},
+				now(),
+				#{loginmessage},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 获取用户上次登录的信息 -->
+	<select id="getLastLoginLog" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			org_userloginlog.*
+		FROM
+			org_userloginlog,
+			org_user
+		WHERE
+			org_userloginlog.status=1
+		and org_user.status=1
+		and org_userloginlog.device='0'
+        and org_userloginlog.loginstatus='0'
+		and org_user.id = org_userloginlog.userid
+		and org_user.account = #{account}
+		and org_user.customertype!=1
+		ORDER BY createtime desc 
+		LIMIT 0,1
+	</select>
+	
+	<!-- 获取离职之前的人员的信息 -->
+	<select id="getOldUser" parameterType="String" resultType="OrgUser">
+		SELECT * from org_user where (org_user.status=0 or org_user.status!=1) and org_user.account=#{account} and org_user.customertype!=1 ORDER BY createtime desc limit 0,1
+	</select>
+	
+	<!-- 更新新用户的钱包 -->
+	<insert id="updateNewBalance" parameterType="HashMap">
+		INSERT INTO org_useraccount (
+			id,
+			userid,
+			leasescompanyid,
+			balance,
+			createtime,
+			updatetime,
+			status
+		)SELECT
+			UUID() AS id,
+			#{userid} AS userid,
+			leasescompanyid,
+			balance,
+			now() AS createtime,
+			now() AS updatetime,
+			1 AS status
+		FROM
+			org_useraccount
+		where org_useraccount.userid=#{olduserid}
+	</insert>
+	
+	<!-- 更新新用户的交易明细 -->
+	<insert id="updateBalanceExpenses" parameterType="HashMap">
+		INSERT INTO org_userexpenses(
+			id,
+			userid,
+			leasescompanyid,
+			expensetype,
+			expensetime,
+			amount,
+			balance,
+			remark,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status
+		)SELECT
+			UUID() AS id,
+			#{userid} AS userid,
+			leasescompanyid,
+			expensetype,
+			expensetime,
+			amount,
+			balance,
+			remark,
+			now() AS createtime,
+			now() AS updatetime,
+			creater,
+			updater,
+			1 AS status
+		FROM
+			org_userexpenses
+		where org_userexpenses.userid=#{olduserid}
+	</insert>
+	
+	<!-- 判断usertoken是否已存在过 -->
+	<select id="hasUsertoken" parameterType="HashMap" resultType="boolean">
+		SELECT
+			CASE WHEN count(*)>0 then 1 ELSE 0 end as flag
+		FROM
+			pub_usertoken
+		WHERE
+			status = 1
+		AND userid = #{userid}
+		AND usertype = #{usertype}
+	</select>
+	
+	<!-- 更新usertoken -->
+	<update id="updateUsertoken" parameterType="HashMap">
+		UPDATE pub_usertoken
+			SET usertoken = #{usertoken},
+			 uuid = #{uuid},
+			 updatetime = now()
+			WHERE
+				status = 1
+			AND userid = #{userid}
+			AND usertype = #{usertype}
+	</update>
+	
+	<!-- 添加usertoken -->
+	<insert id="addUsertoken" parameterType="HashMap">
+		INSERT INTO pub_usertoken (
+				id,
+				userid,
+				usertype,
+				usertoken,
+				uuid,
+				createtime,
+				updatetime,
+				status
+			)
+			VALUES
+				(
+				#{id},
+				#{userid},
+				#{usertype},
+				#{usertoken},
+				#{uuid},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 获取数据库中的usertoken -->
+	<select id="getUserToken" parameterType="String" resultType="String">
+		SELECT
+			pub_usertoken.usertoken
+		FROM
+			pub_usertoken
+		WHERE
+			pub_usertoken. STATUS = 1
+		AND pub_usertoken.usertype = '4'
+		AND pub_usertoken.userid = (
+			SELECT
+				org_user.id
+			FROM
+				org_user
+			WHERE
+				org_user. STATUS = 1
+			AND org_user.account = #{account}
+			AND org_user.customertype!=1
+			ORDER BY
+				org_user.createtime DESC
+			LIMIT 0,1
+		)
+	</select>
+
+	<!-- 通过手机号码查询个人用户信息 -->
+	<select id="getPeUserByAccount" parameterType="String" resultType="PeUser">
+		select * from pe_user where pe_user.account=#{account} and pe_user.status=1
+	</select>
+
+	<!-- 同步机构用户信息到个人用户表 -->
+	<insert id="saveUserInfo2PeUser" parameterType="Map">
+		INSERT INTO pe_user(
+			id,
+			account,
+			email,
+			nickname,
+			userpassword,
+			sex,
+			specialstate,
+			headportraitmin,
+			headportraitmax,
+			registertime,
+			disablestate,
+			disablehis,
+			usetimes,
+			gpsspeed,
+			gpsdirection,
+			lng,
+			lat,
+			createtime,
+			updatetime,
+			withdrawpwd,
+			status,
+			wdpwdchangestate
+		)
+		VALUES
+			(
+				#{peuserid},
+				#{phone},
+				NULL,
+				#{nickname},
+				#{password},
+				#{sex},
+				'0',
+				#{imgpath},
+				#{imgpath},
+				now(),
+				'0',
+				'0',
+				'0',
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				now(),
+				now(),
+				NULL,
+				'1',
+				'0'
+			)
+	</insert>
+	<update id="updateUserInfo2PeUserPassword" parameterType="Map">
+		update pe_user set userpassword = #{password} where account = #{phone}
+	</update>
+	<update id="updateUserInfo2OrgUserPassword" parameterType="Map">
+		update org_user set userpassword = #{password} where account = #{phone}
+	</update>
+</mapper>

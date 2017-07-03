@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.OrganInformationMapper">
+    <select id="getorgInformation" resultType="OrgInformation" parameterType="String">
+		 select id as organId,creditcardnum,creditcardname,bankname from org_organ where id=#{organId}
+    </select>
+    <insert id="insertOrgInformation" parameterType="OrgInformation">
+       INSERT into org_organ (id,creditcardnum,creditcardname,bankname) VALUES (#{organId},#{creditcardnum},#{creditcardname},#{bankname})
+    </insert>
+   <update id="updateOrgInformation" parameterType="OrgInformation">
+    update org_organ
+		set creditcardnum = #{creditcardnum},creditcardname = #{creditcardname},bankname = #{bankname},updatetime = now()
+		where id in
+					(select aa.id from(SELECT
+				org_organ.id
+			FROM
+				org_organ
+			WHERE
+				org_organ.creditcode = (
+					SELECT
+						creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ.id = #{organId}
+				)
+				AND org_organ.customertype!=1
+				)aa)
+		  and status = 1
+   </update>
+</mapper>

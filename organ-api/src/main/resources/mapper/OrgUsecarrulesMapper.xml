@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.OrgUsecarrulesMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- <select id="getLeLeasescompany" resultType="map" parameterType="OrgOrganCompanyRef">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.shortname
+		FROM
+			le_leasescompany,
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref.companyid = le_leasescompany.id
+		AND le_leasescompany.`Status` = 1
+		AND org_organ_company_ref.`Status` = 1
+		AND org_organ_company_ref.bindstate = '1'
+		AND org_organ_company_ref.companyid IN (
+			SELECT
+				le_accountrules.leasescompanyid
+			FROM
+				le_company_rules_ref,
+				le_accountrules
+			WHERE
+				le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = #{organId}
+					)
+				)
+			AND le_company_rules_ref.id = le_accountrules.rulesrefid
+			AND le_company_rules_ref.rulestate = '1'
+			AND le_accountrules.rulestype = #{rulesType}
+			GROUP BY
+				le_accountrules.leasescompanyid
+		)
+		<if test="id != null and id != ''">
+			and le_leasescompany.id != #{id}
+		</if>
+	</select> -->
+	<!-- <select id="getLeVehiclemodels" resultType="map" parameterType="OrgOrganCompanyRef">
+		SELECT
+			le_vehiclemodels.id,
+			le_vehiclemodels.`name`
+		FROM
+			le_vehiclemodels,
+			le_accountrules,
+			le_company_rules_ref
+		WHERE
+		le_vehiclemodels.`Status`=1
+		AND le_accountrules.`Status`=1
+		AND le_company_rules_ref.`Status`=1
+		AND le_accountrules.cartype = le_vehiclemodels.Id
+		AND le_company_rules_ref.id = le_accountrules.rulesrefid
+		AND le_company_rules_ref.rulestate = '1'
+		AND le_accountrules.rulestype = #{rulesType}
+		AND le_vehiclemodels.leasescompanyid = #{companyId}
+	</select> -->
+	<select id="getOrgUsecarrules" resultType="map" parameterType="orgUsecarrules">
+		SELECT
+			org_usecarrules.*, le_leasescompany.shortname leasesCompanyName,
+			le_vehiclemodels.`name` vehicleModelsName
+			<!-- ,
+			(SELECT count(*) from org_user_rules_ref WHERE org_usecarrules.id = org_user_rules_ref.userulesid) as count -->
+		FROM
+			org_usecarrules,
+			le_leasescompany,
+			le_vehiclemodels,
+			
+			le_accountrules,
+			le_company_rules_ref
+			
+			<!-- ,
+			le_company_rules_ref,
+			le_accountrules -->
+		WHERE
+			org_usecarrules.leasescompanyid = le_leasescompany.id
+		AND org_usecarrules.vehiclemodels = le_vehiclemodels.Id
+		
+		<!-- AND le_leasescompany.id = le_company_rules_ref.leasescompanyid
+		AND le_company_rules_ref.id = le_accountrules.rulesrefid
+		AND le_accountrules.cartype = le_vehiclemodels.Id
+		AND le_company_rules_ref.rulestate = '1' -->
+		
+		AND org_usecarrules.`status` = 1
+		AND le_leasescompany.`Status` = 1
+		AND le_vehiclemodels.`Status` = 1
+		AND org_usecarrules.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organId}
+			)
+			AND organ.customertype!=1
+		)
+		AND le_company_rules_ref.id = le_accountrules.rulesrefid
+		AND le_company_rules_ref.rulestate = '1'
+		AND le_accountrules.`Status`=1
+		AND	le_company_rules_ref.`Status`=1
+		AND le_accountrules.leasescompanyid = org_usecarrules.leasescompanyid
+		AND le_accountrules.cartype = org_usecarrules.vehiclemodels
+		AND org_usecarrules.usetype = le_accountrules.rulestype
+		AND le_company_rules_ref.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organId}
+			)
+			AND organ.customertype!=1
+		)
+	<!-- 	<if test="leasesCompanyName != null and leasesCompanyName !=''">
+			AND le_leasescompany.shortname like "%"#{leasesCompanyName}"%"
+		</if> -->
+		<if test="name != null and name !=''">
+			AND org_usecarrules.`name` like "%"#{name}"%"
+		</if>
+		GROUP BY org_usecarrules.id
+	</select>
+	<!-- 根据name 查 -->
+	<select id="getByName" resultType="orgUsecarrules" parameterType="orgUsecarrules">
+		SELECT * FROM org_usecarrules WHERE NAME = #{name} and org_usecarrules.`Status`=1 
+		<if test="vehicleModels != null and vehicleModels != '' ">
+			AND vehiclemodels = #{vehicleModels}
+		</if>
+	</select>
+	<!-- 删除关联表的 org_user_rules_ref wuyong  -->
+<!-- 	<update id="deleteOrgUserRulesRef" parameterType="string">
+		UPDATE  org_user_rules_ref SET `status`=2 WHERE userulesid = #{id}
+	</update> -->
+	<!-- 删除用车规则 -->
+	<update id="deleteOrgUsecarrules" parameterType="string">
+		UPDATE  org_usecarrules SET `status`=2 WHERE id = #{id}
+	</update>
+	<!-- 新增用车规则 -->
+	<insert id="add" parameterType="OrgUsecarrules">
+		INSERT INTO `org_usecarrules` (`id`, `name`, `usetype`, `leasescompanyid`, `vehiclemodels`, `createtime`, `updatetime`, `status`,organid) VALUES 
+		(#{id}, #{name}, #{userType}, #{leasesCompanyId}, #{vehicleModels}, now(), now(), '1',#{organId});
+	</insert>
+	<!-- 修改用车规则 -->
+	<update id="update" parameterType="OrgUsecarrules" >
+		update org_usecarrules set name=#{name}, usetype=#{userType}, leasescompanyid=#{leasesCompanyId}, vehiclemodels=#{vehicleModels}, 
+		createtime=now(),updatetime= now(), status='1',organid=#{organId} where id = #{id}
+	</update>
+	
+	<!-- 新增用车规则 关联表    wuyong-->
+<!-- 	<insert id="addourr" parameterType="OrgUserRulesRef">
+		INSERT INTO `carservicedev`.`org_user_rules_ref` (`id`, `userid`, `userulesid`, `createtime`, `updatetime`, `status`) VALUES 
+		(#{id}, #{userId}, #{useRulesId}, now(), now(), '1');
+	</insert> -->
+	<!-- id  是userid
+	<select id="getById" resultType="map" parameterType="orgUsecarrules">
+		SELECT
+			org_usecarrules.*,le_leasescompany.shortname leasesCompanyName,le_vehiclemodels.`name` vehicleModelsName
+		FROM
+			org_usecarrules,
+			org_user_rules_ref,
+			le_leasescompany,
+			le_vehiclemodels
+		WHERE
+			org_user_rules_ref.userulesid = org_usecarrules.id
+		AND org_usecarrules.leasescompanyid = le_leasescompany.id
+		AND org_usecarrules.vehiclemodels = le_vehiclemodels.Id
+		AND org_usecarrules.`status` = 1
+		AND org_user_rules_ref.`status` = 1
+		AND le_leasescompany.`Status` = 1
+		AND le_vehiclemodels.`Status` = 1
+		AND org_user_rules_ref.userid = #{id}
+		AND org_usecarrules.`name`= #{name}
+	</select>
+	 -->
+	 <!-- 根据机构id得到   规则类型 包括约车 1、接机 2、送机 3，根据机构订单统一-->
+	 <select id="getRulestype" resultType="LeAccountRules" parameterType="string">
+	 	SELECT
+			le_accountrules.*
+		FROM
+			le_company_rules_ref,
+			le_accountrules,
+			org_organ_company_ref
+		WHERE
+			le_company_rules_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype!=1
+			)
+		AND le_company_rules_ref.id = le_accountrules.rulesrefid
+		AND le_company_rules_ref.rulestate='1'
+		AND org_organ_company_ref.companyid = le_accountrules.leasescompanyid
+		AND org_organ_company_ref.bindstate = '1'
+		AND org_organ_company_ref.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype!=1
+		)
+		GROUP BY le_accountrules.rulestype
+	 </select>
+	 <!-- 检查 用车规则名字的是否 重复 -->
+	 <select id="checkRulesname" resultType="int" parameterType="orgUsecarrules">
+	 	select count(*) from org_usecarrules where org_usecarrules.name = #{name} and org_usecarrules.`Status`=1
+	 	<if test="queryId != null and queryId != '' ">
+		 	and org_usecarrules.id not in 
+			<foreach item="item" index="index" collection="queryId" open="(" separator="," close=")">
+	        	#{item}
+	   		</foreach>
+   		</if>
+   		and org_usecarrules.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organId}
+				)
+		 		AND organ.customertype!=1
+			)
+	 </select>
+	 <!-- 根据  机构（超管的id）id 查询 这个机构能加载的 租赁公司 跟 车型 （跟租赁端的个性化计费规则有关） -->
+	 <select id="getAllRules" resultType="map" parameterType="string">
+	 	SELECT
+			le_accountrules.*,le_vehiclemodels.`name` vehicleModelsName,le_leasescompany.shortname leasesCompanyName
+		FROM
+			le_accountrules,
+			le_company_rules_ref,
+			le_vehiclemodels,
+			le_leasescompany,
+			
+			org_organ_company_ref
+			
+		WHERE
+			le_company_rules_ref.id = le_accountrules.rulesrefid
+		AND le_company_rules_ref.rulestate = '1'
+		
+		AND le_accountrules.`Status`=1
+		AND	le_company_rules_ref.`Status`=1
+		AND	le_vehiclemodels.`Status`=1
+		AND	le_leasescompany.`Status`=1
+		
+		AND le_accountrules.cartype = le_vehiclemodels.Id
+		AND le_accountrules.leasescompanyid = le_leasescompany.id
+		
+		AND le_company_rules_ref.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype!=1
+		)
+		
+		AND org_organ_company_ref.companyid = le_accountrules.leasescompanyid
+		AND org_organ_company_ref.bindstate = '1'
+		AND org_organ_company_ref.organid IN (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ. STATUS = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype!=1
+		)
+		GROUP BY le_accountrules.rulestype,le_accountrules.cartype
+	 </select>
+	 <!-- 判断 用车规则 是否有能编辑 -->
+	 <select id="checkRulesUpdate" parameterType="string" resultType="int">
+	 	SELECT
+			count(*)
+		FROM
+			org_usecarrules,
+			org_user_rules_ref
+		WHERE
+			org_usecarrules.id = org_user_rules_ref.userulesid
+		AND org_usecarrules.`name`= #{name}
+		AND org_usecarrules.`status`=1
+		AND	org_user_rules_ref.`status`=1
+	 </select>
+</mapper>

@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.ReportStatisticsMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getordertype" resultType="PubDictionary">
+		  select d.* from pub_dictionary d 
+		  where d.type = '订单类型' and d.status = 1
+    </select>
+    <select id="getCompayByQueryList" resultType="ReportStatisticsParam" parameterType="ReportStatisticsParam">
+     select t.* from 
+		(select (@rownum := @rownum + 1) as rownum,
+		        c.organid,
+		        c.leasescompanyid,
+		        (select o.name from le_leasescompany o where o.id = c.leasescompanyid) as leasescompanyName,
+		        (case when ISNULL(sum(c.ordernum)) then 0 else sum(c.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(c.ordermoney)) then 0 else sum(c.ordermoney) end) as ordermoney 
+		from org_companystatistics c,(select @rownum := 0)r
+		where c.status=1
+		and  c.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+		<if test="ordertype != null and ordertype != '' ">
+						and c.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(c.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(c.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY c.leasescompanyid
+		order by rownum)t
+	 where t.rownum BETWEEN #{iDisplayStart} and (#{iDisplayStart} + #{iDisplayLength}) and t.rownum != #{iDisplayStart}
+	 UNION ALL 
+	 select ''as rownum,''as organid,''as deptid,'合计' as leasescompanyName,
+	  (case when ISNULL(sum(ordernum)) then 0 else sum(ordernum) end) as ordernum,
+     (case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) as ordermoney
+      from
+		(select 
+		        c.organid,
+		        c.leasescompanyid,
+		        (select o.name from le_leasescompany o where o.id = c.leasescompanyid) as leasescompanyName,
+		        (case when ISNULL(sum(c.ordernum)) then 0 else sum(c.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(c.ordermoney)) then 0 else sum(c.ordermoney) end) as ordermoney 
+		from org_companystatistics c
+		where c.status=1
+		and  c.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+		<if test="ordertype != null and ordertype != '' ">
+						and c.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(c.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(c.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY c.organid,c.leasescompanyid)t
+    </select>
+    <select id="getCompayByQueryCount" resultType="int" parameterType="ReportStatisticsParam">
+		  select count(*)
+		  from
+		      (select 
+		        c.organid,
+		        c.leasescompanyid,
+		       (select o.name from le_leasescompany o where o.id = c.leasescompanyid) as leasescompanyName,
+		        (case when ISNULL(sum(c.ordernum)) then 0 else sum(c.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(c.ordermoney)) then 0 else sum(c.ordermoney) end) as ordermoney 
+		from org_companystatistics c
+		where c.status=1
+		and  c.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+		<if test="ordertype != null and ordertype != '' ">
+						and c.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(c.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(c.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY leasescompanyid)t
+    </select>
+    
+    <select id="getDeptByQueryList" resultType="ReportStatisticsParam" parameterType="ReportStatisticsParam">
+     select t.* from 
+		(select      (@rownum := @rownum + 1) as rownum,  
+            bb.organid,
+             bb.id,
+             bb.deptname,
+            ((case when ISNULL(sum(bb.ordernum)) then 0 else sum(bb.ordernum) end) 
+            + (case when ISNULL(sum(cc.ordernumcc)) then 0 else sum(cc.ordernumcc) end))
+             as ordernum,
+		        ((case when ISNULL(sum(bb.ordermoney)) then 0 else sum(bb.ordermoney) end) 
+           + (case when ISNULL(sum(cc.ordermoneycc)) then 0 else sum(cc.ordermoneycc) end))
+             as ordermoney 
+from (select @rownum := 0)r,(select  
+             aa.organid,
+             aa.id,
+             aa.deptname,
+             aa.level,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoney 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 1 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	        <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )bb LEFT JOIN 
+(select      aa.organid,
+             aa.deptname,
+             aa.parentid as id,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernumcc,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoneycc 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 2 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	       <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )cc on bb.id = cc.id group by bb.id order by rownum
+
+
+)t
+	 where t.rownum BETWEEN #{iDisplayStart} and (#{iDisplayStart} + #{iDisplayLength}) and t.rownum != #{iDisplayStart}
+	 UNION ALL 
+    select '' as rownum,''as organid,''as deptid,'合计' as deptName,
+      (case when ISNULL(sum(ordernum)) then 0 else sum(ordernum) end) as ordernum,
+     (case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) as ordermoney 
+      from(
+        select      (@rownum := @rownum + 1) as rownum,  
+            bb.organid,
+             bb.id,
+             bb.deptname,
+            ((case when ISNULL(sum(bb.ordernum)) then 0 else sum(bb.ordernum) end) 
+            + (case when ISNULL(sum(cc.ordernumcc)) then 0 else sum(cc.ordernumcc) end))
+             as ordernum,
+		        ((case when ISNULL(sum(bb.ordermoney)) then 0 else sum(bb.ordermoney) end) 
+           + (case when ISNULL(sum(cc.ordermoneycc)) then 0 else sum(cc.ordermoneycc) end))
+             as ordermoney 
+from (select @rownum := 0)r,(select  
+             aa.organid,
+             aa.id,
+             aa.deptname,
+             aa.level,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoney 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 1 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	        <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )bb LEFT JOIN 
+(select      aa.organid,
+             aa.deptname,
+             aa.parentid as id,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernumcc,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoneycc 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 2 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	       <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )cc on bb.id = cc.id group by bb.id order by rownum)aa 
+    </select>
+    <select id="getDeptByQueryCount" resultType="int" parameterType="ReportStatisticsParam">
+		  select count(*)
+		  from
+		      (select 
+		         aa.organid,
+             aa.id,
+             aa.deptname,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoney 
+      from
+      (SELECT organid,id,deptname FROM org_dept t WHERE t. LEVEL = 1 AND t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid
+		<if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY  aa.id)t
+    </select>
+    
+     <select id="getExportExcal" resultType="ReportStatisticsParam" parameterType="ReportStatisticsParam">
+     select t.* from 
+		(select (@rownum := @rownum + 1) as rownum,
+		        c.organid,
+		        c.leasescompanyid,
+		        (select o.name from le_leasescompany o where o.id = c.leasescompanyid) as leasescompanyName,
+		        (case when ISNULL(sum(c.ordernum)) then 0 else sum(c.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(c.ordermoney)) then 0 else sum(c.ordermoney) end) as ordermoney 
+		from org_companystatistics c,(select @rownum := 0)r
+		where c.status=1
+		and  c.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+		 		  AND organ.customertype!=1
+				 )
+		<if test="ordertype != null and ordertype != '' ">
+						and c.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(c.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(c.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY c.leasescompanyid
+		order by rownum)t
+			 UNION ALL 
+	 select ''as rownum,''as organid,''as deptid,'合计' as leasescompanyName,
+	  (case when ISNULL(sum(ordernum)) then 0 else sum(ordernum) end) as ordernum,
+     (case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) as ordermoney  from
+		(select (@rownum := @rownum + 1) as rownum,
+		        c.organid,
+		        c.leasescompanyid,
+		        (select o.name from le_leasescompany o where o.id = c.leasescompanyid) as leasescompanyName,
+		        (case when ISNULL(sum(c.ordernum)) then 0 else sum(c.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(c.ordermoney)) then 0 else sum(c.ordermoney) end) as ordermoney 
+		from org_companystatistics c,(select @rownum := 0)r
+		where c.status=1
+		and  c.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+		 		  AND organ.customertype!=1
+				 )
+		<if test="ordertype != null and ordertype != '' ">
+						and c.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(c.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(c.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY c.leasescompanyid
+		order by rownum)t
+    </select>
+    
+    <select id="getExportExcal1" resultType="ReportStatisticsParam" parameterType="ReportStatisticsParam">
+    select t.* from 
+		(select      (@rownum := @rownum + 1) as rownum,  
+            bb.organid,
+             bb.id,
+             bb.deptname,
+            ((case when ISNULL(sum(bb.ordernum)) then 0 else sum(bb.ordernum) end) 
+            + (case when ISNULL(sum(cc.ordernumcc)) then 0 else sum(cc.ordernumcc) end))
+             as ordernum,
+		        ((case when ISNULL(sum(bb.ordermoney)) then 0 else sum(bb.ordermoney) end) 
+           + (case when ISNULL(sum(cc.ordermoneycc)) then 0 else sum(cc.ordermoneycc) end))
+             as ordermoney 
+from (select @rownum := 0)r,(select  
+             aa.organid,
+             aa.id,
+             aa.deptname,
+             aa.level,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoney 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 1 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	        <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )bb LEFT JOIN 
+(select      aa.organid,
+             aa.deptname,
+             aa.parentid as id,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernumcc,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoneycc 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 2 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	      <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )cc on bb.id = cc.id group by bb.id order by rownum
+
+
+)t
+	 UNION ALL 
+    select '' as rownum,''as organid,''as deptid,'合计' as deptName,
+      (case when ISNULL(sum(ordernum)) then 0 else sum(ordernum) end) as ordernum,
+     (case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) as ordermoney 
+      from(
+        select      (@rownum := @rownum + 1) as rownum,  
+            bb.organid,
+             bb.id,
+             bb.deptname,
+            ((case when ISNULL(sum(bb.ordernum)) then 0 else sum(bb.ordernum) end) 
+            + (case when ISNULL(sum(cc.ordernumcc)) then 0 else sum(cc.ordernumcc) end))
+             as ordernum,
+		        ((case when ISNULL(sum(bb.ordermoney)) then 0 else sum(bb.ordermoney) end) 
+           + (case when ISNULL(sum(cc.ordermoneycc)) then 0 else sum(cc.ordermoneycc) end))
+             as ordermoney 
+from (select @rownum := 0)r,(select  
+             aa.organid,
+             aa.id,
+             aa.deptname,
+             aa.level,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernum,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoney 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 1 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	    <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )bb LEFT JOIN 
+(select      aa.organid,
+             aa.deptname,
+             aa.parentid as id,
+		        (case when ISNULL(sum(d.ordernum)) then 0 else sum(d.ordernum) end) as ordernumcc,
+		        (case when ISNULL(sum(d.ordermoney)) then 0 else sum(d.ordermoney) end) as ordermoneycc 
+      from
+      (SELECT organid,id,deptname,level,parentid FROM org_dept t WHERE t.level = 2 and t.status =1 and t.organid in(select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organid}
+				  )
+				  AND organ.customertype!=1
+				 )
+           ) aa LEFT JOIN org_deptstatistics d ON aa.id=d.deptid 
+	      <if test="ordertype != null and ordertype != '' ">
+					and d.ordertype  = #{ordertype}
+		</if>
+		<if test="starttime != null and starttime != ''">
+	        and STR_TO_DATE(d.starttime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and STR_TO_DATE(d.endtime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endtime},'%Y-%m-%d')
+	    </if>
+		GROUP BY aa.id )cc on bb.id = cc.id group by bb.id order by rownum
+
+
+)aa 
+    </select>
+</mapper>

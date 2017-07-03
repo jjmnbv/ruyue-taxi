@@ -1,0 +1,982 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.OrgIndexMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOrgderList" resultType="OrgOrder" parameterType="QueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							org_order.orderno,
+							org_order.companyid,
+							org_user.nickname,
+							org_user.account,
+							CONCAT(org_user.nickname," ",org_user.account) AS userMessage,
+							le_leasescompany.shortname AS companyName,
+							org_order.ordertype,
+							org_order.usetime,
+							org_order.orderstatus,
+							org_order.paymentstatus,
+							org_order.reviewstatus,
+							org_order.paymethod,
+							org_order.orderamount
+						FROM
+							org_order,
+							org_user,
+							le_leasescompany,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_order.`status` = 1
+						AND le_leasescompany.`Status` = 1
+						AND org_order.userid = org_user.id
+						AND org_order.usetype = '0'
+						AND org_order.paymethod = '2'
+						AND org_order.companyid = le_leasescompany.id
+						AND org_order.organid in (
+							SELECT
+								organ.id
+							FROM
+								org_organ organ
+							WHERE
+								organ. STATUS = 1
+							AND organ.creditcode = (
+								SELECT
+									org_organ.creditcode
+								FROM
+									org_organ
+								WHERE
+									org_organ. STATUS = 1
+								AND org_organ.id = #{key}
+							)
+							AND organ.customertype!=1
+						)
+						AND org_order.paymethod = '2'
+						<if test="usertype == '0' or usertype == 0">
+						AND org_user.id IN 
+						(SELECT
+							org_user.id
+						FROM
+							org_user
+						WHERE
+							org_user. STATUS = 1
+						AND org_user.dpetid IN (
+							SELECT
+								org_dept.id
+							FROM
+								org_dept
+							WHERE
+								org_dept. STATUS = 1
+							AND org_dept.resid LIKE CONCAT(
+								(
+									SELECT
+										org_dept.resid
+									FROM
+										org_user,
+										org_roleuser,
+										org_dept
+									WHERE
+										org_user.id = #{userid}
+									AND org_user. STATUS = 1
+									AND org_roleuser. STATUS = 1
+									AND org_roleuser.userid = org_user.id
+									AND org_roleuser.roleid IN ('002', '004')
+									AND org_dept. STATUS = 1
+									AND org_dept.id = org_user.dpetid
+								),
+								'%'
+							)
+						)
+						UNION
+							SELECT
+								org_user.id
+							FROM
+								org_user
+							WHERE
+								org_user.id = #{userid})
+						
+						</if>
+					) m
+					where 1=1
+					<if test="queryCompany != null and queryCompany != '' ">
+						and m.companyid like "%"#{queryCompany}"%"
+					</if>
+					<if test="queryOrderNo != null and queryOrderNo != '' ">
+						and m.orderno like "%"#{queryOrderNo}"%"
+					</if>
+					<if test="queryUserMessage != null and queryUserMessage != '' ">
+						and (m.nickname like "%"#{queryUserMessage}"%" or m.account like "%"#{queryUserMessage}"%")
+					</if>
+					<choose>
+						<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+							and m.usetime &gt;= #{startTime} and m.usetime &lt; #{endTime}
+						</when>
+						<otherwise>
+							<if test="startTime != null and startTime != ''">
+								and m.usetime &gt;= #{startTime}
+							</if>
+							<if test="endTime != null and endTime != ''">
+								and m.usetime &lt; #{endTime}
+							</if>
+						</otherwise>
+					</choose>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp != '7-0'.toString() and queryOrderTemp != '7-1'.toString() and queryOrderTemp != '7-2'.toString() and queryOrderTemp != '7-3'.toString() and queryOrderTemp != '7-4'.toString()">
+						and m.orderstatus in 
+							<foreach item="item" index="index" collection="queryOrder" open="(" separator="," close=")">
+		                        #{item}
+	                		</foreach>
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-0'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '0'
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-1'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '1'
+						<!-- and m.orderstatus = '7' and m.paymentstatus in ('1','2','3') -->
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-2'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '2'
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-3'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '3'
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-4'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '4'
+					</if> 
+					<if test="queryVehicleMode != null and queryVehicleMode != '' ">
+						and m.ordertype = #{queryVehicleMode}
+					</if>
+					<if test="queryPaymentMethod != null and queryPaymentMethod != '' ">
+						and m.paymethod = #{queryPaymentMethod}
+					</if>
+					ORDER BY m.usetime DESC
+			) t
+			WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	<select id="getOrgderListCount" parameterType="QueryParam" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							org_order.orderno,
+							org_order.companyid,
+							org_user.nickname,
+							org_user.account,
+							CONCAT(org_user.nickname," ",org_user.account) AS userMessage,
+							le_leasescompany.shortname AS queryCompany,
+							org_order.ordertype,
+							org_order.usetime,
+							org_order.orderstatus,
+							org_order.paymentstatus,
+							org_order.reviewstatus,
+							org_order.paymethod,
+							org_order.orderamount
+						FROM
+							org_order,
+							org_user,
+							le_leasescompany,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_order.`status` = 1
+						AND le_leasescompany.`Status` = 1
+						AND org_order.userid = org_user.id
+						AND org_order.usetype = '0'
+						AND org_order.paymethod = '2'
+						AND org_order.companyid = le_leasescompany.id
+						AND org_order.organid in (
+							SELECT
+								organ.id
+							FROM
+								org_organ organ
+							WHERE
+								organ. STATUS = 1
+							AND organ.creditcode = (
+								SELECT
+									org_organ.creditcode
+								FROM
+									org_organ
+								WHERE
+									org_organ. STATUS = 1
+								AND org_organ.id = #{key}
+							)
+							AND organ.customertype!=1
+						)
+						AND org_order.paymethod = '2'
+						<if test="usertype == '0' or usertype == 0">
+						AND org_user.id IN 
+						(SELECT
+							org_user.id
+						FROM
+							org_user
+						WHERE
+							org_user. STATUS = 1
+						AND org_user.dpetid IN (
+							SELECT
+								org_dept.id
+							FROM
+								org_dept
+							WHERE
+								org_dept. STATUS = 1
+							AND org_dept.resid LIKE CONCAT(
+								(
+									SELECT
+										org_dept.resid
+									FROM
+										org_user,
+										org_roleuser,
+										org_dept
+									WHERE
+										org_user.id = #{userid}
+									AND org_user. STATUS = 1
+									AND org_roleuser. STATUS = 1
+									AND org_roleuser.userid = org_user.id
+									AND org_roleuser.roleid IN ('002', '004')
+									AND org_dept. STATUS = 1
+									AND org_dept.id = org_user.dpetid
+								),
+								'%'
+							)
+						)
+						UNION
+							SELECT
+								org_user.id
+							FROM
+								org_user
+							WHERE
+								org_user.id = #{userid})
+						
+						</if>
+					) m
+					where 1=1
+					<if test="queryCompany != null and queryCompany != '' ">
+						and m.companyid like "%"#{queryCompany}"%"
+					</if>
+					<if test="queryOrderNo != null and queryOrderNo != '' ">
+						and m.orderno like "%"#{queryOrderNo}"%"
+					</if>
+					<if test="queryUserMessage != null and queryUserMessage != '' ">
+						and (m.nickname like "%"#{queryUserMessage}"%" or m.account like "%"#{queryUserMessage}"%")
+					</if>
+					<choose>
+						<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+							and m.usetime &gt;= #{startTime} and m.usetime &lt;= #{endTime}
+						</when>
+						<otherwise>
+							<if test="startTime != null and startTime != ''">
+								and m.usetime &gt;= #{startTime}
+							</if>
+							<if test="endTime != null and endTime != ''">
+								and m.usetime &lt;= #{endTime}
+							</if>
+						</otherwise>
+					</choose>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp != '7-0'.toString() and queryOrderTemp != '7-1'.toString() and queryOrderTemp != '7-2'.toString() and queryOrderTemp != '7-3'.toString() and queryOrderTemp != '7-4'.toString()">
+						and m.orderstatus in 
+							<foreach item="item" index="index" collection="queryOrder" open="(" separator="," close=")">
+		                        #{item}
+	                		</foreach>
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-0'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '0'
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-1'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '1'
+						<!-- and m.orderstatus = '7' and m.paymentstatus in ('1','2','3') -->
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-2'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '2'
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-3'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '3'
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-4'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '4'
+					</if> 
+					<if test="queryVehicleMode != null and queryVehicleMode != '' ">
+						and m.ordertype = #{queryVehicleMode}
+					</if>
+					<if test="queryPaymentMethod != null and queryPaymentMethod != '' ">
+						and m.paymethod = #{queryPaymentMethod}
+					</if>
+					ORDER BY m.usetime DESC
+			) t
+	</select>
+	<select id="getQueryCompany" resultType="LeLeasescompany" parameterType="map">
+		SELECT
+			*
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.`Status` = 1
+		ORDER BY CreateTime
+		LIMIT 1
+		<!-- SELECT
+			*
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.`Status` = 1
+		AND le_leasescompany.id IN (
+			SELECT
+				org_organ_company_ref.companyid
+			FROM
+				org_organ_company_ref
+			WHERE
+				org_organ_company_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = #{organid}
+					)
+					AND organ.customertype!=1
+				)
+				AND org_organ_company_ref.bindstate='1'
+		) -->
+	</select>
+	<!-- 订单详情  -->
+	<select id="getById" resultType="OrgOrderDetails" parameterType="string">
+		SELECT
+			org_order.orderno,
+			org_order.paymentstatus,
+			le_leasescompany.servicesphone,
+			le_leasescompany. NAME AS companyName,
+			CONCAT(
+				org_order.passengers,
+				"(",
+				org_order.passengerphone,
+				")"
+			) AS passengerCar,
+			org_order.usetime,
+			org_order.onaddress,
+			org_order.offaddress,
+			org_order.ordertype,
+			org_order.estimatedtime,
+			org_order.estimatedmileage,
+			org_order.estimatedcost,
+			org_order.cancelparty,
+			org_order.canceltime,
+			(
+				SELECT
+					text
+				FROM
+					pub_dictionary
+				WHERE
+					pub_dictionary.id = org_order.vehiclessubjecttype
+			) AS vehiclessubjecttype,
+			org_order.vehiclessubjecttype,
+			org_order.vehiclessubject,
+			org_order.paymethod,
+			org_order.orderamount,
+			org_order.pricecopy,
+			org_order.orderstatus,
+			org_order.usetype,
+			(
+				SELECT
+					CONCAT(
+						pub_driver.`name`,
+						"(",
+						pub_driver.phone,
+						")"
+					)
+				FROM
+					pub_driver
+				WHERE
+					pub_driver.`Status` = 1
+				AND pub_driver.id = org_order.driverid
+			) AS driverName,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_vehicle.platenoprovince = pub_dictionary.`value`
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_vehicle.platenocity = pub_dictionary.`value`
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle.`Status` = 1
+				AND pub_vehicle.id = org_order.vehicleid
+			) AS plateNo,
+			(
+				SELECT
+					CONCAT(
+						pub_vehicle.color,
+						" ",
+						pub_vehcbrand.`Name`,
+						pub_vehcline.`name`
+					)
+				FROM
+					pub_vehicle,
+					pub_vehcbrand,
+					pub_vehcline
+				WHERE
+					pub_vehicle.`Status` = 1
+				AND pub_vehcbrand.`Status` = 1
+				AND pub_vehcline.`Status` = 1
+				AND pub_vehicle.vehclineid = pub_vehcline.Id
+				AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+				AND pub_vehicle.id = org_order.vehicleid
+			) AS vehcBrandName,
+			<!-- (
+				SELECT
+					le_vehiclemodels.`name`
+				FROM
+					pub_vehicle,
+					le_vehiclemodels,
+					le_vehcline_models_ref,
+					pub_vehcline
+				WHERE
+					pub_vehicle.`Status` = 1
+				AND le_vehiclemodels.`Status` = 1
+				AND le_vehcline_models_ref.`Status` = 1
+				AND pub_vehcline.`Status` = 1
+				AND pub_vehicle.vehclineid = pub_vehcline.Id
+				AND pub_vehcline.Id = le_vehcline_models_ref.vehclineid
+				AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+				AND pub_vehicle.id = org_order.vehicleid
+			) AS modelName -->
+			org_order.factmodelname AS modelName
+		FROM
+			org_order,
+			le_leasescompany
+		WHERE
+			org_order.companyid = le_leasescompany.id
+		AND org_order.`status` = 1
+		AND le_leasescompany.`Status` = 1
+		AND org_order.orderno = #{id}
+	</select>
+	<!-- 订单详情  根据司机id查  -->
+	<!-- 订单详情根据 -->
+	<select id="exportExcel" resultType="OrgOrder" parameterType="QueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							<!-- 订单号 -->
+							org_order.orderno,
+							<!-- 下单人姓名 -->
+							org_user.nickname,
+							<!-- 下单人电话 -->
+							org_user.account,
+							<!-- 下单人部门 -->
+							(SELECT org_dept.deptname FROM org_dept WHERE org_dept.id = org_user.dpetid) as deptid,
+							<!-- 乘车人 -->
+							org_order.passengers,
+							<!-- 乘车人电话 -->
+							org_order.passengerphone,
+							<!-- 上车地址 -->
+							org_order.onaddress,
+							<!-- 下车地址  -->
+							org_order.offaddress,
+							<!-- 预估行驶时长（分钟） -->
+							org_order.estimatedtime,
+							<!-- 预估行驶里程（公里） -->
+							org_order.estimatedmileage,
+							<!-- 下单时间 -->
+							org_order.undertime,
+							<!-- 用车时间 -->
+							org_order.usetime,
+							<!-- 接单时间 -->
+							org_order.ordertime,
+							<!-- 开始时间 -->
+							org_order.starttime,
+							<!-- 结束时间 -->
+							org_order.endtime,
+							<!-- 订单状态 -->
+							org_order.orderstatus,
+							<!-- 支付方式  	paymethod订单结算方式 包括：0-个人支付，1-个人垫付，2-机构支付 -->
+							org_order.paymethod,
+							<!-- 支付状态 包括(0-未支付，1-已支付，2-结算中，3-已结算) -->
+							org_order.paymentstatus,
+							<!-- 支付渠道   1-钱包支付，2-微信支付，3-支付宝支付 -->
+							org_order.paytype,
+							<!-- 下单来源(00-安卓乘客端，01-IOS乘客端，02-微信乘客端，10-租赁端，20-机构端，30-运管端) -->
+							org_order.ordersource,
+							<!-- 用车方式   用车类型(0-因公，1-因私，2-个人) -->
+							org_order.usetype,
+							<!-- 订单类型(1-约车、2-接机、3-送机，4-出租车) -->
+							org_order.ordertype,
+							<!-- 服务车型  -->
+							org_order.factmodelname AS modelName,
+							<!-- (SELECT le_vehiclemodels.`name` FROM pub_vehicle, le_vehcline_models_ref, le_vehiclemodels
+								WHERE org_order.userid = org_user.id
+								AND org_order.vehicleid = pub_vehicle.id
+								AND pub_vehicle.vehclineid = le_vehcline_models_ref.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+							) AS modelName, -->
+							<!-- 获取用车事由类型包括：公务出行、接待客户、会议用车、商务差旅、其它选项，从字典中读取加载  -->
+							( SELECT text FROM pub_dictionary
+								WHERE pub_dictionary.id = org_order.vehiclessubjecttype
+							) AS vehiclessubjecttype,
+							<!-- 用车事由  说明 -->
+							org_order.vehiclessubject,
+							<!-- 行程备注 -->
+							org_order.tripremark,
+							<!-- 司机信息 -->
+							(SELECT CONCAT(pub_driver.`name`,"(",pub_driver.phone,")") FROM pub_driver
+								WHERE pub_driver.`Status` = 1
+								AND pub_driver.id = org_order.driverid
+							) AS driverName,
+							<!-- 资格证号 -->
+							(SELECT pub_driver.jobnum FROM pub_driver
+								WHERE pub_driver.`Status` = 1
+								AND pub_driver.id = org_order.driverid
+							) AS jobnum,
+							<!-- 租赁公司简称  服务车企 -->
+							le_leasescompany.shortname AS companyName,
+							<!-- 用车城市 -->
+							(SELECT city FROM pub_cityaddr
+								WHERE pub_cityaddr.id = org_order.oncity
+								AND pub_cityaddr.`Status` = 1
+							) AS oncity,
+							<!-- 计价条件副本 -->
+							org_order.pricecopy,
+							<!-- 所属租赁公司 与租赁公司id关联 -->
+							org_order.companyid,
+							<!-- 复核状态 包括(0-未复核，1-异常待复核，2-已复核) -->
+							org_order.reviewstatus,
+							<!-- 实际金额 -->
+							org_order.orderamount
+						FROM
+							org_order,
+							org_user,
+							le_leasescompany,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_order.`status` = 1
+						AND le_leasescompany.`Status` = 1
+						AND org_order.userid = org_user.id
+						AND org_order.usetype = '0'
+						AND org_order.paymethod != '0'
+						AND org_order.companyid = le_leasescompany.id
+						AND org_order.organid IN (
+							SELECT
+								organ.id
+							FROM
+								org_organ organ
+							WHERE
+								organ. STATUS = 1
+							AND organ.creditcode = (
+								SELECT
+									org_organ.creditcode
+								FROM
+									org_organ
+								WHERE
+									org_organ. STATUS = 1
+								AND org_organ.id = #{key}
+							)
+						)
+						<if test="usertype == '0' or usertype == 0">
+						AND org_user.id IN 
+						(SELECT
+							org_user.id
+						FROM
+							org_user
+						WHERE
+							org_user. STATUS = 1
+						AND org_user.dpetid IN (
+							SELECT
+								org_dept.id
+							FROM
+								org_dept
+							WHERE
+								org_dept. STATUS = 1
+							AND org_dept.resid LIKE CONCAT(
+								(
+									SELECT
+										org_dept.resid
+									FROM
+										org_user,
+										org_roleuser,
+										org_dept
+									WHERE
+										org_user.id = #{userid}
+									AND org_user. STATUS = 1
+									AND org_roleuser. STATUS = 1
+									AND org_roleuser.userid = org_user.id
+									AND org_roleuser.roleid IN ('002', '004')
+									AND org_dept. STATUS = 1
+									AND org_dept.id = org_user.dpetid
+								),
+								'%'
+							)
+						)
+						UNION
+							SELECT
+								org_user.id
+							FROM
+								org_user
+							WHERE
+								org_user.id = #{userid})
+						
+						</if>
+					) m
+				WHERE
+				1 = 1
+				<if test="queryCompany != null and queryCompany != '' ">
+					and m.companyid like "%"#{queryCompany}"%"
+				</if>
+				<if test="queryOrderNo != null and queryOrderNo != '' ">
+					and m.orderno like "%"#{queryOrderNo}"%"
+				</if>
+				<if test="queryUserMessage != null and queryUserMessage != '' ">
+					and (m.nickname like "%"#{queryUserMessage}"%" or m.account like "%"#{queryUserMessage}"%")
+				</if>
+				<choose>
+					<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+						and m.usetime &gt;= #{startTime} and m.usetime &lt; #{endTime}
+					</when>
+					<otherwise>
+						<if test="startTime != null and startTime != ''">
+							and m.usetime &gt;= #{startTime}
+						</if>
+						<if test="endTime != null and endTime != ''">
+							and m.usetime &lt; #{endTime}
+						</if>
+					</otherwise>
+				</choose>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp != '7-0'.toString() and queryOrderTemp != '7-1'.toString() and queryOrderTemp != '7-2'.toString() and queryOrderTemp != '7-3'.toString() and queryOrderTemp != '7-4'.toString()">
+						and m.orderstatus in 
+							<foreach item="item" index="index" collection="queryOrder" open="(" separator="," close=")">
+		                        #{item}
+	                		</foreach>
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-0'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '0'
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-1'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '1'
+					<!-- and m.orderstatus = '7' and m.paymentstatus in ('1','2','3') -->
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-2'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '2'
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-3'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '3'
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-4'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '4'
+				</if> 
+				<if test="queryVehicleMode != null and queryVehicleMode != '' ">
+					and m.ordertype = #{queryVehicleMode}
+				</if>
+				<if test="queryPaymentMethod != null and queryPaymentMethod != '' ">
+					and m.paymethod = #{queryPaymentMethod}
+				</if>
+				ORDER BY m.usetime DESC
+			) t
+	</select>
+<!-- 	<select id="exportExcel" resultType="OrgOrder" parameterType="QueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							订单号
+							org_order.orderno,
+							下单人姓名
+							org_user.nickname,
+							下单人电话
+							org_user.account,
+							下单人部门
+							(SELECT org_dept.deptname FROM org_dept WHERE org_dept.id = org_user.dpetid) as deptid,
+							乘车人
+							org_order.passengers,
+							乘车人电话
+							org_order.passengerphone,
+							上车地址
+							org_order.onaddress,
+							下车地址 
+							org_order.offaddress,
+							预估行驶时长（分钟）
+							org_order.estimatedtime,
+							预估行驶里程（公里）
+							org_order.estimatedmileage,
+							下单时间
+							org_order.undertime,
+							用车时间
+							org_order.usetime,
+							接单时间
+							org_order.ordertime,
+							开始时间
+							org_order.starttime,
+							结束时间
+							org_order.endtime,
+							订单状态
+							org_order.orderstatus,
+							支付方式  	paymethod订单结算方式 包括：0-个人支付，1-个人垫付，2-机构支付
+							org_order.paymethod,
+							支付状态 包括(0-未支付，1-已支付，2-结算中，3-已结算)
+							org_order.paymentstatus,
+							支付渠道   1-钱包支付，2-微信支付，3-支付宝支付
+							org_order.paytype,
+							下单来源(00-安卓乘客端，01-IOS乘客端，02-微信乘客端，10-租赁端，20-机构端，30-运管端)
+							org_order.ordersource,
+							用车方式   用车类型(0-因公，1-因私，2-个人)
+							org_order.usetype,
+							订单类型(1-约车、2-接机、3-送机，4-出租车)
+							org_order.ordertype,
+							服务车型 
+							org_order.factmodelname AS modelName,
+							(SELECT le_vehiclemodels.`name` FROM pub_vehicle, le_vehcline_models_ref, le_vehiclemodels
+								WHERE org_order.userid = org_user.id
+								AND org_order.vehicleid = pub_vehicle.id
+								AND pub_vehicle.vehclineid = le_vehcline_models_ref.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+							) AS modelName,
+							获取用车事由类型包括：公务出行、接待客户、会议用车、商务差旅、其它选项，从字典中读取加载 
+							( SELECT text FROM pub_dictionary
+								WHERE pub_dictionary.id = org_order.vehiclessubjecttype
+							) AS vehiclessubjecttype,
+							用车事由  说明
+							org_order.vehiclessubject,
+							行程备注
+							org_order.tripremark,
+							司机信息
+							(SELECT CONCAT(pub_driver.`name`,"(",pub_driver.phone,")") FROM pub_driver
+								WHERE pub_driver.`Status` = 1
+								AND pub_driver.id = org_order.driverid
+							) AS driverName,
+							司机姓名
+							(SELECT pub_driver.name FROM pub_driver
+								WHERE pub_driver.`Status` = 1
+								AND pub_driver.id = org_order.driverid) as name,
+							司机电话
+								(SELECT pub_driver.phone FROM pub_driver
+								WHERE pub_driver.`Status` = 1
+								AND pub_driver.id = org_order.driverid) as phone,
+							org_order.plateno as plateno,
+							资格证号
+							(SELECT pub_driver.jobnum FROM pub_driver
+								WHERE pub_driver.`Status` = 1
+								AND pub_driver.id = org_order.driverid
+							) AS jobnum,
+							租赁公司简称  服务车企
+							le_leasescompany.shortname AS companyName,
+							用车城市
+							(SELECT city FROM pub_cityaddr
+								WHERE pub_cityaddr.id = org_order.oncity
+								AND pub_cityaddr.`Status` = 1
+							) AS oncity,
+							计价条件副本
+							org_order.pricecopy,
+							所属租赁公司 与租赁公司id关联
+							org_order.companyid,
+							复核状态 包括(0-未复核，1-异常待复核，2-已复核)
+							org_order.reviewstatus,
+							实际金额
+							org_order.orderamount
+						FROM
+							org_order,
+							org_user,
+							le_leasescompany,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_order.`status` = 1
+						AND le_leasescompany.`Status` = 1
+						AND org_order.userid = org_user.id
+						AND org_order.usetype = '0'
+						AND org_order.paymethod = '2'
+						AND org_order.companyid = le_leasescompany.id
+						AND org_order.organid IN (
+							SELECT
+								organ.id
+							FROM
+								org_organ organ
+							WHERE
+								organ. STATUS = 1
+							AND organ.creditcode = (
+								SELECT
+									org_organ.creditcode
+								FROM
+									org_organ
+								WHERE
+									org_organ. STATUS = 1
+								AND org_organ.id = #{key}
+							)
+							AND organ.customertype!=1
+						)
+						<if test="usertype == '0' or usertype == 0">
+						AND org_user.id IN 
+						(SELECT
+							org_user.id
+						FROM
+							org_user
+						WHERE
+							org_user. STATUS = 1
+						AND org_user.dpetid IN (
+							SELECT
+								org_dept.id
+							FROM
+								org_dept
+							WHERE
+								org_dept. STATUS = 1
+							AND org_dept.resid LIKE CONCAT(
+								(
+									SELECT
+										org_dept.resid
+									FROM
+										org_user,
+										org_roleuser,
+										org_dept
+									WHERE
+										org_user.id = #{userid}
+									AND org_user. STATUS = 1
+									AND org_roleuser. STATUS = 1
+									AND org_roleuser.userid = org_user.id
+									AND org_roleuser.roleid IN ('002', '004')
+									AND org_dept. STATUS = 1
+									AND org_dept.id = org_user.dpetid
+								),
+								'%'
+							)
+						)
+						UNION
+							SELECT
+								org_user.id
+							FROM
+								org_user
+							WHERE
+								org_user.id = #{userid})
+						
+						</if>
+					) m
+				WHERE
+				1 = 1
+				<if test="queryCompany != null and queryCompany != '' ">
+					and m.companyid like "%"#{queryCompany}"%"
+				</if>
+				<if test="queryOrderNo != null and queryOrderNo != '' ">
+					and m.orderno like "%"#{queryOrderNo}"%"
+				</if>
+				<if test="queryUserMessage != null and queryUserMessage != '' ">
+					and (m.nickname like "%"#{queryUserMessage}"%" or m.account like "%"#{queryUserMessage}"%")
+				</if>
+				<choose>
+					<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+						and m.usetime &gt;= #{startTime} and m.usetime &lt; #{endTime}
+					</when>
+					<otherwise>
+						<if test="startTime != null and startTime != ''">
+							and m.usetime &gt;= #{startTime}
+						</if>
+						<if test="endTime != null and endTime != ''">
+							and m.usetime &lt; #{endTime}
+						</if>
+					</otherwise>
+				</choose>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp != '7-0'.toString() and queryOrderTemp != '7-1'.toString() and queryOrderTemp != '7-2'.toString() and queryOrderTemp != '7-3'.toString() and queryOrderTemp != '7-4'.toString()">
+						and m.orderstatus in 
+							<foreach item="item" index="index" collection="queryOrder" open="(" separator="," close=")">
+		                        #{item}
+	                		</foreach>
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-0'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '0'
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-1'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '1'
+					and m.orderstatus = '7' and m.paymentstatus in ('1','2','3')
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-2'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '2'
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-3'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '3'
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-4'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '4'
+				</if> 
+				<if test="queryVehicleMode != null and queryVehicleMode != '' ">
+					and m.ordertype = #{queryVehicleMode}
+				</if>
+				<if test="queryPaymentMethod != null and queryPaymentMethod != '' ">
+					and m.paymethod = #{queryPaymentMethod}
+				</if>
+				ORDER BY m.usetime DESC
+			) t
+	</select> -->
+	<select id="getOrgOrderByOrderno" resultType="map" parameterType="String">
+		select a.*, b.nickname, b.account, c.`name` vehiclemodelname, d.`name` drivername, d.phone driverphone, 
+		CONCAT((select text from pub_dictionary where type = '车牌省' and value = e.platenoprovince),
+		(select text from pub_dictionary where type = '车牌市' and value =e.platenocity), e.plateno
+		) plateno, e.*
+		from org_order a, org_user b, le_vehiclemodels c, pub_driver d, pub_vehicle e, pub_driver_vehicle_ref f
+		where
+		a.userid = b.id and a.driverid = d.id and a.selectedmodel = c.Id and d.id = f.driverid and e.id = f.vehicleid 
+		<!-- and f.bindstate = 0 --> and a.`status` = 1 and b.`Status` = 1 and c.`Status` = 1 and d.`Status` = 1 and e.`Status` = 1 and 
+		a.orderno = #{orderno} limit 1
+	</select>
+	<!-- 通过organid 查到  同一个机构下的organid -->
+	<select id="getByOrganId" resultType="OrgUser" parameterType="string">
+		SELECT
+			organ.id
+		FROM
+			org_organ organ
+		WHERE
+			organ. STATUS = 1
+		AND organ.creditcode = (
+			SELECT
+				org_organ.creditcode
+			FROM
+				org_organ
+			WHERE
+				org_organ. STATUS = 1
+			AND org_organ.id = '1357'
+		)
+		AND organ.customertype!=1
+	</select>
+</mapper>
