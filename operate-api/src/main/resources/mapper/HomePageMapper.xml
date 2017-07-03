@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.HomePageMapper">
+	<!-- 租赁公司不同类型的订单信息 -->
+	<select id="getCompayData" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			(case when ISNULL(sum(bepaidorders+paidorders)) then 0 else sum(bepaidorders+paidorders) end) AS orders,
+			(case when ISNULL(sum(bepaidorders)) then 0 else sum(bepaidorders) end) AS unpayedcount,
+			(case when ISNULL(sum(paidorders)) then 0 else sum(paidorders) end) AS payedcount,
+			(case when ISNULL(sum(bepaidmoney)) then 0 else sum(bepaidmoney) end) AS bepaidmoney,
+			(case when ISNULL(sum(paidmoney)) then 0 else sum(paidmoney) end) AS payedmoney,
+			(case when ISNULL(sum(paidmoney+bepaidmoney)) then 0 else sum(paidmoney+bepaidmoney) end) as incomemoney,
+			(case when ISNULL(sum(diffmoney)) then 0 else sum(diffmoney) end)  as diffmoney,
+			(case when ISNULL(sum(paidmoney+bepaidmoney+diffmoney)) then 0 else sum(paidmoney+bepaidmoney+diffmoney) end)  as ordersmoney
+		FROM
+			op_indexorderstatistics
+		WHERE
+			status = 1
+		AND type = #{type}
+		<if test="ordertype != '' and ordertype != null">
+		  AND ordertype=#{ordertype}
+		</if>
+	</select>
+	<!-- 获取时间分类订单信息 -->
+	<select id="getDataByTime" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			(case when ISNULL(sum(bepaidorders+paidorders)) then 0 else sum(bepaidorders+paidorders) end) AS orders,
+			(case when ISNULL(sum(paidmoney+bepaidmoney+diffmoney)) then 0 else sum(paidmoney+bepaidmoney+diffmoney) end) as ordersmoney
+		FROM
+			op_indexorderstatistics
+		WHERE
+			status = 1
+		  AND type = #{type}
+		  <![CDATA[  AND starttime >= DATE(#{starttime}) AND endtime <= DATE(#{endtime}) ]]>
+	</select>
+</mapper>

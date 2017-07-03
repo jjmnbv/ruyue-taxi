@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OrderMapper">
+	<!-- All Select -->
+	<select id="getOpOrder" parameterType="String" resultType="OpOrder">
+		SELECT * FROM op_order oo WHERE oo.`status` = 1 AND oo.orderno = #{orderno}
+	</select>
+	
+	<select id="getCompanyList" resultType="LeLeasescompany">
+		SELECT
+			ll.*
+		FROM
+			`le_leasescompany` ll
+		WHERE
+			ll.tocstate = 2 and ((ll.status = 1 and ll.platformtype = 1) <!-- 加入toC业务的租赁公司 -->
+			or
+			(ll.status = 2 and ll.platformtype = 0))
+		ORDER BY
+			ll.platformtype,
+			CONVERT (shortname USING gbk) ASC; <!-- 按拼音首字母排序 -->
+	</select>
+    <select id="getBelongCompanyList" resultType="java.util.Map">
+        select id, text shortName
+        from pub_dictionary
+        where type = '租赁公司' and status = '1'
+        order by
+        CONVERT (shortname USING gbk) ASC
+    </select>
+	<select id="getMinOrderInfo" resultType="MinOrderInfo" parameterType="String">
+		select
+			op_order.orderno, op_order.ordertype, op_order.plateno, op_order.factmodelname cartype,
+			concat(op_order.vehcbrandname, " ", op_order.vehclinename) carbrand,
+			pub_driver.name drivername, pub_driver.phone driverphone
+		from
+			op_order left join pub_driver on op_order.driverid = pub_driver.id
+		where
+			op_order.orderno = #{orderno}
+	</select>
+	
+	<select id="getCarTypes" resultType="OpVehiclemodels" parameterType="GetCarTypesParam">
+		SELECT
+			oa.startprice,
+			oa.rangeprice,
+			oa.timeprice,
+			ov.*
+		FROM
+			op_vehiclemodels ov,
+			op_accountrules oa
+		WHERE 1 = 1
+		AND oa.`status` = 1
+		AND ov.`status` = 1
+		AND oa.vehiclemodelsid = ov.Id
+		AND oa.rulesstate = 0
+		AND oa.rulestype = #{ordertype}
+		AND oa.city = #{city}
+		and ov.modelstatus = "0"
+		ORDER BY ov.`level`
+	</select>
+	
+	<select id="getMostContactCount" resultType="int" parameterType="Map">
+		select count(*) from (SELECT 
+			fav.*,CONCAT(fav.name,fav.phone) namephone 
+		FROM(
+			SELECT
+				pu.id,
+				pu.id userid,
+				pu.nickname `name`,
+				pu.account phone,
+				pu.createtime,
+				pu.updatetime,
+				pu.id creater,
+				pu.id updater,
+				pu.`Status`
+			FROM
+				pe_user pu
+			WHERE 1=1
+			AND pu.`status` = 1
+			AND pu.account = #{userid}
+			UNION
+			SELECT
+				pm.*
+			FROM
+				pub_mostcontact pm,
+				pe_user pu
+			WHERE 1=1
+			AND pu.`status` = 1
+			AND pm.`status` = 1
+			AND pm.userphone = #{userid}
+		) fav 
+		<if test="sSearch != null and sSearch != ''">
+		WHERE
+			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
+		</if>
+		group by CONCAT(fav.name,fav.phone))aa
+	</select>
+	
+	<select id="getMostContact" resultType="PeMostContact" parameterType="Select2Param">
+	select * from (SELECT 
+			fav.*,CONCAT(fav.name,fav.phone) namephone 
+		FROM(
+			SELECT
+				pu.id,
+				pu.id userid,
+				pu.nickname `name`,
+				pu.account phone,
+				pu.createtime,
+				pu.updatetime,
+				pu.id creater,
+				pu.id updater,
+				pu.`Status`
+			FROM
+				pe_user pu
+			WHERE 1=1
+			AND pu.`status` = 1
+			AND pu.account = #{userid}
+			UNION
+			SELECT
+				pm.*
+			FROM
+				pub_mostcontact pm,
+				pe_user pu
+			WHERE 1=1
+			AND pu.`status` = 1
+			AND pm.`status` = 1
+			AND pm.userphone = #{userid}
+		) fav
+		<if test="sSearch != null and sSearch != ''">
+		WHERE
+			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
+		</if>)aa group by namephone
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getMostAddress" resultType="PeMostAddress" parameterType="BaseOpParam">
+		SELECT
+			pm.*,pca.city citycaption
+		FROM
+			pub_mostaddress pm,
+			pub_cityaddr pca
+		WHERE 1=1
+		AND pca.`status` = 1 
+		AND pm.`status` = 1
+		AND pca.id = pm.city 
+		AND pm.userphone = #{userid}
+		<if test="sSearch != null and sSearch != ''">
+		AND (
+			pca.city LIKE '%${sSearch}%'
+			OR pm.address LIKE '%${sSearch}%'
+		)
+		</if>
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getMostContactForSelect" resultType="Select2Entity" parameterType="Select2Param">
+		SELECT
+		<if test="type == 0">
+			fav.name id,
+			CONCAT(fav.phone, ' ',IFNULL(fav.name,'')) text
+		</if>
+		<if test="type == 1">
+			fav.phone id,
+			CONCAT(fav.phone, ' ',IFNULL(fav.name,'')) text
+		</if>
+		FROM
+		(
+			SELECT
+				pu.id,
+				pu.id userid,
+				pu.nickname `name`,
+				pu.account phone,
+				pu.createtime,
+				pu.updatetime,
+				pu.id creater,
+				pu.id updater,
+				pu.`Status`
+			FROM
+				pe_user pu
+			WHERE
+				pu.account = (select account from pe_user where id = #{userid})
+				and pu.`status` = 1
+			UNION
+			SELECT
+				pm.*
+			FROM
+				pub_mostcontact pm,
+				pe_user pu
+			WHERE
+				pm.`status` = 1
+			AND pm.userphone = pu.account
+			AND pu.account = (select account from pe_user where id = #{userid})
+		) fav
+		<if test="sSearch != null and sSearch != ''">
+		WHERE
+			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
+		</if>group by CONCAT(fav.phone, ' ',IFNULL(fav.name,''))
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getPeUserForSelect" resultType="Select2Entity" parameterType="Select2Param">
+		SELECT
+			pu.id,
+		CASE WHEN (
+			(
+				SELECT
+					COUNT(oo.orderno)
+				FROM
+					op_order oo
+				WHERE
+					oo.`status` = 1
+				AND oo.userid = pu.id
+				AND oo.orderstatus = #{orderstatus}
+				AND (
+					oo.paymentstatus = #{paymentstatus}
+					OR ISNULL(oo.paymentstatus)
+				)
+			)
+			+
+			(select count(*) from op_taxiorder where op_taxiorder.status = 1 and op_taxiorder.userid = pu.id and op_taxiorder.orderstatus = "7" and (op_taxiorder.paymentstatus in ("0", "5", "6") or isnull(op_taxiorder.paymentstatus)))
+			) > 0 
+			THEN CONCAT(pu.account,' ',IFNULL(pu.nickname,''),'(未支付)')
+			WHEN pu.disablestate = 1
+			THEN CONCAT(pu.account,' ',IFNULL(pu.nickname,''),'(已禁用)')
+			ELSE CONCAT(pu.account,' ',IFNULL(pu.nickname,''))
+			END text
+		FROM
+			pe_user pu
+		WHERE 1=1
+		AND pu.`status` = 1
+		<if test="sSearch != null and sSearch != ''">
+		AND (
+			pu.account LIKE '%${sSearch}%'
+			OR pu.nickname LIKE '%${sSearch}%'
+		)
+		</if>
+		limit 0,10
+	</select>
+	
+	<select id="getPeUserById" parameterType="String" resultType="PeUser">
+		SELECT 
+		pu.*,
+		(
+			SELECT
+				COUNT(oo.orderno)
+			FROM
+				op_order oo
+			WHERE
+				oo.`status` = 1
+			AND oo.userid = pu.id
+			AND oo.orderstatus != 8
+			AND (
+				oo.paymentstatus = '0'
+				OR ISNULL(oo.paymentstatus)
+			)
+		) > 0 notpay
+		FROM
+			pe_user pu
+		WHERE 1=1
+		AND pu.`status` = 1
+		AND pu.id = #{userid}
+	</select>	
+	
+	<!-- 查询网约车业务城市 -->
+	<select id="getNetBusCity" resultType="PubCityAddr" parameterType="map">
+		select * from pub_cityaddr
+		where
+			id in (
+				select city from op_accountrules where rulestype = #{ordertype} and rulesstate = "0" and status = 1
+			)
+			and id in (
+				select city from pub_sendrules where platformtype = "0" and vehicletype = 0 and status = 1
+			)
+			and status = 1
+			<if test='null != city and null != city'>
+				and id = #{city}
+			</if>
+		order by fullnameinitials
+	</select>
+	
+	<!-- 查询出租车业务城市 -->
+	<select id="getTaxiBusCity" resultType="map" parameterType="map">
+		select
+			pub_provinceaddr.id provinceid, pub_provinceaddr.city provincecity, pub_provinceaddr.markid provincemarkid,
+			pub_cityaddr.id cityid, pub_cityaddr.city city, pub_cityaddr.markid citymarkid
+		from
+			pub_cityaddr left join pub_provinceaddr on pub_cityaddr.provinceid = pub_provinceaddr.id
+		where
+			pub_cityaddr.status = 1
+			and pub_cityaddr.id in (
+				select city from op_taxiaccountrules where rulesstate = "0" and status = 1
+			)
+			and pub_cityaddr.id in (
+				select city from op_taxisendrules where rulesstate = "0" and status = 1
+			)
+			<if test='null != city and "" != city'>
+				and pub_cityaddr.id = #{city}
+			</if>
+		order by
+			pub_provinceaddr.sortno desc, pub_provinceaddr.cityinitials, pub_cityaddr.sortno desc, pub_cityaddr.cityinitials
+	</select>
+	
+	<!-- All Update -->
+	<update id="updateOpOrder" parameterType="OpOrder">
+		UPDATE op_order SET 
+			companyid=#{companyid},
+			selectedmodel=#{selectedmodel},
+			ordertype=#{ordertype},
+			userid=#{userid},
+			passengers=#{passengers},
+			passengerphone=#{passengerphone},
+			driverid=#{driverid},
+			vehicleid=#{vehicleid},
+			oncity=#{oncity},
+			onaddress=#{onaddress},
+			offcity=#{offcity},
+			offaddress=#{offaddress},
+			onaddrlng=#{onaddrlng},
+			onaddrlat=#{onaddrlat},
+			offaddrlng=#{offaddrlng},
+			offaddrlat=#{offaddrlat},
+			usetime=#{usetime},
+			tripremark=#{tripremark},
+			orderstatus=#{orderstatus},
+			paymentstatus=#{paymentstatus},
+			reviewstatus=#{reviewstatus},
+			estimatedtime=#{estimatedtime},
+			estimatedmileage=#{estimatedmileage},
+			estimatedcost=#{estimatedcost},
+			paytype=#{paytype},
+			mileage=#{mileage},
+			orderamount=#{orderamount},
+			undertime=#{undertime},
+			ordertime=#{ordertime},
+			departuretime=#{departuretime},
+			arrivaltime=#{arrivaltime},
+			starttime=#{starttime},
+			endtime=#{endtime},
+			completetime=#{completetime},
+			pricecopy=#{pricecopy},
+			fltno=#{fltno},
+			falltime=#{falltime},
+			reviewperson=#{reviewperson},
+			orderreason=#{orderreason},
+			ordersource=#{ordersource},
+			userrate=#{userrate},
+			usercomment=#{usercomment},
+			createtime=#{createtime},
+			updatetime=#{updatetime},
+			userhidden=#{userhidden},
+			cancelparty=#{cancelparty},
+			canceltime=#{canceltime},
+			pushnumber=#{pushnumber},
+			status=#{status}
+		WHERE orderno=#{orderno}
+	</update>
+    <select id="getManualSelectDriver" resultType="com.szyciov.op.dto.response.GetManualDriverResponse" parameterType="com.szyciov.op.dto.request.GetManualDriverRequest">
+        select
+            concat(id, '_', vehicleid) id,
+            concat(phone, ' ', `name`) text,
+            jobNum,
+            `name`,
+            phone,
+            workStatus,
+            plateNo,
+            vehicleModelName
+        from (
+            -- toc 业务
+             select
+                t5.id,
+                t1.id vehicleid,
+                t5.jobnum jobNum,
+                t5.`name`,
+                t5.phone,
+                t5.workstatus workStatus,
+                concat(dicp.`text`, dicc.`text`, t1.plateno)  plateNo,
+                t6.name vehicleModelName,
+                t5.belongleasecompany
+             from pub_vehicle t1
+             inner join op_vehiclemodels_vehicle_ref t2 on t1.id =t2.vehicleid
+             inner join le_leasescompany t3 on t3.id=t1.leasescompanyid
+             inner join pub_driver_vehicle_ref t4 on t4.vehicleid=t1.id
+             inner join pub_driver t5 on t4.driverid = t5.id
+             inner join op_vehiclemodels t6 on t6.Id=t2.vehiclemodelsid
+             inner join pub_dictionary dicp on t1.platenoprovince=dicp.value
+             inner join pub_dictionary dicc on t1.platenocity=dicc.value
+             where 1=1
+                and t1.status=1
+                and t2.status=1
+                and t3.status=1
+                and t4.status=1
+                and t5.status=1
+                and t6.status=1
+                and t3.tocstate = 2
+                and t5.vehicletype=0
+                and t5.workstatus=0
+            union
+            -- 运管业务
+            select
+                t1.id,
+                t3.id vehicleid,
+                t1.jobnum jobNum,
+                t1.`name`,
+                t1.phone,
+                t1.workstatus workStatus,
+                concat(dicp.`text`, dicc.`text`, t3.plateno)  plateNo,
+                t5.name vehicleModelName,
+                t1.belongleasecompany
+            from pub_driver t1
+            inner join pub_driver_vehicle_ref t2 on t2.driverid = t1.id
+            inner join pub_vehicle t3 on t3.id = t2.vehicleid
+            inner join op_vehcline_models_ref t4 on t4.vehclineid=t3.vehclineid
+            inner join op_vehiclemodels t5 on t5.Id=t4.vehiclemodelsid
+            inner join pub_dictionary dicp on t3.platenoprovince=dicp.value
+            inner join pub_dictionary dicc on t3.platenocity=dicc.value
+            where 1=1
+                and dicp.status=1
+                and dicc.status=1
+                and t1.status=1
+                and t2.status=1
+                and t3.status=1
+                and t4.status=1
+                and t5.status=1
+                and t1.platformtype=0
+                and t1.vehicletype=0
+                and t1.workstatus=0
+        ) t where 1=1
+        <if test='null != phone and "" != phone'>
+            and instr(t.phone, #{phone}) > 0
+        </if>
+        <if test='null != jobNum and "" != jobNum'>
+            and instr(t.jobnum, #{jobNum}) > 0
+        </if>
+        <if test='null != name and "" != name'>
+            and instr(t.`name`, #{name}) > 0
+        </if>
+        <if test='null != keyword and "" != keyword'>
+            and (instr(t.`name`, #{keyword}) > 0 or instr(t.phone, #{keyword}) > 0)
+        </if>
+        <if test='null != plateNo and "" != plateNo'>
+            and instr(t.plateNo, #{plateNo}) > 0
+        </if>
+        <if test='null != leaseCompanyId and "" != leaseCompanyId'>
+            and t.belongleasecompany = #{leaseCompanyId}
+        </if>
+
+    </select>
+
+    <select id="getTaxiManualSelectDriver" resultType="com.szyciov.op.dto.response.GetTaxiManualDriverResponse" parameterType="com.szyciov.op.dto.request.GetTaxiManualDriverRequest">
+      select
+            concat(id, '_', vehicleid) id,
+            concat(phone, ' ', `name`) text,
+            jobNum,
+            `name`,
+            phone,
+            workStatus,
+            plateNo
+        from (
+            -- 租赁端
+            select
+                t5.id,
+                t1.id vehicleid,
+                t5.jobnum jobNum,
+                t5.`name`,
+                t5.phone,
+                t5.workstatus workStatus,
+                concat(dicp.`text`, dicc.`text`, t1.plateno)  plateNo,
+                t5.belongleasecompany
+            from pub_vehicle t1
+            inner join le_leasescompany t3 on t3.id=t1.leasescompanyid
+            inner join pub_driver_vehicle_ref t4 on t4.vehicleid=t1.id
+            inner join pub_driver t5 on t4.driverid = t5.id
+            inner join pub_dictionary dicp on t1.platenoprovince=dicp.value
+            inner join pub_dictionary dicc on t1.platenocity=dicc.value
+            where 1=1
+                and t1.status=1
+                and t3.status=1
+                and t4.status=1
+                and t5.status=1
+                and t3.tocstate=2
+                and t5.vehicletype=1
+                and t1.platformtype = 1
+                and t1.boundstate = 1
+                and t5.workstatus=0
+
+            -- 运管端
+            union
+
+            select
+                t1.id,
+                t3.id vehicleid,
+                t1.jobnum jobNum,
+                t1.`name`,
+                t1.phone,
+                t1.workstatus workStatus,
+                concat(dicp.`text`, dicc.`text`, t3.plateno)  plateNo,
+                t1.belongleasecompany
+            from pub_driver t1
+            inner join pub_driver_vehicle_ref t2 on t2.driverid = t1.id
+            inner join pub_vehicle t3 on t3.id = t2.vehicleid
+            inner join pub_dictionary dicp on t3.platenoprovince=dicp.value
+            inner join pub_dictionary dicc on t3.platenocity=dicc.value
+            where 1=1
+                and dicp.status=1
+                and dicc.status=1
+                and t1.status=1
+                and t2.status=1
+                and t3.status=1
+                and t1.platformtype=0
+                and t1.vehicletype=1
+                and t1.boundstate = 1
+                and t1.workstatus=0
+        ) t where 1=1
+        <if test='null != phone and "" != phone'>
+            and instr(t.phone, #{phone}) > 0
+        </if>
+        <if test='null != jobNum and "" != jobNum'>
+            and instr(t.jobnum, #{jobNum}) > 0
+        </if>
+        <if test='null != name and "" != name'>
+            and instr(t.`name`, #{name}) > 0
+        </if>
+        <if test='null != keyword and "" != keyword'>
+            and (instr(t.`name`, #{keyword}) > 0 or instr(t.phone, #{keyword}) > 0)
+        </if>
+        <if test='null != plateNo and "" != plateNo'>
+            and instr(t.plateNo, #{plateNo}) > 0
+        </if>
+        <if test='null != leaseCompanyId and "" != leaseCompanyId'>
+            and t.belongleasecompany = #{leaseCompanyId}
+        </if>
+    </select>
+	
+<!-- 	<update id="delMostContact" parameterType="PeMostContact"> -->
+<!-- 		UPDATE org_mostcontact SET  -->
+<!-- 			updatetime=NOW(), -->
+<!-- 			status=#{status} -->
+<!-- 		WHERE id=#{id} AND userid = #{userid} -->
+<!-- 	</update> -->
+	<!-- All Insert -->
+<!-- 	<insert id="addMostContact" parameterType="PeMostContact"> -->
+<!-- 		INSERT INTO org_mostcontact( -->
+<!-- 			id, -->
+<!-- 			userid, -->
+<!-- 			name, -->
+<!-- 			phone, -->
+<!-- 			createtime, -->
+<!-- 			updatetime, -->
+<!-- 			creater, -->
+<!-- 			updater, -->
+<!-- 			status -->
+<!-- 		) VALUES( -->
+<!-- 			#{id}, -->
+<!-- 			#{userid}, -->
+<!-- 			#{name}, -->
+<!-- 			#{phone}, -->
+<!-- 			#{createtime}, -->
+<!-- 			#{updatetime}, -->
+<!-- 			#{creater}, -->
+<!-- 			#{updater}, -->
+<!-- 			#{status} -->
+<!-- 		) -->
+<!-- 	</insert> -->
+	<!-- All Delete -->
+<!-- 	<delete id="delMostContact" parameterType="PeMostContact"> -->
+<!-- 		DELETE FROM org_mostcontact WHERE org_mostcontact.`status` = 1 AND id=#{id} AND userid=#{userid} -->
+<!-- 	</delete> -->
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.MessageMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOpUserNewsListByUserId" resultType="UserNews" parameterType="QueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum, op_usernews.*
+	    from op_usernews, (select @rownum := 0) r
+	    where op_usernews.userid = #{key}
+	      and op_usernews.status = 1
+	    order by op_usernews.createtime desc ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getOpUserNewsListCountByUserId" resultType="int" parameterType="string">
+	    select count(*)
+	    from op_usernews
+	    where op_usernews.userid = #{userId}
+	      and op_usernews.status = 1
+	</select>
+	
+	<select id="getOpUserNewsUnReadCountByUserId" resultType="int" parameterType="string">
+	    select count(*)
+	    from op_usernews
+	    where op_usernews.userid = #{userId}
+	      and op_usernews.newsstate = 0
+	      and op_usernews.status = 1
+	</select>
+	
+	<select id="getOpUserNewsById" resultType="UserNews" parameterType="string">
+	    select op_usernews.*
+	    from op_usernews
+	    where op_usernews.id = #{id}
+	      and op_usernews.status = 1
+	</select>
+	
+	<update id="updateOpUserNews" parameterType="string">
+		update op_usernews
+		set newsstate = 1,updatetime = now()
+		where userid = #{userId}
+		  and newsstate = 0
+		  and status = 1
+	</update>
+	
+	<update id="updateReadNews" parameterType="string">
+		update op_usernews
+		set newsstate = 1,updatetime = now()
+		where id = #{id}
+		  and newsstate = 0
+		  and status = 1
+	</update>
+	
+</mapper>

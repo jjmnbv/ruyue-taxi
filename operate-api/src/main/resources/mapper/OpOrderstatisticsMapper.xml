@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpOrderstatisticsMapper">
+	<!-- 租赁公司不同类型的订单信息 -->
+	<select id="getMonthData" parameterType="OpOrderstatisticsParam" resultType="OpOrderstatisticsParam">
+	  select t.* from(select (@rownum := @rownum + 1) as rownum,
+       starttime,compayName,sum(orders) orders,sum(ordermoney) ordermoney,sum(bepaidorders) bepaidorders,sum(paidorder)paidorder, 
+       sum(case when ordertype in ('1') then orders else 0 end) carorders,
+       sum(case when ordertype in ('2') then orders else 0 end) pickuporders,
+       sum(case when ordertype in ('3') then orders else 0 end) dropofforders
+ from(select 
+       <if test="type != '' and type != null and type == '2'.toString()">
+           DATE_FORMAT(o.endtime, '%Y年') as starttime,
+          </if>
+         <if test="type != '' and type != null and type == '0'.toString()">
+           DATE_FORMAT(o.endtime, '%Y-%m月') as starttime,
+          </if>
+          <if test="type != '' and type != null and type == '1'.toString()">
+           CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime),'季度') as starttime,
+          </if>
+	    (select l.name from le_leasescompany l where l.id = o.leasesCompanyId) as compayName,
+       o.ordertype,
+	    (case when ISNULL(sum(bepaidorders+paidorders)) then 0 else sum(bepaidorders+paidorders) end) AS orders,
+		(case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) AS ordermoney,
+		(case when ISNULL(sum(bepaidorders)) then 0 else sum(bepaidorders) end) AS bepaidorders,
+		(case when ISNULL(sum(paidorders)) then 0 else sum(paidorders) end) as paidorder
+       from op_orderstatistics o 
+        where 1=1
+          <if test="userid != '' and userid != null">
+        and o.leasescompanyid in(
+            select t1.dynamicid from op_roleuser t left join op_roledataauthority t1 
+                              on t.roleid = t1.roleid and t.`status` = 1
+                              where t.userid = #{userid} and t1.`status` = '1'
+          )
+          </if>
+          <if test="leasescompanyid != '' and leasescompanyid != null">
+        and o.leasescompanyid = #{leasescompanyid}
+          </if>
+       <if test="type != '' and type != null and type == '0'.toString()">
+		  and STR_TO_DATE(o.endtime,'%Y-%m') = STR_TO_DATE(#{starttime},'%Y-%m')
+		   GROUP BY o.leasescompanyid,STR_TO_DATE(o.endtime,'%Y-%m')
+		</if>
+		<if test="type != '' and type != null and type == '1'.toString()">
+		  and CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime)) = #{endtime}
+		  GROUP BY o.leasescompanyid,
+          CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime),'Q')
+		</if>
+		 <if test="type != '' and type != null and type == '2'.toString()">
+		   and STR_TO_DATE(o.endtime,'%Y') = STR_TO_DATE(#{starttime},'%Y')
+		   GROUP BY o.leasescompanyid,STR_TO_DATE(o.endtime,'%Y')
+		</if>
+		  ,o.ordertype)aa,(select @rownum := 0) r
+     GROUP BY starttime,compayName)t
+     where t.rownum BETWEEN #{iDisplayStart} and (#{iDisplayStart} + #{iDisplayLength}) and t.rownum != #{iDisplayStart}
+	</select>
+	<select id="getMonthDataCount" parameterType="OpOrderstatisticsParam" resultType="int">
+	 select count(*) from(select 
+       o.starttime,
+	     o.leasescompanyid,
+	    (case when ISNULL(sum(bepaidorders+paidorders)) then 0 else sum(bepaidorders+paidorders) end) AS orders,
+			(case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) AS ordermoney,
+			(case when ISNULL(sum(bepaidorders)) then 0 else sum(bepaidorders) end) AS bepaidorders,
+			(case when ISNULL(sum(paidorders)) then 0 else sum(paidorders) end) as paidorders
+       from op_orderstatistics o 
+          where 1=1
+       <if test="type != '' and type != null and type == '0'.toString()">
+		  and STR_TO_DATE(o.endtime,'%Y-%m') = STR_TO_DATE(#{starttime},'%Y-%m')
+		   GROUP BY o.leasescompanyid,STR_TO_DATE(o.endtime,'%Y-%m')
+		</if>
+		 <if test="leasescompanyid != '' and leasescompanyid != null">
+        and o.leasescompanyid = #{leasescompanyid}
+          </if>
+		<if test="type != '' and type != null and type == '1'.toString()">
+		  and CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime)) = #{endtime}
+		  GROUP BY o.leasescompanyid,
+          CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime),'Q')
+		</if>
+		 <if test="type != '' and type != null and type == '2'.toString()">
+		   and STR_TO_DATE(o.endtime,'%Y') = STR_TO_DATE(#{starttime},'%Y')
+		   GROUP BY o.leasescompanyid,STR_TO_DATE(o.endtime,'%Y')
+		</if>)t
+	</select>
+	<select id="getQuarterData" parameterType="HashMap" resultType="OpOrderstatisticsParam">
+	</select>
+	<select id="getAllData" parameterType="String" resultType="OpOrderstatisticsParam">
+	 select 
+	        (case when ISNULL(sum(bepaidorders+paidorders)) then 0 else sum(bepaidorders+paidorders) end) AS orders,
+			(case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) AS ordermoney
+       from op_orderstatistics o 
+       where 1=1
+        <if test="leasescompanyid != '' and leasescompanyid != null">
+        and o.leasescompanyid = #{leasescompanyid}
+          </if>
+       <if test="type != '' and type != null and type == '0'.toString()">
+		  and STR_TO_DATE(o.endtime,'%Y-%m') = STR_TO_DATE(#{starttime},'%Y-%m')
+		</if>
+		<if test="type != '' and type != null and type == '1'.toString()">
+		  and CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime)) = #{endtime}
+		</if>
+		 <if test="type != '' and type != null and type == '2'.toString()">
+		   and STR_TO_DATE(o.endtime,'%Y') = STR_TO_DATE(#{starttime},'%Y')
+		</if>
+	</select>
+	<select id="exportData" parameterType="OpOrderstatisticsParam" resultType="OpOrderstatisticsParam">
+	select 
+       starttime,compayName,sum(orders) orders,sum(ordermoney) ordermoney,sum(bepaidorders) bepaidorders,sum(paidorder)paidorder, 
+       sum(case when ordertype in ('1') then orders else 0 end) carorders,
+       sum(case when ordertype in ('2') then orders else 0 end) pickuporders,
+       sum(case when ordertype in ('3') then orders else 0 end) dropofforders
+ from(select 
+       <if test="type != '' and type != null and type == '2'.toString()">
+           DATE_FORMAT(o.endtime, '%Y年') as starttime,
+          </if>
+         <if test="type != '' and type != null and type == '0'.toString()">
+           DATE_FORMAT(o.endtime, '%Y-%m月') as starttime,
+          </if>
+          <if test="type != '' and type != null and type == '1'.toString()">
+           CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime),'季度') as starttime,
+          </if>
+	    (select l.name from le_leasescompany l where l.id = o.leasesCompanyId) as compayName,
+       o.ordertype,
+	    (case when ISNULL(sum(bepaidorders+paidorders)) then 0 else sum(bepaidorders+paidorders) end) AS orders,
+		(case when ISNULL(sum(ordermoney)) then 0 else sum(ordermoney) end) AS ordermoney,
+		(case when ISNULL(sum(bepaidorders)) then 0 else sum(bepaidorders) end) AS bepaidorders,
+		(case when ISNULL(sum(paidorders)) then 0 else sum(paidorders) end) as paidorder
+       from op_orderstatistics o 
+        where 1=1
+          <if test="userid != '' and userid != null">
+        and o.leasescompanyid in(
+            select t1.dynamicid from op_roleuser t left join op_roledataauthority t1 
+                              on t.roleid = t1.roleid and t.`status` = 1
+                              where t.userid = #{userid} and t1.`status` = '1'
+          )
+          </if>
+          <if test="leasescompanyid != '' and leasescompanyid != null">
+        and o.leasescompanyid = #{leasescompanyid}
+          </if>
+        <if test="type != '' and type != null and type == '0'.toString()">
+		  and STR_TO_DATE(o.endtime,'%Y-%m') = STR_TO_DATE(#{starttime},'%Y-%m')
+		   GROUP BY o.leasescompanyid,STR_TO_DATE(o.endtime,'%Y-%m')
+		</if>
+		<if test="type != '' and type != null and type == '1'.toString()">
+		  and CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime)) = #{endtime}
+		  GROUP BY o.leasescompanyid,
+          CONCAT(YEAR(o.endtime),'_',QUARTER(o.endtime),'Q')
+		</if>
+		 <if test="type != '' and type != null and type == '2'.toString()">
+		   and STR_TO_DATE(o.endtime,'%Y') = STR_TO_DATE(#{starttime},'%Y')
+		   GROUP BY o.leasescompanyid,STR_TO_DATE(o.endtime,'%Y')
+		</if>
+		  ,o.ordertype)aa
+     GROUP BY starttime,compayName
+	</select>
+	<select id="getCustom" resultType="OpOrderstatisticsParam" parameterType="String">
+	  SELECT l.id,l.name as compayName from le_leasescompany l where l.id in (
+                 select t1.dynamicid from op_roleuser t left join op_roledataauthority t1 
+                              on t.roleid = t1.roleid and t.`status` = 1
+                              where t1.`status` = '1' 
+                               <if test="_parameter  != '' and _parameter != null and _parameter  != '00001'">
+		                         and t.userid = #{userTheId} 
+		                      </if>
+    ) 
+	</select>
+</mapper>

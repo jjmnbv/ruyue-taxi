@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.LeDriverorderstatisticsMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getVehcBrand" resultType="map" parameterType="LeDriverorderstatisticsParam">
+		SELECT
+		pub_vehcline.id AS id,
+		CONCAT(
+			CONCAT(pub_vehcbrand.`Name`, ' '),
+			pub_vehcline.`name`
+		) AS text
+		FROM
+		pub_vehcline,
+		pub_vehcbrand,
+		pub_vehicle
+		WHERE
+		pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		AND pub_vehcline.`Status` = 1
+		AND pub_vehcbrand.`Status` = 1
+		AND pub_vehicle.`Status` = 1
+		AND pub_vehicle.vehclineid = pub_vehcline.Id
+		 and pub_vehicle.platformtype = 0 
+		<if test="vehcBrand != null and vehcBrand != '' ">
+			and CONCAT(
+					CONCAT(pub_vehcbrand.`Name`, ' '),
+					pub_vehcline.`name`
+				) like "%"#{vehcBrand}"%"
+		</if> 
+		GROUP BY id
+	</select>
+	<select id="getPlateno" resultType="Map" parameterType="LeDriverorderstatisticsParam">
+			select id,CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+             pub_vehicle.plateno) as text
+			  from pub_vehicle
+			  where 1=1
+			   and pub_vehicle.platformtype = 0 
+			  <if test="plateno != null and plateno != '' ">
+			  and
+				CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+             pub_vehicle.plateno)
+				like "%"#{plateno}"%"
+		</if> 
+	</select>
+	<select id="getDriver" resultType="Map" parameterType="LeDriverorderstatisticsParam">
+			SELECT
+				id,
+				CONCAT(NAME, ' ', phone) text
+			FROM
+				pub_driver
+			where 1=1
+			  and platformtype = 0 
+				<if test="name != null and name != '' ">
+					and 
+					CONCAT(NAME, ' ', phone)
+				like "%"#{name}"%"
+		        </if> 
+	</select>
+	<select id="getJobnum" resultType="Map" parameterType="LeDriverorderstatisticsParam">
+			SELECT
+				id,
+				jobnum text
+			FROM
+				pub_driver
+			where 1=1
+			  and platformtype = 0 
+				<if test="jobnum != null and jobnum != '' ">
+					and 
+					jobnum
+				like "%"#{jobnum}"%"
+		        </if> 
+	</select>
+	<select id="getVehcBrandAllToC" resultType="LeDriverorderstatisticsParam" parameterType="LeDriverorderstatisticsParam">
+select sum(aa.carorders) as carorders,sum(aa.pickuporders) as pickuporders,
+       sum(aa.dropofforders) as dropofforders,sum(aa.ordermoney) as ordermoney,sum(aa.allOrders) as allOrders,
+       sum(aa.orderreviewPrice) as orderreviewPrice,sum(aa.confirmedorders) as confirmedorders,
+      sum(aa.processedorders) as processedorders,SUM(aa.taxiorders) as taxiOrders,sum(aa.orderreview) as orderreview
+from(SELECT
+            ifnull(sum(case when o.ordertype in ('0', '1') then 1 else 0 end),0) carorders,
+		    ifnull(sum(case when o.ordertype in ('2') then 1 else 0 end),0) pickuporders,
+		    ifnull(sum(case when o.ordertype in ('3') then 1 else 0 end),0) dropofforders,
+            ifnull(sum(o.shouldpayamount),0) as ordermoney,
+            count(*) as allOrders,
+            ifnull((sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))),0) AS orderreviewPrice,
+            ifnull(sum(case when o.reviewstatus in ('2') then 1 else 0 end),0) confirmedorders,
+		    ifnull(sum(case when o.reviewstatus in ('1') then 1 else 0 end),0) processedorders,
+            '0' as taxiorders,
+              sum((select count(*) from op_order t where t.orderno = o.orderno and (o.shouldpayamount - o.actualpayamount !=0))) AS orderreview
+FROM
+	pub_driver d,op_order o
+    where o.driverid = d.id
+           AND  o.orderstatus = '7'
+            and d.platformtype = 0 
+            and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+            and o.paymentstatus in ('0','1')
+	    <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="plateno != null and plateno != ''">
+           and  o.vehicleid = #{plateno}
+	    </if>
+	    <if test="name != null and name != ''">
+	        and d.id = #{name}
+	    </if>
+	    <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+         (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	       and d.id = #{jobnum}
+        </if>
+	   UNION ALL
+	   	SELECT  '0' as carorders,'0' as pickuporders, '0' as dropofforders, 
+			  (sum(o.shouldpayamount)+sum(o.schedulefee)) as ordermoney,
+			  count(*) as allOrders,
+			  ifnull((sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))),0) AS orderreviewPrice,
+			  ifnull(sum(case when o.reviewstatus in ('2') then 1 else 0 end),0) confirmedorders,
+		      ifnull(sum(case when o.reviewstatus in ('1') then 1 else 0 end),0) processedorders,
+			  count(*) as taxiorders, 
+			   sum((select count(*) from op_taxiorder t where t.orderno = o.orderno and (o.shouldpayamount - o.actualpayamount !=0))) AS orderreview
+				FROM   pub_driver d, op_taxiorder o
+				WHERE o.driverid = d.id AND o.orderstatus = '7'
+				  and d.platformtype = 0 
+				  and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+		<if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="plateno != null and plateno != ''">
+	       and  o.vehicleid = #{plateno}
+	    </if>
+	    <if test="name != null and name != ''">
+	        and d.id = #{name}
+	    </if>
+	    <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+         (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	     and d.id = #{jobnum}
+        </if>)aa
+	</select>
+	<select id="getVehcBrandAll2" resultType="LeDriverorderstatisticsParam" parameterType="LeDriverorderstatisticsParam">
+	SELECT count(*) AS allOrders, o.driverid, o.vehicleid, o.oncity, d.jobnum AS jobnum,CONCAT(d.name, '|',d.phone) AS NAME,
+   sum( CASE WHEN o.ordertype IN ('0', '1') THEN 1 ELSE 0 END ) carorders, 
+   sum( CASE WHEN o.ordertype IN ('2') THEN 1 ELSE 0 END ) pickuporders, 
+   sum( CASE WHEN o.ordertype IN ('3') THEN 1 ELSE 0 END ) dropofforders,
+(SELECT  CONCAT(pub_vehcbrand.`Name`,' ',pub_vehcline.`name`)FROM pub_vehicle AS pv,pub_vehcline,pub_vehcbrand WHERE pv.vehclineid = pub_vehcline.Id AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id AND pv.id = o.vehicleid) AS vehcBrand, 
+(SELECT c.city FROM pub_cityaddr c WHERE c.id = o.oncity ) AS cityName,
+(select CONCAT( (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1), (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1), pub_vehicle.plateno )  from pub_vehicle where   pub_vehicle.id =  o.vehicleid ) AS plateno,
+   sum( CASE WHEN o.reviewstatus IN ('1', '2') THEN 1 ELSE 0 END ) AS reviewstatus, 
+  sum(o.shouldpayamount) AS ordermoney, avg(o.userrate) userrate,'/' as taxiOrders
+	FROM   pub_driver d, op_order o
+	WHERE o.driverid = d.id AND o.orderstatus = '7'
+	  and d.platformtype = 0 
+	  and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+	  and o.paymentstatus in ('0','1')
+   <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+   </if>
+   <if test="endTime != null and endTime != ''">
+       and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+   </if>
+   <if test="plateno != null and plateno != ''">
+	      and  o.vehicleid = #{plateno}
+   </if>
+   <if test="name != null and name != ''">
+	        and d.id = #{name}
+   </if>
+ <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+        (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand} 
+  </if>
+  <if test="jobnum != null and jobnum != ''">
+	     and d.id = #{jobnum}
+  </if>
+  GROUP BY o.driverid, o.vehicleid, o.oncity, d.name, d.phone
+  UNION ALL
+  SELECT count(*) AS allOrders, o.driverid, o.vehicleid, o.oncity, d.jobnum AS jobnum,CONCAT(d.name, '|',d.phone) AS NAME,
+   '/' as carorders,'/' as pickuporders, '/' dropofforders,
+(SELECT  CONCAT(pub_vehcbrand.`Name`,' ',pub_vehcline.`name`)FROM pub_vehicle AS pv,pub_vehcline,pub_vehcbrand WHERE pv.vehclineid = pub_vehcline.Id AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id AND pv.id = o.vehicleid) AS vehcBrand, 
+(SELECT c.city FROM pub_cityaddr c WHERE c.id = o.oncity ) AS cityName,
+(select CONCAT( (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1), (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1), pub_vehicle.plateno )  from pub_vehicle where   pub_vehicle.id =  o.vehicleid ) AS plateno,
+  sum( CASE WHEN o.reviewstatus IN ('1', '2') THEN 1 ELSE 0 END ) AS reviewstatus, 
+  (sum(o.shouldpayamount)+sum(o.schedulefee)) as ordermoney,
+  avg(o.userrate) userrate, count(*) as taxiOrders
+	FROM   pub_driver d, op_taxiorder o
+	WHERE o.driverid = d.id AND o.orderstatus = '7'
+	  and d.platformtype = 0 
+	  and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+	 <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+   </if>
+   <if test="endTime != null and endTime != ''">
+       and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+   </if>
+   <if test="plateno != null and plateno != ''">
+	       and  o.vehicleid = #{plateno}
+   </if>
+   <if test="name != null and name != ''">
+	         and d.id = #{name}
+   </if>
+ <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+        (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand} 
+  </if>
+  <if test="jobnum != null and jobnum != ''">
+	     and d.id  = #{jobnum}
+  </if>
+  GROUP BY o.driverid, o.vehicleid, o.oncity, d.name, d.phone
+	</select>
+	<select id="getDriverCountListCountByQueryToC" resultType="int" parameterType="LeDriverorderstatisticsParam">
+	select count(*)from(SELECT count(*) AS allOrders
+	FROM   pub_driver d, op_order o
+	WHERE o.driverid = d.id AND o.orderstatus = '7'
+	  and d.platformtype = 0
+	   and o.paymentstatus in ('0','1') 
+	   and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+   <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+   </if>
+   <if test="endTime != null and endTime != ''">
+       and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+   </if>
+   <if test="plateno != null and plateno != ''">
+	     and  o.vehicleid = #{plateno}
+   </if>
+   <if test="name != null and name != ''">
+	        and d.id = #{name}
+   </if>
+ <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+        (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand} 
+  </if>
+  <if test="jobnum != null and jobnum != ''">
+	     and d.id = #{jobnum}
+  </if>
+  GROUP BY o.driverid, o.vehicleid, o.oncity, d.name, d.phone
+  UNION ALL
+  SELECT count(*) AS allOrders
+	FROM   pub_driver d, op_taxiorder o
+	WHERE o.driverid = d.id AND o.orderstatus = '7'
+	  and d.platformtype = 0 
+	  and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+	 <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+   </if>
+   <if test="endTime != null and endTime != ''">
+       and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+   </if>
+   <if test="plateno != null and plateno != ''">
+	     and  o.vehicleid = #{plateno}
+   </if>
+   <if test="name != null and name != ''">
+	         and d.id = #{name}
+   </if>
+ <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+        (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand} 
+  </if>
+  <if test="jobnum != null and jobnum != ''">
+	     and d.id = #{jobnum}
+  </if>
+  GROUP BY o.driverid, o.vehicleid, o.oncity, d.name, d.phone
+  )t
+	</select>
+	<select id="getDriverCountListByQueryToC" resultType="LeDriverorderstatisticsParam" parameterType="LeDriverorderstatisticsParam">
+	select t1.* from (
+	SELECT count(*) AS allOrders, o.driverid, o.vehicleid, o.oncity, d.jobnum AS jobnum,CONCAT(d.name, '|',d.phone) AS NAME,
+   sum( CASE WHEN o.ordertype IN ('0', '1') THEN 1 ELSE 0 END ) carorders, 
+   sum( CASE WHEN o.ordertype IN ('2') THEN 1 ELSE 0 END ) pickuporders, 
+   sum( CASE WHEN o.ordertype IN ('3') THEN 1 ELSE 0 END ) dropofforders,
+(SELECT  CONCAT(pub_vehcbrand.`Name`,' ',pub_vehcline.`name`)FROM pub_vehicle AS pv,pub_vehcline,pub_vehcbrand WHERE pv.vehclineid = pub_vehcline.Id AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id AND pv.id = o.vehicleid) AS vehcBrand, 
+(SELECT c.city FROM pub_cityaddr c WHERE c.id = o.oncity ) AS cityName,
+(select CONCAT( (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1), (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1), pub_vehicle.plateno )  from pub_vehicle where   pub_vehicle.id =  o.vehicleid ) AS plateno,
+   sum( CASE WHEN o.reviewstatus IN ('1', '2') THEN 1 ELSE 0 END ) AS reviewstatus, 
+  sum(o.shouldpayamount) AS ordermoney, round(avg(o.userrate),1) userrate,'/' as taxiOrders
+	FROM   pub_driver d, op_order o
+	WHERE o.driverid = d.id AND o.orderstatus = '7'
+	   and d.platformtype = 0 
+	    and o.paymentstatus in ('0','1')
+	    and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+   <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+   </if>
+   <if test="endTime != null and endTime != ''">
+       and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+   </if>
+   <if test="plateno != null and plateno != ''">
+	      and  o.vehicleid = #{plateno}
+   </if>
+   <if test="name != null and name != ''">
+	        and d.id = #{name}
+   </if>
+ <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+        (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand} 
+  </if>
+  <if test="jobnum != null and jobnum != ''">
+	     and d.id = #{jobnum}
+  </if>
+  GROUP BY o.driverid, o.vehicleid, o.oncity, d.name, d.phone
+  UNION ALL
+  SELECT count(*) AS allOrders, o.driverid, o.vehicleid, o.oncity, d.jobnum AS jobnum,CONCAT(d.name, '|',d.phone) AS NAME,
+   '/' as carorders,'/' as pickuporders, '/' dropofforders,
+(SELECT  CONCAT(pub_vehcbrand.`Name`,' ',pub_vehcline.`name`)FROM pub_vehicle AS pv,pub_vehcline,pub_vehcbrand WHERE pv.vehclineid = pub_vehcline.Id AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id AND pv.id = o.vehicleid) AS vehcBrand, 
+(SELECT c.city FROM pub_cityaddr c WHERE c.id = o.oncity ) AS cityName,
+(select CONCAT( (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1), (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1), pub_vehicle.plateno )  from pub_vehicle where   pub_vehicle.id =  o.vehicleid ) AS plateno,
+  sum( CASE WHEN o.reviewstatus IN ('1', '2') THEN 1 ELSE 0 END ) AS reviewstatus, 
+  (sum(o.shouldpayamount)+sum(o.schedulefee))  AS ordermoney, 
+  round(avg(o.userrate),1) userrate, count(*) as taxiOrders
+	FROM   pub_driver d, op_taxiorder o
+	WHERE o.driverid = d.id AND o.orderstatus = '7'
+	  and d.platformtype = 0 
+	  and o.companyid = '873CF4F7-39C1-4E7F-A7FA-9F1303274218'
+	 <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+   </if>
+   <if test="endTime != null and endTime != ''">
+       and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+   </if>
+   <if test="plateno != null and plateno != ''">
+	        and  o.vehicleid = #{plateno}
+   </if>
+   <if test="name != null and name != ''">
+	        and d.id = #{name}
+   </if>
+ <if test="vehcBrand != null and vehcBrand != ''">
+	        and 
+        (select ve.vehclineid from pub_vehicle ve where ve.id =  o.vehicleid) = #{vehcBrand} 
+  </if>
+  <if test="jobnum != null and jobnum != ''">
+	     and d.id = #{jobnum}
+  </if>
+  GROUP BY o.driverid, o.vehicleid, o.oncity, d.name, d.phone
+  ) t1 group by driverid, vehicleid, oncity, jobnum, plateno, oncity, name order by ordermoney desc 
+ limit ${iDisplayStart},${iDisplayLength}
+	</select>
+</mapper>

@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.szyciov.operate.mapper.PubDriverVehicleRefMapper" >
+
+  <select id="selectByPrimaryKey" resultType="PubDriverVehicleRef" >
+    select `id` ,`vehicleid` ,`driverid` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,`status` ,`id` ,`vehicleid` ,`driverid` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,`status`
+    from pub_driver_vehicle_ref where  `id` = #{id}
+  </select>
+
+
+  <select id="search" resultType="PubDriverVehicleRef">
+    select `id` ,`vehicleid` ,`driverid` ,`createtime` ,`updatetime` ,
+    `creater` ,`updater` ,`status` ,`id` ,`vehicleid` ,`driverid` ,
+    `createtime` ,`updatetime` ,`creater` ,`updater` ,`status`
+    from pub_driver_vehicle_ref
+  </select>
+
+
+
+  <select id="listVehicleBindInfo" resultType="VehicleBindInfoDto" parameterType="String">
+    SELECT
+	  t.id,t1.id as driverID,t1.`name`,t1.phone,t1.sex,t1.passworkstatus,getCityStr(t1.city) as cityStr
+    FROM
+    pub_driver_vehicle_ref t
+    LEFT JOIN pub_driver t1 ON t.driverid = t1.id
+    where t.vehicleid = #{vehicleid}
+    <if test="driverid!=null and driverid !=''">
+      and t.driverid != #{driverid}
+    </if>
+	  and t.status ='1'
+  </select>
+
+
+  <insert id="save" parameterType="PubDriverVehicleRef" useGeneratedKeys="true" >
+    insert into pub_driver_vehicle_ref (`id` ,`vehicleid` ,`driverid` ,
+    `createtime` ,`updatetime` ,`creater` ,`updater` ,`status`  )
+    values (#{id},#{vehicleid},#{driverid},
+    #{createtime},#{updatetime},#{creater},#{updater},#{status})
+  </insert>
+  
+  <delete id="deleteByPrimaryKey">
+    delete from pub_driver_vehicle_ref where  `id` = #{id}
+  </delete>
+  
+  <update id="updateByPrimaryKey" parameterType="PubDriverVehicleRef" >
+    update pub_driver_vehicle_ref set `vehicleid` = #{vehicleid},
+    `driverid` = #{driverid},`createtime` = #{createtime},
+    `updatetime` = #{updatetime},`creater` = #{creater},
+    `updater` = #{updater},`status` = #{status},`id` = #{id},
+    `vehicleid` = #{vehicleid},`driverid` = #{driverid},
+    `createtime` = #{createtime},`updatetime` = #{updatetime},
+    `creater` = #{creater},`updater` = #{updater},
+    `status` = #{status} where  `id` = #{id}
+  </update>
+
+
+  <select id="getRefCount" parameterType="String" resultType="Integer">
+    select count(id) from pub_driver_vehicle_ref
+    where vehicleid = #{vehicleid}
+    and driverid = #{driverid}
+	and status ='1'
+  </select>
+  
+  
+    <!-- 根据司机姓名或者手机号码查找司机 -->
+    <select id="getDriverByNameOrPhone" resultType="hashmap" parameterType="hashmap">
+	    select pub_driver.id as id,concat(pub_driver.name,' ',pub_driver.phone) as text
+	    from pub_driver
+	    where pub_driver.platformtype = 0
+	      and pub_driver.status = 1
+	      and pub_driver.vehicletype = #{vehicletype}
+	    <if test="driver != null and driver != ''">
+	        and (pub_driver.name like concat("%",#{driver},"%")
+	          or pub_driver.phone like concat("%",#{driver},"%"))
+	    </if>
+	    <if test="jobstatus != null and jobstatus != ''">
+	        and pub_driver.jobstatus = #{jobstatus}
+	    </if>
+    </select>
+	
+    <!-- 查找司机资格证号 -->
+    <select id="getDriverByJobnum" resultType="hashmap" parameterType="hashmap">
+	    select pub_driver.jobnum as id,pub_driver.jobnum as text
+	    from pub_driver
+	    where pub_driver.platformtype = 0
+	      and pub_driver.status = 1
+	      and pub_driver.vehicletype = 0
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum like concat("%",#{jobnum},"%")
+	    </if>
+	    <if test="jobstatus != null and jobstatus != ''">
+	        and pub_driver.jobstatus = #{jobstatus}
+	    </if>
+    </select>
+	
+	<!-- 分页查询网约车绑定页面的服务司机信息 -->
+    <select id="getDriverInfoListByQuery" resultType="hashmap" parameterType="PubDriverVehicleRefQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t2.* from
+	    (select t1.* from
+	    (select pub_driver.id,pub_vehicle.id as vehicleid,pub_driver.jobnum,pub_driver.name,pub_driver.phone,pub_driver.boundstate,pub_driver.workstatus,pub_driver.city,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = pub_driver.city) as cityvisual,
+	           (case pub_driver.boundstate when 0 then '未绑定' when 1 then '已绑定' end) as boundstatevisual,
+	           (case pub_driver.boundstate when 0 then '/' when 1 then case pub_driver.workstatus when 0 then '空闲' when 1 then '服务中' when 2 then '下线' end end) as workstatusvisual,	           
+	           (case pub_driver.boundstate when 0 then '/' when 1 then op_vehiclemodels.name end) as vehiclemodelsname,
+	           concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as vehcbrandname,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) AS plateno   
+	    from pub_driver left join pub_driver_vehicle_ref on (pub_driver.id = pub_driver_vehicle_ref.driverid and pub_driver_vehicle_ref.status = 1)
+	                    left join pub_vehicle on (pub_vehicle.id = pub_driver_vehicle_ref.vehicleid and pub_vehicle.vehicletype = 0 and pub_vehicle.platformtype = 0)
+	                    left join pub_vehcline on (pub_vehcline.Id = pub_vehicle.vehclineid and pub_vehcline.platformtype = 0)
+	                    left join pub_vehcbrand on (pub_vehcbrand.Id = pub_vehcline.vehcBrandID and pub_vehcbrand.platformtype = 0)
+	                    left join op_vehcline_models_ref on (op_vehcline_models_ref.vehclineid = pub_vehcline.Id and op_vehcline_models_ref.status = 1)
+	                    left join op_vehiclemodels on (op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id)	                    
+	    where pub_driver.status = 1
+	      and pub_driver.platformtype = 0
+	      and pub_driver.vehicletype = 0
+	      and pub_driver.jobstatus = 0
+	    <if test="driver != null and driver != ''">
+	        and pub_driver.id = #{driver}
+	    </if>  
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum = #{jobnum}
+	    </if>  
+	    <if test="boundstate != null and boundstate != ''">
+	        and pub_driver.boundstate = #{boundstate}
+	    </if>  
+	    <if test="workstatus != null and workstatus != ''">
+	        and pub_driver.workstatus = #{workstatus}
+	    </if>   
+	    <if test="vehiclemodelsid != null and vehiclemodelsid != ''">
+	        and op_vehiclemodels.Id = #{vehiclemodelsid}
+	    </if>  
+	    <if test="city != null and city != ''">
+	        and pub_driver.city = #{city}
+	    </if>
+	    ) t1
+	    where 1 = 1
+	    <if test="vehclineid != null and vehclineid != ''">
+	        and t1.vehcbrandname = #{vehclineid}
+	    </if>
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat('%',#{plateno},'%')    
+	    </if>
+	    order by CONVERT (t1.cityvisual USING gbk) COLLATE gbk_chinese_ci,t1.boundstate
+	    ) t2, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+    </select>
+    <select id="getDriverInfoListCountByQuery" resultType="int" parameterType="PubDriverVehicleRefQueryParam">
+	    select count(*) from
+	    (select pub_driver.id,pub_vehicle.id as vehicleid,pub_driver.jobnum,pub_driver.name,pub_driver.phone,pub_driver.boundstate,pub_driver.workstatus,pub_driver.city,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = pub_driver.city) as cityvisual,
+	           (case pub_driver.boundstate when 0 then '未绑定' when 1 then '已绑定' end) as boundstatevisual,
+	           (case pub_driver.boundstate when 0 then '/' when 1 then case pub_driver.workstatus when 0 then '空闲' when 1 then '服务中' when 2 then '下线' end end) as workstatusvisual,	           
+	           (case pub_driver.boundstate when 0 then '/' when 1 then op_vehiclemodels.name end) as vehiclemodelsname,
+	           concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as vehcbrandname,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) AS plateno   
+	    from pub_driver left join pub_driver_vehicle_ref on (pub_driver.id = pub_driver_vehicle_ref.driverid and pub_driver_vehicle_ref.status = 1)
+	                    left join pub_vehicle on (pub_vehicle.id = pub_driver_vehicle_ref.vehicleid and pub_vehicle.vehicletype = 0 and pub_vehicle.platformtype = 0)
+	                    left join pub_vehcline on (pub_vehcline.Id = pub_vehicle.vehclineid and pub_vehcline.platformtype = 0)
+	                    left join pub_vehcbrand on (pub_vehcbrand.Id = pub_vehcline.vehcBrandID and pub_vehcbrand.platformtype = 0)
+	                    left join op_vehcline_models_ref on (op_vehcline_models_ref.vehclineid = pub_vehcline.Id and op_vehcline_models_ref.status = 1)
+	                    left join op_vehiclemodels on (op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id)	                    
+	    where pub_driver.status = 1
+	      and pub_driver.platformtype = 0
+	      and pub_driver.vehicletype = 0
+	      and pub_driver.jobstatus = 0
+	    <if test="driver != null and driver != ''">
+	        and pub_driver.id = #{driver}
+	    </if>  
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum = #{jobnum}
+	    </if>  
+	    <if test="boundstate != null and boundstate != ''">
+	        and pub_driver.boundstate = #{boundstate}
+	    </if>  
+	    <if test="workstatus != null and workstatus != ''">
+	        and pub_driver.workstatus = #{workstatus}
+	    </if>   
+	    <if test="vehiclemodelsid != null and vehiclemodelsid != ''">
+	        and op_vehiclemodels.Id = #{vehiclemodelsid}
+	    </if>  
+	    <if test="city != null and city != ''">
+	        and pub_driver.city = #{city}
+	    </if>
+	    ) t1
+	    where 1 = 1
+	    <if test="vehclineid != null and vehclineid != ''">
+	        and t1.vehcbrandname = #{vehclineid}
+	    </if>
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat('%',#{plateno},'%')    
+	    </if>
+    </select>
+    
+    <!-- 查找列表中的服务车型 -->
+    <select id="getVehiclemodels" resultType="hashmap">
+	    select distinct op_vehiclemodels.Id as id,op_vehiclemodels.name as text
+	    from pub_driver_vehicle_ref,pub_vehicle,pub_vehcline,op_vehcline_models_ref,op_vehiclemodels
+	    where pub_driver_vehicle_ref.status = 1
+	      and pub_vehicle.status = 1
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.boundstate = 1
+	      and pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+	      and pub_vehicle.vehclineid = pub_vehcline.Id
+	      and pub_vehcline.status = 1
+	      and op_vehcline_models_ref.status = 1
+	      and op_vehcline_models_ref.vehclineid = pub_vehcline.Id
+	      and op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id
+	      and op_vehiclemodels.status = 1
+    </select>
+    
+    <!-- 查找列表中的登记城市 -->
+    <select id="getCityaddr" resultType="hashmap">
+	    select distinct pub_cityaddr.id as id,pub_cityaddr.city as text
+	    from pub_driver,pub_cityaddr
+	    where pub_driver.status = 1
+	      and pub_driver.vehicletype = 0
+	      and pub_driver.platformtype = 0
+	      and pub_driver.jobstatus = 0
+	      and pub_driver.city = pub_cityaddr.id
+    </select>
+    
+    <!-- 查找列表中的品牌车系 -->
+    <select id="getVehcbrand" resultType="hashmap" parameterType="string">
+	    select t1.id,t1.text from
+	    (select distinct concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as id,concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as text
+	    from pub_vehcline,pub_vehcbrand
+	    where pub_vehcline.status = 1
+	      and pub_vehcline.platformtype = 0
+	      and pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+	      and pub_vehcbrand.status = 1
+	      and pub_vehcbrand.platformtype = 0
+	    ) t1
+	    where 1 = 1
+	    <if test="vehcbrandname != null and vehcbrandname != ''">
+	        and t1.text like concat('%',#{vehcbrandname},'%') 
+	    </if>
+    </select>
+    
+    
+
+    
+    <!-- 绑定车辆时，查询 未绑定（不含维修中）车辆的品牌车系的合集 -->
+    <select id="getVehcbrandByCity" resultType="hashmap" parameterType="hashmap">
+	    select t1.id,t1.text from
+	    (select distinct concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as id,concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as text
+	    from pub_vehicle inner join pub_vehcline on (pub_vehicle.vehclineid = pub_vehcline.Id and pub_vehcline.platformtype = 0 and pub_vehcline.status = 1)
+	                     inner join pub_vehcbrand on (pub_vehcline.vehcBrandID = pub_vehcbrand.Id and pub_vehcbrand.platformtype = 0 and pub_vehcbrand.status = 1)
+	    where pub_vehicle.status = 1
+	      and pub_vehicle.boundstate = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.vehiclestatus = 0
+	      and pub_vehicle.city = #{city}
+	    ) t1
+	    where 1=1
+	    <if test="vehcbrandname != null and vehcbrandname != ''">
+	        and t1.text like concat('%',#{vehcbrandname},'%') 
+	    </if>
+    </select>
+    
+    <!-- 绑定车辆时，查询 未绑定（不含维修中）车辆 -->
+    <select id="getUnbandCarsListByCity" resultType="hashmap" parameterType="PubDriverVehicleRefQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t2.* from
+	    (select t1.* from 
+	    (select pub_vehicle.id,concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as vehcbrandname,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) as plateno,
+		       ifnull(op_vehiclemodels.name,'/') as vehiclemodelsname,pub_vehicle.color,
+		       (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.status =1 and pub_cityaddr.id = pub_vehicle.city)  as city
+	    from pub_vehicle inner join pub_vehcline on (pub_vehicle.vehclineid = pub_vehcline.Id and pub_vehcline.platformtype = 0 and pub_vehcline.status = 1)
+	                     inner join pub_vehcbrand on (pub_vehcline.vehcBrandID = pub_vehcbrand.Id and pub_vehcbrand.platformtype = 0 and pub_vehcbrand.status = 1)
+	                     left join op_vehcline_models_ref on (op_vehcline_models_ref.vehclineid = pub_vehcline.Id and op_vehcline_models_ref.status = 1)
+	                     left join op_vehiclemodels on (op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id and op_vehiclemodels.status = 1)
+	    where pub_vehicle.status = 1
+	      and pub_vehicle.boundstate = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.vehiclestatus = 0
+	      and pub_vehicle.city = #{city}
+	    ) t1
+	    where 1 = 1
+	    <if test="vehclineid != null and vehclineid != ''">
+	        and t1.vehcbrandname = #{vehclineid}
+	    </if>
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat('%',#{plateno},'%') 
+	    </if>
+	    ) t2, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+    </select>
+    <select id="getUnbandCarsListCountByCity" resultType="int" parameterType="PubDriverVehicleRefQueryParam">
+	    select count(*) from 
+	    (select pub_vehicle.id,concat(pub_vehcbrand.Name,' ',pub_vehcline.name) as vehcbrandname,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) as plateno,
+		       ifnull(op_vehiclemodels.name,'/') as vehiclemodelsname,pub_vehicle.color,
+		       (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.status =1 and pub_cityaddr.id = pub_vehicle.city)  as city
+	    from pub_vehicle inner join pub_vehcline on (pub_vehicle.vehclineid = pub_vehcline.Id and pub_vehcline.platformtype = 0 and pub_vehcline.status = 1)
+	                     inner join pub_vehcbrand on (pub_vehcline.vehcBrandID = pub_vehcbrand.Id and pub_vehcbrand.platformtype = 0 and pub_vehcbrand.status = 1)
+	                     left join op_vehcline_models_ref on (op_vehcline_models_ref.vehclineid = pub_vehcline.Id and op_vehcline_models_ref.status = 1)
+	                     left join op_vehiclemodels on (op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id and op_vehiclemodels.status = 1)
+	    where pub_vehicle.status = 1
+	      and pub_vehicle.boundstate = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.vehiclestatus = 0
+	      and pub_vehicle.city = #{city}
+	    ) t1
+	    where 1 = 1
+	    <if test="vehclineid != null and vehclineid != ''">
+	        and t1.vehcbrandname = #{vehclineid}
+	    </if>
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat('%',#{plateno},'%')
+	    </if>
+    </select>
+
+    
+    <!-- 绑定成功,解除绑定 修改司机的工作状态-->
+	<update id="updateDriverWorkStatus" parameterType="hashmap">
+		update pub_driver set workstatus = #{workstatus},boundstate = #{boundstate},updatetime = now(),updater = #{updater}
+		where id = #{id}
+	</update>
+    
+    <!-- 绑定成功，解除绑定 添加记录到司机车辆绑定记录表 -->
+    <insert id="createPubDriverVehicleBind" parameterType="PubDriverVehicleBind">
+		insert into pub_driver_vehicle_bind(id,vehicleid,driverid,drivertype,bindstate,unbindreason,bindpersonnum,binddirverinfo,createtime,updatetime,operator,creater,updater,status)
+		values(#{id},#{vehicleid},#{driverid},#{drivertype},#{bindstate},#{unbindreason},#{bindpersonnum},#{binddirverinfo},now(),now(),#{operator},#{creater},#{updater},1)
+	</insert>
+    
+    <!-- 绑定成功，添加记录到司机车辆绑定关系表 -->
+    <insert id="createPubDriverVehicleRef" parameterType="PubDriverVehicleRef">
+		insert into pub_driver_vehicle_ref(id,vehicleid,driverid,createtime,updatetime,creater,updater,status)
+		values(#{id},#{vehicleid},#{driverid},now(),now(),#{creater},#{updater},1)
+	</insert>
+    
+    <!-- 绑定成功,解除绑定 修改车辆的绑定状态 -->
+	<update id="updateVehicleBindState" parameterType="hashmap">
+		update pub_vehicle set boundstate = #{boundstate},bindpersonnum = #{bindpersonnum},updatetime = now(),updater = #{updater},driverid = #{driverid}
+		where id = #{id}
+	</update>
+    
+    <!-- 解绑时，需判断当前司机是否存在未完成订单。此处未完成订单包括：待出发、已出发、已抵达、服务中等状态的订单。 -->
+    <select id="getUncompleteCountByDriverId" resultType="int" parameterType="hashmap">
+	    select count(*)
+	    from op_order
+	    where op_order.status = 1
+	      and op_order.driverid = #{driverid}
+	      and op_order.vehicleid = #{vehicleid}
+	      and (op_order.orderstatus = '2' or op_order.orderstatus = '3' or op_order.orderstatus = '4' or op_order.orderstatus = '6')
+    </select>
+    
+    <!-- 绑定时，判断该车是否已具有服务车型，判断该车是否已被绑定。查找车牌号。 -->
+    <select id="getBoundStateByVehicleId" resultType="hashmap" parameterType="string">
+	    select pub_vehicle.boundstate,op_vehiclemodels.Id,pub_vehicle.vehiclestatus,pub_vehicle.city,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) as plateno
+	    from pub_vehicle left join pub_vehcline on (pub_vehicle.vehclineid = pub_vehcline.Id and pub_vehcline.status = 1 and pub_vehcline.platformtype = 0)
+	                     left join op_vehcline_models_ref on (pub_vehcline.Id = op_vehcline_models_ref.vehclineid and op_vehcline_models_ref.status = 1)
+	                     left join op_vehiclemodels on (op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id and op_vehiclemodels.status = 1)
+	    where pub_vehicle.id = #{id}
+	      and pub_vehicle.status = 1
+    </select>
+    
+    <!-- 根据driverid获取司机信息 -->
+    <select id="getDriverByDriverId" resultType="hashmap" parameterType="string">
+	    select * from pub_driver where id = #{id}
+    </select>
+    
+    <!-- 解绑时,修改司机车辆绑定关系 -->
+	<update id="updatePubDriverVehicleRef" parameterType="hashmap">
+		update pub_driver_vehicle_ref 
+		set status = 2,updatetime=now(),updater=#{updater}
+		where vehicleid = #{vehicleid}
+		  and driverid = #{driverid}
+		  and status = 1
+	</update>
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 查找司机操作记录 -->
+    <select id="getDriverOpRecordListByQuery" resultType="hashmap" parameterType="PubDriverVehicleBindQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pub_driver.jobnum,pub_driver.name,pub_driver.phone,op_vehiclemodels.name as vehiclemodelsname,pub_driver_vehicle_bind.bindstate,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) as plateno,
+	           date_format(pub_driver_vehicle_bind.createtime, '%Y-%m-%d %H:%i') as createtime,
+	           ifnull(pub_driver_vehicle_bind.unbindreason,'/') as unbindreason,
+	           (select op_user.nickname from op_user where op_user.id = pub_driver_vehicle_bind.operator) as operator
+	    from pub_driver_vehicle_bind,pub_driver,pub_vehicle,pub_vehcline,op_vehcline_models_ref,op_vehiclemodels
+	    where pub_driver_vehicle_bind.status = 1
+	      and pub_driver_vehicle_bind.drivertype = 0
+	      and pub_driver_vehicle_bind.driverid = pub_driver.id
+	      and pub_driver.vehicletype = 0
+	      and pub_driver.platformtype = 0
+	      and pub_driver.status = 1
+	      and pub_driver_vehicle_bind.vehicleid = pub_vehicle.id
+	      and pub_vehicle.status = 1
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.vehclineid = pub_vehcline.Id
+	      and pub_vehcline.status = 1
+	      and pub_vehcline.platformtype = 0
+	      and pub_vehcline.Id = op_vehcline_models_ref.vehclineid
+	      and op_vehcline_models_ref.status = 1
+	      and op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id
+	      and op_vehiclemodels.status = 1
+	    <if test="driver != null and driver != ''">
+	        and pub_driver.id = #{driver}
+	    </if>  
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum = #{jobnum}
+	    </if>
+	    <if test="bindstate != null and bindstate != ''">
+	        and pub_driver_vehicle_bind.bindstate = #{bindstate}
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pub_driver_vehicle_bind.createtime desc) t1,(select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+    </select>
+	<select id="getDriverOpRecordListCountByQuery" resultType="int" parameterType="PubDriverVehicleBindQueryParam">
+	    select count(*)
+	    from pub_driver_vehicle_bind,pub_driver,pub_vehicle,pub_vehcline,op_vehcline_models_ref,op_vehiclemodels
+	    where pub_driver_vehicle_bind.status = 1
+	      and pub_driver_vehicle_bind.drivertype = 0
+	      and pub_driver_vehicle_bind.driverid = pub_driver.id
+	      and pub_driver.vehicletype = 0
+	      and pub_driver.platformtype = 0
+	      and pub_driver.status = 1
+	      and pub_driver_vehicle_bind.vehicleid = pub_vehicle.id
+	      and pub_vehicle.status = 1
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.vehclineid = pub_vehcline.Id
+	      and pub_vehcline.status = 1
+	      and pub_vehcline.platformtype = 0
+	      and pub_vehcline.Id = op_vehcline_models_ref.vehclineid
+	      and op_vehcline_models_ref.status = 1
+	      and op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id
+	      and op_vehiclemodels.status = 1
+	    <if test="driver != null and driver != ''">
+	        and pub_driver.id = #{driver}
+	    </if>  
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum = #{jobnum}
+	    </if>
+	    <if test="bindstate != null and bindstate != ''">
+	        and pub_driver_vehicle_bind.bindstate = #{bindstate}
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+    </select>
+	
+	
+	<!-- 查找车辆操作记录 -->
+    <select id="getVehicleOpRecordListByQuery" resultType="hashmap" parameterType="PubDriverVehicleBindQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t2.* from
+	    (select t1.* from
+	    (select CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) as plateno,
+		       op_vehiclemodels.name as vehiclemodelsname,pub_vehicle.vin,pub_driver.name,pub_driver.phone,pub_driver_vehicle_bind.bindstate,
+		       date_format(pub_driver_vehicle_bind.createtime, '%Y-%m-%d %H:%i') as createtime,
+		       pub_driver_vehicle_bind.createtime as createtimeorder,
+	           ifnull(pub_driver_vehicle_bind.unbindreason,'/') as unbindreason,
+	           (select op_user.nickname from op_user where op_user.id = pub_driver_vehicle_bind.operator) as operator
+	    from pub_driver_vehicle_bind,pub_driver,pub_vehicle,pub_vehcline,op_vehcline_models_ref,op_vehiclemodels
+	    where pub_driver_vehicle_bind.status = 1
+	      and pub_driver_vehicle_bind.drivertype = 0
+	      and pub_driver_vehicle_bind.driverid = pub_driver.id
+	      and pub_driver.vehicletype = 0
+	      and pub_driver.platformtype = 0
+	      and pub_driver.status = 1
+	      and pub_driver_vehicle_bind.vehicleid = pub_vehicle.id
+	      and pub_vehicle.status = 1
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.vehclineid = pub_vehcline.Id
+	      and pub_vehcline.status = 1
+	      and pub_vehcline.platformtype = 0
+	      and pub_vehcline.Id = op_vehcline_models_ref.vehclineid
+	      and op_vehcline_models_ref.status = 1
+	      and op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id
+	      and op_vehiclemodels.status = 1
+	    <if test="vin != null and vin != ''">
+	        and pub_vehicle.vin = #{vin}
+	    </if>
+	    <if test="bindstate != null and bindstate != ''">
+	        and pub_driver_vehicle_bind.bindstate = #{bindstate}
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pub_driver_vehicle_bind.createtime desc
+	    ) t1
+	    where 1 = 1
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno = #{plateno}
+	    </if>
+	    order by t1.createtimeorder desc
+	    ) t2,(select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+    </select>
+	<select id="getVehicleOpRecordListCountByQuery" resultType="int" parameterType="PubDriverVehicleBindQueryParam">
+	    select count(*) from
+	    (select CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) as plateno,
+		       op_vehiclemodels.name as vehiclemodelsname,pub_vehicle.vin,pub_driver.name,pub_driver.phone,pub_driver_vehicle_bind.bindstate,
+		       date_format(pub_driver_vehicle_bind.createtime, '%Y-%m-%d %H:%i') as createtime,
+		       pub_driver_vehicle_bind.createtime as createtimeorder,
+	           ifnull(pub_driver_vehicle_bind.unbindreason,'/') as unbindreason,
+	           (select op_user.nickname from op_user where op_user.id = pub_driver_vehicle_bind.operator) as operator
+	    from pub_driver_vehicle_bind,pub_driver,pub_vehicle,pub_vehcline,op_vehcline_models_ref,op_vehiclemodels
+	    where pub_driver_vehicle_bind.status = 1
+	      and pub_driver_vehicle_bind.drivertype = 0
+	      and pub_driver_vehicle_bind.driverid = pub_driver.id
+	      and pub_driver.vehicletype = 0
+	      and pub_driver.platformtype = 0
+	      and pub_driver.status = 1
+	      and pub_driver_vehicle_bind.vehicleid = pub_vehicle.id
+	      and pub_vehicle.status = 1
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.platformtype = 0
+	      and pub_vehicle.vehclineid = pub_vehcline.Id
+	      and pub_vehcline.status = 1
+	      and pub_vehcline.platformtype = 0
+	      and pub_vehcline.Id = op_vehcline_models_ref.vehclineid
+	      and op_vehcline_models_ref.status = 1
+	      and op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.Id
+	      and op_vehiclemodels.status = 1
+	    <if test="vin != null and vin != ''">
+	        and pub_vehicle.vin = #{vin}
+	    </if>
+	    <if test="bindstate != null and bindstate != ''">
+	        and pub_driver_vehicle_bind.bindstate = #{bindstate}
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and pub_driver_vehicle_bind.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pub_driver_vehicle_bind.createtime desc
+	    ) t1
+	    where 1 = 1
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno = #{plateno}
+	    </if>
+    </select>
+	
+	<!-- 车辆操作记录中，查找所有车牌号 -->
+    <select id="getPlatenoByPlateno" resultType="hashmap" parameterType="string">
+	    select distinct t1.plateno as id,t1.plateno as text
+	    from
+	    (select CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) as plateno
+	    from pub_vehicle
+	    where pub_vehicle.status = 1
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.platformtype = 0
+	    ) t1
+	    where 1 = 1
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat("%",#{plateno},"%")
+	    </if>
+    </select>
+    
+    <!-- 车辆操作记录中，查找所有车架号 -->
+    <select id="getVehicleVinByVin" resultType="hashmap" parameterType="string">
+	    select distinct pub_vehicle.vin as id,pub_vehicle.vin as text
+	    from pub_vehicle
+	    where pub_vehicle.status = 1
+	      and pub_vehicle.vehicletype = 0
+	      and pub_vehicle.platformtype = 0
+	    <if test="vin != null and vin != ''">
+	        and pub_vehicle.vin like concat("%",#{vin},"%")
+	    </if>
+    </select>
+
+    <!-- 查询运管端客服电话-->
+	<select id="getOpPlatformInfo" resultType="hashmap">
+        select * from op_platforminfo where status = 1
+    </select>
+</mapper>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.JPushLogMapper">
+ 
+	<select id="queryJPushLog" resultType="JPushLog" parameterType="JPushLogQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pub_jpushlog.*,pub_driver.name as drivername
+	    from pub_jpushlog LEFT OUTER JOIN pub_driver ON pub_jpushlog.driverid = pub_driver.id
+	    where pub_jpushlog.status = '1'
+	      and pub_driver.status='1'
+	    <if test="orderno != null and orderno != ''">
+	        and pub_jpushlog.orderno like concat('%',#{orderno},'%')
+	    </if> 
+	     <if test="driverphone != null and driverphone != ''">
+	        and pub_jpushlog.driverphone like concat('%',#{driverphone},'%')
+	    </if> 
+	    order by pub_jpushlog.createtime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="queryJPushLogCount" resultType="int" parameterType="JPushLogQueryParam">
+	    select count(*)
+	    from pub_jpushlog LEFT OUTER JOIN pub_driver ON pub_jpushlog.driverid = pub_driver.id
+	    where pub_jpushlog.status = '1'
+	      and pub_driver.status='1'
+	    <if test="orderno != null and orderno != ''">
+	        and pub_jpushlog.orderno like concat('%',#{orderno},'%')
+	    </if> 
+	     <if test="driverphone != null and driverphone != ''">
+	        and pub_jpushlog.driverphone like concat('%',#{driverphone},'%')
+	    </if> 
+	</select>
+	
+	<select id="getAllJPushLog" resultType="JPushLog" parameterType="JPushLogQueryParam">
+	    select pub_jpushlog.*,pub_driver.name as drivername
+	    from pub_jpushlog LEFT OUTER JOIN pub_driver ON pub_jpushlog.driverid = pub_driver.id
+	    where pub_jpushlog.status = '1'
+	        and pub_driver.status='1'
+	    <if test="orderno != null and orderno != ''">
+	        and pub_jpushlog.orderno like concat('%',#{orderno},'%')
+	    </if> 
+	    <if test="driverphone != null and driverphone != ''">
+	        and pub_jpushlog.driverphone like concat('%',#{driverphone},'%')
+	    </if>
+	</select>
+	
+</mapper>

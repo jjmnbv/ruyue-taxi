@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.LePersonalorderstatisticsMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getPersonalCountListCountByQuery" resultType="int" parameterType="LePersonalorderstatisticsParam">
+	 select count(*) FROM (select 
+        date_format(c.endtime,'%Y年%m月') as time,
+        SUM(c.ordernum) as ordernum,
+        SUM(c.confirmedorders),
+        SUM(c.processedorders),
+        SUM(c.ordermoney),
+        SUM(c.diffmoney),
+        SUM(c.confirmedorders+c.processedorders) as alluporders,
+        (ifnull(SUM(c.ordermoney),0)- ifnull(sum(schedulefee),0)) runfee,  
+        ifnull(sum(schedulefee),0) schedulefee
+       from le_personalorderstatistics c where c.status=1
+       <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+	    </if>
+	    <if test="ordertype != null and ordertype != ''">
+	        and c.ordertype = #{ordertype}
+	    </if>
+	    <if test="paymentstatus != null and paymentstatus!= ''">
+	        and c.paymentstatus = #{paymentstatus}
+	    </if>
+	     <if test="type != null and type != ''">
+	        and c.type = #{type}
+	    </if>
+	    <if test="leasescompanyid != null and leasescompanyid != ''">
+	        and c.leasescompanyid = #{leasescompanyid}
+	    </if>
+       GROUP BY date_format(c.endtime,'%Y年%m月'))t
+    </select> 
+    <select id="getPersonalCountListByQuery" resultType="LePersonalorderstatisticsParam" parameterType="LePersonalorderstatisticsParam">
+       select t.* from 
+		(select (@rownum := @rownum + 1) as rownum,
+		date_format(c.endtime,'%Y年%m月') as time,
+		SUM(c.ordernum) as ordernum,
+        SUM(c.confirmedorders) as confirmedorders,
+        SUM(c.processedorders) as processedorders,
+        SUM(c.ordermoney) as ordermoney,
+        SUM(c.diffmoney) as diffmoney,
+        SUM(c.confirmedorders+c.processedorders) as alluporders,
+        (ifnull(SUM(c.ordermoney),0)- ifnull(sum(schedulefee),0)) runfee,  
+        ifnull(sum(schedulefee),0) schedulefee
+        from le_personalorderstatistics c,(select @rownum := 0)r where c.status=1
+	     <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+	    </if>
+	    <if test="ordertype != null and ordertype != ''">
+	        and c.ordertype = #{ordertype}
+	    </if>
+	    <if test="paymentstatus != null and paymentstatus!= ''">
+	        and c.paymentstatus = #{paymentstatus}
+	    </if>
+	     <if test="type != null and type != ''">
+	        and c.type = #{type}
+	     </if>
+	     <if test="leasescompanyid != null and leasescompanyid != ''">
+	        and c.leasescompanyid = #{leasescompanyid}
+	    </if>
+	    GROUP BY date_format(c.endtime,'%Y年%m月') ORDER BY date_format(c.endtime,'%Y年%m月') DESC)t
+          where t.rownum BETWEEN #{iDisplayStart} and (#{iDisplayStart} + #{iDisplayLength}) and t.rownum != #{iDisplayStart}
+	</select> 
+ <select id="getPersonalAll" resultType="LePersonalorderstatisticsParam" parameterType="LePersonalorderstatisticsParam">
+  select c.*,
+  date_format(c.endtime,'%Y年%m月') as time,
+		(select p.city from pub_cityaddr p where c.cityid = p.id) as city,
+        c.confirmedorders+c.processedorders as alluporders
+  from le_personalorderstatistics c where c.status=1
+      <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+	    </if>
+	    <if test="ordertype != null and ordertype != ''">
+	        and c.ordertype = #{ordertype}
+	    </if>
+	    <if test="paymentstatus != null and paymentstatus!= ''">
+	        and c.paymentstatus = #{paymentstatus}
+	    </if>
+	     <if test="type != null and type != ''">
+	        and c.type = #{type}
+	    </if>
+	    <if test="leasescompanyid != null and leasescompanyid != ''">
+	        and c.type = #{leasescompanyid}
+	    </if>
+ </select> 
+ <select id="getPersonalAll1" resultType="LePersonalorderstatisticsParam" parameterType="LePersonalorderstatisticsParam">
+  select 
+		date_format(c.endtime,'%Y年%m月') as time,
+		SUM(c.ordernum) as ordernum,
+        SUM(c.confirmedorders) as confirmedorders,
+        SUM(c.processedorders) as processedorders,
+        SUM(c.ordermoney) as ordermoney,
+        SUM(c.diffmoney) as diffmoney,
+        SUM(c.confirmedorders+c.processedorders) as alluporders
+        from le_personalorderstatistics c where c.status=1
+	     <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+	    </if>
+	    <if test="ordertype != null and ordertype != ''">
+	        and c.ordertype = #{ordertype}
+	    </if>
+	    <if test="paymentstatus != null and paymentstatus!= ''">
+	        and c.paymethod = #{paymethod}
+	    </if>
+	    <if test="leasescompanyid != null and leasescompanyid != ''">
+	        and c.leasescompanyid = #{leasescompanyid}
+	    </if>
+	     <if test="type != null and type != ''">
+	        and c.type = #{type}
+	    </if>
+	    GROUP BY date_format(c.endtime,'%Y年%m月')
+ </select> 
+ <select id="getPersonalAll2" resultType="LePersonalorderstatisticsParam" parameterType="LePersonalorderstatisticsParam">
+  select 
+        (select p.city from pub_cityaddr p where c.cityid = p.id) as city,
+        SUM(c.ordernum) as ordernum,
+        SUM(c.confirmedorders) as confirmedorders,
+        SUM(c.processedorders) as processedorders,
+        SUM(c.ordermoney) as ordermoney,
+        SUM(c.diffmoney) as diffmoney,
+        SUM(c.confirmedorders+c.processedorders) as alluporders 
+       from le_personalorderstatistics c where c.status=1
+       <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+	    </if>
+	    <if test="ordertype != null and ordertype != ''">
+	        and c.ordertype = #{ordertype}
+	    </if>
+	     <if test="paymentstatus != null and paymentstatus!= ''">
+	        and c.paymentstatus = #{paymentstatus}
+	    </if>
+	    <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="leasescompanyid != null and leasescompanyid != ''">
+	        and c.leasescompanyid = #{leasescompanyid}
+	    </if>
+	     <if test="type != null and type != ''">
+	        and c.type = #{type}
+	    </if>
+       GROUP BY c.cityid
+ </select> 
+ <select id="getordertype" resultType="PubDictionary">
+  select d.* from pub_dictionary d 
+  where d.type = '订单类型' and d.status = 1
+ </select>
+ <select id="getPaymentstatus" resultType="PubDictionary">
+  select d.* from pub_dictionary d 
+  where d.type = '入账状态' and d.status = 1
+ </select>
+ <select id="getPersonalCountListCountByQuery1" resultType="int" parameterType="LePersonalorderstatisticsParam">
+	 select count(*) FROM (select (@rownum := @rownum + 1) as rownum,
+		(select p.city from pub_cityaddr p where c.cityid = p.id) as city,
+		SUM(c.ordernum) as ordernum,
+        SUM(c.confirmedorders) as confirmedorders,
+        SUM(c.processedorders) as processedorders,
+        SUM(c.ordermoney) as ordermoney,
+        SUM(c.diffmoney) as diffmoney,
+        SUM(c.confirmedorders+c.processedorders) as alluporders,
+        (ifnull(SUM(c.ordermoney),0)- ifnull(sum(schedulefee),0)) runfee,  
+        ifnull(sum(schedulefee),0) schedulefee
+        from le_personalorderstatistics c,(select @rownum := 0)r where c.status=1
+	     <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m') <![CDATA[ = ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+	    </if>
+	    <if test="ordertype != null and ordertype != ''">
+	        and c.ordertype = #{ordertype}
+	    </if>
+	     <if test="paymentstatus != null and paymentstatus!= ''">
+	        and c.paymentstatus = #{paymentstatus}
+	    </if>
+	    <if test="leasescompanyid != null and leasescompanyid != ''">
+	        and c.leasescompanyid = #{leasescompanyid}
+	    </if>
+	    <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	     <if test="type != null and type != ''">
+	        and c.type = #{type}
+	    </if>
+	    GROUP BY c.cityid ORDER BY CONVERT( (select p.city from pub_cityaddr p where c.cityid = p.id) USING gbk ) COLLATE gbk_chinese_ci ASC)t
+    </select> 
+    <select id="getPersonalCountListByQuery1" resultType="LePersonalorderstatisticsParam" parameterType="LePersonalorderstatisticsParam">
+       select t.* from 
+		(select (@rownum := @rownum + 1) as rownum,
+		(select p.city from pub_cityaddr p where c.cityid = p.id) as city,
+		SUM(c.ordernum) as ordernum,
+        SUM(c.confirmedorders) as confirmedorders,
+        SUM(c.processedorders) as processedorders,
+        SUM(c.ordermoney) as ordermoney,
+        SUM(c.diffmoney) as diffmoney,
+        SUM(c.confirmedorders+c.processedorders) as alluporders,
+        (ifnull(SUM(c.ordermoney),0)- ifnull(sum(schedulefee),0)) runfee,  
+        ifnull(sum(schedulefee),0) schedulefee
+        from le_personalorderstatistics c,(select @rownum := 0)r where c.status=1
+	     <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m') <![CDATA[ = ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+	    </if>
+	    <if test="ordertype != null and ordertype != ''">
+	        and c.ordertype = #{ordertype}
+	    </if>
+	     <if test="paymentstatus != null and paymentstatus!= ''">
+	        and c.paymentstatus = #{paymentstatus}
+	    </if>
+	    <if test="leasescompanyid != null and leasescompanyid != ''">
+	        and c.leasescompanyid = #{leasescompanyid}
+	    </if>
+	    <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	     <if test="type != null and type != ''">
+	        and c.type = #{type}
+	    </if>
+	    GROUP BY c.cityid ORDER BY CONVERT( (select p.city from pub_cityaddr p where c.cityid = p.id) USING gbk ) COLLATE gbk_chinese_ci ASC )t
+          where t.rownum BETWEEN #{iDisplayStart} and (#{iDisplayStart} + #{iDisplayLength}) and t.rownum != #{iDisplayStart}
+	</select>
+	<select id="getCityListById" resultType="map" parameterType="LePersonalorderstatisticsParam">
+       SELECT id,city as text from pub_cityaddr where id in(select city from pub_sendrules_history ) and id in(select city from op_accountrules_modilog)
+       <if test="city != null and city != '' ">
+					and city
+				like "%"#{city}"%"
+		</if> 
+	</select>
+	<select id="getCustomer" resultType="PubDictionary" >
+       select id,shortname text from le_leasescompany where tocstate = 2
+	</select>
+</mapper>

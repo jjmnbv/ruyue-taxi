@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.TourFeeManagementMapper">
+
+	<!-- 分页查询行程费用结算信息 -->
+    <select id="getTourFeeListByQuery" resultType="hashmap" parameterType="TourFeeManagementQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t2.* from
+	    (select t1.* from
+	    (select op_taxiorder.orderno,pub_driver.name,pub_driver.phone,le_leasescompany.shortname,op_taxiorder.orderamount,op_taxiorder.paymentstatus,pub_driver.jobnum,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) AS plateno,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '未结算' when op_taxiorder.paymentstatus in ('3','6','8') then '已结算' end) as paymentstatusvisual,
+		       date_format(op_taxiorder.paymenttime, '%Y/%m/%d %H:%i') as paymenttimevisual,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '/' when op_taxiorder.paymentstatus in ('3','6','8') then date_format(op_taxiorder.settlementtime, '%Y/%m/%d %H:%i') end) as settlementtimevisual,
+		       pub_driver_tradingrecord.tradeno,pub_driver_tradingrecord.paymenttype	           
+	    from op_taxiorder inner join le_leasescompany on (op_taxiorder.companyid = le_leasescompany.id)
+	                      left join pub_driver_tradingrecord on (op_taxiorder.orderno = pub_driver_tradingrecord.orderno and pub_driver_tradingrecord.status = 1 and pub_driver_tradingrecord.driverid = op_taxiorder.driverid and pub_driver_tradingrecord.tradingstatus = 1)
+	                      left join pub_driver on (op_taxiorder.driverid = pub_driver.id)
+	                      left join pub_vehicle on (op_taxiorder.vehicleid = pub_vehicle.id)  
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno = #{orderno}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum like concat('%',#{jobnum},'%')
+	    </if>  
+	    <if test="driverid != null and driverid != ''">
+	        and op_taxiorder.driverid = #{driverid}
+	    </if>
+	    <choose>
+	        <when test="paymentstatus == '0'.toString()">
+	              and op_taxiorder.paymentstatus in ('4','5','7') 
+	        </when>
+	        <when test="paymentstatus == '1'.toString()">
+	              and op_taxiorder.paymentstatus in ('3','6','8') 
+	        </when>
+	        <otherwise>
+	              and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	        </otherwise>
+	    </choose> 
+	    <if test="companyid != null and companyid != ''">
+	        and op_taxiorder.companyid = #{companyid}
+	    </if>
+	    <if test="tradeno != null and tradeno != ''">
+	        and pub_driver_tradingrecord.tradeno like concat('%',#{tradeno},'%')
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by CONVERT (paymentstatusvisual USING gbk) COLLATE gbk_chinese_ci,op_taxiorder.paymenttime desc
+	    ) t1
+	    where 1 = 1
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat('%',#{plateno},'%')
+	    </if>
+	    ) t2,(select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+    </select>
+    <select id="getTourFeeListCountByQuery" resultType="int" parameterType="TourFeeManagementQueryParam">
+	    select count(*) from
+	    (select op_taxiorder.orderno,pub_driver.name,pub_driver.phone,le_leasescompany.shortname,op_taxiorder.orderamount,op_taxiorder.paymentstatus,pub_driver.jobnum,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) AS plateno,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '未结算' when op_taxiorder.paymentstatus in ('3','6','8') then '已结算' end) as paymentstatusvisual,
+		       date_format(op_taxiorder.paymenttime, '%Y/%m/%d %H:%i') as paymenttimevisual,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '/' when op_taxiorder.paymentstatus in ('3','6','8') then date_format(op_taxiorder.settlementtime, '%Y/%m/%d %H:%i') end) as settlementtimevisual,
+		       pub_driver_tradingrecord.tradeno,pub_driver_tradingrecord.paymenttype	           
+	    from op_taxiorder inner join le_leasescompany on (op_taxiorder.companyid = le_leasescompany.id)
+	                      left join pub_driver_tradingrecord on (op_taxiorder.orderno = pub_driver_tradingrecord.orderno and pub_driver_tradingrecord.status = 1 and pub_driver_tradingrecord.driverid = op_taxiorder.driverid and pub_driver_tradingrecord.tradingstatus = 1)
+	                      left join pub_driver on (op_taxiorder.driverid = pub_driver.id)
+	                      left join pub_vehicle on (op_taxiorder.vehicleid = pub_vehicle.id)  
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno = #{orderno}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum like concat('%',#{jobnum},'%')
+	    </if>  
+	    <if test="driverid != null and driverid != ''">
+	        and op_taxiorder.driverid = #{driverid}
+	    </if>
+	    <choose>
+	        <when test="paymentstatus == '0'.toString()">
+	              and op_taxiorder.paymentstatus in ('4','5','7') 
+	        </when>
+	        <when test="paymentstatus == '1'.toString()">
+	              and op_taxiorder.paymentstatus in ('3','6','8') 
+	        </when>
+	        <otherwise>
+	              and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	        </otherwise>
+	    </choose> 
+	    <if test="companyid != null and companyid != ''">
+	        and op_taxiorder.companyid = #{companyid}
+	    </if>
+	    <if test="tradeno != null and tradeno != ''">
+	        and pub_driver_tradingrecord.tradeno like concat('%',#{tradeno},'%')
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by CONVERT (paymentstatusvisual USING gbk) COLLATE gbk_chinese_ci,op_taxiorder.paymenttime desc
+	    ) t1
+	    where 1 = 1
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat('%',#{plateno},'%')
+	    </if>	    	    
+    </select>
+    
+    <!-- 查找订单号 -->
+    <select id="getOrderNo" resultType="hashmap" parameterType="string">	    
+	    select op_taxiorder.orderno as id,op_taxiorder.orderno as text        
+	    from op_taxiorder
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno like concat("%",#{orderno},"%")
+	    </if>    
+    </select>
+    
+    <!-- 查找司机 -->
+    <select id="getDriverByNameOrPhone" resultType="hashmap" parameterType="string">	    
+	    select distinct op_taxiorder.driverid as id,concat(pub_driver.name,' ',pub_driver.phone) as text
+	    from op_taxiorder,pub_driver
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.driverid = pub_driver.id
+	      and pub_driver.status = 1
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	    <if test="driver != null and driver != ''">
+	        and (pub_driver.name like concat("%",#{driver},"%")
+	          or pub_driver.phone like concat("%",#{driver},"%"))
+	    </if>  
+    </select>
+    
+    <!-- 所属企业 -->
+    <select id="getCompanyNameById" resultType="hashmap">	    
+	    select distinct op_taxiorder.companyid as id,le_leasescompany.shortname as text
+	    from op_taxiorder,le_leasescompany
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	      and op_taxiorder.companyid = le_leasescompany.id
+    </select>
+    
+    <!-- 查找资格证号 -->
+    <select id="getJobnumByJobnum" resultType="hashmap" parameterType="string">
+	    select distinct pub_driver.jobnum as id,pub_driver.jobnum as text
+	    from op_taxiorder,pub_driver
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.driverid = pub_driver.id
+	      and pub_driver.status = 1
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum like concat("%",#{jobnum},"%")
+	    </if>  
+    </select>
+    
+    <!--导出行程费用结算信息 -->
+    <select id="getTourFeeListExport" resultType="hashmap" parameterType="TourFeeManagementQueryParam">
+	    select t1.* from
+	    (select op_taxiorder.orderno,pub_driver.name,pub_driver.phone,le_leasescompany.shortname,op_taxiorder.orderamount,op_taxiorder.paymentstatus,pub_driver.jobnum,
+	           CONCAT(
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.value = pub_vehicle.platenoprovince AND pub_dictionary.status = 1),
+			         (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.value = pub_vehicle.platenocity AND pub_dictionary.status = 1),
+			         pub_vehicle.plateno
+		             ) AS plateno,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '未结算' when op_taxiorder.paymentstatus in ('3','6','8') then '已结算' end) as paymentstatusvisual,
+		       date_format(op_taxiorder.paymenttime, '%Y/%m/%d %H:%i') as paymenttimevisual,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '/' when op_taxiorder.paymentstatus in ('3','6','8') then date_format(op_taxiorder.settlementtime, '%Y/%m/%d %H:%i') end) as settlementtimevisual,
+		       pub_driver_tradingrecord.tradeno,pub_driver_tradingrecord.paymenttype	           
+	    from op_taxiorder inner join le_leasescompany on (op_taxiorder.companyid = le_leasescompany.id)
+	                      left join pub_driver_tradingrecord on (op_taxiorder.orderno = pub_driver_tradingrecord.orderno and pub_driver_tradingrecord.driverid = op_taxiorder.driverid and pub_driver_tradingrecord.status = 1 and pub_driver_tradingrecord.tradingstatus = 1)
+	                      left join pub_driver on (op_taxiorder.driverid = pub_driver.id)
+	                      left join pub_vehicle on (op_taxiorder.vehicleid = pub_vehicle.id)  
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno = #{orderno}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum like concat('%',#{jobnum},'%')
+	    </if>  
+	    <if test="driverid != null and driverid != ''">
+	        and op_taxiorder.driverid = #{driverid}
+	    </if>
+	    <choose>
+	        <when test="paymentstatus == '0'.toString()">
+	              and op_taxiorder.paymentstatus in ('4','5','7') 
+	        </when>
+	        <when test="paymentstatus == '1'.toString()">
+	              and op_taxiorder.paymentstatus in ('3','6','8') 
+	        </when>
+	        <otherwise>
+	              and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	        </otherwise>
+	    </choose> 
+	    <if test="companyid != null and companyid != ''">
+	        and op_taxiorder.companyid = #{companyid}
+	    </if>
+	    <if test="tradeno != null and tradeno != ''">
+	        and pub_driver_tradingrecord.tradeno like concat('%',#{tradeno},'%')
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by CONVERT (paymentstatusvisual USING gbk) COLLATE gbk_chinese_ci,op_taxiorder.paymenttime desc
+	    ) t1
+	    where 1 = 1
+	    <if test="plateno != null and plateno != ''">
+	        and t1.plateno like concat('%',#{plateno},'%')
+	    </if>
+    </select>
+
+	
+</mapper>

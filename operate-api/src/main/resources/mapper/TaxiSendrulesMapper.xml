@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.TaxiSendrulesMapper">
+
+	<!-- 分页查询出租车派单规则 -->
+	<select id="getTaxiSendrulesListByQuery" resultType="map" parameterType="OpTaxiSendrulesQueryParam">
+		select
+			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_taxisendrules.city) cityname,
+			op_taxisendrules.*
+		from
+			op_taxisendrules
+		where
+			status = 1
+			<if test='null != city'>
+				and op_taxisendrules.city = #{city}
+			</if>
+			<if test='null != usetype'>
+				and op_taxisendrules.usetype = #{usetype}
+			</if>
+			<if test='null != sendtype'>
+				and op_taxisendrules.sendtype = #{sendtype}
+			</if>
+			<if test='null != sendmodel'>
+				and op_taxisendrules.sendmodel = #{sendmodel}
+			</if>
+		order by
+			op_taxisendrules.shortname asc, op_taxisendrules.usetype desc
+		limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+	<select id="getTaxiSendrulesCountByQuery" resultType="int" parameterType="OpTaxiSendrulesQueryParam">
+		select
+			count(*)
+		from
+			op_taxisendrules
+		where
+			status = 1
+			<if test='null != city'>
+				and op_taxisendrules.city = #{city}
+			</if>
+			<if test='null != usetype'>
+				and op_taxisendrules.usetype = #{usetype}
+			</if>
+			<if test='null != sendtype'>
+				and op_taxisendrules.sendtype = #{sendtype}
+			</if>
+			<if test='null != sendmodel'>
+				and op_taxisendrules.sendmodel = #{sendmodel}
+			</if>
+	</select>
+	
+	<!-- 查询已有派单规则中国的所有城市(select2) -->
+	<select id="getTaxiSendrulesCityBySelect" resultType="map" parameterType="map">
+		select
+			distinct op_taxisendrules.city id, pub_cityaddr.city text
+		from
+			op_taxisendrules left join pub_cityaddr on op_taxisendrules.city = pub_cityaddr.id
+		where
+			op_taxisendrules.status = 1
+			<if test='null != cityname'>
+				and pub_cityaddr.city like concat('%', #{cityname}, '%')
+			</if>
+	</select>
+	
+	<!-- 查询派单规则详情 -->
+	<select id="getTaxiSendrulesById" resultType="OpTaxisendrules" parameterType="string">
+		select
+			op_taxisendrules.*, pub_cityaddr.city cityname, pub_cityaddr.markid citymarkid
+		from
+			op_taxisendrules left join pub_cityaddr on op_taxisendrules.city = pub_cityaddr.id
+		where op_taxisendrules.id = #{id}
+	</select>
+	
+	<!-- 查询平台出租车司机+加入toC的出租车司机 -->
+	<select id="getTaxiDriverCount" resultType="int">
+		select
+			count(*)
+		from
+			(select
+				pub_driver.id
+			from
+				pub_driver left join le_leasescompany on pub_driver.leasescompanyid = le_leasescompany.id
+			where
+				pub_driver.status = 1 and le_leasescompany.status = 1 and le_leasescompany.tocstate = "2"
+				and le_leasescompany.companystate = "0" and pub_driver.jobstatus = "0" and pub_driver.vehicletype = "1"
+				and pub_driver.platformtype = "1" and pub_driver.boundstate = "1"
+			union
+			select
+				pub_driver.id
+			from
+				pub_driver
+			where
+				pub_driver.status = 1 and pub_driver.jobstatus = "0" and pub_driver.vehicletype = "1"
+				and pub_driver.platformtype = "0" and pub_driver.boundstate = "1"
+			) tmp
+	</select>
+	
+	<!-- 新增出租车派单规则 -->
+	<insert id="insertOpTaxiSendrules" parameterType="OpTaxisendrules">
+		insert into op_taxisendrules(id, city, usetype, sendtype, sendmodel, systemsendinterval, driversendinterval, personsendinterval, initsendradius, maxsendradius, increratio,
+			pushnumlimit, pushnum, pushlimit, shortname, carsinterval, rulesstate, createtime, updatetime, creater, updater, status)
+		values(#{id}, #{city}, #{usetype}, #{sendtype}, #{sendmodel}, #{systemsendinterval}, #{driversendinterval}, #{personsendinterval}, #{initsendradius}, #{maxsendradius}, #{increratio},
+			#{pushnumlimit}, #{pushnum}, #{pushlimit}, #{shortname}, #{carsinterval}, #{rulesstate}, now(), now(), #{creater}, #{updater}, 1)
+	</insert>
+	
+	<!-- 修改出租车派单规则 -->
+	<update id="updateOpTaxiSendrules" parameterType="OpTaxisendrules">
+		update op_taxisendrules set updatetime = now()
+		<if test='null != city'>
+			,city = #{city}
+		</if>
+		<if test='null != usetype'>
+			,usetype = #{usetype}
+		</if>
+		<if test='null != sendtype'>
+			,sendtype = #{sendtype}
+		</if>
+		<if test='null != sendmodel'>
+			,sendmodel = #{sendmodel}
+		</if>
+		<if test='null != systemsendinterval'>
+			,systemsendinterval = #{systemsendinterval}
+		</if>
+		<if test='null != driversendinterval'>
+			,driversendinterval = #{driversendinterval}
+		</if>
+		<if test='null != personsendinterval'>
+			,personsendinterval = #{personsendinterval}
+		</if>
+		<if test='null != initsendradius'>
+			,initsendradius = #{initsendradius}
+		</if>
+		<if test='null != maxsendradius'>
+			,maxsendradius = #{maxsendradius}
+		</if>
+		<if test='null != increratio'>
+			,increratio = #{increratio}
+		</if>
+		<if test='null != pushnumlimit'>
+			,pushnumlimit = #{pushnumlimit}
+		</if>
+		<if test='null != pushnum'>
+			,pushnum = #{pushnum}
+		</if>
+		<if test='null != pushlimit'>
+			,pushlimit = #{pushlimit}
+		</if>
+		<if test='null != shortname'>
+			,shortname = #{shortname}
+		</if>
+		<if test='null != carsinterval'>
+			,carsinterval = #{carsinterval}
+		</if>
+		<if test='null != updater'>
+			,updater = #{updater}
+		</if>
+		<if test='null != rulesstate'>
+			,rulesstate = #{rulesstate}
+		</if>
+		where id = #{id}
+	</update>
+	
+	<!-- 查询城市的缩写 -->
+	<select id="getCityShortname" resultType="map" parameterType="string">
+		select fullnameinitials shortname from pub_cityaddr where id = #{cityid}
+	</select>
+	
+	<!-- 添加派单规则历史数据 -->
+	<insert id="insertOpTaxisendrulesHistory" parameterType="OpTaxisendrulesHistory">
+		insert into op_taxisendrules_history(id, city, usetype, sendtype, sendmodel, systemsendinterval, driversendinterval, personsendinterval, initsendradius, 
+			maxsendradius, increratio, pushnumlimit, pushnum, pushlimit, shortname, carsinterval, createtime, updatetime, creater, updater, status, operatetype, operator, taxisendrulesid)
+		values(#{id}, #{city}, #{usetype}, #{sendtype}, #{sendmodel}, #{systemsendinterval}, #{driversendinterval}, #{personsendinterval}, #{initsendradius}, #{maxsendradius},
+			#{increratio}, #{pushnumlimit}, #{pushnum}, #{pushlimit}, #{shortname}, #{carsinterval}, now(), now(), #{creater}, #{updater}, 1, #{operatetype}, #{operator}, #{taxisendrulesid})
+	</insert>
+	
+	<select id="getOpTaxiSendrulesList" resultType="OpTaxisendrules" parameterType="OpTaxisendrules">
+		select
+			*
+		from
+			op_taxisendrules
+		where
+			status = 1
+			<if test='null != city'>
+				and city = #{city}
+			</if>
+			<if test='null != usetype'>
+				and usetype = #{usetype}
+			</if>
+	</select>
+	
+	<!-- 分页查询出租车派单规则历史记录 -->
+	<select id="getTaxiSendrulesHistoryListByQuery" resultType="map" parameterType="OpTaxiSendrulesHistoryQueryParam">
+		select
+			op_taxisendrules_history.*,
+			(select op_user.nickname from op_user where op_user.id = op_taxisendrules_history.operator) operatorname,
+			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_taxisendrules_history.city) cityname,
+			date_format(op_taxisendrules_history.createtime, '%Y/%m/%d %H:%i:%s') operatetime
+		from
+			op_taxisendrules_history
+		where op_taxisendrules_history.status = 1 and op_taxisendrules_history.taxisendrulesid = #{taxisendrulesid}
+		order by
+			op_taxisendrules_history.createtime desc
+		limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+	<select id="getTaxiSendrulesHistoryCountByQuery" resultType="int" parameterType="OpTaxiSendrulesHistoryQueryParam">
+		select
+			count(*)
+		from
+			op_taxisendrules_history
+		where
+			op_taxisendrules_history.status = 1 and op_taxisendrules_history.taxisendrulesid = #{taxisendrulesid}
+	</select>
+	
+	<!-- 获取运管端平台所属城市人工+系统派单规则数量 -->
+	<select id="getOpSendmodelCountByUser" resultType="int" parameterType="OpUser">
+		select
+			count(*)
+		from
+			op_taxisendrules
+		where
+			op_taxisendrules.status = 1 and op_taxisendrules.rulesstate = "0" and op_taxisendrules.sendmodel = "1"
+			<if test='usertype == "0"'>
+				and op_taxisendrules.city in (
+					select le_leasescompany.city
+					from op_roleuser left join op_roledataauthority on op_roleuser.roleid = op_roledataauthority.roleid
+					left join le_leasescompany on op_roledataauthority.rootdynamicid = le_leasescompany.id
+					where op_roleuser.status = 1 and op_roledataauthority.status = 1
+					and le_leasescompany.platformtype = 0 and op_roleuser.userid = #{id}
+				)
+			</if>
+	</select>
+	
+</mapper>

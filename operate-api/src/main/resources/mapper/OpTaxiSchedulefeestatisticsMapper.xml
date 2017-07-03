@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpTaxiSchedulefeestatisticsMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+    <select id="getCustomer" resultType="PubDictionary" >
+       select aa.id,name text from (select companyid as id from op_order GROUP BY companyid
+							       UNION
+							      select companyid as id from op_taxiorder GROUP BY companyid
+								   UNION 
+								  select id from le_leasescompany where tocstate = 2 or platformtype = '0')aa,
+								   le_leasescompany
+		where aa.id = le_leasescompany.id 
+	</select>
+	<select id="getDriver" resultType="Map" parameterType="LeDriverorderstatisticsParam">
+			SELECT
+				id,
+				CONCAT(NAME, ' ', phone) text
+			FROM
+				pub_driver
+			where 1=1
+			 <!--  and platformtype = 0  -->
+				<if test="name != null and name != '' ">
+					and 
+					CONCAT(NAME, ' ', phone)
+				like "%"#{name}"%"
+		        </if>
+		        <if test="leasesCompanyId != null and leasesCompanyId != '' ">
+				 and leasesCompanyId = #{leasesCompanyId}
+		        </if>  
+	</select>
+	<!-- 企业调度费用统计 -->
+	<select id="getDateQuery" resultType="OpTaxiSchedulefeestatistics" parameterType = "OpTaxiSchedulefeestatistics">
+	 select t.* from(select UUID() as id ,
+						 <if test="timeType == '0'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m/%d') as time,
+						 </if>
+						 <if test="timeType == '1'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m') as time,
+						 </if>
+	                      count(*) orders,o.companyid,l.name as customer,
+	                       ifnull(sum(ifnull(o.actualpayamount,o.orderamount)), 0) AS runMoney,
+	                       ifnull(sum(o.schedulefee),0) as money
+                      from op_taxiorder o,le_leasescompany l where l.id = o.companyid and o.orderstatus = '7' 
+                       <if test="feetype == '0'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','5','6','7','8')
+                       </if>
+                       <if test="feetype == '1'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','4','5','6','7','8')
+                       </if>
+					      <if test="timeType == '0'.toString()">
+					        <if test="startTime1 != null and startTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime1},'%Y-%m-%d')
+						     </if>
+						    <if test="endTime1 != null and endTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime1},'%Y-%m-%d')
+						     </if>
+						  </if>
+						  <if test="timeType == '1'.toString()">
+					        <if test="startTime != null and startTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+						     </if>
+						    <if test="endTime != null and endTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+						     </if>
+						  </if>
+						<if test="accounttype != null and accounttype != ''">
+						       <if test="accounttype == '0'.toString()">
+					            and o.paymentstatus in ('1','3','7','8')
+					           </if>
+					            <if test="accounttype == '1'.toString()">
+					            and o.paymentstatus in ('0','2','5','6')
+					           </if>
+					           <if test="accounttype == '2'.toString()">
+					            and o.paymentstatus in ('5','7')
+					           </if>
+					            <if test="accounttype == '3'.toString()">
+					            and o.paymentstatus in ('6','8')
+					           </if>
+					           <if test="accounttype == '4'.toString()">
+					            and o.paymentstatus in ('0')
+					           </if>
+					            <if test="accounttype == '5'.toString()">
+					            and o.paymentstatus in ('1')
+					           </if>
+					           <if test="accounttype == '6'.toString()">
+					            and o.paymentstatus in ('4')
+					           </if>
+					            <if test="accounttype == '7'.toString()">
+					            and o.paymentstatus in ('3')
+					           </if>
+						  </if>
+						  <if test="customer != null and customer != ''">
+						        and o.companyid = #{customer}
+						  </if>
+						   <if test="timeType == '0'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m-%d'),companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m-%d') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>
+						  <if test="timeType =='1'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m'), companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>	
+						   )t
+             limit ${iDisplayStart},${iDisplayLength}
+	</select>
+	<select id="getDateQueryCount" resultType="int" parameterType = "OpTaxiSchedulefeestatistics">
+	 select count(*) from(select o.companyid
+                      from op_taxiorder o,le_leasescompany l where l.id = o.companyid and o.orderstatus = '7'
+                        <if test="feetype == '0'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','5','6','7','8')
+                       </if>
+                       <if test="feetype == '1'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','4','5','6','7','8')
+                       </if>
+					      <if test="timeType == '0'.toString()">
+					        <if test="startTime1 != null and startTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime1},'%Y-%m-%d')
+						     </if>
+						    <if test="endTime1 != null and endTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime1},'%Y-%m-%d')
+						     </if>
+						  </if>
+						  <if test="timeType == '1'.toString()">
+					        <if test="startTime != null and startTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+						     </if>
+						    <if test="endTime != null and endTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+						     </if>
+						  </if>
+						 <if test="accounttype != null and accounttype != ''">
+						       <if test="accounttype == '0'.toString()">
+					            and o.paymentstatus in ('1','3','7','8')
+					           </if>
+					            <if test="accounttype == '1'.toString()">
+					            and o.paymentstatus in ('0','2','4','5','6')
+					           </if>
+					           <if test="accounttype == '2'.toString()">
+					            and o.paymentstatus in ('5','7')
+					           </if>
+					            <if test="accounttype == '3'.toString()">
+					            and o.paymentstatus in ('6','8')
+					           </if>
+					           <if test="accounttype == '4'.toString()">
+					            and o.paymentstatus in ('0')
+					           </if>
+					            <if test="accounttype == '5'.toString()">
+					            and o.paymentstatus in ('1')
+					           </if>
+					           <if test="accounttype == '6'.toString()">
+					            and o.paymentstatus in ('4')
+					           </if>
+					            <if test="accounttype == '7'.toString()">
+					            and o.paymentstatus in ('3')
+					           </if>
+						  </if>
+						  <if test="customer != null and customer != ''">
+						        and o.companyid = #{customer}
+						  </if>
+						   <if test="timeType == '0'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m-%d'),companyid
+						  </if>
+						  <if test="timeType =='1'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m'), companyid
+						  </if>	)t
+	</select>
+	<!-- 司机调度费用统计 -->
+	<select id="getDateDriverQuery" resultType="OpTaxiSchedulefeestatistics" parameterType = "OpTaxiSchedulefeestatistics">
+	 select t.* from(select UUID() as id ,
+	      (SELECT CONCAT(NAME, ' ', phone) driver FROM pub_driver where pub_driver.id = o.driverid) driver,
+						 <if test="timeType == '0'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m/%d') as time,
+						 </if>
+						 <if test="timeType == '1'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m') as time,
+						 </if>
+	                      count(*) orders,o.companyid,l.name as customer,
+	                     ifnull(sum(ifnull(o.actualpayamount,o.orderamount)), 0) AS runMoney,
+	                     ifnull(sum(o.schedulefee),0) as money
+                      from op_taxiorder o,le_leasescompany l where l.id = o.companyid and o.orderstatus = '7'
+                        <if test="feetype == '0'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','5','6','7','8')
+                       </if>
+                       <if test="feetype == '1'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','4','5','6','7','8')
+                       </if>
+					      <if test="timeType == '0'.toString()">
+					        <if test="startTime1 != null and startTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime1},'%Y-%m-%d')
+						     </if>
+						    <if test="endTime1 != null and endTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime1},'%Y-%m-%d')
+						     </if>
+						  </if>
+						  <if test="timeType == '1'.toString()">
+					        <if test="startTime != null and startTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+						     </if>
+						    <if test="endTime != null and endTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+						     </if>
+						  </if>
+						  <if test="accounttype != null and accounttype != ''">
+						       <if test="accounttype == '0'.toString()">
+					            and o.paymentstatus in ('1','3','7','8')
+					           </if>
+					            <if test="accounttype == '1'.toString()">
+					            and o.paymentstatus in ('0','2','4','5','6')
+					           </if>
+					           <if test="accounttype == '2'.toString()">
+					            and o.paymentstatus in ('5','7')
+					           </if>
+					            <if test="accounttype == '3'.toString()">
+					            and o.paymentstatus in ('6','8')
+					           </if>
+					           <if test="accounttype == '4'.toString()">
+					            and o.paymentstatus in ('0')
+					           </if>
+					            <if test="accounttype == '5'.toString()">
+					            and o.paymentstatus in ('1')
+					           </if>
+					           <if test="accounttype == '6'.toString()">
+					            and o.paymentstatus in ('4')
+					           </if>
+					            <if test="accounttype == '7'.toString()">
+					            and o.paymentstatus in ('3')
+					           </if>
+						  </if>
+						  <if test="customer != null and customer != ''">
+						        and o.companyid = #{customer}
+						  </if>
+						  <if test="driver != null and driver != ''">
+						        and o.driverid = #{driver}
+						  </if>
+						   <if test="timeType == '0'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m-%d'),driverid,companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m-%d') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>
+						  <if test="timeType =='1'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m'),driverid,companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>	
+						   )t
+             limit ${iDisplayStart},${iDisplayLength}
+	</select>
+	<select id="getDateDriverQueryCount" resultType="int" parameterType = "OpTaxiSchedulefeestatistics">
+	 select count(*) from(select o.companyid
+                      from op_taxiorder o,le_leasescompany l where l.id = o.companyid and o.orderstatus = '7'
+                       <if test="feetype == '0'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','5','6','7','8')
+                       </if>
+                       <if test="feetype == '1'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','4','5','6','7','8')
+                       </if>
+					      <if test="timeType == '0'.toString()">
+					        <if test="startTime1 != null and startTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime1},'%Y-%m-%d')
+						     </if>
+						    <if test="endTime1 != null and endTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime1},'%Y-%m-%d')
+						     </if>
+						  </if>
+						  <if test="timeType == '1'.toString()">
+					        <if test="startTime != null and startTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+						     </if>
+						    <if test="endTime != null and endTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+						     </if>
+						  </if>
+						 <if test="accounttype != null and accounttype != ''">
+						       <if test="accounttype == '0'.toString()">
+					            and o.paymentstatus in ('1','3','7','8')
+					           </if>
+					            <if test="accounttype == '1'.toString()">
+					            and o.paymentstatus in ('0','2','4','5','6')
+					           </if>
+					           <if test="accounttype == '2'.toString()">
+					            and o.paymentstatus in ('5','7')
+					           </if>
+					            <if test="accounttype == '3'.toString()">
+					            and o.paymentstatus in ('6','8')
+					           </if>
+					           <if test="accounttype == '4'.toString()">
+					            and o.paymentstatus in ('0')
+					           </if>
+					            <if test="accounttype == '5'.toString()">
+					            and o.paymentstatus in ('1')
+					           </if>
+					           <if test="accounttype == '6'.toString()">
+					            and o.paymentstatus in ('4')
+					           </if>
+					            <if test="accounttype == '7'.toString()">
+					            and o.paymentstatus in ('3')
+					           </if>
+						  </if>
+						  <if test="customer != null and customer != ''">
+						        and o.companyid = #{customer}
+						  </if>
+						  <if test="driver != null and driver != ''">
+						        and o.driverid = #{driver}
+						  </if>
+						   <if test="timeType == '0'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m-%d'),driverid,companyid
+						  </if>
+						  <if test="timeType =='1'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m'),driverid,companyid
+						  </if>	)t
+	</select>
+	<!-- 企业统计导出 -->
+	<select id="opTaxiSchedulefeesExport" resultType="OpTaxiSchedulefeestatistics" parameterType = "OpTaxiSchedulefeestatistics">
+	 select t.* from(select UUID() as id ,
+						 <if test="timeType == '0'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m/%d') as time,
+						 </if>
+						 <if test="timeType == '1'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m') as time,
+						 </if>
+	                      count(*) orders,o.companyid,l.name as customer,
+	                      ifnull(sum(ifnull(o.actualpayamount,o.orderamount)), 0) AS runMoney,
+	                      ifnull(sum(o.schedulefee),0) as money
+                      from op_taxiorder o,le_leasescompany l where l.id = o.companyid and o.orderstatus = '7' 
+                        <if test="feetype == '0'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','5','6','7','8')
+                       </if>
+                       <if test="feetype == '1'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','4','5','6','7','8')
+                       </if>
+					      <if test="timeType == '0'.toString()">
+					        <if test="startTime1 != null and startTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime1},'%Y-%m-%d')
+						     </if>
+						    <if test="endTime1 != null and endTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime1},'%Y-%m-%d')
+						     </if>
+						  </if>
+						  <if test="timeType == '1'.toString()">
+					        <if test="startTime != null and startTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+						     </if>
+						    <if test="endTime != null and endTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+						     </if>
+						  </if>
+						 <if test="accounttype != null and accounttype != ''">
+						       <if test="accounttype == '0'.toString()">
+					            and o.paymentstatus in ('1','3','7','8')
+					           </if>
+					            <if test="accounttype == '1'.toString()">
+					            and o.paymentstatus in ('0','2','4','5','6')
+					           </if>
+					           <if test="accounttype == '2'.toString()">
+					            and o.paymentstatus in ('5','7')
+					           </if>
+					            <if test="accounttype == '3'.toString()">
+					            and o.paymentstatus in ('6','8')
+					           </if>
+					           <if test="accounttype == '4'.toString()">
+					            and o.paymentstatus in ('0')
+					           </if>
+					            <if test="accounttype == '5'.toString()">
+					            and o.paymentstatus in ('1')
+					           </if>
+					           <if test="accounttype == '6'.toString()">
+					            and o.paymentstatus in ('4')
+					           </if>
+					            <if test="accounttype == '7'.toString()">
+					            and o.paymentstatus in ('3')
+					           </if>
+						  </if>
+						  <if test="customer != null and customer != ''">
+						        and o.companyid = #{customer}
+						  </if>
+						   <if test="timeType == '0'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m-%d'),companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m-%d') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>
+						  <if test="timeType =='1'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m'), companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>	
+						   )t
+	</select>
+	<!-- 司机统计导出 -->
+	<select id="opTaxiSchedulefeesExport1" resultType="OpTaxiSchedulefeestatistics" parameterType = "OpTaxiSchedulefeestatistics">
+	 select t.* from(select UUID() as id ,
+	      (SELECT CONCAT(NAME, ' ', phone) driver FROM pub_driver where pub_driver.id = o.driverid) driver,
+						 <if test="timeType == '0'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m/%d') as time,
+						 </if>
+						 <if test="timeType == '1'.toString()">
+						    DATE_FORMAT(o.usetime, '%Y/%m') as time,
+						 </if>
+	                      count(*) orders,o.companyid,l.name as customer,
+	                      ifnull(sum(ifnull(o.actualpayamount,o.orderamount)), 0) AS runMoney,
+	                      ifnull(sum(o.schedulefee),0) as money
+                      from op_taxiorder o,le_leasescompany l where l.id = o.companyid and o.orderstatus = '7' 
+                       <if test="feetype == '0'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','5','6','7','8')
+                       </if>
+                       <if test="feetype == '1'.toString()">
+                        and o.paymentstatus in ('0','1','2','3','4','5','6','7','8')
+                       </if>
+					      <if test="timeType == '0'.toString()">
+					        <if test="startTime1 != null and startTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime1},'%Y-%m-%d')
+						     </if>
+						    <if test="endTime1 != null and endTime1 != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime1},'%Y-%m-%d')
+						     </if>
+						  </if>
+						  <if test="timeType == '1'.toString()">
+					        <if test="startTime != null and startTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m')
+						     </if>
+						    <if test="endTime != null and endTime != ''">
+						        and STR_TO_DATE(o.usetime,'%Y-%m') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m')
+						     </if>
+						  </if>
+						  <if test="accounttype != null and accounttype != ''">
+						       <if test="accounttype == '0'.toString()">
+					            and o.paymentstatus in ('1','3','7','8')
+					           </if>
+					            <if test="accounttype == '1'.toString()">
+					            and o.paymentstatus in ('0','2','4','5','6')
+					           </if>
+					           <if test="accounttype == '2'.toString()">
+					            and o.paymentstatus in ('5','7')
+					           </if>
+					            <if test="accounttype == '3'.toString()">
+					            and o.paymentstatus in ('6','8')
+					           </if>
+					           <if test="accounttype == '4'.toString()">
+					            and o.paymentstatus in ('0')
+					           </if>
+					            <if test="accounttype == '5'.toString()">
+					            and o.paymentstatus in ('1')
+					           </if>
+					           <if test="accounttype == '6'.toString()">
+					            and o.paymentstatus in ('4')
+					           </if>
+					            <if test="accounttype == '7'.toString()">
+					            and o.paymentstatus in ('3')
+					           </if>
+						  </if>
+						  <if test="customer != null and customer != ''">
+						        and o.companyid = #{customer}
+						  </if>
+						  <if test="driver != null and driver != ''">
+						        and o.driverid = #{driver}
+						  </if>
+						   <if test="timeType == '0'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m-%d'),driverid,companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m-%d') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>
+						  <if test="timeType =='1'.toString()">
+						    GROUP BY STR_TO_DATE(o.usetime, '%Y-%m'),driverid,companyid
+						    ORDER BY STR_TO_DATE(o.usetime,'%Y-%m') DESC ,CONVERT( l.name USING gbk ) COLLATE gbk_chinese_ci
+						  </if>	
+						   )t
+	</select>
+</mapper>

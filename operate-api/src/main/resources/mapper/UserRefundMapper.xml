@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.UserRefundMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getPeUserRefundListByQuery" resultType="PeUserRefund" parameterType="QueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pe_userrefund.*,
+	       CONCAT(IFNULL(pe_user.nickname,''),' ',pe_user.account) as userName
+	    from pe_userrefund,pe_user
+	    where pe_userrefund.userid = pe_user.id
+	      and pe_userrefund.status = 1
+	      and pe_userrefund.refundstatus = #{key}
+	    <if test="key == '0'.toString()">
+	      order by pe_userrefund.committime,pe_user.account 
+	    </if>
+	    <if test="key == '1'.toString()">
+	      order by pe_userrefund.updatetime desc 
+	    </if>
+	    ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getPeUserRefundListCountByQuery" resultType="int" parameterType="string">
+	    select count(*)
+	    from pe_userrefund,pe_user
+	    where pe_userrefund.userid = pe_user.id
+	      and pe_userrefund.status = 1
+	      and pe_userrefund.refundstatus = #{key}
+	</select>
+
+	<update id = "updatePeUserRefund" parameterType="hashmap">
+		update pe_userrefund
+		set refundstatus = 1,updatetime = now(),updater = #{updater}
+		where id = #{id}
+		  and status = 1
+	</update>
+	
+	<update id = "updateOpUserAccount" parameterType="hashmap">
+		update pe_useraccount
+		set balance = IFNULL(balance,0) + #{amount},updatetime = now()
+		where userid = #{userId}
+		  and status = 1
+	</update>
+	
+	<insert id="createOpUserExpenses" parameterType="OrgUserExpenses">
+	    insert into pe_userexpenses(id,userid,expensetype,expensetime,amount,balance,remark,createtime,updatetime,creater,updater,status,tradetype,detailtype,operateresult)
+	    values(#{id},#{userId},3,now(),#{amount},#{balance},#{remark},now(),now(),#{updater},#{updater},1,#{tradeType},#{detailType},0)
+	</insert>
+	
+	<select id="getPeUserRefundById" resultType="PeUserRefund" parameterType="string">
+	    select pe_userrefund.*
+	    from pe_userrefund
+	    where pe_userrefund.id = #{id}
+	      and pe_userrefund.status = 1
+	</select>
+	
+	<select id="getBalanceByUserId" resultType="decimal" parameterType="string">
+	    select pe_useraccount.balance
+	    from pe_useraccount
+	    where pe_useraccount.userid = #{userId}
+	      and pe_useraccount.status = 1
+	</select>
+	
+	<insert id="createPeUserNews" parameterType="OrgUserNews">
+	    insert into pe_usernews(id,userid,type,title,content,newsstate,createtime,updatetime,status)
+	    values(#{id},#{userId},#{type},#{title},#{content},#{newsState},now(),now(),1)
+	</insert>
+	
+	<select id="checkPeUserAccountExist" resultType="int" parameterType="string">
+	    select count(*)
+	    from pe_useraccount
+	    where pe_useraccount.userid = #{userId}
+	      and pe_useraccount.status = 1
+	</select>
+	
+	<insert id="createPeUserAccount" parameterType="hashmap">
+	    insert into pe_useraccount(id,userid,balance,createtime,updatetime,status)
+	    values(#{id},#{userId},#{amount},now(),now(),1)
+	</insert>
+	
+	<select id="getOpOrderById" resultType="OpOrder" parameterType="string">
+	    select * from
+	    (select op_order.orderstatus,op_order.paymentstatus,op_order.userrate,op_order.usercomment
+	    from op_order
+	    where op_order.orderno = #{orderNo}
+	    union
+	    select op_taxiorder.orderstatus,op_taxiorder.paymentstatus,op_taxiorder.userrate,op_taxiorder.usercomment
+	    from op_taxiorder
+	    where op_taxiorder.orderno = #{orderNo}
+	    ) t
+	    limit 0,1
+	</select>
+	
+	<!-- 查询运管端客服电话-->
+	<select id="getOpPlatformInfo" resultType="hashmap">
+        select * from op_platforminfo where status = 1
+    </select>
+    
+    <!-- 查询下单人信息-->
+	<select id="getPeUserInfo" resultType="hashmap" parameterType="string">
+        select * from pe_user where id = #{id} and status = 1
+    </select>
+	
+</mapper>

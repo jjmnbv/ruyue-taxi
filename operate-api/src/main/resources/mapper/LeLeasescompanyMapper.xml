@@ -1,0 +1,973 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.LeLeasescompanyMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getLeLeasescompanyListByQuery" resultType="LeLeasescompany" parameterType="QueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							le_leasescompany.id,
+							le_leasescompany.`name`,
+							le_leasescompany.shortname,
+							le_user.account,
+							(
+								SELECT
+									city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.id = le_leasescompany.city
+								AND pub_cityaddr.`status` = 1
+							) AS city,
+							le_leasescompany.companystate,
+							le_leasescompany.tocstate,
+							le_leasescompany.contacts,
+							le_leasescompany.phone,
+							le_leasescompany.CreateTime
+						FROM
+							le_leasescompany,
+							le_user,
+							(SELECT @rownum := 0) r
+						WHERE
+							le_leasescompany.id = le_user.leasescompanyid
+						AND le_leasescompany.`Status` = 1
+						AND le_user.`status` = 1
+						AND le_user.specialstate = '1'
+						
+						<if test="usertype == '0' or usertype == 0">
+							and le_leasescompany.id in (
+								select t1.dynamicid from op_roleuser t left join op_roledataauthority t1
+								on t.roleid = t1.roleid and t.`status` = 1
+								where t.userid = #{key} and t1.`status` = '1'
+							)
+						</if>
+					) m
+					where 1=1
+					<if test="queryName != null and queryName != '' ">
+						and m.id = #{queryName}
+					</if>
+					<if test="queryCity != null and queryCity != '' ">
+						and m.city = #{queryCity}
+					</if>
+					<if test="queryCompanystate != null and queryCompanystate != '' ">
+						and m.companystate = #{queryCompanystate}
+					</if>
+					<choose>
+						<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+							and m.CreateTime &gt;= #{startTime} and m.CreateTime &lt; #{endTime}
+						</when>
+						<otherwise>
+							<if test="startTime != null and startTime != ''">
+								and m.CreateTime &gt;= #{startTime}
+							</if>
+							<if test="endTime != null and endTime != ''">
+								and m.CreateTime &lt; #{endTime}
+							</if>
+						</otherwise>
+					</choose>
+					order by m.CreateTime desc
+			) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	<select id="getLeLeasescompanyListCountByQuery" resultType="int" parameterType="QueryParam">
+		SELECT
+			COUNT(*)
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							le_leasescompany.id,
+							le_leasescompany.`name`,
+							le_leasescompany.shortname,
+							le_user.account,
+							(
+								SELECT
+									city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.id = le_leasescompany.city
+								AND pub_cityaddr.`status` = 1
+							) AS city,
+							le_leasescompany.companystate,
+							le_leasescompany.tocstate,
+							le_leasescompany.contacts,
+							le_leasescompany.phone,
+							le_leasescompany.CreateTime
+						FROM
+							le_leasescompany,
+							le_user,
+							(SELECT @rownum := 0) r
+						WHERE
+							le_leasescompany.id = le_user.leasescompanyid
+						AND le_leasescompany.`Status` = 1
+						AND le_user.`status` = 1
+						AND le_user.specialstate = '1'
+						
+						<if test="usertype == '0' or usertype == 0">
+							and le_leasescompany.id in (
+								select t1.dynamicid from op_roleuser t left join op_roledataauthority t1
+								on t.roleid = t1.roleid and t.`status` = 1
+								where t.userid = #{key} and t1.`status` = '1'
+							)
+						</if>
+					) m
+					where 1=1
+					<if test="queryName != null and queryName != '' ">
+						and m.id = #{queryName}
+					</if>
+					<if test="queryCity != null and queryCity != '' ">
+						and m.city = #{queryCity}
+					</if>
+					<if test="queryCompanystate != null and queryCompanystate != '' ">
+						and m.companystate = #{queryCompanystate}
+					</if>
+					<choose>
+						<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+							and m.CreateTime &gt;= #{startTime} and m.CreateTime &lt; #{endTime}
+						</when>
+						<otherwise>
+							<if test="startTime != null and startTime != ''">
+								and m.CreateTime &gt;= #{startTime}
+							</if>
+							<if test="endTime != null and endTime != ''">
+								and m.CreateTime &lt; #{endTime}
+							</if>
+						</otherwise>
+					</choose>
+					order by m.CreateTime desc
+			) t
+	</select>
+	<!--查询 租赁公司简称  跟 城市  -->
+	<select id="getNameOrCity" resultType="LeLeasescompany" parameterType="QueryParam">
+			SELECT
+				le_leasescompany.id,
+				le_leasescompany.shortname,
+				(
+					SELECT
+						city
+					FROM
+						pub_cityaddr
+					WHERE
+						pub_cityaddr.id = le_leasescompany.city
+					AND pub_cityaddr.`status` = 1
+				) AS city
+			FROM
+				le_leasescompany,
+				le_user
+			WHERE
+				le_leasescompany.id = le_user.leasescompanyid
+			AND le_leasescompany.`Status` = 1
+			AND le_user.`status` = 1
+			AND le_user.specialstate = '1'
+			<if test="usertype == '0' or usertype == 0">
+				and le_leasescompany.id in (
+					select t1.dynamicid from op_roleuser t left join op_roledataauthority t1
+					on t.roleid = t1.roleid and t.`status` = 1
+					where t.userid = #{key} and t1.`status` = '1'
+				)
+			</if>
+	</select>
+	<!--查询 租赁公司简称  跟 城市  -->
+	<select id="getCityOrName" resultType="LeLeasescompany" parameterType="QueryParam">
+			SELECT
+				le_leasescompany.id,
+				(
+					SELECT
+						city
+					FROM
+						pub_cityaddr
+					WHERE
+						pub_cityaddr.id = le_leasescompany.city
+					AND pub_cityaddr.`status` = 1
+				) AS city
+			FROM
+				le_leasescompany,
+				le_user
+			WHERE
+				le_leasescompany.id = le_user.leasescompanyid
+			AND le_leasescompany.`Status` = 1
+			AND le_user.`status` = 1
+			AND le_user.specialstate = '1'
+			<if test="usertype == '0' or usertype == 0">
+				and le_leasescompany.id in (
+					select t1.dynamicid from op_roleuser t left join op_roledataauthority t1
+					on t.roleid = t1.roleid and t.`status` = 1
+					where t.userid = #{key} and t1.`status` = '1'
+				)
+			</if>
+			GROUP BY le_leasescompany.city
+	</select>
+	<!-- 启用账号 -->
+	<update id="enable" parameterType="string">
+		update le_leasescompany set companystate = '0',UpdateTime=now() where id = #{id}
+	</update>
+	<!-- 禁用账号 -->
+	<update id="disable" parameterType="string">
+		update le_leasescompany set companystate = '1',UpdateTime=now() where id = #{id}
+	</update>	
+	<!-- 根据id 查询 -->
+	<select id="getById" resultType="LeLeasescompany" parameterType="string">
+		SELECT
+			le_leasescompany.*,
+			le_user.account,
+			le_user.id as getById,
+			le_user.firsttime,
+			 (
+				SELECT
+					city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = le_leasescompany.city
+				AND pub_cityaddr.`status` = 1
+			) AS cityShow,
+			le_user.id as userId
+		FROM
+			le_leasescompany,
+			le_user
+		WHERE
+			le_leasescompany.id = le_user.leasescompanyid
+		AND le_leasescompany.`Status` = 1
+		AND le_user.`status` = 1
+		AND le_user.specialstate=1
+		AND le_leasescompany.id=#{id}
+	</select>
+	<!-- 禁用 toc -->
+	<update id="disableToc" parameterType="string">
+		update le_leasescompany set tocstate = '0',UpdateTime=now() where id = #{id}
+	</update>
+	<!-- 审核 tuc -->
+	<select id="examineToc" parameterType="string">
+		update le_leasescompany set tocstate = '2',UpdateTime=now() where id = #{id}
+	</select>
+	<!-- 重置密码 -->
+	<update id="resetPassword" parameterType="User">
+		update le_user set userpassword = #{userpassword},updatetime=now() where account = #{account}
+	</update>
+	<!-- 拿到城市 （选择城市） -->
+	<select id="getPubCityaddr" resultType="City">
+		SELECT * FROM pub_cityaddr where `status`=1
+	</select>
+	<!-- 检测  客户名称   客户简称  的唯一性 -->
+	<select id="checkNameOrShortName" resultType="int" parameterType="LeLeasescompany">
+			SELECT
+				count(*)
+			FROM
+				le_leasescompany,
+				le_user
+			WHERE
+				1 = 1
+			AND le_leasescompany.id = le_user.leasescompanyid
+			AND le_leasescompany.`Status`=1
+			AND le_user.`status`=1
+			and (le_leasescompany.name = #{name} or le_leasescompany.shortname = #{shortName} or le_user.account = #{account})
+		<if test="id != null and id != '' ">
+			and le_leasescompany.id != #{id}
+		</if>
+	</select>
+	<!-- add LeLeasescompany -->
+	<insert id="createLeLeasescompany" parameterType="LeLeasescompany">
+		INSERT INTO `le_leasescompany` (`id`, `name`, `shortname`, `contacts`, `phone`, `mail`, `city`, `address`, `bizlicpic`, bizlicnum,`idcardfront`, `idcardback`, `idcard`, `tocstate`,companystate, `CreateTime`, `UpdateTime`, `Creater`, `Updater`, `Status`,regorder,platformtype) VALUES 
+									   (#{id}, #{name},#{shortName},#{contacts},#{phone},#{mail},#{city},#{address},#{bizlicPic},#{bizlicNum},#{idCardFront},#{idCardBack},#{idCard},'0','0',now(),now(),#{creater},#{updater},1,#{regorder},1);
+	</insert>
+	<!-- and  LeLeasescompany 同时在  le_user 中添加  账号  密码  超管-->	
+	<insert id="createLeUser" parameterType="User">
+		insert into le_user (id , leasescompanyid ,account ,userpassword,nickname,specialstate,createtime,updatetime,status,firsttime,telphone,email) values
+							(#{id},#{leasescompanyid},#{account},#{userpassword},#{nickname},#{specialstate},now(),now(),1,'0',#{telphone},#{email})
+	</insert>
+	<!-- 修改  le user 的账号 密码 -->
+	<update id="updateLeUsers" parameterType="User">
+		update le_user set updatetime = now(),email=#{email},nickname=#{nickname} 
+		<if test="telphone != null and telphone != '' ">
+			,telphone = #{telphone}
+		</if>
+		<if test="account != null and account != '' ">
+			,account = #{account}
+		</if>
+		<if test="userpassword != null and userpassword != '' ">
+			,userpassword = #{userpassword}
+		</if>
+		where id = #{id}
+	</update>
+	<!-- 修改   LeLeasescompany -->
+	<update id="updateLeLeasescompany" parameterType="LeLeasescompany">
+		update le_leasescompany set `name`= #{name}, `shortname`= #{shortName}, `contacts`= #{contacts}, `phone` = #{phone}, `mail` = #{mail}, `city` = #{city},
+		`address` = #{address}, `bizlicpic` = #{bizlicPic}, bizlicnum = #{bizlicNum},`idcardfront` = #{idCardFront}, `idcardback` = #{idCardBack}, `idcard` = #{idCard}, 
+		`UpdateTime` = now(),`Updater` = #{updater} where id = #{id}
+	</update>
+	<!-- 修改  le_user 的账号 -->
+	<update id="updateLeUser" parameterType="User">
+		update le_user set updatetime = now(),email=#{email},nickname=#{nickname},`UpdateTime` = now() 
+		<if test="telphone != null and telphone != '' ">
+			,telphone = #{telphone}
+		</if>
+		<if test="account != null and account != '' ">
+			,account = #{account}
+		</if>
+		<if test="userpassword != null and userpassword != '' ">
+			,userpassword = #{userpassword}
+		</if>
+		where leasescompanyid = #{leasescompanyid} and specialstate = '1'
+	</update>
+	<!-- 查询司机车型信息 -->
+	<select id="getPubDriverListByQuery" parameterType="QueryParam"
+		resultType="PubDriver">
+		<!-- SELECT
+				t.*
+			FROM
+				(
+					SELECT
+						(@rownum := @rownum + 1) AS indexnum,
+						m.*
+					FROM
+						(
+							SELECT
+								*, (
+									SELECT
+										pub_cityaddr.city
+									FROM
+										pub_cityaddr
+									WHERE
+										pub_cityaddr.`status` = 1
+									AND pub_cityaddr.id = pub_driver.city
+								) AS cityName,
+								(
+									SELECT
+										text
+									FROM
+										pub_dictionary
+									WHERE
+										pub_dictionary.Type = '服务状态'
+									AND pub_dictionary.`Value` = pub_driver.workstatus
+								) AS workStatusName,
+								(
+									SELECT
+										CONCAT(
+											op_vehiclemodels.`name`,
+											" ",
+											(
+												SELECT
+													pub_dictionary.text
+												FROM
+													pub_dictionary
+												WHERE
+													pub_dictionary.type = '车牌省'
+												AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+												AND pub_dictionary.`status` = 1
+											),
+											(
+												SELECT
+													pub_dictionary.text
+												FROM
+													pub_dictionary
+												WHERE
+													pub_dictionary.type = '车牌市'
+												AND pub_dictionary.`value` = pub_vehicle.platenocity
+												AND pub_dictionary.`status` = 1
+											),
+											pub_vehicle.plateno
+										)
+									FROM
+										op_vehiclemodels_vehicle_ref,
+										pub_driver_vehicle_ref,
+										op_vehiclemodels,
+										pub_vehicle
+									WHERE
+										op_vehiclemodels_vehicle_ref.vehicleid = pub_driver_vehicle_ref.vehicleId
+									AND pub_vehicle.id = op_vehiclemodels_vehicle_ref.vehicleid
+									AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+									AND op_vehiclemodels_vehicle_ref.vehiclemodelsid = op_vehiclemodels.Id
+									AND pub_driver_vehicle_ref.driverId = pub_driver.id
+									AND pub_driver_vehicle_ref.bindState = '0'
+									AND op_vehiclemodels_vehicle_ref.`status` = 1
+									AND pub_driver_vehicle_ref.`Status` = 1
+									AND op_vehiclemodels.`status` = 1
+									AND pub_vehicle.`Status` = 1
+								) AS distributionVel,
+								(
+									SELECT
+										op_vehiclemodels_vehicle_ref.updatetime
+									FROM
+										op_vehiclemodels_vehicle_ref,
+										pub_driver_vehicle_ref,
+										op_vehiclemodels
+									WHERE
+										pub_driver_vehicle_ref.driverId = pub_driver.id
+									AND op_vehiclemodels_vehicle_ref.vehicleid = pub_driver_vehicle_ref.vehicleId
+									AND op_vehiclemodels_vehicle_ref.vehiclemodelsid = op_vehiclemodels.Id
+									AND pub_driver_vehicle_ref.bindState = '0'
+									AND op_vehiclemodels_vehicle_ref.`status` = 1
+									AND pub_driver_vehicle_ref.`Status` = 1
+									AND op_vehiclemodels.`status` = 1
+								) AS distributionVelTime
+							FROM
+								pub_driver,
+								(SELECT @rownum := 0) r
+							WHERE
+								pub_driver.`Status` = 1
+							AND pub_driver.leasescompanyid= #{leasesCompanyId}
+					<if test="queryKeyword != null and queryKeyword !='' ">
+						AND( pub_driver.name like "%"#{queryKeyword}"%"
+						OR pub_driver.phone like "%"#{queryKeyword}"%")
+					</if>
+					<if test="queryWorkStatus != null and queryWorkStatus != ''">
+						and pub_driver.workstatus = #{queryWorkStatus}
+					</if>
+					<if test="queryCity != null and queryCity != ''">
+						and pub_driver.city = #{queryCity}
+					</if>
+							ORDER BY
+								distributionVelTime DESC
+						) m
+						WHERE m.distributionVelTime IS NOT NULL
+						AND m.distributionVel IS NOT NULL
+						where m.workStatusName != '未绑定'
+				) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]> -->
+		SELECT
+				t1.id,
+				t1.leasescompanyid,
+				CONCAT(t1.`name`," ",t1.phone) AS `name`,
+				(
+					SELECT
+						pub_cityaddr.city
+					FROM
+						pub_cityaddr
+					WHERE
+						pub_cityaddr.`status` = 1
+					AND pub_cityaddr.id = t3.city
+				) AS cityName,
+				t3.vehicletype,
+				t1.workstatus,
+				(
+					SELECT
+						text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.Type = '服务状态'
+					AND pub_dictionary.`Value` = t1.workstatus
+				) AS workStatusName,
+				IF(t3.vehicletype = 1 AND t1.passworkstatus = 1,
+					(
+					CONCAT(
+						(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= t3.platenoprovince AND pub_dictionary.`status`=1),
+						(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= t3.platenocity AND pub_dictionary.`status`=1),
+						t3.plateno
+					)
+					),
+					(
+					CONCAT(
+					CONCAT(
+					t5.`name`,
+					' '
+					),
+					CONCAT(
+						(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= t3.platenoprovince AND pub_dictionary.`status`=1),
+						(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= t3.platenocity AND pub_dictionary.`status`=1),
+						t3.plateno
+					)
+					)
+					)) AS vehicleInfo,
+					CONCAT(
+						t7.`name`,
+						" ",
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary.type = '车牌省'
+							AND pub_dictionary.`value` = t3.platenoprovince
+							AND pub_dictionary.`status` = 1
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary.type = '车牌市'
+							AND pub_dictionary.`value` = t3.platenocity
+							AND pub_dictionary.`status` = 1
+						),
+						t3.plateno
+					) AS distributionVel,
+					t6.updatetime AS distributionVelTime,
+					(SELECT text FROM pub_dictionary WHERE pub_dictionary.Type = '租赁公司' AND pub_dictionary.`Value` = t1.belongleasecompany ) AS belongleasecompanyName
+			FROM
+				pub_driver t1,
+				pub_driver_vehicle_ref t2
+			LEFT JOIN pub_vehicle t3 ON t2.vehicleid = t3.id AND t3.`Status`=1 AND t3.platformtype=1
+			LEFT JOIN le_vehcline_models_ref t4 ON t3.vehclineid = t4.vehclineid AND t4.`Status`=1
+			LEFT JOIN le_vehiclemodels t5 ON t4.vehiclemodelsid = t5.Id AND t5.`Status`=1
+			LEFT JOIN op_vehiclemodels_vehicle_ref t6 ON t6.vehicleid = t3.id AND t6.`status`=1
+			LEFT JOIN op_vehiclemodels t7 ON t7.Id = t6.vehiclemodelsid AND t7.`status`=1
+			WHERE
+				t1.leasescompanyid = #{leasesCompanyId}
+			AND t1.`Status`=1
+			AND t1.platformtype=1
+			AND t1.id = t2.driverid
+			AND t2.`status`=1
+			AND ((t1.vehicletype = '1' AND t1.id = t3.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+			<!-- AND (
+						(
+							t3.id = t2.vehicleid
+							AND t3.vehicletype = '0'
+						)
+						OR (
+							t1.id = t3.driverid
+							AND t3.vehicletype = '1'
+						)
+					) -->
+			<if test="queryKeyword != null and queryKeyword !='' ">
+				AND t1.id = #{queryKeyword}
+			</if>
+			<if test="queryWorkStatus != null and queryWorkStatus != ''">
+				and t1.workstatus = #{queryWorkStatus}
+			</if>
+			<if test="queryCity != null and queryCity != ''">
+				and t1.city = #{queryCity}
+			</if>
+			<if test="queryVehicletype != null and queryVehicletype != ''">
+				and t3.vehicletype = #{queryVehicletype}
+			</if>
+			<if test="belongleasecompanyQuery != null and belongleasecompanyQuery != ''">
+				and t1.belongleasecompany = #{belongleasecompanyQuery}
+			</if>
+			ORDER BY CONVERT ( (
+					SELECT
+						pub_cityaddr.city
+					FROM
+						pub_cityaddr
+					WHERE
+						pub_cityaddr.`status` = 1
+					AND pub_cityaddr.id = t3.city
+				) USING gbk) COLLATE gbk_chinese_ci,
+			t3.vehicletype DESC
+			LIMIT #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<!-- 查询司机车型信息 -->
+	<select id="getPubDriverListCountByQuery" parameterType="QueryParam"
+		resultType="int">
+		SELECT
+			COUNT(*)
+			FROM
+				pub_driver t1,
+				pub_driver_vehicle_ref t2
+			LEFT JOIN pub_vehicle t3 ON t2.vehicleid = t3.id AND t3.`Status`=1 AND t3.platformtype=1
+			LEFT JOIN le_vehcline_models_ref t4 ON t3.vehclineid = t4.vehclineid AND t4.`Status`=1
+			LEFT JOIN le_vehiclemodels t5 ON t4.vehiclemodelsid = t5.Id AND t5.`Status`=1
+			LEFT JOIN op_vehiclemodels_vehicle_ref t6 ON t6.vehicleid = t3.id AND t6.`status`=1
+			LEFT JOIN op_vehiclemodels t7 ON t7.Id = t6.vehiclemodelsid AND t7.`status`=1
+			WHERE
+				t1.leasescompanyid = #{leasesCompanyId}
+			AND t1.`Status`=1
+			AND t1.platformtype=1
+			AND t1.id = t2.driverid
+			AND ((t1.vehicletype = '1' AND t1.id = t3.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+			AND t2.`status`=1
+			<!-- AND (
+						(
+							t3.id = t2.vehicleid
+							AND t3.vehicletype = '0'
+						)
+						OR (
+							t1.id = t3.driverid
+							AND t3.vehicletype = '1'
+						)
+					) -->
+			<if test="queryKeyword != null and queryKeyword !='' ">
+				AND t1.id = #{queryKeyword}
+			</if>
+			<if test="queryWorkStatus != null and queryWorkStatus != ''">
+				and t1.workstatus = #{queryWorkStatus}
+			</if>
+			<if test="queryCity != null and queryCity != ''">
+				and t1.city = #{queryCity}
+			</if>
+			<if test="queryVehicletype != null and queryVehicletype != ''">
+				and t3.vehicletype = #{queryVehicletype}
+			</if>
+			<if test="belongleasecompanyQuery != null and belongleasecompanyQuery != ''">
+				and t1.belongleasecompany = #{belongleasecompanyQuery}
+			</if>
+			ORDER BY CONVERT ( (
+					SELECT
+						pub_cityaddr.city
+					FROM
+						pub_cityaddr
+					WHERE
+						pub_cityaddr.`status` = 1
+					AND pub_cityaddr.id = t3.city
+				) USING gbk) COLLATE gbk_chinese_ci,
+			t3.vehicletype DESC					
+	</select>
+	<!-- 查询车型信息  -->
+	<select id="getVehicleInfo" parameterType="string" resultType="PubDriver">
+		SELECT
+		CONCAT(
+		CONCAT(
+		le_vehiclemodels.`name`,
+		' '
+		),
+		CONCAT(
+			(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+			pub_vehicle.plateno
+		)
+		) AS vehicleInfo
+		FROM
+		pub_vehicle,
+		le_vehcline_models_ref,
+		le_vehiclemodels,
+		(
+		SELECT
+		*
+		FROM
+		pub_driver_vehicle_ref
+		WHERE
+		<!-- pub_driver_vehicle_ref.bindstate = '0' -->
+		pub_driver_vehicle_ref.`Status` = 1
+		AND
+		pub_driver_vehicle_ref.driverid =
+		#{id}
+		) AS pub_driver_vehicle_ref
+		WHERE
+		pub_vehicle.id = pub_driver_vehicle_ref.vehicleid
+		AND pub_vehicle.`Status` = 1
+		AND le_vehcline_models_ref.`Status` = 1
+		AND le_vehiclemodels.`Status` = 1
+		AND le_vehcline_models_ref.vehclineid = pub_vehicle.vehclineid
+		AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+	</select>
+	<!-- 查询经营范围 -->
+	<select id="getPubVehicleScope" parameterType="string" resultType="PubVehicleScope">
+		SELECT
+			(SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle_scope.cityid)  AS cityid
+		FROM
+			pub_driver,
+			pub_vehicle_scope,
+			pub_driver_vehicle_ref
+		WHERE
+			pub_driver_vehicle_ref.driverId = pub_driver.id
+		AND pub_driver_vehicle_ref.vehicleId = pub_vehicle_scope.vehicleid
+		AND pub_driver.id = #{id}
+		AND pub_driver.`Status`=1
+		AND pub_vehicle_scope.`Status`=1
+		AND pub_driver_vehicle_ref.`Status`=1
+		<!-- AND pub_driver_vehicle_ref.bindState='0' -->
+	</select>
+	<!--  查询 服务状态 -->
+	<select id="getDictionaryByType" resultType="Dictionary" parameterType="string">
+		select * from pub_dictionary where pub_dictionary.type = #{queryType}
+		order by pub_dictionary.sort;
+	</select>
+	<!-- 得到城市 -->
+	<select id="getCity" resultType="PubDriver" parameterType="string">
+		SELECT
+				t1.city,
+				(
+					SELECT
+						pub_cityaddr.city
+					FROM
+						pub_cityaddr
+					WHERE
+						pub_cityaddr.`status` = 1
+					AND pub_cityaddr.id = t3.city
+				) AS cityName
+			FROM
+				pub_driver t1,
+				pub_driver_vehicle_ref t2
+			LEFT JOIN pub_vehicle t3 ON t2.vehicleid = t3.id AND t3.`Status`=1 AND t3.platformtype=1
+			LEFT JOIN le_vehcline_models_ref t4 ON t3.vehclineid = t4.vehclineid AND t4.`Status`=1
+			LEFT JOIN le_vehiclemodels t5 ON t4.vehiclemodelsid = t5.Id AND t5.`Status`=1
+			LEFT JOIN op_vehiclemodels_vehicle_ref t6 ON t6.vehicleid = t3.id AND t6.`status`=1
+			LEFT JOIN op_vehiclemodels t7 ON t7.Id = t6.vehiclemodelsid AND t7.`status`=1
+			WHERE
+				t1.leasescompanyid = #{leasesCompanyId}
+			AND t1.`Status`=1
+			AND t1.platformtype=1
+			AND t1.id = t2.driverid
+			AND t2.`status`=1
+			AND (
+						(
+							t3.id = t2.vehicleid
+							AND t3.vehicletype = '0'
+						)
+						OR (
+							t1.id = t3.driverid
+							AND t3.vehicletype = '1'
+						)
+					)
+			GROUP BY t1.city
+	</select>
+	<!-- 根据id查  司机的信息-->
+	<select id="getByIdPubDriver" resultType="PubDriver" parameterType="string">
+		SELECT
+			pub_driver.*, pub_driver_vehicle_ref.vehicleId,
+			(
+			SELECT
+				op_vehiclemodels.id
+			FROM
+				op_vehiclemodels_vehicle_ref,
+				pub_driver_vehicle_ref,
+				op_vehiclemodels,
+				pub_vehicle
+			WHERE
+				op_vehiclemodels_vehicle_ref.vehicleid = pub_driver_vehicle_ref.vehicleId
+			AND pub_vehicle.id = op_vehiclemodels_vehicle_ref.vehicleid
+			AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			AND op_vehiclemodels_vehicle_ref.vehiclemodelsid = op_vehiclemodels.Id
+			AND pub_driver_vehicle_ref.driverId = pub_driver.id
+			<!-- AND pub_driver_vehicle_ref.bindState = '0' -->
+			AND op_vehiclemodels_vehicle_ref.`status` = 1
+			AND pub_driver_vehicle_ref.`Status` = 1
+			AND op_vehiclemodels.`status` = 1
+			AND pub_vehicle.`Status` = 1
+			) AS distributionVelId,
+			(
+			SELECT
+				op_vehiclemodels.`name`
+			FROM
+				op_vehiclemodels_vehicle_ref,
+				pub_driver_vehicle_ref,
+				op_vehiclemodels,
+				pub_vehicle
+			WHERE
+				op_vehiclemodels_vehicle_ref.vehicleid = pub_driver_vehicle_ref.vehicleId
+			AND pub_vehicle.id = op_vehiclemodels_vehicle_ref.vehicleid
+			AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			AND op_vehiclemodels_vehicle_ref.vehiclemodelsid = op_vehiclemodels.Id
+			AND pub_driver_vehicle_ref.driverId = pub_driver.id
+			<!-- AND pub_driver_vehicle_ref.bindState = '0' -->
+			AND op_vehiclemodels_vehicle_ref.`status` = 1
+			AND pub_driver_vehicle_ref.`Status` = 1
+			AND op_vehiclemodels.`status` = 1
+			AND pub_vehicle.`Status` = 1
+			) AS distributionVel
+		FROM
+			pub_driver,
+			pub_driver_vehicle_ref
+		WHERE
+			pub_driver.id = #{id}
+		AND pub_driver.id = pub_driver_vehicle_ref.driverId
+		AND pub_driver .`Status`=1
+		AND pub_driver_vehicle_ref.`Status`=1
+		<!-- AND pub_driver_vehicle_ref.bindState='0' -->
+	</select>
+	<!-- 查 运管端的车型 -->
+	<select id="getOpVehiclemodels" resultType="OpVehiclemodels">
+		select * from op_vehiclemodels where status = 1 and modelstatus = '0' ORDER BY `level`
+	</select>
+	<!-- 添加  修改车型  -->
+	<insert id="createOpVehclineModelsRef" parameterType="OpVehiclemodelsVehicleRef">
+		INSERT INTO `op_vehiclemodels_vehicle_ref` (`id`, `vehiclemodelsid`, `vehicleid`, `createtime`, `updatetime`, `creater`, `updater`, `status`) VALUES 
+		(#{id},#{vehiclemodelsid},#{vehicleid},now(),now(),#{creater},#{updater}, '1');
+	</insert>
+	<!-- 修改  修改车型  -->
+	<insert id="updateOpVehclineModelsRef" parameterType="OpVehiclemodelsVehicleRef">
+		update `op_vehiclemodels_vehicle_ref` set vehiclemodelsid=#{vehiclemodelsid},updatetime=now() where vehicleid=#{vehicleid}
+	</insert>
+	<!-- 检查 是否 添加 车型 -->
+	<select id="checkOpVehclineModelsRef" parameterType="OpVehiclemodelsVehicleRef" resultType="int">
+		select count(*) from op_vehiclemodels_vehicle_ref where  vehicleid = #{vehicleid} and status=1
+	</select>
+	<!-- 导出 -->
+	<select id="exportData" resultType="LeLeasescompany" parameterType="QueryParam">
+		<!-- SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							le_leasescompany.id,
+							le_leasescompany.`name`,
+							le_leasescompany.shortname,
+							le_user.account,
+							(
+								SELECT
+									city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.id = le_leasescompany.city
+								AND pub_cityaddr.`status` = 1
+							) AS city,
+							le_leasescompany.companystate,
+							le_leasescompany.tocstate,
+							le_leasescompany.contacts,
+							le_leasescompany.phone,
+							le_leasescompany.CreateTime
+						FROM
+							le_leasescompany,
+							le_user,
+							(SELECT @rownum := 0) r
+						WHERE
+							le_leasescompany.id = le_user.leasescompanyid
+						AND le_leasescompany.`Status` = 1
+						AND le_user.`status` = 1
+					) m
+					where 1=1
+					order by m.CreateTime desc
+			) t -->
+			SELECT
+				t.*
+			FROM
+				(
+					SELECT
+						(@rownum := @rownum + 1) AS indexnum,
+						m.*
+					FROM
+						(
+							SELECT
+								le_leasescompany.id,
+								le_leasescompany.`name`,
+								le_leasescompany.shortname,
+								le_user.account,
+								(
+									SELECT
+										city
+									FROM
+										pub_cityaddr
+									WHERE
+										pub_cityaddr.id = le_leasescompany.city
+									AND pub_cityaddr.`status` = 1
+								) AS city,
+								le_leasescompany.companystate,
+								le_leasescompany.tocstate,
+								le_leasescompany.contacts,
+								le_leasescompany.phone,
+								le_leasescompany.CreateTime
+							FROM
+								le_leasescompany,
+								le_user,
+								(SELECT @rownum := 0) r
+							WHERE
+								le_leasescompany.id = le_user.leasescompanyid
+							AND le_leasescompany.`Status` = 1
+							AND le_user.`status` = 1
+							AND le_user.specialstate = '1'
+							
+							<if test="usertype == '0' or usertype == 0">
+							and le_leasescompany.id in (
+								select t1.dynamicid from op_roleuser t left join op_roledataauthority t1
+								on t.roleid = t1.roleid and t.`status` = 1
+								where t.userid = #{key} and t1.`status` = '1'
+							)
+							</if>
+							
+						) m
+						where 1=1
+						<if test="queryName != null and queryName != '' ">
+							and m.id = #{queryName}
+						</if>
+						<if test="queryCity != null and queryCity != '' ">
+							and m.city = #{queryCity}
+						</if>
+						<if test="queryCompanystate != null and queryCompanystate != '' ">
+							and m.companystate = #{queryCompanystate}
+						</if>
+						<choose>
+							<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+								and m.CreateTime &gt;= #{startTime} and m.CreateTime &lt; #{endTime}
+							</when>
+							<otherwise>
+								<if test="startTime != null and startTime != ''">
+									and m.CreateTime &gt;= #{startTime}
+								</if>
+								<if test="endTime != null and endTime != ''">
+									and m.CreateTime &lt; #{endTime}
+								</if>
+							</otherwise>
+						</choose>
+						order by m.CreateTime desc
+				) t
+	</select>
+	<!-- 城市名字    反向查城市id -->
+	<select id="getCityId" resultType="PubCityAddr" parameterType="string">
+		select * from pub_cityaddr where city = #{cityName} and `status`=1
+	</select>
+	<!-- 查询  最新添加的一条数据  SELECT * FROM le_leasescompany WHERE le_leasescompany.`Status`=1 ORDER BY le_leasescompany.CreateTime DESC LIMIT 1 -->
+	<select id="getCreateFristData" resultType="LeLeasescompany">
+		SELECT * FROM le_leasescompany WHERE le_leasescompany.`Status`=1 ORDER BY le_leasescompany.CreateTime DESC LIMIT 1
+	</select>
+	<!-- 删除已经绑定了服务车型的司机那一条数据 -->
+	<update id="deleteVehiclemodelsid" parameterType="string">
+		update `op_vehiclemodels_vehicle_ref` set op_vehiclemodels_vehicle_ref.`status` = 2 where vehicleid=#{id} 
+	</update>
+
+	<!--   -->
+	<select id="getLeLeasescompanyById" parameterType="string" resultType="LeLeasescompany">
+		SELECT
+		le_leasescompany.*
+		FROM
+		le_leasescompany
+		WHERE
+		le_leasescompany.id = #{leaseid}
+	</select>
+	<!-- 首页，querykey select2的条件查询 -->
+	<select id="getQueryKeyword" resultType="map" parameterType="QueryParam">
+		SELECT
+				t1.id,
+				CONCAT(t1.`name`," ",t1.phone) AS text
+			FROM
+				pub_driver t1,
+				pub_driver_vehicle_ref t2
+			LEFT JOIN pub_vehicle t3 ON t2.vehicleid = t3.id AND t3.`Status`=1 AND t3.platformtype=1
+			LEFT JOIN le_vehcline_models_ref t4 ON t3.vehclineid = t4.vehclineid AND t4.`Status`=1
+			LEFT JOIN le_vehiclemodels t5 ON t4.vehiclemodelsid = t5.Id AND t5.`Status`=1
+			LEFT JOIN op_vehiclemodels_vehicle_ref t6 ON t6.vehicleid = t3.id AND t6.`status`=1
+			LEFT JOIN op_vehiclemodels t7 ON t7.Id = t6.vehiclemodelsid AND t7.`status`=1
+			WHERE
+				t1.leasescompanyid = #{leasesCompanyId}
+			AND t1.`Status`=1
+			AND t1.platformtype=1
+			AND t1.id = t2.driverid
+			AND t2.`status`=1
+			AND ((t1.vehicletype = '1' AND t1.id = t3.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+			<!-- AND (
+						(
+							t3.id = t2.vehicleid
+							AND t3.vehicletype = '0'
+						)
+						OR (
+							t1.id = t3.driverid
+							AND t3.vehicletype = '1'
+						)
+					) -->
+			<if test="queryKeyword != null and queryKeyword != ''">
+				and CONCAT(t1.`name`,t1.phone) like "%"#{queryKeyword}"%"
+			</if>	
+	</select>
+	<!--  判断客户管理是否有数据 -->
+	<select id="checkLeLeasescompany" resultType="int">
+		SELECT COUNT(*) FROM le_leasescompany WHERE `Status`=1
+	</select>
+</mapper>

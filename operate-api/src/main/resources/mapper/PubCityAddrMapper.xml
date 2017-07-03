@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.PubCityAddrMapper">
+	
+	<select id="getPubCityAddrByList" parameterType="PubCityAddr" resultType="PubCityAddr">
+		select * from pub_cityaddr where status = 1
+		order by CONVERT(pub_cityaddr.city USING gbk ) COLLATE gbk_chinese_ci
+	</select>
+	
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.PubDictionaryMapper">
+	
+	<select id="getPubDictionaryByList" parameterType="PubDictionary" resultType="PubDictionary">
+		select * from pub_dictionary
+		<where>
+			<if test='null != id and "" != id'>
+				and id = #{id}
+			</if>
+			<if test='null != parentId and "" != parentId'>
+				and parentid = #{parentId}
+			</if>
+			<if test='null != type and "" != type'>
+				and type = #{type}
+			</if>
+			<if test='null != text and "" != text'>
+				and text = #{text}
+			</if>
+			<if test='null != value and "" != value'>
+				and value = #{value}
+			</if>
+			<if test='null != desc and "" != desc'>
+				and desc = #{desc}
+			</if>
+			<if test='null != sort and "" != sort'>
+				and sort = #{sort}
+			</if>
+			<if test='null != status and "" != status'>
+				and status = #{status}
+			</if>
+		</where>
+	</select>
+	
+</mapper>

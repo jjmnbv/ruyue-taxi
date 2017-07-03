@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.PubDriverAccountMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 增加   添加司机账户 -->
+	<insert id="createOrgDriverAccount" parameterType="PubDriverAccount">
+		insert into pub_driveraccount
+		(id,driverid,leasescompanyid,balance,createtime,updatetime,status,platformtype)
+		values
+		(#{id},#{driverid},#{leasescompanyid},#{balance},now(),now(),1,#{platformtype})
+	</insert>
+	<!-- 分页 查询 -->
+	<select id="getOrgDriverAccountListByQuery" parameterType="QueryParam" resultType="PubDriverAccount">
+		select t.* from
+		(select (@rownum := @rownum + 1) as rownum,t1.* from
+		(select pub_driver.id as driverid,pub_driver.phone as driverAccount,pub_driver.name as driverName,pub_driver.vehicletype as driverType,
+		       IFNULL(pub_driveraccount.balance,0) as balance,
+		       (select count(*) from pub_driverexpenses where pub_driverexpenses.driverid = pub_driver.id and pub_driverexpenses.status = 1 and pub_driverexpenses.platformtype = 0 and pub_driverexpenses.detailtype = '0') as balanceCount,
+		       (select count(*) from pub_driverexpenses where pub_driverexpenses.driverid = pub_driver.id and pub_driverexpenses.status = 1 and pub_driverexpenses.platformtype = 0 and (pub_driverexpenses.detailtype = '0' or pub_driverexpenses.detailtype = '1')) as dealCount
+		from pub_driver left join pub_driveraccount on (pub_driveraccount.driverid = pub_driver.id and pub_driveraccount.status = 1 and pub_driveraccount.platformtype = 0)
+		where pub_driver.status = 1 
+		  and pub_driver.platformtype = 0
+		<if test="queryDriver != null and queryDriver != '' ">
+			and pub_driver.id = #{queryDriver}
+		</if>
+		<if test="queryType != null and queryType != '' ">
+		    and pub_driver.vehicletype = #{queryType}
+		</if>
+		order by balance desc
+		) t1, (select @rownum := 0) r ) t
+		<![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	<!-- 分页 查询 -->
+	<select id="getOrgDriverAccountListCountByQuery" parameterType="QueryParam" resultType="int">
+		select count(*)
+		from pub_driver left join pub_driveraccount on (pub_driveraccount.driverid = pub_driver.id and pub_driveraccount.status = 1 and pub_driveraccount.platformtype = 0)
+		where pub_driver.status = 1 
+		  and pub_driver.platformtype = 0
+		<if test="queryDriver != null and queryDriver != '' ">
+			and pub_driver.id = #{queryDriver}
+		</if>
+		<if test="queryType != null and queryType != '' ">
+		    and pub_driver.vehicletype = #{queryType}
+		</if>
+	</select>
+	<!-- 首页加载 司机的查询 -->
+	<select id="getQueryDriver" resultType="map" parameterType="string">
+		SELECT
+			pub_driver.id AS id,
+			CONCAT(
+				pub_driver.`name`,
+				" ",
+				pub_driver.phone
+			) AS text
+		FROM
+			pub_driver
+		WHERE
+			pub_driver.`Status` = 1
+		AND pub_driver.platformtype = 0
+		<if test="queryDriver != null and queryDriver != '' ">
+		and	CONCAT(
+				pub_driver.`name`,
+				" ",
+				pub_driver.phone
+			) like "%"#{queryDriver}"%"
+		</if>
+	</select>
+	<!-- 查询交易明细   余额明细 -->
+	<select id="getDetailedByList" resultType="PubDriverExpenses" parameterType="QueryParam">
+		select t.* from
+		(select (@rownum := @rownum + 1) as rownum,t1.* from
+		(select date_format(pub_driverexpenses.expensetime, '%Y-%m-%d %H:%i') as expensetimevisual,
+		        pub_driverexpenses.tradetype,pub_driverexpenses.expensetype,
+		        IFNULL(pub_driverexpenses.amount,0) as amount,
+		        IFNULL(pub_driverexpenses.balance,0) as balance,
+		        IFNULL(pub_driverexpenses.remark,'无') as remark
+		from pub_driverexpenses
+		where pub_driverexpenses.status = 1
+		  and pub_driverexpenses.platformtype = 0
+		  and pub_driverexpenses.driverid = #{driverid}		
+		<if test="detailtype == '0'.toString()">
+	        and pub_driverexpenses.detailtype = '0'
+	        <!-- 添加子查询，交易类型为订单支付，交易渠道只能为余额支付， -->
+	        and pub_driverexpenses.id not in (select id from pub_driverexpenses subs
+	              where subs.status = 1
+		            and subs.platformtype = 0
+		            and subs.driverid = #{driverid} 
+		            and subs.tradetype='1' and subs.expensetype in('1','2','4')	)
+	        <choose>
+		        <when test="queryTradetype == '0'.toString()">
+	              and pub_driverexpenses.tradetype = '0'
+	            </when>
+	            <when test="queryTradetype == '1'.toString()">
+	              and pub_driverexpenses.tradetype = '1'
+	              and pub_driverexpenses.expensetype = '3'
+	            </when>
+	            <when test="queryTradetype == '23'.toString()">
+	              and (pub_driverexpenses.tradetype = '2' or pub_driverexpenses.tradetype = '3')
+	            </when>
+	            <when test="queryTradetype == '4'.toString()">
+	              and pub_driverexpenses.tradetype = '4'
+	            </when>
+		    </choose>
+	    </if>
+		<if test="detailtype == '1'.toString()">
+	        and (pub_driverexpenses.detailtype = '0' or pub_driverexpenses.detailtype = '1')
+	        <choose>
+		        <when test="queryTradetype == '0'.toString()">
+	              and pub_driverexpenses.tradetype = '0'
+	            </when>
+	            <when test="queryTradetype == '1'.toString()">
+	              and pub_driverexpenses.tradetype = '1'
+	              and pub_driverexpenses.expensetype in ('1','2','3')
+	            </when>
+	            <when test="queryTradetype == '23'.toString()">
+	              and (pub_driverexpenses.tradetype = '2' or pub_driverexpenses.tradetype = '3')
+	            </when>
+	            <when test="queryTradetype == '4'.toString()">
+	              and pub_driverexpenses.tradetype = '4'
+	            </when>
+		    </choose>
+	    </if>
+		<if test="startTime != null and startTime != ''">
+	        and pub_driverexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_driverexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>  
+		order by pub_driverexpenses.expensetime desc
+		) t1, (select @rownum := 0) r ) t
+		<![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	<!-- 查询分页 -->
+	<select id="getDetailedByListCount" resultType="int" parameterType="QueryParam">
+		select count(*)
+		from pub_driverexpenses
+		where pub_driverexpenses.status = 1
+		  and pub_driverexpenses.platformtype = 0
+		  and pub_driverexpenses.driverid = #{driverid}		
+		<if test="detailtype == '0'.toString()">
+	        and pub_driverexpenses.detailtype = '0'
+	        <!-- 添加子查询，交易类型为订单支付，交易渠道只能为余额支付， -->
+	        and pub_driverexpenses.id not in (select id from pub_driverexpenses subs
+	              where subs.status = 1
+		            and subs.platformtype = 0
+		            and subs.driverid = #{driverid} 
+		            and subs.tradetype='1' and subs.expensetype in('1','2','4')	)
+	        <choose>
+		        <when test="queryTradetype == '0'.toString()">
+	              and pub_driverexpenses.tradetype = '0'
+	            </when>
+	            <when test="queryTradetype == '1'.toString()">
+	              and pub_driverexpenses.tradetype = '1'
+	              and pub_driverexpenses.expensetype = '3'
+	            </when>
+	            <when test="queryTradetype == '23'.toString()">
+	              and (pub_driverexpenses.tradetype = '2' or pub_driverexpenses.tradetype = '3')
+	            </when>
+	            <when test="queryTradetype == '4'.toString()">
+	              and pub_driverexpenses.tradetype = '4'
+	            </when>
+		    </choose>
+	    </if>
+		<if test="detailtype == '1'.toString()">
+	        and (pub_driverexpenses.detailtype = '0' or pub_driverexpenses.detailtype = '1')
+	        <choose>
+		        <when test="queryTradetype == '0'.toString()">
+	              and pub_driverexpenses.tradetype = '0'
+	            </when>
+	            <when test="queryTradetype == '1'.toString()">
+	              and pub_driverexpenses.tradetype = '1'
+	              and pub_driverexpenses.expensetype in ('1','2','3')
+	            </when>
+	            <when test="queryTradetype == '23'.toString()">
+	              and (pub_driverexpenses.tradetype = '2' or pub_driverexpenses.tradetype = '3')
+	            </when>
+	            <when test="queryTradetype == '4'.toString()">
+	              and pub_driverexpenses.tradetype = '4'
+	            </when>
+		    </choose>
+	    </if>
+		<if test="startTime != null and startTime != ''">
+	        and pub_driverexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_driverexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>  
+	</select>
+	<!-- 导出 -->
+	<select id="exportData" resultType="PubDriverExpenses" parameterType="QueryParam">
+		select date_format(pub_driverexpenses.expensetime, '%Y-%m-%d %H:%i') as expensetimevisual,
+		        pub_driverexpenses.tradetype,pub_driverexpenses.expensetype,
+		        IFNULL(pub_driverexpenses.amount,0) as amount,
+		        IFNULL(pub_driverexpenses.balance,0) as balance,
+		        IFNULL(pub_driverexpenses.remark,'无') as remark
+		from pub_driverexpenses
+		where pub_driverexpenses.status = 1
+		  and pub_driverexpenses.platformtype = 0
+		  and pub_driverexpenses.driverid = #{driverid}		
+		<if test="detailtype == '0'.toString()">
+	        and pub_driverexpenses.detailtype = '0'
+	        <!-- 添加子查询，交易类型为订单支付，交易渠道只能为余额支付， -->
+	        and pub_driverexpenses.id not in (select id from pub_driverexpenses subs
+	              where subs.status = 1
+		            and subs.platformtype = 0
+		            and subs.driverid = #{driverid} 
+		            and subs.tradetype='1' and subs.expensetype in('1','2','4')	)
+	        <choose>
+		        <when test="queryTradetype == '0'.toString()">
+	              and pub_driverexpenses.tradetype = '0'
+	            </when>
+	            <when test="queryTradetype == '1'.toString()">
+	              and pub_driverexpenses.tradetype = '1'
+	              and pub_driverexpenses.expensetype = '3'
+	            </when>
+	            <when test="queryTradetype == '23'.toString()">
+	              and (pub_driverexpenses.tradetype = '2' or pub_driverexpenses.tradetype = '3')
+	            </when>
+	            <when test="queryTradetype == '4'.toString()">
+	              and pub_driverexpenses.tradetype = '4'
+	            </when>
+		    </choose>
+	    </if>
+		<if test="detailtype == '1'.toString()">
+	        and (pub_driverexpenses.detailtype = '0' or pub_driverexpenses.detailtype = '1')
+	        <choose>
+		        <when test="queryTradetype == '0'.toString()">
+	              and pub_driverexpenses.tradetype = '0'
+	            </when>
+	            <when test="queryTradetype == '1'.toString()">
+	              and pub_driverexpenses.tradetype = '1'
+	              and pub_driverexpenses.expensetype in ('1','2','3')
+	            </when>
+	            <when test="queryTradetype == '23'.toString()">
+	              and (pub_driverexpenses.tradetype = '2' or pub_driverexpenses.tradetype = '3')
+	            </when>
+	            <when test="queryTradetype == '4'.toString()">
+	              and pub_driverexpenses.tradetype = '4'
+	            </when>
+		    </choose>
+	    </if>
+		<if test="startTime != null and startTime != ''">
+	        and pub_driverexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_driverexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>  
+		order by pub_driverexpenses.expensetime desc
+	</select>
+	<select id="getIsNull" resultType="int" parameterType="string">
+		SELECT
+			count(*)
+		FROM
+			pub_driverexpenses
+		WHERE
+			pub_driverexpenses.platformtype = 1
+		AND pub_driverexpenses.`status` = 1
+		and pub_driverexpenses.driverid=#{id}
+	</select>
+
+
+	<insert id="savePubDriverExpenses" parameterType="PubDriverExpenses">
+		INSERT INTO pub_driverexpenses( id, driverid, tradetype, expensetype, expensetime, amount,
+		balance, detailtype, remark, createtime, updatetime, creater,
+		updater, status, operateresult, platformtype
+		) VALUES( #{id}, #{driverid}, #{tradetype}, #{expensetype}, #{expensetime},
+		#{amount}, #{balance}, #{detailtype}, #{remark}, #{createtime}, #{updatetime},
+		#{creater}, #{updater}, #{status}, #{operateresult}, #{platformtype}
+		)
+	</insert>
+
+	<insert id="savePeUserExpenses" parameterType="PeUserExpenses">
+		INSERT INTO pe_userexpenses(id,userid,tradetype,expensetype,expensetime,amount,
+		balance,detailtype,remark,createtime,updatetime,creater,updater,status,operateresult)
+		values (#{id},#{userid},#{tradetype},#{expensetype},#{expensetime},#{amount},
+		#{balance},#{detailtype},#{remark},#{createtime},#{updatetime},#{creater},#{updater},#{status},#{operateresult})
+	</insert>
+
+
+	<select id="getPeUserExpenses" parameterType="String" resultType="PeUserExpenses">
+		SELECT id,userid,tradetype,expensetype,expensetime,amount,
+		balance,detailtype,remark,createtime,updatetime,creater,updater,status,operateresult
+		FROM  pe_userexpenses t
+		where t.state = '1'
+		<if test="userid !=null and userid=''">
+			and t.userid = #{userid}
+		</if>
+	</select>
+
+
+</mapper>

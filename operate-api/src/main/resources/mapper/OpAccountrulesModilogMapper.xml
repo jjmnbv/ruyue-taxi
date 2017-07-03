@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.OpAccountrulesModilogMapper">
+	
+	<sql id="query_opAccountrules_where">
+		<if test='null != rulestype and "" != rulestype'>
+			and op_accountrules.rulestype = #{rulestype}
+		</if>
+		<if test='null != city and "" != city'>
+			and op_accountrules.city = #{city}
+		</if>
+		<if test='null != vehiclemodelsid and "" != vehiclemodelsid'>
+			and op_accountrules.vehiclemodelsid = #{vehiclemodelsid}
+		</if>
+		<if test='null != rulesstate and "" != rulesstate'>
+			and op_accountrules.rulestype = #{rulestype}
+		</if>
+	</sql>
+	
+	<!-- 分页查询计费规则历史数据 -->
+	<select id="getOpAccountRulesModiLogListByQuery" parameterType="OpAccountrulesModilogQueryParam" resultType="OpAccountrulesModilog">
+		select op_user.nickname createrName,
+		(case op_accountrules_modilog.timetype when "0" then "总用时" when "1" then "低速用时" end) timetypeName,
+		(case op_accountrules_modilog.moditype when "0" then "修改操作" when "1" then "启用操作" when "2" then "禁用操作" when "3" then "一键更换" when "4" then "新增操作"  end) moditypeName,
+		(select pub_dictionary.text from pub_dictionary where pub_dictionary.type = "规则状态" and pub_dictionary.value = op_accountrules_modilog.rulesstate) rulesstateName,
+		ifnull(op_accountrules_modilog.perhour, "---") perhourVisual,
+		op_accountrules_modilog.*
+		from op_accountrules_modilog,
+		op_user
+		where op_accountrules_modilog.creater = op_user.id
+		and op_accountrules_modilog.status = 1
+		and op_user.status = 1
+		and op_accountrules_modilog.accountrulesid = #{accountrulesid}
+		order by updatetime desc
+		limit #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<select id="getOpAccountRulesModiLogCountByQuery" parameterType="OpAccountrulesModilogQueryParam" resultType="int">
+		select count(*)
+		from op_accountrules_modilog,
+		op_user
+		where op_accountrules_modilog.creater = op_user.id
+		and op_accountrules_modilog.status = 1
+		and op_user.status = 1
+		and op_accountrules_modilog.accountrulesid = #{accountrulesid}
+	</select>
+	
+	<!-- 添加计费规则 -->
+	<insert id="insertOpAccountrulesModilog" parameterType="OpAccountrulesModilog">
+		insert into op_accountrules_modilog(id, accountrulesid, city, rulestype, cartype, startprice, rangeprice, timeprice, timetype, perhour, rulesstate, moditype, reason, createtime, updatetime, creater, updater, status,deadheadmileage,deadheadprice,nightstarttime,nightendtime,nighteprice)
+		values(#{id}, #{accountrulesid}, #{city}, #{rulestype}, #{cartype}, #{startprice}, #{rangeprice}, #{timeprice}, #{timetype}, #{perhour}, #{rulesstate}, #{moditype}, #{reason}, #{createtime}, #{updatetime}, #{creater}, #{updater}, #{status},#{deadheadmileage},#{deadheadprice},#{nightstarttime},#{nightendtime},#{nighteprice})
+	</insert>
+	
+</mapper>

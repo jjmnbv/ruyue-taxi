@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.PubVehcbrandMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 车品牌的添加 -->
+	<insert id="createPubVehcbrand" parameterType="PubVehcbrand">
+		insert into pub_vehcbrand(id,leasescompanyid,Name,initials,logo,Remark,CreateTime,UpdateTime,Creater,Updater,Status,platformtype)
+			values (#{id},#{leasesCompanyId},#{name},#{initials},#{logo},#{remark},now(),now(),#{creater},#{updater},1,0)
+	</insert>
+	<!-- 车品牌的修改 -->
+	<update id="updatePubVehcbrand" parameterType="PubVehcbrand">
+		UPDATE pub_vehcbrand set logo=#{logo},updateTime=now(),Updater=#{updater} WHERE id = #{id}
+	</update>
+	<!-- 检查删除 -->
+	<select id="checkDelete" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM pub_vehcbrand,pub_vehcline WHERE pub_vehcline.vehcBrandID=pub_vehcbrand.id AND pub_vehcbrand.id = #{id} and pub_vehcbrand.Status=1 and pub_vehcline.Status=1 
+		<!-- 新增加的过滤条件  所属平台 -->
+		and pub_vehcbrand.platformtype=0 and pub_vehcline.platformtype=0
+	
+	</select>
+	<!-- 删除 -->
+	<update id="deletePubVehcbrand" parameterType="string">
+		UPDATE pub_vehcbrand set `Status`=2,updateTime=now() WHERE id = #{id} 
+	</update>
+	<!-- 查询  -->
+	<select id="getPubVehcbrandListByQuery" parameterType="QueryParam" resultType="PubVehcbrand">
+		SELECT
+			t.*
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					pub_vehcbrand.*
+				FROM
+					pub_vehcbrand,
+					(SELECT @rownum := 0) r
+				WHERE
+					pub_vehcbrand.`Status` = 1
+				<!-- AND pub_vehcbrand.leasescompanyid = #{leasesCompanyId} -->
+				<!-- 新增加的过滤条件  所属平台 -->
+				and pub_vehcbrand.platformtype=0
+				<if test="key != null and key !='' ">
+				AND pub_vehcbrand.id = #{key}
+				</if>
+				ORDER BY
+					CONVERT(pub_vehcbrand.`Name` USING gbk ) COLLATE gbk_chinese_ci 
+			) m
+		) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	<!-- 查询的分页 -->
+	<select id="getPubVehcbrandListCountByQuery" parameterType="QueryParam" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					pub_vehcbrand.*
+				FROM
+					pub_vehcbrand,
+					(SELECT @rownum := 0) r
+				WHERE
+					pub_vehcbrand.`Status` = 1
+				<!-- AND pub_vehcbrand.leasescompanyid = #{leasesCompanyId} -->
+				<!-- 新增加的过滤条件  所属平台 -->
+				and pub_vehcbrand.platformtype=0
+				<if test="key != null and key !='' ">
+				AND pub_vehcbrand.id = #{key}
+				</if>
+				ORDER BY
+					CONVERT(pub_vehcbrand.`Name` USING gbk ) COLLATE gbk_chinese_ci
+			) m
+		) t
+	</select>
+	<!-- 前台的查询条件查询  品牌的模糊 -->
+	<select id="getBrand" resultType="map" parameterType="PubVehcbrand">
+		SELECT id,`Name` AS text FROM pub_vehcbrand WHERE `Status`=1 
+		<!-- and leasescompanyid = #{leasesCompanyId} -->
+		<!-- 新增加的过滤条件  所属平台 -->
+		and pub_vehcbrand.platformtype=0
+		ORDER BY CONVERT(text USING gbk ) COLLATE gbk_chinese_ci
+		<if test="id != null and id !='' ">
+		and	name like "%"#{id}"%"
+		</if>
+	</select>
+	<!-- 根据id查询 -->
+	<select id="getById" resultType="PubVehcbrand" parameterType="string">
+		SELECT * FROM pub_vehcbrand WHERE id = #{id}
+	</select>
+	<!-- 导出  -->
+	<select id="exportData" resultType="PubVehcbrand" parameterType="map">
+		<!-- SELECT
+			pub_vehcbrand.*
+		FROM
+			pub_vehcbrand
+		WHERE
+			pub_vehcbrand.`Status` = 1
+		and leasescompanyid = #{leasesCompanyId}
+			ORDER BY
+			pub_vehcbrand.`Name` -->
+			SELECT
+			t.*
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					pub_vehcbrand.*
+				FROM
+					pub_vehcbrand,
+					(SELECT @rownum := 0) r
+				WHERE
+					pub_vehcbrand.`Status` = 1
+				<!-- AND pub_vehcbrand.leasescompanyid = #{leasesCompanyId} -->
+				<!-- 新增加的过滤条件  所属平台 -->
+				and pub_vehcbrand.platformtype=0
+				<if test="key != null and key !='' ">
+				AND pub_vehcbrand.id = #{key}
+				</if>
+				ORDER BY
+					CONVERT(pub_vehcbrand.`Name` USING gbk ) COLLATE gbk_chinese_ci 
+			) m
+		) t
+	</select>
+	<!-- 检查 品牌的唯一性 -->
+	<select id="checkBrand" parameterType="PubVehcbrand" resultType="int">
+		SELECT COUNT(*) FROM pub_vehcbrand WHERE `name`= #{name} 
+		<!-- and leasescompanyid = #{leasesCompanyId} --> 
+		and Status=1
+		<!-- 新增加的过滤条件  所属平台 -->
+		and pub_vehcbrand.platformtype=0
+	</select>
+	<!-- 根据品牌名字跟租赁公司id查品牌表 -->
+	<select id="getByName" parameterType="PubVehcbrand" resultType="PubVehcbrand">
+		SELECT * FROM pub_vehcbrand WHERE `name`= #{name} 
+		<!-- and leasescompanyid = #{leasesCompanyId} -->
+		and Status=1
+		<!-- 新增加的过滤条件  所属平台 -->
+		and pub_vehcbrand.platformtype=0
+	</select>
+</mapper>

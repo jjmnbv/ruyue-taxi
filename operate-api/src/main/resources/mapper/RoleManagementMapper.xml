@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.RoleManagementMapper">
+	<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getByRoleName" resultType="int" parameterType="hashmap">
+		select count(*) from op_rolemanagement where op_rolemanagement.status=1 and op_rolemanagement.rolename =#{rolename}
+	</select>
+	
+	<!-- 角色拥有的机构公司权限 -->
+	<resultMap type="com.szyciov.op.entity.RoleManagement" id="RoleManagement">
+		<id property="id" column="id"></id>
+		<result property="roletype" column="roletype"></result>
+		<result property="roledesc" column="roledesc"></result>
+		<result property="rolename" column="rolename"></result>
+		<result property="creater" column="creater"></result>
+		<result property="updater" column="updater"></result>
+		<result property="createtime" column="createtime"></result>
+		<result property="updatetime" column="updatetime"></result>
+		<result property="status" column="status"></result>
+		<result property="roletypecaption" column="roletypecaption"></result>
+		<association property="lecompany" column="id" select="lease4op"></association> 
+	</resultMap>
+	
+	<select id="lease4op" parameterType="hashmap"  resultType="HashMap">
+		select * from (
+		SELECT
+			le_leasescompany.*,
+			(SELECT pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id=le_leasescompany.city and pub_cityaddr.status=1) as citycaption
+		FROM
+			le_leasescompany,
+			op_roledataauthority
+		WHERE
+			op_roledataauthority.roleid = #{id}
+		<!-- AND op_roledataauthority.dataauthorityconfigid = '00' //主要用户控制运管端租赁权限，目前只有这个权限以后如果需要自己部门等限根据需要在加 -->
+		AND le_leasescompany.id = op_roledataauthority.dynamicid
+		AND op_roledataauthority.status = 1
+		) t
+		order by  CONVERT(t.citycaption USING gbk ) COLLATE gbk_chinese_ci ,CONVERT(t.name USING gbk ) COLLATE gbk_chinese_ci
+	</select>
+	
+	 <select id="getAvailableLeList" parameterType="String" resultType="HashMap">
+		select * from (
+		SELECT
+			le_leasescompany.*,
+			(SELECT pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id=le_leasescompany.city and pub_cityaddr.status=1) as citycaption
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.status = 1 or (le_leasescompany.status = 2 and le_leasescompany.platformtype = 0)
+		<!-- 根据城市和机构名称排序 -->
+		) t
+		order by  CONVERT(t.citycaption USING gbk ) COLLATE gbk_chinese_ci ,CONVERT(t.name USING gbk ) COLLATE gbk_chinese_ci
+	</select>
+	
+	<select id="getRoleManagementListByQuery" resultMap="RoleManagement" parameterType="QueryParam">
+	    SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS rownum,
+					(select text from pub_dictionary where pub_dictionary.type='运管角色类型' and pub_dictionary.value=op_rolemanagement.roletype and pub_dictionary.status=1)as roletypecaption,
+					op_rolemanagement.*
+				FROM
+					op_rolemanagement,
+					(SELECT @rownum := 0) r
+				WHERE
+					op_rolemanagement.status = 1
+				ORDER BY
+					op_rolemanagement.updatetime DESC
+			) t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<select id="getRoleManagementListCountByQuery" resultType="int" parameterType="QueryParam">
+		select count(*)
+		from op_rolemanagement
+		where op_rolemanagement.status = 1
+	</select>
+	
+	<update id = "deleteRoleManagement" parameterType="string">
+		update op_rolemanagement set op_rolemanagement.status=2,updatetime=now(),updater=#{updater}  where id = #{id}	
+	</update>
+	
+	<select id = "getById" resultMap="RoleManagement" parameterType="string">
+		select op_rolemanagement.*,(select text from pub_dictionary where pub_dictionary.type='运管角色类型' and pub_dictionary.value=op_rolemanagement.roletype and pub_dictionary.status=1)as roletypecaption from op_rolemanagement where op_rolemanagement.id = #{id}
+	</select>
+	
+	<insert id="createRoleManagement" parameterType="RoleManagement">
+		insert into op_rolemanagement(id,rolename,roletype,roledesc,creater,createtime,updater,updatetime,status)
+		values (#{id},#{rolename},#{roletype},#{roledesc},#{creater},now(),#{updater},now(),1)
+	</insert>
+	
+	<update id = "updateRoleManagement" parameterType="RoleManagement">
+		update op_rolemanagement
+		set rolename=#{rolename},roledesc=#{roledesc},updater=#{updater},updatetime=now()
+		where op_rolemanagement.id = #{id}
+	</update>
+	
+	<delete id="deleteDataAuthorityByRole" parameterType="string">
+		delete from op_roledataauthority where op_roledataauthority.roleid=#{roleid}
+		<!-- and le_roledataauthority.dataauthorityconfigid='00' //根据需要如果权限众多在考虑删除条件、目前就只有一种权限类型可以直接根据角色id删除  -->
+	</delete>
+	
+	<insert id="addDataAuthority" parameterType="List">
+		INSERT INTO op_roledataauthority (
+			id,
+			roleid,
+			dataauthorityconfigid,
+			rootdynamicid,
+			dynamicid,
+			STATUS
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator="," >
+        	(#{item.id},#{item.roleid},'00',#{item.lecompanyid},#{item.lecompanyid},1)
+   		</foreach>
+	</insert>
+	
+	<select id="getAvailableMenuList" resultType="Menu">
+		select * from op_menu where op_menu.status=1 and op_menu.notassign!=1 or op_menu.notassign is null ORDER BY op_menu.level,op_menu.sequence
+	</select>
+	
+	<select id="getMenuFunctionIdByRoleId" parameterType="String" resultType="string">
+		SELECT
+			op_functionmanagement.id
+		FROM
+			op_functionmanagement,
+			op_rolefunction
+		where 
+				op_rolefunction.roleid = #{id}
+		AND op_rolefunction.dynamicid = op_functionmanagement.id
+		AND op_rolefunction.status=1
+		AND op_functionmanagement.status=1
+	</select>
+	
+	<delete id="deleteFunctionAuthorityByRole" parameterType="string">
+		delete from op_rolefunction where op_rolefunction.roleid=#{roleid}
+	</delete>
+	
+	<insert id="addFunctionAuthority" parameterType="List">
+		INSERT INTO op_rolefunction (
+			id,
+			roleid,
+			typeid,
+			dynamicid,
+			createtime,
+			STATUS
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator="," >
+        	(#{item.id},#{item.roleid},'1',#{item.functionid},now(),1)
+   		</foreach>
+	</insert>
+	
+	<select id="hasFeature" parameterType="HashMap" resultType="boolean">
+		SELECT
+			(
+				CASE op_user.usertype
+				WHEN 1 THEN
+					1
+				ELSE
+					(
+						SELECT
+							count(*) > 0
+						FROM
+							op_user,
+							op_roleuser,
+							op_rolefunction,
+							op_functionmanagement
+						WHERE
+							op_user. STATUS = 1
+						AND op_roleuser. STATUS = 1
+						AND op_rolefunction. STATUS = 1
+						AND op_functionmanagement. STATUS = 1
+						AND op_user.id = op_roleuser.userid
+						AND op_roleuser.roleid = op_rolefunction.roleid
+						AND op_rolefunction.dynamicid = op_functionmanagement.id
+						AND op_user.account = #{loginName}
+						AND op_functionmanagement.controllername = #{controllerName}
+						AND op_functionmanagement.actionname = #{actionName}
+					)
+				END
+			) hasfeature
+		FROM
+			op_user
+		WHERE
+			op_user. STATUS = 1
+		AND op_user.account = #{loginName}
+	</select>
+	
+	<select id="getRoleTypes" resultType="Dictionary">
+		select * from pub_dictionary where pub_dictionary.type = '运管角色类型'
+		order by pub_dictionary.sort;
+	</select>
+	
+	<!-- 查看某个角色是否已经拥有用户 -->
+	<select id="hasUser4ThisRole" parameterType="String" resultType="boolean">
+		select case when count(*)>0 then 1 else 0 end as flag from op_roleuser,op_user where op_roleuser.status=1 and op_user.status=1 and op_user.id=op_roleuser.userid and op_roleuser.roleid=#{id}
+	</select>
+
+
+	<select id="listRoleId" resultType="String" parameterType="String">
+		SELECT t.roleid FROM op_rolefunction t
+		LEFT JOIN op_functionmanagement a ON a.id = t.dynamicid
+		WHERE t.`status` = '1' AND a.functionname = #{functionName}
+		AND t.roleid IN (
+		SELECT op_roleuser.roleid FROM op_roleuser
+		LEFT JOIN op_roledataauthority ON op_roleuser.roleid = op_roledataauthority.roleid
+		LEFT JOIN le_leasescompany ON op_roledataauthority.rootdynamicid = le_leasescompany.id
+		LEFT JOIN le_accountrules ON le_leasescompany.id = le_accountrules.leasescompanyid
+		AND le_accountrules.type = '0' AND le_accountrules.rulesstate = '0'
+		WHERE op_roleuser. STATUS = 1 AND op_roledataauthority. STATUS = 1
+		AND le_leasescompany. STATUS = 1 AND le_accountrules. STATUS = 1
+		AND le_leasescompany.companystate = 0 AND le_leasescompany.tocstate = 2
+		AND le_accountrules.city = #{cityCode})
+	</select>
+	<select id="allListRoleId" resultType="String" parameterType="String">
+	 <!-- SELECT
+          op_rolemanagement.id
+				FROM
+					op_rolemanagement
+				WHERE
+					op_rolemanagement.status = 1
+          and op_rolemanagement.roletype = 2 -->
+       select id from op_user where id in(select userid from op_roleuser where roleid in (SELECT
+          op_rolemanagement.id
+				FROM
+					op_rolemanagement
+				WHERE
+					op_rolemanagement.status = 1
+          and op_rolemanagement.roletype = 2))
+	</select>
+	
+	<!-- 根据角色名称查询详情 -->
+	<select id="getRolemanagementByName" parameterType="RoleManagement" resultType="RoleManagement">
+		select * from op_rolemanagement where rolename = #{rolename} and status = 1
+	</select>
+	
+</mapper>

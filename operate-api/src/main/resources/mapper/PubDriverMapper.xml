@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.PubDriverMapper">
+	<!-- parameterType传入参数类型 resultMap=自己定义的一个返回类型 resultType返回类型 -->
+	<!-- 新增  -->
+	<insert id="createPubDriver" parameterType="PubDriver">
+		insert into
+		pub_driver(id,leasescompanyid,jobnum,name,phone,sex,userpassword,driverstype,cardtime,city,jobstatus,
+		identitytype,driversnum,driverphoto,idcardnum,idcardfront,idcardback,workstatus,gpsspeed,gpsdirection,lng,lat,
+		avgrate,ordercount,CreateTime,UpdateTime,Creater,Updater,Status,headportraitmin,headportraitmax,driveryears,
+		vehicletype,boundstate,lockstatus,platformtype)
+		values
+		(#{id},#{leasesCompanyId},#{jobNum},#{name},#{phone},#{sex},#{userPassword},#{driversType},
+		#{cardTime},#{city},#{jobStatus},#{idEntityType},#{driversNum},#{driverPhoto},#{idCardNum},
+		#{idCardFront},#{idCardBack},'3',#{gpsSpeed},#{gpsDirection},#{lng},#{lat},4.5,#{orderCount},now(),now(),
+		#{creater},#{updater},1,#{headPortraitMax},#{headPortraitMax},#{driverYears},#{vehicleType},#{boundState},
+		#{lockStatus},#{platformType})
+	</insert>
+	<!-- 修改 -->
+	<update id="updatePubDriver" parameterType="PubDriver">
+		UPDATE pub_driver
+		<trim prefix="set" suffixOverrides=",">
+			<if test="jobNum!=null">jobnum = #{jobNum},</if>
+			<if test="name!=null">name=#{name},</if>
+			<if test="phone!=null">phone=#{phone},</if>
+			<if test="sex!=null">sex=#{sex},</if>
+			<if test="driversType!=null">driverstype=#{driversType},</if>
+			<if test="city!=null">city=#{city},</if>
+			<if test="jobStatus!=null">jobstatus=#{jobStatus},</if>
+
+
+			<if test="driversNum!=null">driversnum=#{driversNum},</if>
+			<if test="idEntityType!=null">identitytype=#{idEntityType},</if>
+			<if test="driverPhoto!=null">driverphoto=#{driverPhoto},</if>
+			<if test="idCardNum!=null">idcardnum=#{idCardNum},</if>
+			<if test="idCardFront!=null">idcardfront=#{idCardFront},</if>
+			<if test="idCardBack!=null">idcardback=#{idCardBack},</if>
+			<if test="updater!=null">Updater=#{updater},</if>
+			<if test="headPortraitMax!=null">headportraitmin=#{headPortraitMax},</if>
+			<if test="headPortraitMax!=null">headportraitmax=#{headPortraitMax},</if>
+			<if test="driverYears!=null">driveryears=#{driverYears},</if>
+			<if test="vehicleType!=null">vehicletype=#{vehicleType},</if>
+			<if test="boundState!=null">boundstate=#{boundState},</if>
+			<if test="lockStatus!=null">lockstatus=#{lockStatus},</if>
+			UpdateTime=now()
+		</trim>
+		WHERE
+		id = #{id}
+	</update>
+	<!-- 检查司机 工号 手机（x） 驾驶证号 身份证号是否重复 -->
+	<select id="checkPubDriver" parameterType="PubDriver"
+		resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		pub_driver
+		WHERE
+		pub_driver.`Status` = 1
+		AND (
+		jobnum = #{jobNum}
+		or driversnum =
+		#{driversNum}
+		or idcardnum = #{idCardNum}
+		)
+		and id != #{id}
+		<!-- 增加所属平台的过滤条件 -->
+		and pub_driver.platformtype=#{platformType}
+	</select>
+	<!-- 检测  司机手机号码  在平台唯一 -->
+	<select id="checkPubDriverPhone" parameterType="PubDriver" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		pub_driver
+		WHERE
+		pub_driver.`Status` = 1
+		AND phone = #{phone}
+		and id != #{id}
+	</select>
+	<!-- 根据id查一条记录 -->
+	<select id="getByPubDriverId" resultType="PubDriver"
+		parameterType="string">
+		SELECT * FROM pub_driver WHERE id = #{id}
+	</select>
+	<!-- 重置密码 -->
+	<update id="resetPassword" parameterType="PubDriver">
+		UPDATE pub_driver SET
+		userpassword=#{userPassword},updatetime=now() where id = #{id}
+	</update>
+	<!-- 删除司机 -->
+	<update id="deletePubDriver" parameterType="string">
+		UPDATE pub_driver SET
+		pub_driver.`Status`=2 WHERE id = #{id}
+	</update>
+	<!-- 检查能否删除 -->
+	<select id="checkDelete" parameterType="string" resultType="int">
+		SELECT count(*) FROM pub_driver_vehicle_ref WHERE pub_driver_vehicle_ref.driverid=#{id} 
+		AND pub_driver_vehicle_ref.`Status`=1 
+		<!-- AND pub_driver_vehicle_ref.bindstate = '0' -->
+	</select>
+	<!-- 首页查询分页 -->
+	<select id="getPubDriverListByQuery" parameterType="QueryParam"
+		resultType="PubDriver">
+
+		SELECT
+		*,
+		getCityStr(pub_driver.city) as cityName,
+		(SELECT text FROM pub_dictionary where pub_dictionary.Type='服务状态' and
+		pub_dictionary.`Value`=pub_driver.workstatus and pub_dictionary.status=1)as workStatusName
+		FROM
+		pub_driver
+		WHERE
+		pub_driver.`Status` = 1
+		<!-- 增加所属平台的过滤条件 -->
+		and pub_driver.platformtype=#{platformType}
+		<include refid="queryVehicleParam"/>
+		ORDER BY
+		pub_driver.jobstatus asc ,
+		CONVERT ((cityName) USING gbk) COLLATE gbk_chinese_ci asc,
+		pub_driver.vehicletype DESC,
+		(CASE pub_driver.workstatus
+		WHEN  2 THEN 1
+		WHEN  0 THEN 2
+		WHEN  1 THEN 3
+		ELSE 0
+		END) asc
+		LIMIT #{iDisplayStart} ,#{iDisplayLength}
+	</select>
+	<!-- 首页查询分页 -->
+	<select id="getPubDriverListCountByQuery" parameterType="QueryParam"
+		resultType="int">
+
+		SELECT
+		count(id)
+		FROM
+		pub_driver
+		WHERE
+		pub_driver.`Status` = 1
+		<!-- 增加所属平台的过滤条件 -->
+		and pub_driver.platformtype=#{platformType}
+		<include refid="queryVehicleParam"/>
+	</select>
+
+	<sql id="queryVehicleParam">
+		<if test="queryKeyword != null and queryKeyword !='' ">
+			AND( pub_driver.name like "%"#{queryKeyword}"%"
+			OR pub_driver.phone like "%"#{queryKeyword}"%")
+		</if>
+		<if test="queryWorkStatus != null and queryWorkStatus !='' ">
+			AND pub_driver.workstatus=#{queryWorkStatus}
+		</if>
+		<if test="queryCity != null and queryCity !='' ">
+			AND pub_driver.city like "%"#{queryCity}"%"
+		</if>
+		<if test="queryJobStatus != null and queryJobStatus !='' ">
+			AND pub_driver.jobstatus like "%"#{queryJobStatus}"%"
+		</if>
+		<if test="jobNum != null and jobNum !='' ">
+			AND pub_driver.jobNum = #{jobNum}
+		</if>
+		<if test="driverId != null and driverId !='' ">
+			AND pub_driver.id = #{driverId}
+		</if>
+
+		<if test="queryBoundState != null and queryBoundState !='' ">
+			AND pub_driver.boundstate=#{queryBoundState}
+		</if>
+		<if test="queryVehicleType != null and queryVehicleType !='' ">
+			AND pub_driver.vehicletype=#{queryVehicleType}
+		</if>
+	</sql>
+
+	<!-- 首页， 登记城市的select2的条件查询 -->
+	<select id="getCity" resultType="map" parameterType="QueryParam">
+			SELECT
+		(
+			SELECT
+				pub_cityaddr.id
+			FROM
+				pub_cityaddr
+			WHERE
+				pub_cityaddr.`status` = 1
+			AND pub_cityaddr.id = pub_driver.city
+		) AS id,
+		(
+			SELECT
+				pub_cityaddr.city
+			FROM
+				pub_cityaddr
+			WHERE
+				pub_cityaddr.`status` = 1
+			AND pub_cityaddr.id = pub_driver.city
+		) AS text
+		FROM
+			pub_driver
+		WHERE
+			platformtype = #{platformType}
+		AND `Status` = 1
+		<if test="queryCity != null and queryCity != '' ">
+			and (
+			SELECT
+				pub_cityaddr.city
+			FROM
+				pub_cityaddr
+			WHERE
+				pub_cityaddr.`status` = 1
+			AND pub_cityaddr.id = pub_driver.city
+			) like "%"#{queryCity}"%"
+		</if>
+		GROUP BY
+		text	
+	</select>
+	<!-- 根据id查询 -->
+	<select id="getById" resultType="PubDriver" parameterType="string">
+		SELECT
+			pub_driver.*, (
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = pub_driver.city
+			) AS cityName,
+			(
+				SELECT
+					pub_dictionary.text
+				FROM
+					pub_dictionary
+				WHERE
+					pub_dictionary.type = '驾驶类型'
+				AND pub_dictionary.`value` = pub_driver.driverstype
+			) AS driversTypeName,
+			(SELECT pub_cityaddr.markid FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_driver.city) AS citymarkId
+		FROM
+			pub_driver
+		WHERE
+			id = #{id}
+	</select>
+	<!-- 根据司机id查，当前司机是否绑定状态 -->
+	<select id="judgeBinding" resultType="int" parameterType="string">
+		SELECT count(*) FROM pub_driver_vehicle_ref WHERE pub_driver_vehicle_ref.driverid=#{id} 
+		AND pub_driver_vehicle_ref.`Status`=1 
+		<!-- AND pub_driver_vehicle_ref.bindstate = '0' -->
+	</select>
+
+	<!-- 特殊司机的所属的机构 -->
+	<select id="getSpecialDri" resultType="map" parameterType="QueryParam">
+		SELECT
+		org_organ.shortname as id,
+		org_organ.shortname as text
+		FROM
+			org_organ_driver_ref,
+			org_organ,
+			org_organ_company_ref
+
+		WHERE
+			org_organ_driver_ref.organid = org_organ.id
+			AND org_organ.id = org_organ_company_ref.organid
+			AND org_organ_company_ref.companyid = #{leasesCompanyId}
+			<if test="queryServiceOrg != null and queryServiceOrg != '' ">
+				and org_organ.shortname like "%"#{queryServiceOrg}"%"
+			</if>
+		GROUP BY org_organ.shortname
+	</select>
+
+	<!-- 导出的数据 -->
+	<select id="exportData" resultType="ExportDriverVo" parameterType="QueryParam">
+		SELECT
+		pub_driver.jobnum,
+		pub_driver.name,
+		pub_driver.phone,
+		pub_driver.sex,
+		pub_driver.vehicletype,
+		pub_driver.idcardnum,
+		pub_driver.driveryears,
+		pub_driver.boundstate,
+		pub_driver.jobstatus,
+		(SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_driver.city)  AS cityName,
+		(select text from pub_dictionary where pub_dictionary.type='驾驶类型' and pub_dictionary.`Value`=pub_driver.driverstype and pub_dictionary.status=1) as driversTypeName
+		FROM
+		pub_driver,
+		(SELECT @rownum := 0) r
+		WHERE
+		pub_driver.`Status` = 1
+		<!-- 增加所属平台的过滤条件 -->
+		and pub_driver.platformtype=#{platformType}
+		<include refid="queryVehicleParam"/>
+		ORDER BY
+		CONVERT ((SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_driver.city) USING gbk) COLLATE gbk_chinese_ci,
+		pub_driver.vehicletype DESC,
+		workstatus DESC
+	</select>
+	<!-- 发短信  需要租赁公司简称  传租赁公司id -->
+	<select id="getLeLeasescompany" parameterType="string" resultType="LeLeasescompany">
+		SELECT * FROM le_leasescompany WHERE  `status`=1  AND id =#{id}
+	</select>
+	<!-- 判断   服务中 的司机不能解绑  条件2 有预约的单子也不行 -->
+	<select id="checkUnbundling" parameterType="string" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			org_order
+		WHERE
+			org_order.driverid = #{driverId}
+		AND org_order.`status` = 1
+		AND (org_order.orderstatus = 2 OR org_order.orderstatus = 3)
+	</select>
+
+	<!--清空司机在线时长-->
+	<update id="cleanPubDriverOnlineTime" parameterType="PubDriver">
+		UPDATE pub_driver
+		SET
+		onlinetime = 0,
+		uptime = null,
+		updater=#{updater},
+		UpdateTime=#{updateTime}
+		WHERE
+		id = #{id}
+	</update>
+
+	<update id="updatePubDriverStatus" parameterType="PubDriver">
+		UPDATE pub_driver
+		SET
+		<if test="workStatus!=null and workStatus!=''">
+			workstatus = #{workStatus},
+		</if>
+		<if test="lockStatus!=null and lockStatus!=''">
+			lockstatus = #{lockStatus},
+		</if>
+		<if test="boundState!=null and boundState!=''">
+			boundstate = #{boundState},
+		</if>
+		<if test="passworkStatus!=null and passworkStatus!=''">
+			passworkstatus = #{passworkStatus},
+		</if>
+		updater=#{updater},
+		UpdateTime=#{updateTime}
+		WHERE
+		id = #{id}
+	</update>
+</mapper>

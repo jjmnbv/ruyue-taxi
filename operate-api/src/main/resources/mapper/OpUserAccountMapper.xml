@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpUserAccountMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOpUserAccountListByQuery" resultType="PeUser" parameterType="OrganUserAccountQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pe_user.id as id,
+	        pe_user.account as account,
+	        IFNULL(pe_user.nickname,'-') as nickname,
+	        (case pe_user.sex when '0' then '男' when '1' then '女' when '男' then '男' when '女' then '女' else '-' end) as sex,
+	        IFNULL(pe_useraccount.balance,0) as balance,
+	        (select COUNT(pe_userexpenses.id) from pe_userexpenses where pe_userexpenses.userid = pe_user.id and pe_userexpenses.detailtype='0') as balanceCount,
+	        (select COUNT(pe_userexpenses.id) from pe_userexpenses where pe_userexpenses.userid = pe_user.id and (pe_userexpenses.detailtype='0' or pe_userexpenses.detailtype='1')) as dealCount,
+	        pe_user.registertime as registertime
+	    from pe_user left join pe_useraccount on (pe_user.id = pe_useraccount.userid and pe_useraccount.status = 1)
+	    where pe_user.status = 1
+	    <if test="userId != null and userId != ''">
+	        and pe_user.id = #{userId}
+	    </if> 
+	    order by pe_user.registertime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getOpUserAccountListCountByQuery" resultType="int" parameterType="OrganUserAccountQueryParam">
+	    select count(*)
+	    from pe_user left join pe_useraccount on (pe_user.id = pe_useraccount.userid and pe_useraccount.status = 1)
+	    where pe_user.status = 1
+	    <if test="userId != null and userId != ''">
+	        and pe_user.id = #{userId}
+	    </if> 
+	</select>
+
+	<select id="getUserExpensesListByQuery" resultType="OrgUserExpenses" parameterType="OrganUserAccountQueryParam">
+	    <!-- select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pe_userexpenses.expensetime as expenseTime,
+	       (case pe_userexpenses.expensetype when '1' then '微信支付' when '2' then '支付宝支付' when '3' then '系统退款' when '4' then '余额支付' end) as expenseType,
+	       CONCAT((case pe_userexpenses.expensetype when '1' then '-' when '2' then '-' when '3' then '+' when '4' then '-' end),pe_userexpenses.amount) as amount,
+	       IFNULL(pe_userexpenses.balance,0) as balance,
+	       IFNULL(pe_userexpenses.remark,'无') as remark
+	    from pe_userexpenses
+	    where pe_userexpenses.userid = #{userId}
+	      and pe_userexpenses.status = 1
+	    <if test="expenseType != null and expenseType != ''">
+	        and pe_userexpenses.expensetype = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pe_userexpenses.expensetime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]> -->
+	    
+	     select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pe_userexpenses.expensetime as expenseTime,
+	       (case pe_userexpenses.tradetype when '0' then '充值' when '1' then '订单支付' when '2' then '系统退款' when '3' then '提现' when '4' then '平台奖励' end) as tradeType,
+	       (case pe_userexpenses.expensetype when '1' then '微信支付' when '2' then '支付宝支付' when '3' then '账户余额' when '4' then '余额支付' when '5' then '付现' else '/' end) as expenseType,
+	       CONCAT((case pe_userexpenses.tradetype when '0' then '+' when '4' then '+' when '1' then '-' when '2' then '+' when '3' then (case pe_userexpenses.operateresult when '0' then '-' when '1' then '+' end) end),pe_userexpenses.amount) as amount,
+	       IFNULL(pe_userexpenses.balance,0) as balance,
+	       IFNULL(pe_userexpenses.remark,'无') as remark
+	    from pe_userexpenses
+	    where pe_userexpenses.userid = #{userId}
+	    <if test="expenseType != null and expenseType != ''">
+	        and pe_userexpenses.tradetype = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="detailType != null and detailType != ''">
+	        and pe_userexpenses.detailtype = #{detailType}
+	    </if>
+	    order by pe_userexpenses.expensetime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getUserExpensesListCountByQuery" resultType="int" parameterType="OrganUserAccountQueryParam">
+	     select count(*) from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pe_userexpenses.expensetime as expenseTime,
+	       (case pe_userexpenses.tradetype when '0' then '充值' when '1' then '订单支付' when '2' then '系统退款' when '3' then '提现' when '4' then '平台奖励' end) as tradeType,
+	       (case pe_userexpenses.expensetype when '1' then '微信支付' when '2' then '支付宝支付' when '3' then '账户余额' when '4' then '余额支付' when '5' then '付现' else '/' end) as expenseType,
+	       CONCAT((case pe_userexpenses.tradetype when '0' then '+' when '4' then '+' when '1' then '-' when '2' then '+' when '3' then (case pe_userexpenses.operateresult when '0' then '-' when '1' then '+' end) end),pe_userexpenses.amount) as amount,
+	       IFNULL(pe_userexpenses.balance,0) as balance,
+	       IFNULL(pe_userexpenses.remark,'无') as remark
+	    from pe_userexpenses
+	    where pe_userexpenses.userid = #{userId}
+	    <if test="expenseType != null and expenseType != ''">
+	        and pe_userexpenses.tradetype = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="detailType != null and detailType != ''">
+	        and pe_userexpenses.detailtype = #{detailType}
+	    </if>
+	    order by pe_userexpenses.expensetime desc) t1, (select @rownum := 0) r ) t
+	</select>
+	
+	<select id="getExistUserList" resultType="hashmap" parameterType="hashmap">
+	    select pe_user.id as id,pe_user.account as text
+	    from pe_user
+	    where pe_user.status = 1
+	    <if test="nameAccount != null and nameAccount != ''">
+	        and (pe_user.nickname like "%"#{nameAccount}"%"
+	           or pe_user.account like "%"#{nameAccount}"%")
+	    </if>
+	    limit 0,10
+	</select>
+
+	<select id="getUserExpensesListExport" resultType="OrgUserExpenses" parameterType="OrganUserAccountQueryParam">
+	    <!-- select pe_userexpenses.expensetime as expenseTime,
+	       (case pe_userexpenses.expensetype when '1' then '微信支付' when '2' then '支付宝支付' when '3' then '系统退款' when '4' then '余额支付' end) as expenseType,
+	       CONCAT((case pe_userexpenses.expensetype when '1' then '-' when '2' then '-' when '3' then '+' when '4' then '-' end),pe_userexpenses.amount) as amount,
+	       IFNULL(pe_userexpenses.balance,0) as balance,
+	       IFNULL(pe_userexpenses.remark,'无') as remark
+	    from pe_userexpenses
+	    where pe_userexpenses.userid = #{userId}
+	      and pe_userexpenses.status = 1
+	    <if test="expenseType != null and expenseType != ''">
+	        and pe_userexpenses.expensetype = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pe_userexpenses.expensetime desc -->
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pe_userexpenses.expensetime as expenseTime,
+	       (case pe_userexpenses.tradetype when '0' then '充值' when '1' then '订单支付' when '2' then '系统退款' when '3' then '提现' when '4' then '平台奖励' end) as tradeType,
+	       (case pe_userexpenses.expensetype when '1' then '微信支付' when '2' then '支付宝支付' when '3' then '账户余额' when '4' then '余额支付' when '5' then '付现' else '/' end) as expenseType,
+	       CONCAT((case pe_userexpenses.tradetype when '0' then '+' when '4' then '+' when '1' then '-' when '2' then '+' when '3' then (case pe_userexpenses.operateresult when '0' then '-' when '1' then '+' end) end),pe_userexpenses.amount) as amount,
+	       IFNULL(pe_userexpenses.balance,0) as balance,
+	       IFNULL(pe_userexpenses.remark,'无') as remark
+	    from pe_userexpenses
+	    where pe_userexpenses.userid = #{userId}
+	    <if test="expenseType != null and expenseType != ''">
+	        and pe_userexpenses.tradetype = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pe_userexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="detailType != null and detailType != ''">
+	        and pe_userexpenses.detailtype = #{detailType}
+	    </if>
+	    order by pe_userexpenses.expensetime desc) t1, (select @rownum := 0) r ) t
+	</select>
+
+</mapper>

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.PeUserMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+<!-- 首页加载 -->
+<select id="getPeUserListByQuery" resultType="PeUser" parameterType="QueryParam">
+	SELECT
+	t.*
+	FROM
+	(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				<!-- SELECT
+					pe_user.*
+				FROM
+					pe_user,
+					(SELECT @rownum := 0) r
+				WHERE
+					`status` = 1 -->
+				SELECT p.*,o.account as orgUserAccount FROM pe_user p LEFT JOIN org_user o ON (p.account = o.account AND o.`Status`=1 AND o.usertype=0), (SELECT @rownum := 0) r WHERE p.`status` = 1
+			) m
+		WHERE
+			1 = 1
+		<if test="queryAccount != null and queryAccount != '' ">
+			and m.account like "%"#{queryAccount}"%"
+		</if>
+		<if test="queryCompanystate != null and queryCompanystate != '' ">
+			and m.disablestate = #{queryCompanystate}
+		</if>
+		<choose>
+			<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+				and m.registertime &gt;= #{startTime} and m.CreateTime &lt; #{endTime}
+			</when>
+			<otherwise>
+				<if test="startTime != null and startTime != ''">
+					and m.registertime &gt;= #{startTime}
+				</if>
+				<if test="endTime != null and endTime != ''">
+					and m.registertime &lt; #{endTime}
+				</if>
+			</otherwise>
+		</choose>
+		ORDER BY
+			m.registertime DESC
+	) t
+	WHERE
+	<![CDATA[
+	t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	]]>
+</select>
+<select id="getPeUserListCountByQuery" resultType="int" parameterType="QueryParam">
+	SELECT
+	count(*)
+	FROM
+	(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				<!-- SELECT
+					pe_user.*
+				FROM
+					pe_user,
+					(SELECT @rownum := 0) r
+				WHERE
+					`status` = 1 -->
+				SELECT p.*,o.account as orgUserAccount FROM pe_user p LEFT JOIN org_user o ON (p.account = o.account AND o.`Status`=1 AND o.usertype=0), (SELECT @rownum := 0) r WHERE p.`status` = 1
+			) m
+		WHERE
+			1 = 1
+		<if test="queryAccount != null and queryAccount != '' ">
+			and m.account like "%"#{queryAccount}"%"
+		</if>
+		<if test="queryCompanystate != null and queryCompanystate != '' ">
+			and m.disablestate = #{queryCompanystate}
+		</if>
+		<choose>
+			<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+				and m.registertime &gt;= #{startTime} and m.CreateTime &lt; #{endTime}
+			</when>
+			<otherwise>
+				<if test="startTime != null and startTime != ''">
+					and m.registertime &gt;= #{startTime}
+				</if>
+				<if test="endTime != null and endTime != ''">
+					and m.registertime &lt; #{endTime}
+				</if>
+			</otherwise>
+		</choose>
+		ORDER BY
+			m.registertime DESC
+	) t
+</select>
+<!-- 重置密码 -->
+<update id="resetPassword" parameterType="PeUser">
+	update pe_user set userpassword = #{userpassword},updatetime = now() where id = #{id}
+</update>
+<!-- 根据id 查 -->
+<select id="getById" parameterType="string" resultType="PeUser">
+	select * from pe_user where id = #{id}
+</select>
+<!-- 启用 -->
+<update id="enable" parameterType="string">
+	update pe_user set updatetime = now(),disablestate = '0' where id = #{id}
+</update>
+<!-- 禁用-->
+<update id="disable" parameterType="string">
+	update pe_user set updatetime = now(),disablestate = '1' where id = #{id}
+</update>
+<!-- 判断是否有禁用记录 -->
+<select id="disableRecord" parameterType="string" resultType="int">
+	select count(*) from pe_userdisablelog where userid = #{id}
+</select>
+<!--  -->
+<select id="getPeUserdisablelogListByQuery" resultType="PeUserdisablelog" parameterType="QueryParam">
+	SELECT
+	t.*
+	FROM
+	(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					pe_userdisablelog.*,
+					pe_user.account
+				FROM
+					pe_user,
+					pe_userdisablelog,
+					(SELECT @rownum := 0) r
+				WHERE
+				pe_userdisablelog.`status` = 1
+				AND pe_user.`status`=1
+				AND pe_user.id = pe_userdisablelog.userid
+				AND pe_userdisablelog.userid = #{key}
+			) m
+		WHERE
+			1 = 1
+		ORDER BY
+			m.updatetime DESC
+	) t
+	WHERE
+	<![CDATA[
+	t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	]]>
+</select>
+<select id="getPeUserdisablelogListCountByQuery" resultType="int" parameterType="QueryParam">
+	SELECT
+	count(*)
+	FROM
+	(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					pe_userdisablelog.*,
+					pe_user.account
+				FROM
+					pe_user,
+					pe_userdisablelog,
+					(SELECT @rownum := 0) r
+				WHERE
+				pe_userdisablelog.`status` = 1
+				AND pe_user.`status`=1
+				AND pe_user.id = pe_userdisablelog.userid
+				AND pe_userdisablelog.userid = #{key}
+			) m
+		WHERE
+			1 = 1
+		ORDER BY
+			m.updatetime DESC
+	) t
+</select>
+<!--  导出  -->
+<select id="exportData" resultType="PeUser" parameterType="QueryParam">
+	<!-- SELECT
+		pe_user.*
+	FROM
+		pe_user
+	WHERE
+		`status` = 1 -->
+		SELECT
+	t.*
+	FROM
+	(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				<!-- SELECT
+					pe_user.*
+				FROM
+					pe_user,
+					(SELECT @rownum := 0) r
+				WHERE
+					`status` = 1 -->
+				SELECT p.*,o.account as orgUserAccount FROM pe_user p LEFT JOIN org_user o ON (p.account = o.account AND o.`Status`=1 AND o.usertype=0), (SELECT @rownum := 0) r WHERE p.`status` = 1
+			) m
+		WHERE
+			1 = 1
+		<if test="queryAccount != null and queryAccount != '' ">
+			and m.account like "%"#{queryAccount}"%"
+		</if>
+		<if test="queryCompanystate != null and queryCompanystate != '' ">
+			and m.disablestate = #{queryCompanystate}
+		</if>
+		<choose>
+			<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+				and m.registertime &gt;= #{startTime} and m.CreateTime &lt; #{endTime}
+			</when>
+			<otherwise>
+				<if test="startTime != null and startTime != ''">
+					and m.registertime &gt;= #{startTime}
+				</if>
+				<if test="endTime != null and endTime != ''">
+					and m.registertime &lt; #{endTime}
+				</if>
+			</otherwise>
+		</choose>
+		ORDER BY
+			m.registertime DESC
+	) t
+</select>
+<!-- 添加  禁用记录 -->
+<insert id="createPeUserdisablelog" parameterType="PeUserdisablelog">
+	INSERT INTO pe_userdisablelog (`id`, `userid`, `action`, `starttime`, `endtime`, `reason`, `createtime`, `updatetime`, `creater`, `updater`, `status`) VALUES 
+								(#{id}, #{userid}, #{action}, #{starttime}, #{endtime}, #{reason}, now(), now(), #{creater}, #{updater}, '1');
+</insert>
+<!-- 得到运管端的客服电话 -->
+<select id="getOpPlatforminfo" resultType="OpPlatformInfo">
+	select * from op_platforminfo where status=1
+</select>
+<!-- 根据account 重置 org_user 的密码 -->
+<update id="resetOrgUserPassword" parameterType="PeUser">
+	update org_user set updatetime = now(),userpassword= #{userpassword}  where account = #{orgUserAccount} and usertype = 0 and status = 1 
+</update>
+</mapper>

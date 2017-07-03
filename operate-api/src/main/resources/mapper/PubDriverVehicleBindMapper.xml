@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "mybatis-3-mapper.dtd" >
+<mapper namespace="com.szyciov.operate.mapper.PubDriverVehicleBindMapper" >
+
+  <select id="selectByPrimaryKey" resultType="PubDriverVehicleBind" >
+    select `id` ,`vehicleid` ,`driverid` ,`drivertype` ,`bindstate` ,
+    `unbindreason` ,`bindpersonnum` ,`binddirverinfo` ,`createtime` ,
+    `updatetime` ,`operator` ,`creater` ,`updater` ,`status` ,`id` ,
+    `vehicleid` ,`driverid` ,`drivertype` ,`bindstate` ,
+    `unbindreason` ,`bindpersonnum` ,`binddirverinfo` ,`createtime` ,
+    `updatetime` ,`operator` ,`creater` ,`updater` ,`status`
+    from pub_driver_vehicle_bind where  `id` = #{id}
+  </select>
+  
+  <select id="search" resultType="PubDriverVehicleBind">
+    select `id` ,`vehicleid` ,`driverid` ,`drivertype` ,`bindstate` ,
+    `unbindreason` ,`bindpersonnum` ,`binddirverinfo` ,`createtime` ,
+    `updatetime` ,`operator` ,`creater` ,`updater` ,`status` ,`id` ,
+    `vehicleid` ,`driverid` ,`drivertype` ,`bindstate` ,
+    `unbindreason` ,`bindpersonnum` ,`binddirverinfo` ,
+    `createtime` ,`updatetime` ,`operator` ,`creater` ,`updater` ,
+    `status`  from pub_driver_vehicle_bind
+  </select>
+  
+  <insert id="save" parameterType="PubDriverVehicleBind" useGeneratedKeys="true" >
+    insert into pub_driver_vehicle_bind
+    (`id` ,`vehicleid` ,`driverid` ,`drivertype` ,`bindstate` ,`unbindreason` ,
+    `bindpersonnum` ,`binddirverinfo` ,`createtime` ,`updatetime` ,`operator` ,
+    `creater` ,`updater` ,`status`  )
+    values
+    (#{id},#{vehicleid},#{driverid},#{drivertype},#{bindstate},#{unbindreason},
+    #{bindpersonnum},#{binddirverinfo},#{createtime},#{updatetime},#{operator},
+    #{creater},#{updater},#{status})
+  </insert>
+
+
+  <delete id="deleteByPrimaryKey">
+    delete from pub_driver_vehicle_bind where  `id` = #{id}
+  </delete>
+
+  
+</mapper>

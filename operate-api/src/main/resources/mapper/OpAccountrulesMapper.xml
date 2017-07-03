@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.OpAccountrulesMapper">
+	
+	<sql id="query_opAccountrules_where">
+		<if test='null != rulestype and "" != rulestype'>
+			and op_accountrules.rulestype = #{rulestype}
+		</if>
+		<if test='null != city and "" != city'>
+			and op_accountrules.city = #{city}
+		</if>
+		<if test='null != vehiclemodelsid and "" != vehiclemodelsid'>
+			and op_accountrules.vehiclemodelsid = #{vehiclemodelsid}
+		</if>
+		<if test='null != rulesstate and "" != rulesstate'>
+			and op_accountrules.rulesstate = #{rulesstate}
+		</if>
+		<if test='null != timetype and "" != timetype'>
+			and op_accountrules.timetype = #{timetype}
+		</if>
+	</sql>
+	
+	<!-- 查询计费规则中的所有服务车型 -->
+	<select id="getModelsByList" resultType="OpVehiclemodels">
+		select distinct op_vehiclemodels.id, op_vehiclemodels.name
+		from op_accountrules,
+		op_vehiclemodels,
+		pub_cityaddr
+		where op_accountrules.vehiclemodelsid = op_vehiclemodels.id
+		and op_accountrules.city = pub_cityaddr.id
+		and op_accountrules.status = 1
+		and op_vehiclemodels.status = 1
+		and pub_cityaddr.status = 1
+		order by op_vehiclemodels.level
+	</select>
+	
+	<!-- 查询计费规则中的所有城市 -->
+	<select id="getCityByList" parameterType="PubCityAddr" resultType="map">
+		select distinct pub_cityaddr.id id, pub_cityaddr.city text
+		from op_accountrules,
+		op_vehiclemodels,
+		pub_cityaddr
+		where op_accountrules.vehiclemodelsid = op_vehiclemodels.id
+		and op_accountrules.city = pub_cityaddr.id
+		and op_accountrules.status = 1
+		and op_vehiclemodels.status = 1
+		and pub_cityaddr.status = 1
+		<if test='null != city and "" != city'>
+			and pub_cityaddr.city like concat("%", #{city}, "%")
+		</if>
+	</select>
+	
+	<!-- 分页查询计费规则 -->
+	<select id="getOpAccountRulesListByQuery" parameterType="OpAccountruleQueryParam" resultType="OpAccountrules">
+		select pub_cityaddr.city cityName, op_vehiclemodels.name vehiclemodelsName,
+		(select pub_dictionary.text from pub_dictionary where pub_dictionary.type = "规则类型" and pub_dictionary.value = op_accountrules.rulestype) rulestypeName,
+		(case op_accountrules.timetype when "0" then "总用时" when "1" then "低速用时" end) timetypeName,
+		(select pub_dictionary.text from pub_dictionary where pub_dictionary.type = "规则状态" and pub_dictionary.value = op_accountrules.rulesstate) rulesstateName,
+		ifnull(op_accountrules.perhour, "---") perhourVisual,
+		op_accountrules.*
+		from op_accountrules,
+		op_vehiclemodels,
+		pub_cityaddr
+		where op_accountrules.vehiclemodelsid = op_vehiclemodels.id
+		and op_accountrules.city = pub_cityaddr.id
+		and op_accountrules.status = 1
+		and op_vehiclemodels.status = 1
+		and pub_cityaddr.status = 1
+		<include refid="query_opAccountrules_where"></include>
+		order by pub_cityaddr.cityInitials,op_accountrules.rulestype,op_vehiclemodels.level,op_accountrules.rulesstate
+		limit #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<select id="getOpAccountRulesCountByQuery" parameterType="OpAccountruleQueryParam" resultType="int">
+		select count(*) 
+		from op_accountrules,
+		op_vehiclemodels,
+		pub_cityaddr
+		where op_accountrules.vehiclemodelsid = op_vehiclemodels.id
+		and op_accountrules.city = pub_cityaddr.id
+		and op_accountrules.status = 1
+		and op_vehiclemodels.status = 1
+		and pub_cityaddr.status = 1
+		<include refid="query_opAccountrules_where"></include>
+	</select>
+	
+	<!-- 根据主键查询计费规则 -->
+	<select id="getOpAccountrulesById" parameterType="string" resultType="OpAccountrules">
+		select op_accountrules.*, pub_cityaddr.city cityName
+		from op_accountrules left join pub_cityaddr on op_accountrules.city = pub_cityaddr.id
+		where op_accountrules.id = #{id} and pub_cityaddr.status = 1
+	</select>
+	
+	<!-- 条件查询计费规则 -->
+	<select id="getOpAccountrulesByList" parameterType="OpAccountrules" resultType="OpAccountrules">
+		select pub_cityaddr.city cityName, op_vehiclemodels.name vehiclemodelsName,
+		(select pub_dictionary.text from pub_dictionary where pub_dictionary.type = "规则类型" and pub_dictionary.value = op_accountrules.rulestype) rulestypeName,
+		(case op_accountrules.timetype when "0" then "总用时" when "1" then "低速用时" end) timetypeName,
+		op_accountrules.*
+		from op_accountrules,
+		op_vehiclemodels,
+		pub_cityaddr
+		where op_accountrules.vehiclemodelsid = op_vehiclemodels.id
+		and op_accountrules.city = pub_cityaddr.id
+		and op_accountrules.status = 1
+		and op_vehiclemodels.status = 1
+		and pub_cityaddr.status = 1
+		<include refid="query_opAccountrules_where"></include>
+	</select>
+	
+	<!-- 添加计费规则 -->
+	<insert id="insertOpAccountrules" parameterType="OpAccountrules">
+		insert into op_accountrules(id, city, rulestype, vehiclemodelsid, startprice, rangeprice, timeprice, timetype, perhour, rulesstate, reason, createtime, updatetime, creater, updater, status,deadheadmileage,deadheadprice,nightstarttime,nightendtime,nighteprice)
+		values(#{id}, #{city}, #{rulestype}, #{vehiclemodelsid}, #{startprice}, #{rangeprice}, #{timeprice}, #{timetype}, #{perhour}, #{rulesstate}, #{reason}, #{createtime}, #{updatetime}, #{creater}, #{updater}, #{status},#{deadheadmileage},#{deadheadprice},#{nightstarttime},#{nightendtime},#{nighteprice})
+	</insert>
+	
+	<update id="updateOpAccountrules" parameterType="OpAccountrules">
+		update op_accountrules set id = #{id}
+		<if test='null != city and "" != city'>
+			,city = #{city}
+		</if>
+		<if test='null != rulestype and "" != rulestype'>
+			,rulestype = #{rulestype}
+		</if>
+		<if test='null != vehiclemodelsid and "" != vehiclemodelsid'>
+			,vehiclemodelsid = #{vehiclemodelsid}
+		</if>
+		<if test='null != startprice'>
+			,startprice = #{startprice}
+		</if>
+		<if test='null != rangeprice'>
+			,rangeprice = #{rangeprice}
+		</if>
+		<if test='null != timeprice'>
+			,timeprice = #{timeprice}
+		</if>
+		<if test='null != timetype'>
+			,timetype = #{timetype}
+		</if>
+		<if test='(null != timetype and timetype == "0") or (null != perhour)'>
+			,perhour = #{perhour}
+		</if>
+		<if test='null != rulesstate and "" != rulesstate'>
+			,rulesstate = #{rulesstate}
+		</if>
+		<if test='null != reason and "" != reason'>
+			,reason = #{reason}
+		</if>
+		<if test='null != createtime and "" != createtime'>
+			,createtime = #{createtime}
+		</if>
+		<if test='null != updatetime and "" != updatetime'>
+			,updatetime = #{updatetime}
+		</if>
+		<if test='null != creater and "" != creater'>
+			,creater = #{creater}
+		</if>
+		<if test='null != updater and "" != updater'>
+			,updater = #{updater}
+		</if>
+		<if test='null != status'>
+			,status = #{status}
+		</if>
+		,deadheadmileage = #{deadheadmileage}
+		,deadheadprice = #{deadheadprice}
+		,nightstarttime = #{nightstarttime}
+		,nightendtime = #{nightendtime}
+		,nighteprice = #{nighteprice}
+		where id = #{id}
+	</update>
+	
+	<!-- 根据城市一键修改时间补贴类型 -->
+	<update id="updateOpAccountRulesByCity" parameterType="OpAccountrules">
+		update op_accountrules set timetype = #{timetype}, perhour = #{perhour}, updatetime = #{updatetime}
+		where city = #{city} and status = 1
+	</update>
+	
+</mapper>

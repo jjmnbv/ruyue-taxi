@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.PubSysversionMapper">
+	
+	<!-- 查询版本说明数据中所有的适用系统 -->
+	<select id="getSystemtypeByList" resultType="PubDictionary">
+		select
+			pub_dictionary.value,
+			pub_dictionary.text
+		from
+			pub_dictionary
+		where
+			(exists(select systemtype value from pub_sysversion where systemtype = 2 and status = 1)
+			or value in(select systemtype value from pub_sysversion where systemtype != 2 and status = 1))
+			and type = "系统类型"
+	</select>
+	
+	<!-- 条件查询版本说明信息 -->
+	<select id="getPubSysversionList" parameterType="PubSysversion" resultType="PubSysversion">
+		select
+			pub_sysversion.*,
+			pub_dictionary.text platformtypeName,
+			(case pub_sysversion.systemtype when "0" then "ios" when "1" then "Android" when "2" then "ios、Adnroid" end) systemtypeName
+		from
+			pub_sysversion,
+			pub_dictionary
+		where
+			pub_sysversion.platformtype = pub_dictionary.value
+			and pub_dictionary.type = "终端类型"
+			and pub_dictionary.status = 1
+			<if test='null != id and "" != id'>
+				and pub_sysversion.id = #{id}
+			</if>
+			<if test='null != platformtype and "" != platformtype'>
+				and pub_sysversion.platformtype = #{platformtype}
+			</if>
+			<if test='null != systemtype and "" != systemtype'>
+				and pub_sysversion.systemtype = #{systemtype}
+			</if>
+			<if test='null != curversion and "" != curversion'>
+				and pub_sysversion.curversion = #{curversion}
+			</if>
+			<if test='null != versionno and "" != versionno'>
+				and pub_sysversion.versionno = #{versionno}
+			</if>
+			<if test='null != maxversionno and "" != maxversionno'>
+				and pub_sysversion.maxversionno = #{maxversionno}
+			</if>
+			<if test='null != changelog and "" != changelog'>
+				and pub_sysversion.changelog = #{changelog}
+			</if>
+			<if test='null != createtime and "" != createtime'>
+				and pub_sysversion.createtime = #{createtime}
+			</if>
+			<if test='null != updatetime and "" != updatetime'>
+				and pub_sysversion.updatetime = #{updatetime}
+			</if>
+			<if test='null != status and "" != status'>
+				and pub_sysversion.status = #{status}
+			</if>
+	</select>
+	
+	<!-- 查询版本说明中已存在的当前版本号 -->
+	<select id="getCurversionByList" parameterType="PubSysversion" resultType="map">
+		select
+			DISTINCT curversion id, curversion text
+		from
+			pub_sysversion
+		where
+			status = 1
+			<if test='null != curversion and "" != curversion'>
+				and curversion like concat("%", #{curversion}, "%")
+			</if>
+	</select>
+	
+	<!-- 分页查询版本说明数据 -->
+	<select id="getPubSysversionListByQuery" parameterType="PubSysversionQueryParam" resultType="PubSysversion">
+		select
+			pub_sysversion.*,
+			pub_dictionary.text platformtypeName,
+			(case pub_sysversion.systemtype when "0" then "ios" when "1" then "Android" when "2" then "ios、Adnroid" end) systemtypeName
+		from
+			pub_sysversion,
+			pub_dictionary
+		where
+			pub_sysversion.platformtype = pub_dictionary.value
+			and pub_dictionary.type = "终端类型"
+			and pub_dictionary.status = 1
+			and pub_sysversion.status = 1
+			<if test='null != platformtype and "" != platformtype'>
+				and pub_sysversion.platformtype = #{platformtype}
+			</if>
+			<if test='null != curversion and "" != curversion'>
+				and pub_sysversion.curversion = #{curversion}
+			</if>
+			<if test='null != systemtype and "" != systemtype'>
+				and (pub_sysversion.systemtype = #{systemtype} or pub_sysversion.systemtype = 2)
+			</if>
+			<if test='null != startTime and "" != startTime'>
+				and date(pub_sysversion.releasedate) &gt;= #{startTime}
+			</if>
+			<if test='null != endTime and "" != endTime'>
+				and date(pub_sysversion.releasedate) &lt;= #{endTime}
+			</if>
+		order by pub_sysversion.updatetime desc
+		limit #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<select id="getPubSysversionCountByQuery" parameterType="PubSysversionQueryParam" resultType="int">
+		select
+			count(*)
+		from
+			pub_sysversion
+		where
+			pub_sysversion.status = 1
+			<if test='null != platformtype and "" != platformtype'>
+				and platformtype = #{platformtype}
+			</if>
+			<if test='null != curversion and "" != curversion'>
+				and curversion = #{curversion}
+			</if>
+			<if test='null != systemtype and "" != systemtype'>
+				and (systemtype = #{systemtype} or systemtype = 2)
+			</if>
+			<if test='null != startTime and "" != startTime'>
+				and date(releasedate) &gt;= #{startTime}
+			</if>
+			<if test='null != endTime and "" != endTime'>
+				and date(releasedate) &lt;= #{endTime}
+			</if>
+	</select>
+	
+	<!-- 根据id查询版本说明详情 -->
+	<select id="getPubSysversionById" parameterType="string" resultType="PubSysversion">
+		select
+			pub_sysversion.*,
+			pub_dictionary.text platformtypeName,
+			(case pub_sysversion.systemtype when "0" then "ios" when "1" then "Android" when "2" then "ios、Adnroid" end) systemtypeName
+		from
+			pub_sysversion,
+			pub_dictionary
+		where
+			pub_sysversion.platformtype = pub_dictionary.value
+			and pub_dictionary.type = "终端类型"
+			and pub_dictionary.status = 1
+			and pub_sysversion.status = 1
+			and pub_sysversion.id = #{id}
+	</select>
+	
+	<!-- 添加版本说明 -->
+	<insert id="insertPubSysversion" parameterType="PubSysversion">
+		insert into pub_sysversion(id, platformtype, systemtype, curversion, versionno, maxversionno, releasedate, changelog, createtime, updatetime, status)
+		values(#{id}, #{platformtype}, #{systemtype}, #{curversion}, #{versionno}, #{maxversionno}, #{releasedate}, #{changelog}, #{createtime}, #{updatetime}, #{status})
+	</insert>
+	
+	<update id="updatePubSysversion" parameterType="PubSysversion">
+		update pub_sysversion set id = #{id}
+		<if test='null != platformtype and "" != platformtype'>
+			,platformtype = #{platformtype}
+		</if>
+		<if test='null != systemtype and "" != systemtype'>
+			,systemtype = #{systemtype}
+		</if>
+		<if test='null != curversion and "" != curversion'>
+			,curversion = #{curversion}
+		</if>
+		<if test='null != versionno and "" != versionno'>
+			,versionno = #{versionno}
+		</if>
+		<if test='null != maxversionno'>
+			,maxversionno = #{maxversionno}
+		</if>
+		<if test='null != releasedate and "" != releasedate'>
+			,releasedate = #{releasedate}
+		</if>
+		<if test='null != changelog and "" != changelog'>
+			,changelog = #{changelog}
+		</if>
+		<if test='null != createtime and "" != createtime'>
+			,createtime = #{createtime}
+		</if>
+		<if test='null != updatetime and "" != updatetime'>
+			,updatetime = #{updatetime}
+		</if>
+		<if test='null != status and "" != status'>
+			,status = #{status}
+		</if>
+		where id = #{id}
+	</update>
+	
+</mapper>

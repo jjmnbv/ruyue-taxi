@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.UserMapper">
+	<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<insert id="createUser" parameterType="OpUser">
+		INSERT INTO op_user (
+			id,
+			operateid,
+			usertype,
+			account,
+			telphone,
+			email,
+			nickname,
+			userpassword,
+			registertime,
+			disablestate,
+			disablehis,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+			#{id},
+			#{operateid},
+			'0',
+			#{account},
+			#{telphone},
+			#{email},
+			#{nickname},
+			#{userpassword},
+			now(),
+			'0',
+			'0',
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<update id="updateUser"  parameterType="OpUser">
+		UPDATE op_user
+		SET 
+			<if test="userpassword!=null and userpassword!='' ">
+				op_user.userpassword = #{userpassword},
+			</if>
+			<if test="nickname!=null and nickname!='' ">
+				op_user.nickname = #{nickname},
+			</if>
+		 	<if test="telphone!=null and telphone!='' ">
+				op_user.telphone = #{telphone},
+			</if>
+			op_user.email = #{email},
+		 	op_user.updatetime = now()
+		WHERE
+			op_user.id = #{id}
+	</update>
+	
+	<select id="getUserListByQuery" resultType="OpUser" parameterType="UserQueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+			select 
+				h.*,(@rownum := @rownum + 1) AS rownum
+			    from (
+					SELECT
+						op_user.*,
+						(select roleid from op_roleuser where op_roleuser.userid = op_user.id and op_roleuser.status=1)as roleid,
+						(
+						SELECT
+							op_rolemanagement.roletype
+						FROM
+							op_rolemanagement,
+							op_roleuser
+						WHERE
+							op_rolemanagement. STATUS = 1
+						AND op_roleuser. STATUS = 1
+						AND op_rolemanagement.id = op_roleuser.roleid
+						and op_roleuser.userid = op_user.id
+						) as roletype,
+						ifnull((select rolename from op_rolemanagement where op_rolemanagement.id = roleid and op_rolemanagement.status=1),'---')as rolename
+					FROM
+						op_user
+					WHERE
+						op_user.status = 1
+					AND op_user.usertype != 1
+					<if test="nickname!=null and nickname!='' ">
+						AND op_user.nickname like "%"#{nickname}"%"
+					</if>
+					<if test="telphone!=null and telphone!='' ">
+						AND op_user.telphone like "%"#{telphone}"%"
+					</if>
+					<if test="disablestate!=null and disablestate!=''">
+						AND op_user.telphone = #{disablestate}
+					</if>
+				) h,
+				(SELECT @rownum := 0) r
+				<if test="roletype!=null and roletype!=''">
+					where h.roletype = #{roletype}
+				</if>
+				order by  CONVERT(h.rolename USING gbk ),h.updatetime DESC
+			)t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<select id="getUserListCountByQuery" resultType="int" parameterType="UserQueryParam">
+		select count(*) from (
+			select * from (
+				SELECT
+					op_user.*,
+					(select roleid from op_roleuser where op_roleuser.userid = op_user.id and op_roleuser.status=1)as roleid,
+					(
+					SELECT
+						op_rolemanagement.roletype
+					FROM
+						op_rolemanagement,
+						op_roleuser
+					WHERE
+						op_rolemanagement. STATUS = 1
+					AND op_roleuser. STATUS = 1
+					AND op_rolemanagement.id = op_roleuser.roleid
+					and op_roleuser.userid = op_user.id
+					) as roletype,
+					(select rolename from op_rolemanagement where op_rolemanagement.id = roleid and op_rolemanagement.status=1)as rolename
+				FROM
+					op_user
+				WHERE
+					op_user.status = 1
+				AND op_user.usertype != 1
+				<if test="nickname!=null and nickname!='' ">
+					AND op_user.nickname like "%"#{nickname}"%"
+				</if>
+				<if test="telphone!=null and telphone!='' ">
+					AND op_user.telphone like "%"#{telphone}"%"
+				</if>
+				<if test="disablestate!=null and disablestate!=''">
+					AND op_user.telphone = #{disablestate}
+				</if>
+			) h
+			<if test="roletype!=null and roletype!=''">
+				where h.roletype = #{roletype}
+			</if>
+		) t
+	</select>
+	
+	<select id="getPasswordByName" resultType="string" parameterType="string">
+		SELECT userpassword from op_user where account = #{loginname} and status=1
+	</select>
+	
+	<select id="getById" resultType="OpUser" parameterType="string">
+		select 
+		  op_user.*,
+		  (select op_roleuser.roleid from op_roleuser where op_roleuser.status=1 and op_roleuser.userid = op_user.id LIMIT 0,1) as roleid,
+		  (select op_rolemanagement.rolename from op_rolemanagement where op_rolemanagement.status=1 and op_rolemanagement.id = roleid LIMIT 0,1) as rolename,
+		  (select op_rolemanagement.roletype from op_rolemanagement where op_rolemanagement.status=1 and op_rolemanagement.id = roleid LIMIT 0,1) as roletype,
+		  (select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='运管角色类型' and pub_dictionary.value= roletype) as roletypecaption
+		 from op_user where op_user.id = #{id} and op_user.status = 1
+	</select>
+	
+	<update id="deleteUser"  parameterType="string">
+		UPDATE op_user
+		SET op_user.status = 2,
+		op_user.updatetime = now()
+		WHERE
+			op_user.id = #{id}
+	</update>
+	
+	<select id="getUserMenuList" resultType="MenuBar" parameterType="OpUser">
+		SELECT
+			t4.url,
+			t5.applicationdomain,
+			t6.menuname,
+			t6.cssclass,
+			t6.level,
+			t6.sequence,
+			t6.parentid,
+			t6.id
+		FROM
+			<if test="usertype != 1">
+			op_rolefunction t1,
+			op_user t2,
+			op_roleuser t3,
+			</if>
+			op_functionmanagement t4,
+			le_applicationmodule t5,
+			op_menu t6
+		WHERE
+		<if test="usertype != 1">
+			t2.account = #{account} and t3.roleid = t1.roleid
+		AND t2.id = t3.userid
+		AND t1.dynamicId = t4.id
+		AND t1.status = 1
+		AND t2.status = 1
+		AND t3.status = 1
+		AND
+		</if>
+			t4.applicationid = t5.id
+		AND t6.functionid = t4.id
+		AND t4.status = 1
+		AND t5.status = 1
+		AND t6.status = 1
+		UNION
+			SELECT
+				NULL,
+				NULL,
+				t7.menuname,
+				t7.cssclass,
+				t7.level,
+				t7.sequence,
+				t7.parentid,
+				t7.id
+			FROM
+				op_menu t7
+			WHERE
+				t7.id IN (
+					SELECT
+						t6.parentid
+					FROM
+						<if test="usertype != 1">
+						op_rolefunction t1,
+						op_user t2,
+						op_roleuser t3,
+						</if>
+						op_functionmanagement t4,
+						le_applicationmodule t5,
+						op_menu t6
+					WHERE
+					<if test="usertype != 1">
+						t2.account = #{account} and t3.roleid = t1.roleid
+					AND t2.id = t3.userid
+					AND t1.dynamicId = t4.id
+					AND t1.status = 1
+					AND t2.status = 1
+					AND t3.status = 1
+					AND
+					</if>
+						t4.applicationid = t5.id
+					AND t6.functionid = t4.id
+					AND t4.status = 1
+					AND t5.status = 1
+					AND t6.status = 1
+				)
+			AND t7.status = 1
+			ORDER BY
+				level,
+				sequence
+	</select>
+	
+	<select id="getRoleManagementByUserId"  parameterType="String" resultType="RoleManagement">
+		SELECT
+			*
+		FROM
+			op_rolemanagement,
+			op_roleuser
+		WHERE
+			op_rolemanagement. STATUS = 1
+		AND op_roleuser. STATUS = 1
+		AND op_roleuser.roleid = op_rolemanagement.id
+		AND op_roleuser.userid = #{userid}
+	</select>
+	
+	<select id="getValiableRoles" resultType="RoleManagement">
+		SELECT
+			*
+		FROM
+			op_rolemanagement
+		WHERE
+			op_rolemanagement. STATUS = 1
+	</select>
+	
+	<delete id="deleteRoleById" parameterType="String">
+		delete from op_roleuser where op_roleuser.userid = #{userid}
+	</delete>
+	
+	<insert id="addRole4User" parameterType="HashMap">
+		INSERT INTO op_roleuser (id, roleid, userid, STATUS)
+		VALUES
+		(
+			#{id},
+			#{roleid},
+			#{userid},
+			1
+		)
+	</insert>
+	
+	<!-- 获取字典中的运管端的角色类型 -->
+	<select id="getRolesInfo" resultType="HashMap">
+		SELECT
+			value as type,
+			text as name
+		FROM
+			pub_dictionary
+		WHERE
+			pub_dictionary. STATUS = 1
+		and pub_dictionary.type='运管角色类型'
+	</select>
+	
+	
+	<select id="getByLoginName" resultType="OpUser" parameterType="string">
+		select t.*, t1.roleid from op_user t left join op_roleuser t1 on t.id = t1.userid and t1.status=1
+		where t.account = #{loginname} and t.status=1
+	</select>
+	<!--  修改  密码错误次数 -->
+	<update id="updateLogontimes" parameterType="OpUser">
+		UPDATE op_user SET logontimes = #{logontimes},updatetime = now() where id = #{id}
+	</update>
+	<!-- 重置登陆次数 -->
+	<update id="resetLogontimes" parameterType="OpUser">
+		update op_user set updatetime=now(),logontimes=#{logontimes} where id = #{id}
+	</update>
+	
+	<!-- 添加登录日志 -->
+	<insert id="addUserLoginLog" parameterType="HashMap">
+		INSERT INTO op_userloginlog (
+			id,
+			userid,
+			ipaddr,
+			device,
+			version,
+			phonebrand,
+			phonemodel,
+			browserversion,
+			browsertype,
+			loginstatus,
+			loginmessage,
+			logintime,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{ipaddr},
+				#{device},
+				#{version},
+				#{phonebrand},
+				#{phonemodel},
+				#{browserversion},
+				#{browsertype},
+				#{loginstatus},
+				#{loginmessage},
+				now(),
+				now(),
+				now(),
+				1
+			)
+	</insert>
+</mapper>

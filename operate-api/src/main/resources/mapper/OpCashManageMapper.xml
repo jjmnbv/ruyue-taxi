@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpCashManageMapper">
+
+	<!-- 查询用户对应的机构权限 -->
+	<select id="getAccounts" parameterType="map" resultType="map">
+		<!-- 查询id和text -->
+
+		SELECT
+		DISTINCT
+		CASE t.usertype
+		WHEN '2' THEN t1.id
+		ELSE t2.id END AS id,
+		CASE t.usertype
+		WHEN '2' THEN t1.phone
+		ELSE t2.account END as text
+		FROM
+		pub_withdraw t
+		left JOIN pub_driver t1 on t1.id = t.userid and t1.`Status`='1'
+		left join pe_user t2 on t2.id = t.userid and t2.`status`='1'
+		WHERE
+		t. STATUS = 1
+		and t.platformtype =#{platformtype}
+		AND t.processstatus = #{processstatus}
+		and (t1.phone LIKE "%"#{account}"%" or t2.account like "%"#{account}"%")
+		limit 0,10
+	</select>
+
+	<select id="getNames" parameterType="map" resultType="map">
+		<!-- 查询id和text -->
+		SELECT
+			DISTINCT
+			t.creditcardname AS id,
+			t.creditcardname AS text
+		FROM
+			pub_withdraw t
+		WHERE
+			t.STATUS = 1
+		AND t.processstatus = #{processstatus}
+		AND t.platformtype = #{platformtype}
+		and t.creditcardname LIKE "%"#{creditcardname}"%"
+		and t.platformtype='0'
+		limit 0,10
+	</select>
+
+
+	<select id="getListCashCountByQuery" parameterType="CashManageQueryParam" resultType="int">
+		SELECT
+		count(t.id)
+		FROM
+		pub_withdraw t
+		WHERE
+		t. STATUS = 1
+
+		<include refid="listCashParam"/>
+
+ 	</select>
+	
+	<select id="listCashByQuery" parameterType="CashManageQueryParam" resultType="CashManagerIndexVo">
+		SELECT
+		t.id,
+		t.userid,
+		t.usertype,
+		t.amount,
+		t.creditcardnum,
+		t.creditcardname,
+		t.bankname,
+		t.applytime,
+		t1.phone as driverLogin,
+		t2.account as userLogin,
+	  	t.processresult,
+		t.processreason,
+		t.processtime,
+		t3.nickname as processusername,
+		(@rownum := @rownum + 1) AS rownum
+		FROM
+		pub_withdraw t
+		left JOIN pub_driver t1 on t1.id = t.userid and t1.`Status`='1'
+		left join pe_user t2 on t2.id = t.userid and t2.`status`='1'
+		left join op_user t3 on t3.id = t.processuser and t3.status='1',
+		(SELECT @rownum := 0) r
+		WHERE
+		t. STATUS = 1
+		<include refid="listCashParam"/>
+
+		limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+
+	<sql id="listCashParam">
+		and t.platformtype = #{platformtype}
+		<if test="id!=null and id!=''">
+			and t.id = #{id}
+		</if>
+		<if test="processstatus!=null and processstatus!=''">
+			and t.processstatus = #{processstatus}
+		</if>
+		<if test="leasescompanyid!=null and leasescompanyid!=''">
+			AND t.leasescompanyid=#{leasescompanyid}
+		</if>
+
+
+		<if test="usertype!=null and usertype!=''">
+			AND t.usertype=#{usertype}
+		</if>
+		<if test="userid!=null and userid!=''">
+			AND t.userid = #{userid}
+		</if>
+		<if test="creditcardname!=null and creditcardname!=''">
+			AND t.creditcardname =#{creditcardname}
+		</if>
+
+		<if test="processstatus=='0' or processstatus==0">
+			<if test="minUseTime != '' and minUseTime != null">
+				<![CDATA[
+            		 and t.applytime >= date_format(#{minUseTime}, '%Y-%m-%d')
+        		]]>
+			</if>
+
+			<if test="maxUseTime != '' and maxUseTime != null">
+				<![CDATA[
+              		and t.applytime < STR_TO_DATE(ADDDATE(#{maxUseTime},1),'%Y-%m-%d %H:%i:%s')
+        		]]>
+			</if>
+			order by t.applytime
+		</if>
+
+		<if test="processstatus=='1' or processstatus==1">
+			<if test="minUseTime != '' and minUseTime != null">
+				<![CDATA[
+            		 and t.processtime >= date_format(#{minUseTime}, '%Y-%m-%d')
+        		]]>
+			</if>
+
+			<if test="maxUseTime != '' and maxUseTime != null">
+				<![CDATA[
+              		and t.processtime < STR_TO_DATE(ADDDATE(#{maxUseTime},1),'%Y-%m-%d %H:%i:%s')
+        		]]>
+			</if>
+			order by t.processtime desc
+		</if>
+
+	</sql>
+	
+	<!-- 拒绝打款了 -->
+	<update id="cashReject" parameterType="Map">
+		UPDATE pub_withdraw
+		SET pub_withdraw.processstatus = '1',
+		 pub_withdraw.processtime = now(),
+		 pub_withdraw.updatetime = now(),
+		 pub_withdraw.processresult = '1',
+		 pub_withdraw.processreason=#{reson},
+		 pub_withdraw.processuser=#{processuserid}
+		where pub_withdraw.id=#{id}
+	</update>
+	
+	<!-- 确认打款了 -->
+	<update id="cashOk" parameterType="Map">
+		UPDATE pub_withdraw
+		SET pub_withdraw.processstatus = '1',
+		 pub_withdraw.processtime = now(),
+		 pub_withdraw.updatetime = now(),
+		 pub_withdraw.processresult = '0',
+		 pub_withdraw.processuser=#{processuserid}
+		where pub_withdraw.id=#{id}
+	</update>
+
+	<!-- 导出 -->
+	<select id="listExportData" parameterType="CashManageQueryParam" resultType="CashManagerExcelVo">
+		SELECT
+		t.userid,
+		t.usertype,
+		t.amount,
+		t.creditcardnum,
+		t.creditcardname,
+		t.bankname,
+		t.applytime,
+		t1.phone as driverLogin,
+		t2.account as userLogin
+		FROM
+		pub_withdraw t
+		left JOIN pub_driver t1 on t1.id = t.userid and t1.`Status`='1'
+		left join pe_user t2 on t2.id = t.userid and t2.`status`='1'
+		WHERE
+		t. STATUS = 1
+		and t.platformtype = #{platformtype}
+		and t.processstatus = #{processstatus}
+		<include refid="listCashParam"/>
+	</select>
+	
+	<!-- 导出数据多少的判断 -->
+	<select id="getListExportDataCount" resultType="int" parameterType="CashManageQueryParam">
+		SELECT
+		count(t.id)
+		FROM
+		pub_withdraw t
+		left JOIN pub_driver t1 on t1.id = t.userid and t1.`Status`='1'
+		left join pe_user t2 on t2.id = t.userid and t2.`status`='1'
+		WHERE
+		t. STATUS = 1
+		and t.platformtype = #{platformtype}
+		and t.processstatus = #{processstatus}
+		<include refid="listCashParam"/>
+	</select>
+
+	<!-- 根据操作的id查询需要通知的人员信息的集合 -->
+	<select id="getUserInfoByProcessId" parameterType="String" resultType="Map">
+		SELECT
+			t.usertype,
+			t.amount,
+			t.applytime,
+			t.bankname,
+			t.creditcardnum,
+			t.processstatus,
+			CASE t.usertype
+			WHEN '2' THEN
+				t1.phone
+			ELSE
+				t2.account
+			END AS account,
+			t.leasescompanyid,
+			t.userid
+		FROM
+			pub_withdraw t
+		left JOIN pub_driver t1 on t1.id = t.userid and t1.`Status`='1'
+		left join pe_user t2 on t2.id = t.userid and t2.`status`='1'
+		WHERE t.id=#{processid}
+		
+	</select>
+
+	<select id="getUserBlance4Driver" resultType="Map" parameterType="Map">
+		SELECT
+			*
+		FROM
+			org_driveraccount
+		WHERE
+			org_driveraccount. STATUS = 1
+		AND org_driveraccount.userid = #{userid}
+
+	</select>
+
+
+	<insert id="recoverMoney4Driver" parameterType="Map">
+		UPDATE pub_driveraccount
+		SET pub_driveraccount.balance = pub_driveraccount.balance+NULLIF(#{amount},0),pub_driveraccount.updatetime=now()
+		WHERE
+			pub_driveraccount.driverid=#{userid}
+		and pub_driveraccount.status=1
+	</insert>
+
+	<insert id="addRecord4Driver" parameterType="Map">
+		INSERT INTO pub_driverexpenses(
+				id,
+				driverid,
+				tradetype,
+				expensetype,
+				expensetime,
+				amount,
+				balance,
+				detailtype,
+				remark,
+				createtime,
+				updatetime,
+				creater,
+				updater,
+				status,
+				operateresult,
+				platformtype
+			)
+			select
+				#{recodeid},
+				#{userid},
+				'2',
+				'4',
+				now(),
+				#{amount},
+				pub_driveraccount.balance,
+				'0',
+				'提现受理失败，返还提现申请金额',
+				now(),
+				now(),
+				#{oper},
+				#{oper},
+				1,
+				'0',
+				'0'
+			from pub_driveraccount
+			WHERE
+				pub_driveraccount.driverid=#{userid}
+			and pub_driveraccount.status=1
+			limit 0,1
+	</insert>
+
+
+
+	<insert id="recoverMoney4PeUser" parameterType="Map">
+		UPDATE pe_useraccount t
+		SET t.balance = t.balance+NULLIF(#{amount},0),t.updatetime=now()
+		WHERE
+		t.userid=#{userid}
+		and t.status=1
+	</insert>
+
+	<insert id="addRecord4PeUser" parameterType="Map">
+		INSERT INTO pe_userexpenses(
+		id,
+		userid,
+		tradetype,
+		expensetype,
+		expensetime,
+		amount,
+		balance,
+		detailtype,
+		remark,
+		createtime,
+		updatetime,
+		creater,
+		updater,
+		status,
+		operateresult,
+		platformtype
+		)
+		select
+		#{recodeid},
+		#{userid},
+		'2',
+		'4',
+		now(),
+		#{amount},
+		t.balance,
+		'0',
+		'提现受理失败，返还提现申请金额',
+		now(),
+		now(),
+		#{oper},
+		#{oper},
+		1,
+		'0',
+		'0'
+		from pe_useraccount t
+		WHERE
+		t.userid=#{userid}
+		and t.status=1
+		limit 0,1
+	</insert>
+
+</mapper>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpShiftRulesMapper">
+
+	<!-- 获取可用的城市列表 -->
+	<select id="getVailableCitys" resultType="Map" parameterType="Map">
+		SELECT
+			op_shiftrules.city AS cityid,
+			pub_cityaddr.city AS cityname
+		FROM
+			op_shiftrules,
+			pub_cityaddr
+		WHERE
+			op_shiftrules. STATUS = 1
+		AND pub_cityaddr. STATUS = 1
+		AND op_shiftrules.city=pub_cityaddr.id
+	</select>
+	
+	<select id="getCitys" resultType="Map" parameterType="Map">
+		SELECT
+			op_shiftrules.city AS id,
+			pub_cityaddr.city AS text
+		FROM
+			op_shiftrules,
+			pub_cityaddr
+		WHERE
+			op_shiftrules. STATUS = 1
+		AND pub_cityaddr. STATUS = 1
+		AND op_shiftrules.city=pub_cityaddr.id
+		<if test="cityname!=null and cityname!='' ">
+			AND pub_cityaddr.city like "%"#{cityname}"%" 
+		</if>
+	</select>
+	
+	
+	<select id="getShiftRulesListByQuery" resultType="OpShiftRules" parameterType="OpShiftRulesQueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS rownum,
+					op_shiftrules.*,
+					pub_cityaddr.city as cityname
+				FROM
+					op_shiftrules,
+					pub_cityaddr,
+					(SELECT @rownum := 0) r
+				WHERE
+					op_shiftrules.status=1
+				and pub_cityaddr.status=1
+				AND pub_cityaddr.id=op_shiftrules.city
+				<if test="city!=null and city!='' ">
+					and op_shiftrules.city=#{city}
+				</if>
+				order by op_shiftrules.updatetime DESC
+			) t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<select id="getShiftRulesListCountByQuery" resultType="int" parameterType="OpShiftRulesQueryParam">
+		SELECT
+			count(*)
+		FROM
+			op_shiftrules,
+			pub_cityaddr
+		WHERE
+			op_shiftrules.status=1
+		and pub_cityaddr.status=1
+		AND pub_cityaddr.id=op_shiftrules.city
+		<if test="city!=null and city!='' ">
+			and op_shiftrules.city=#{city}
+		</if>
+	</select>
+	
+	<select id="getShiftRules" resultType="OpShiftRules" parameterType="Map">
+		select op_shiftrules.*,pub_cityaddr.city as cityname from op_shiftrules,pub_cityaddr where pub_cityaddr.status=1 and pub_cityaddr.id=op_shiftrules.city and op_shiftrules.status=1 and op_shiftrules.id=#{id}
+	</select>
+	
+	<select id="hasCity" resultType="boolean" parameterType="Map">
+		SELECT
+			CASE
+		WHEN count(*) > 0 THEN
+			1
+		ELSE
+			0
+		END AS flag
+		FROM
+			op_shiftrules
+		WHERE
+			op_shiftrules. STATUS = 1
+		AND op_shiftrules.city = #{city}
+		<if test="id!=null and id!='' ">
+			<![CDATA[
+				and op_shiftrules.id <> #{id}
+			]]>
+		</if>
+	</select>
+	
+	<select id="createShiftRules" parameterType="Map">
+		insert into op_shiftrules (
+			id,
+			autoshifttime,
+			manualshifttime,
+			city,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status
+		)
+		VALUES
+			(
+			#{id},
+			#{autoshifttime},
+			#{manualshifttime},
+			#{city},
+			now(),
+			now(),
+			#{creater},
+			#{updater},
+			1
+		)
+	</select>
+	
+	<select id="updateShiftRules" parameterType="Map">
+		update op_shiftrules SET op_shiftrules.city=#{city},op_shiftrules.autoshifttime=#{autoshifttime},op_shiftrules.manualshifttime=#{manualshifttime},op_shiftrules.updater=#{updater},op_shiftrules.updatetime=NOW() where op_shiftrules.status=1 and op_shiftrules.id=#{id}
+	</select>
+
+	<select id="getRules" parameterType="String" resultType="OpShiftRules">
+		SELECT * FROM op_shiftrules lsr WHERE lsr.`status` = 1
+		AND lsr.city = #{city}
+	</select>
+
+</mapper>

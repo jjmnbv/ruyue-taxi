@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpTaxiAccountRulesMapper">
+	<select id="citySelect" parameterType="Select2Param" resultType="Select2Entity">
+		SELECT
+			pca.id id,
+			pca.city text
+		FROM
+			op_taxiaccountrules otar
+		LEFT JOIN pub_cityaddr pca ON otar.city = pca.id
+		WHERE
+			otar.`status` = 1
+		<if test="sSearch != null and sSearch != ''">
+		AND pca.city LIKE '%${sSearch}%'
+		</if>
+	</select>
+	
+	<select id="search" parameterType="OpTaxiAccountRule" resultType="OpTaxiAccountRule">
+		SELECT
+			otar.*,
+			pca.city cityname
+		FROM
+			op_taxiaccountrules otar
+		LEFT JOIN pub_cityaddr pca ON otar.city = pca.id
+		WHERE
+			otar.`status` = 1
+		<if test="id != null and id !=''">
+		AND otar.id = #{id}
+		</if>
+		<if test="city != null and city !=''">
+		AND otar.city = #{city}
+		</if>
+		<if test="rulesstate != null and rulesstate !=''">
+		AND otar.rulesstate = #{rulesstate}
+		</if>
+		ORDER BY otar.updatetime DESC
+		LIMIT #{iDisplayStart},#{iDisplayLength}
+	</select>
+	
+	<select id="getTotalCount" parameterType="OpTaxiAccountRule" resultType="int">
+		SELECT
+			COUNT(otar.id)
+		FROM
+			op_taxiaccountrules otar
+		WHERE
+			otar.`status` = 1
+		<if test="city != null and city !=''">
+		AND otar.city = #{city}
+		</if>
+		<if test="rulesstate != null and rulesstate !=''">
+		AND otar.rulesstate = #{rulesstate}
+		</if>
+	</select>
+	
+	<select id="searchHistory" parameterType="OpTaxiAccountRule" resultType="OpTaxiAccountRuleModiLog">
+		SELECT
+			otcrm.*
+		FROM
+			op_taxiaccountrules_modilog otcrm
+		WHERE
+			otcrm.`status` = 1
+		AND otcrm.taxiaccountrulesid = #{id}
+		ORDER BY otcrm.updatetime DESC
+		LIMIT #{iDisplayStart},#{iDisplayLength}
+	</select>
+	
+	<select id="getHistoryTotalCount" parameterType="OpTaxiAccountRule" resultType="int">
+		SELECT
+			COUNT(otcrm.id)
+		FROM
+			op_taxiaccountrules_modilog otcrm
+		WHERE
+			otcrm.`status` = 1
+		AND otcrm.taxiaccountrulesid = #{id}
+	</select>
+	
+	<insert id="saveOrUpdate" parameterType="OpTaxiAccountRule">
+	INSERT INTO op_taxiaccountrules(
+		id,
+		city,
+		startprice,
+		startrange,
+		surcharge,
+		emptytravelrate,
+		standardrange,
+		renewalprice,
+		rulesstate,
+		createtime,
+		updatetime,
+		creater,
+		updater,
+		status
+	) VALUES(
+		#{id},
+		#{city},
+		#{startprice},
+		#{startrange},
+		#{surcharge},
+		#{emptytravelrate},
+		#{standardrange},
+		#{renewalprice},
+		#{rulesstate},
+		#{createtime},
+		#{updatetime},
+		#{creater},
+		#{updater},
+		#{status}
+	) ON DUPLICATE KEY UPDATE 
+	startprice=#{startprice},
+	startrange=#{startrange},
+	surcharge=#{surcharge},
+	emptytravelrate=#{emptytravelrate},
+	standardrange=#{standardrange},
+	renewalprice=#{renewalprice},
+	startrange=#{startrange},
+	updater=#{updater},
+	updatetime=#{updatetime}
+	</insert>
+	
+	<insert id="saveModiLog" parameterType="OpTaxiAccountRuleModilog">
+	INSERT INTO op_taxiaccountrules_modilog(
+		id,
+		taxiaccountrulesid,
+		city,
+		startprice,
+		startrange,
+		surcharge,
+		emptytravelrate,
+		standardrange,
+		renewalprice,
+		rulesstate,
+		operatetype,
+		createtime,
+		updatetime,
+		creater,
+		updater,
+		status
+	) VALUES(
+		#{id},
+		#{taxiaccountrulesid},
+		#{city},
+		#{startprice},
+		#{startrange},
+		#{surcharge},
+		#{emptytravelrate},
+		#{standardrange},
+		#{renewalprice},
+		#{rulesstate},
+		#{operatetype},
+		#{createtime},
+		#{updatetime},
+		#{creater},
+		#{updater},
+		#{status}
+	)
+	</insert>
+	
+	<update id="updateAll" parameterType="OpTaxiAccountRule">
+	UPDATE op_taxiaccountrules SET 
+		id=#{id},
+		city=#{city},
+		startprice=#{startprice},
+		startrange=#{startrange},
+		surcharge=#{surcharge},
+		emptytravelrate=#{emptytravelrate},
+		standardrange=#{standardrange},
+		renewalprice=#{renewalprice},
+		rulesstate=#{rulesstate},
+		createtime=#{createtime},
+		updatetime=#{updatetime},
+		creater=#{creater},
+		updater=#{updater},
+		status=#{status}
+	WHERE id=#{id}
+	</update>
+	<update id="updateRuleState" parameterType="OpTaxiAccountRule">
+	UPDATE op_taxiaccountrules SET 
+		rulesstate=#{rulesstate},
+		updatetime=#{updatetime},
+		updater=#{updater}
+	WHERE id=#{id}
+	</update>
+</mapper>

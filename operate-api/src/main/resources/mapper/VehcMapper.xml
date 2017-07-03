@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.VehcMapper">
+
+	<select id="getVehcById" parameterType="string" resultType="com.szyciov.param.VehcParam">
+
+	SELECT
+		vehcPlate plates ,
+		OrganizationShortName deptName
+	FROM
+		vw_eqpbytaxiinfo
+	WHERE
+		vehcId = #{vehcId}
+
+	</select>
+
+</mapper>

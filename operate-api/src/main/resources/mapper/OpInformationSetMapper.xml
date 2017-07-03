@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpInformationSetMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOpPlatformInfo" resultType="OpPlatformInfo">
+	    select op_platforminfo.*
+	    from op_platforminfo
+	    where op_platforminfo.status = 1
+	</select>
+	
+	<select id="getOpPlatformInfoCount" resultType="int">
+	    select count(*)
+	    from op_platforminfo
+	    where op_platforminfo.status = 1
+	</select>
+	
+	<insert id="createOpPlatformInfo" parameterType="OpPlatformInfo">
+	    insert into op_platforminfo(id,companyname,companyshortname,city,servcietel,wechatpayaccount,wechatappid,wechatmerchantno,wechatsecretkey,alipayaccount,alipayappid,alipayprivatekey,alipaypublickey,alipaypartnerid,alipaypartnerprivatekey,alipaypartnerpublickey,wechatstatus,alipaystatus,createtime,updatetime,status,
+	      driverwechatstatus,driveralipaystatus,driverwechatpayaccount,driverwechatappid,driverwechatmerchantno,driverwechatsecretkey,driveralipayaccount,driveralipayappid,driveralipayprivatekey,driveralipaypublickey,driveralipaypartnerid,driveralipaypartnerpublickey,driveralipaypartnerprivatekey)
+	    values(#{id},#{companyname},#{companyshortname},#{city},#{servcieTel},#{wechatPayAccount},#{wechatAppId},#{wechatMerchantNo},#{wechatSecretKey},#{aliPayAccount},#{aliPayAppId},#{aliPayPrivateKey},#{aliPayPublicKey},#{aliPayPartnerId},#{aliPayPartnerPrivateKey},#{aliPayPartnerPublicKey},#{wechatstatus},#{alipaystatus},now(),now(),1,
+	       #{driverwechatstatus},#{driveralipaystatus},#{driverwechatpayaccount},#{driverwechatappid},#{driverwechatmerchantno},#{driverwechatsecretkey},#{driveralipayaccount},#{driveralipayappid},#{driveralipayprivatekey},#{driveralipaypublickey},#{driveralipaypartnerid},#{driveralipaypartnerpublickey},#{driveralipaypartnerprivatekey});
+	</insert>
+
+	<update id="updateOpPlatformInfo" parameterType="OpPlatformInfo">
+		update op_platforminfo
+		set servcietel = #{servcieTel},wechatpayaccount = #{wechatPayAccount},wechatappid = #{wechatAppId},wechatmerchantno = #{wechatMerchantNo},wechatsecretkey = #{wechatSecretKey},alipayaccount = #{aliPayAccount},alipayappid = #{aliPayAppId},alipayprivatekey = #{aliPayPrivateKey},alipaypublickey = #{aliPayPublicKey},alipaypartnerid = #{aliPayPartnerId},alipaypartnerprivatekey = #{aliPayPartnerPrivateKey},alipaypartnerpublickey = #{aliPayPartnerPublicKey},updatetime = now()
+		where id = #{id}
+		  and status = 1
+	</update>
+    <update id="updateDriverOpPlatformInfo" parameterType="OpPlatformInfo">
+        update op_platforminfo
+        set servcietel = #{servcieTel},
+        driverwechatpayaccount = #{driverwechatpayaccount},
+        driverwechatappid = #{driverwechatappid},
+        driverwechatmerchantno = #{driverwechatmerchantno},
+        driverwechatsecretkey = #{driverwechatsecretkey},
+        driveralipayaccount = #{driveralipayaccount},
+        driveralipayappid = #{driveralipayappid},
+        driveralipayprivatekey = #{driveralipayprivatekey},
+        driveralipaypublickey = #{driveralipaypublickey},
+        driveralipaypartnerid = #{driveralipaypartnerid},
+        driveralipaypartnerpublickey = #{driveralipaypartnerpublickey},
+        driveralipaypartnerprivatekey = #{driveralipaypartnerprivatekey},
+        updatetime = now()
+        where id = #{id}
+        and status = 1
+    </update>
+	<insert id="createServcietel" parameterType="OpPlatformInfo">
+	    insert into op_platforminfo(id,servcietel,companyname,companyshortname,city,createtime,updatetime,status)
+	    values(#{id},#{servcieTel},#{companyname},#{companyshortname},#{city},now(),now(),1);
+	</insert>
+	<insert id="insertLeLeasescompany" parameterType="OpPlatformInfo">
+	    insert into le_leasescompany(id,phone,name,shortname,city,createtime,updatetime,status,platformtype,tocstate )
+	    values(#{id},#{servcieTel},#{companyname},#{companyshortname},#{city},now(),now(),2,0,2);
+	</insert>
+	<update id="updateServcietel" parameterType="OpPlatformInfo">
+		update op_platforminfo
+		set servcietel = #{servcieTel},companyname = #{companyname},companyshortname = #{companyshortname},city = #{city},updatetime = now()
+		where id = #{id}
+		  and status = 1
+	</update>
+	<update id="updateLeLeasescompany" parameterType="OpPlatformInfo">
+		update le_leasescompany
+		set phone = #{servcieTel},name = #{companyname},shortname = #{companyshortname},city = #{city},updatetime = now()
+		where id = #{id}
+	</update>
+	<select id="getLeLeasescompany" resultType="int">
+	    select count(*)
+	    from le_leasescompany
+	    where le_leasescompany.id = #{id}
+	</select> 
+	<select id="getCityId" resultType="String" parameterType="String">
+	   select id from pub_cityaddr where pub_cityaddr.city = #{city}
+	</select>
+	<select id="getCityName" resultType="OpPlatformInfo" parameterType="OpPlatformInfo">
+	   select city from pub_cityaddr where pub_cityaddr.id = #{city}
+	</select>
+	<!-- 更新运管端数据 -->
+	<update id="editOpPlatformInfo" parameterType="OpPlatformInfo">
+		update op_platforminfo set updatetime = now()
+		<if test='null != companyname and "" != companyname'>
+			,companyname = #{companyname}
+		</if>
+		<if test='null != companyshortname and "" != companyshortname'>
+			,companyshortname = #{companyshortname}
+		</if>
+		<if test='null != city and "" != city'>
+			,city = #{city}
+		</if>
+		<if test='null != servcieTel and "" != servcieTel'>
+			,servcietel = #{servcieTel}
+		</if>
+		<if test='null != wechatstatus and "" != wechatstatus'>
+			,wechatstatus = #{wechatstatus}
+		</if>
+		<if test='null != alipaystatus and "" != alipaystatus'>
+			,alipaystatus = #{alipaystatus}
+		</if>
+		<if test='null != wechatPayAccount and "" != wechatPayAccount'>
+			,wechatpayaccount = #{wechatPayAccount}
+		</if>
+		<if test='null != wechatAppId and "" != wechatAppId'>
+			,wechatappid = #{wechatAppId}
+		</if>
+		<if test='null != wechatMerchantNo and "" != wechatMerchantNo'>
+			,wechatmerchantno = #{wechatMerchantNo}
+		</if>
+		<if test='null != wechatSecretKey and "" != wechatSecretKey'>
+			,wechatsecretkey = #{wechatSecretKey}
+		</if>
+		<if test='null != aliPayAccount and "" != aliPayAccount'>
+			,alipayaccount = #{aliPayAccount}
+		</if>
+		<if test='null != aliPayAppId and "" != aliPayAppId'>
+			,alipayappid = #{aliPayAppId}
+		</if>
+		<if test='null != aliPayPrivateKey and "" != aliPayPrivateKey'>
+			,alipayprivatekey = #{aliPayPrivateKey}
+		</if>
+		<if test='null != aliPayPublicKey and "" != aliPayPublicKey'>
+			,alipaypublickey = #{aliPayPublicKey}
+		</if>
+		<if test='null != aliPayPartnerId and "" != aliPayPartnerId'>
+			,alipaypartnerid = #{aliPayPartnerId}
+		</if>
+		<if test='null != aliPayPartnerPublicKey and "" != aliPayPartnerPublicKey'>
+			,alipaypartnerpublickey = #{aliPayPartnerPublicKey}
+		</if>
+		<if test='null != aliPayPartnerPrivateKey and "" != aliPayPartnerPrivateKey'>
+			,alipaypartnerprivatekey = #{aliPayPartnerPrivateKey}
+		</if>
+		<if test='null != wechatstatus and "" != wechatstatus'>
+			,wechatstatus = #{wechatstatus}
+		</if>
+		<if test='null != alipaystatus and "" != alipaystatus'>
+			,alipaystatus = #{alipaystatus}
+		</if>
+        <if test='null != driveralipaystatus and "" != driveralipaystatus'>
+            ,driveralipaystatus = #{driveralipaystatus}
+        </if>
+        <if test='null != driverwechatstatus and "" != driverwechatstatus'>
+            ,driverwechatstatus = #{driverwechatstatus}
+        </if>
+        <if test='null != driverwechatpayaccount and "" != driverwechatpayaccount'>
+            ,driverwechatpayaccount = #{driverwechatpayaccount}
+        </if>
+        <if test='null != driverwechatappid and "" != driverwechatappid'>
+            ,driverwechatappid = #{driverwechatappid}
+        </if>
+        <if test='null != driverwechatmerchantno and "" != driverwechatmerchantno'>
+            ,driverwechatmerchantno = #{driverwechatmerchantno}
+        </if>
+        <if test='null != driverwechatsecretkey and "" != driverwechatsecretkey'>
+            ,driverwechatsecretkey = #{driverwechatsecretkey}
+        </if>
+        <if test='null != driveralipayaccount and "" != driveralipayaccount'>
+            ,driveralipayaccount = #{driveralipayaccount}
+        </if>
+        <if test='null != driveralipayappid and "" != driveralipayappid'>
+            ,driveralipayappid = #{driveralipayappid}
+        </if><if test='null != driveralipayprivatekey and "" != driveralipayprivatekey'>
+        ,driveralipayprivatekey = #{driveralipayprivatekey}
+        </if>
+        <if test='null != driveralipaypublickey and "" != driveralipaypublickey'>
+            ,driveralipaypublickey = #{driveralipaypublickey}
+        </if>
+        <if test='null != driveralipaypartnerid and "" != driveralipaypartnerid'>
+            ,driveralipaypartnerid = #{driveralipaypartnerid}
+        </if>
+        <if test='null != driveralipaypartnerpublickey and "" != driveralipaypartnerpublickey'>
+            ,driveralipaypartnerpublickey = #{driveralipaypartnerpublickey}
+        </if>
+        <if test='null != driveralipaypartnerprivatekey and "" != driveralipaypartnerprivatekey'>
+            ,driveralipaypartnerprivatekey = #{driveralipaypartnerprivatekey}
+        </if>
+	</update>
+	
+	<!-- 添加支付宝历史更新记录 -->
+	<select id="insertWechatAccountHistory" parameterType="PubWechataccountHistory">
+		insert into pub_wechataccount_history(id, companyid, wechataccount, wechatappid, wechatmerchantno, wechatsecretkey, createtime, updatetime, creater, updater, status, platformtype,usertype)
+		values(#{id}, #{companyid}, #{wechataccount}, #{wechatappid}, #{wechatmerchantno}, #{wechatsecretkey}, now(), now(), #{creater}, #{updater}, 1, #{platformtype},#{usertype})
+	</select>
+	
+	<!-- 添加微信历史更新记录 -->
+	<select id="insertAlipayAccountHistory" parameterType="PubAlipayaccountHistory">
+		insert into pub_alipayaccount_history(id, companyid, alipayaccount, alipayappid, alipayprivatekey, alipaypublickey, alipaypartnerid, alipaypartnerpublickey, alipaypartnerprivatekey, createtime, updatetime, creater, updater, status, platformtype,usertype)
+		values(#{id}, #{companyid}, #{alipayaccount}, #{alipayappid}, #{alipayprivatekey}, #{alipaypublickey}, #{alipaypartnerid}, #{alipaypartnerpublickey}, #{alipaypartnerprivatekey}, now(), now(), #{creater}, #{updater}, 1, #{platformtype},#{usertype})
+	</select>
+
+	<!-- 添加支付宝历史更新记录 -->
+	<select id="insertDriverWechatAccountHistory" parameterType="PubWechataccountHistory">
+		insert into pub_wechataccount_history(id, companyid, wechataccount, wechatappid, wechatmerchantno, wechatsecretkey, createtime, updatetime, creater, updater, status, platformtype,usertype)
+		values(#{id}, #{companyid}, #{wechataccount}, #{wechatappid}, #{wechatmerchantno}, #{wechatsecretkey}, now(), now(), #{creater}, #{updater}, 1, #{platformtype},#{usertype})
+	</select>
+
+	<!-- 添加微信历史更新记录 -->
+	<select id="insertDriverAlipayAccountHistory" parameterType="PubAlipayaccountHistory">
+		insert into pub_alipayaccount_history(id, companyid, alipayaccount, alipayappid, alipayprivatekey, alipaypublickey, alipaypartnerid, alipaypartnerpublickey, alipaypartnerprivatekey, createtime, updatetime, creater, updater, status, platformtype,usertype)
+		values(#{id}, #{companyid}, #{alipayaccount}, #{alipayappid}, #{alipayprivatekey}, #{alipaypublickey}, #{alipaypartnerid}, #{alipaypartnerpublickey}, #{alipaypartnerprivatekey}, now(), now(), #{creater}, #{updater}, 1, #{platformtype},#{usertype})
+	</select>
+
+</mapper>

@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.PubVehicleMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 增加 -->
+	<insert id="createPubVehicle" parameterType="PubVehicle">
+		insert into pub_vehicle(id,leasescompanyid,vehclineid,platenoprovince,platenocity,plateno,vin,color,city,loads,CreateTime,UpdateTime,Creater,Updater,Status,vehicletype,vehiclestatus,platformtype,boundstate)
+		values (#{id},#{leasesCompanyId},#{vehclineId},#{plateNoProvince},#{plateNoCity},#{plateNo},#{vin},#{color},#{city},#{loads},now(),now(),#{creater},#{updater},1,#{vehicleType},0,#{platformType},0)
+	</insert>
+	<!-- 修改 -->
+	<update id="updatePubVehicle" parameterType="PubVehicle">
+		UPDATE pub_vehicle set leasescompanyid=#{leasesCompanyId},vehclineid=#{vehclineId},platenoprovince=#{plateNoProvince},
+		platenocity=#{plateNoCity},plateno=#{plateNo},vin=#{vin},color=#{color},city=#{city},loads=#{loads},updateTime=now(),
+		Updater=#{updater},driverid=#{driverId},vehiclestatus=#{vehicleStatus} where id = #{id}
+	</update>
+	<!-- 检查 车牌、车架号 是否重复 新增、修改用到 -->
+	<select id="checkPubVehicle" parameterType="PubVehicle" resultType="int">
+		SELECT
+		COUNT(id)
+		FROM
+		pub_vehicle
+		WHERE
+		`Status` = 1
+		<if test="(plateNoProvince !=null and plateNoProvince !='' and plateNoCity !=null and plateNoCity !='' and plateNo !=null and plateNo !='') or (vin !=null and vin !='')">
+			AND (( platenoprovince = #{plateNoProvince} AND platenocity = #{plateNoCity} AND plateno = #{plateNo} ) OR vin = #{vin})
+		</if>
+		<if test="id != null and id !='' ">
+			AND id != #{id}
+		</if>
+		<if test="showPlateNo != null and showPlateNo !='' ">
+			AND getPlatenoStr(platenoprovince,platenocity,plateno) = #{showPlateNo}
+		</if>
+		<!-- 新增所属平台的过滤条件 -->
+		and platformtype = #{platformType}
+	</select>
+
+	<!-- 删除 -->
+	<update id="deletePubVehicle" parameterType="string">
+		UPDATE pub_vehicle set pub_vehicle.`Status` = 2 WHERE pub_vehicle.id=#{id}
+	</update>
+
+	<select id="getPubVehicleListByQuery" parameterType="VehicleIndexQueryParam" resultType="VehicleIndexVo">
+ 		SELECT
+ 		t.id,
+		t.vehclineid,
+		CONCAT(t2.`Name`," ",t1.`name`) AS brandCars,
+		getPlatenoStr(t.platenoprovince,t.platenocity,t.plateno) as platenoStr,
+		t.vin,
+		t.color,
+		getCityStr(t.city) as cityStr,
+		t_driver.workstatus,
+		t.boundstate,
+		t4.`name` AS serviceCars,
+		t.loads,
+		t.vehicletype,
+		t.vehiclestatus
+		FROM
+		pub_vehicle t
+		LEFT JOIN pub_driver t_driver on t_driver.id = t.driverid
+		LEFT JOIN pub_vehcline t1 ON t.vehclineid = t1.Id and t1.`Status`='1' and t1.platformtype = #{platformtype}
+		LEFT JOIN pub_vehcbrand t2 ON t1.vehcBrandID = t2.Id and t2.`Status`='1' and t2.platformtype =#{platformtype}
+		LEFT JOIN op_vehcline_models_ref t3 ON t.vehclineid = t3.vehclineid and t3.`Status` ='1'
+		LEFT JOIN op_vehiclemodels t4 ON t4.Id = t3.vehiclemodelsid and t4.`Status` = '1'
+		WHERe t.platformtype = #{platformtype} and t.`Status`='1'
+		and t.vehclineid = t1.Id
+		<include refid="PubVehicleListByQueryParam"/>
+		ORDER BY
+		CONVERT (getCityStr(t.city) USING gbk) COLLATE gbk_chinese_ci,
+		t.vehicletype DESC,
+		(CASE t.`vehicletype`
+		WHEN  0 THEN t4.level
+		ELSE 1
+		END)asc,
+		(CASE t_driver.`workstatus`
+		WHEN  2 THEN 1
+		WHEN  0 THEN 2
+		WHEN  1 THEN 3
+		ELSE 0
+		END)
+		LIMIT #{iDisplayStart} ,#{iDisplayLength}
+	</select>
+	<select id="getPubVehicleListCountByQuery" parameterType="VehicleIndexQueryParam" resultType="int">
+
+		SELECT
+		count(t.id)
+		FROM
+		pub_vehicle t
+		LEFT JOIN pub_driver t_driver on t_driver.id = t.driverid
+		LEFT JOIN pub_vehcline t1 ON t.vehclineid = t1.Id and t1.`Status`='1' and t1.platformtype = #{platformtype}
+		LEFT JOIN pub_vehcbrand t2 ON t1.vehcBrandID = t2.Id and t2.`Status`='1' and t2.platformtype =#{platformtype}
+		LEFT JOIN op_vehcline_models_ref t3 ON t.vehclineid = t3.vehclineid and t3.`Status` ='1'
+		LEFT JOIN op_vehiclemodels t4 ON t4.Id = t3.vehiclemodelsid and t4.`Status` = '1'
+		WHERe t.platformtype = #{platformtype} and t.`Status`='1'
+		and t.vehclineid = t1.Id
+		<include refid="PubVehicleListByQueryParam"/>
+	</select>
+
+	<sql id="PubVehicleListByQueryParam">
+		<if test="id!=null and id!=''">
+			and t.id = #{id}
+		</if>
+ 		<if test="vehicletype!=null and vehicletype!=''">
+			and t.vehicletype = #{vehicletype}
+		</if>
+		<if test="city!=null and city!=''">
+			and t.city = #{city}
+		</if>
+		<if test="platenoStr!=null and platenoStr!=''">
+			and getPlatenoStr(t.platenoprovince,t.platenocity,t.plateno) like "%"#{platenoStr}"%"
+		</if>
+		<if test="workstatus!=null and workstatus!=''">
+			and t_driver.workstatus = #{workstatus}
+		</if>
+		<if test="boundstate!=null and boundstate!=''">
+			and t.boundstate = #{boundstate}
+		</if>
+		<if test="vehiclestatus!=null and vehiclestatus!=''">
+			and t.vehiclestatus = #{vehiclestatus}
+		</if>
+		<if test="brandCars!=null and brandCars!=''">
+			and CONCAT(t2.`Name`," ",t1.`name`) = #{brandCars}
+		</if>
+		<if test="serviceCars!=null and serviceCars!=''">
+			and t4.id = #{serviceCars}
+			and t.vehicletype = '0'
+		</if>
+	</sql>
+	<!-- 首页加载品牌车系 -->
+	<select id="getBrandCars" resultType="map" parameterType="PubVehicle">
+		SELECT
+		pub_vehcline.id AS id,
+		CONCAT(
+		CONCAT(pub_vehcbrand.`Name`, ' '),
+		pub_vehcline.`name`
+		) AS text
+		FROM
+		pub_vehcline,
+		pub_vehcbrand
+ 		WHERE
+		pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		AND pub_vehcline.`Status` = 1
+		AND pub_vehcbrand.`Status` = 1
+		<!-- 新增所属平台的过滤条件 -->
+ 		and pub_vehcbrand.platformtype = #{platformType}
+		and pub_vehcline.platformtype = #{platformType}
+		<if test="id != null and id != '' ">
+			and CONCAT(
+			CONCAT(pub_vehcbrand.`Name`, ' '),
+			pub_vehcline.`name`
+			) like "%"#{id}"%"
+		</if>
+		GROUP BY id
+		ORDER BY convert(CONCAT(
+		CONCAT(pub_vehcbrand.`Name`, ' '),
+		pub_vehcline.`name`
+		) using gbk) ASC
+	</select>
+	<!-- 得到服务车型 -->
+	<select id="getServiceCars" resultType="PubVehicle" parameterType="string">
+		<!--SELECT-->
+		<!--op_vehiclemodels.`name` AS serviceCars-->
+		<!--FROM-->
+		<!--pub_vehicle,-->
+		<!--pub_vehcline,-->
+		<!--op_vehcline_models_ref,-->
+		<!--op_vehiclemodels-->
+		<!--WHERE-->
+		<!--pub_vehicle.vehclineid=pub_vehcline.Id-->
+		<!--AND op_vehcline_models_ref.vehclineid=pub_vehcline.Id-->
+		<!--AND op_vehcline_models_ref.vehiclemodelsid=op_vehiclemodels.Id-->
+		<!--AND pub_vehicle.`Status` = 1-->
+		<!--AND pub_vehcline.`Status` = 1-->
+		<!--AND op_vehcline_models_ref.`Status` = 1-->
+		<!--AND op_vehiclemodels.`Status` = 1-->
+		<!--&lt;!&ndash; 新增所属平台的过滤条件 &ndash;&gt;-->
+		<!--and pub_vehicle.platformtype = #{platformType}-->
+		<!--and pub_vehcline.platformtype = #{platformType}-->
+		<!--GROUP BY op_vehiclemodels.`name`-->
+		<!--ORDER BY op_vehiclemodels.`level`-->
+
+		SELECT
+		op_vehiclemodels.`name` AS serviceCars,
+		op_vehiclemodels.`id` AS id
+		FROM
+		op_vehiclemodels
+		WHERE
+		  op_vehiclemodels.`Status` = 1
+		GROUP BY op_vehiclemodels.`name`
+		ORDER BY op_vehiclemodels.`level`
+	</select>
+	<!-- 得到城市  -->
+	<select id="getCity" resultType="City" parameterType="string">
+		SELECT DISTINCT t1.id, t1.city
+		FROM pub_vehicle t
+		left join pub_cityaddr t1 on t1.id = t.city	and t1.`status`='1'
+		where t.`Status`='1'
+		<if test="queryText!=null and queryText!=''">
+			and t1.city  like "%"#{queryText}"%"
+		</if>
+		<!-- 新增所属平台的过滤条件 -->
+		and t.platformtype = #{platformType}
+	</select>
+	<!-- 根据id查询一条数据 -->
+	<select id="getById" parameterType="string" resultType="PubVehicle">
+		SELECT
+		pub_vehicle.*, CONCAT(
+		CONCAT(pub_vehcbrand.`Name`, ' '),
+		pub_vehcline.`name`
+		) AS brandCars,
+		(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1) AS plateNoProvinceName,
+		(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1) AS plateNoCityName,
+		(SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city) AS cityName,
+		(SELECT pub_cityaddr.markid FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city) AS citymarkid
+		FROM
+		pub_vehicle,
+		pub_vehcline,
+		pub_vehcbrand
+		WHERE
+		pub_vehicle.id = #{id}
+		AND pub_vehicle.vehclineid = pub_vehcline.Id
+		AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+	</select>
+	<!-- 拿到城市字典表所有数据 -->
+	<select id="getPubCityaddr" resultType="City">
+		SELECT * FROM pub_cityaddr where `status`=1
+	</select>
+	<!-- 拿到车牌省 -->
+	<select id="getPlateNoProvince" resultType="Dictionary">
+		SELECT * FROM pub_dictionary WHERE pub_dictionary.type="车牌省" AND pub_dictionary.`status`=1
+	</select>
+	<!-- 根据车牌省的id 关联查到下面的市 -->
+	<select id="getPlateNoCity" resultType="Dictionary" parameterType="string">
+		SELECT
+		*
+		FROM
+		pub_dictionary AS p
+		WHERE
+		p.parentid = (
+		SELECT
+		id
+		FROM
+		pub_dictionary
+		WHERE
+		pub_dictionary.type = "车牌省"
+		AND pub_dictionary.`status` = 1
+		AND pub_dictionary.`value` = #{id}
+		)
+	</select>
+	<!-- 导出 -->
+	<select id="exportExcel" parameterType="VehicleIndexQueryParam" resultType="VehicleExportVo">
+		SELECT
+		t.id,
+		t.vehicletype,
+		t4.`name` AS serviceCars,
+		t.boundstate,
+		t.vehiclestatus,
+		getPlatenoStr(t.platenoprovince,t.platenocity,t.plateno) as platenoStr,
+		CONCAT(t2.`Name`," ",t1.`name`) AS brandCars,
+		t.vin,
+		t.color,
+		t.loads,
+		getCityStr(t.city) as cityStr
+		FROM
+		pub_vehicle t
+		LEFT JOIN pub_driver t_driver on t_driver.id = t.driverid
+		LEFT JOIN pub_vehcline t1 ON t.vehclineid = t1.Id and t1.`Status`='1' and t1.platformtype = #{platformtype}
+		LEFT JOIN pub_vehcbrand t2 ON t1.vehcBrandID = t2.Id and t2.`Status`='1' and t2.platformtype =#{platformtype}
+		LEFT JOIN op_vehcline_models_ref t3 ON t.vehclineid = t3.vehclineid and t3.`Status` ='1'
+		LEFT JOIN op_vehiclemodels t4 ON t4.Id = t3.vehiclemodelsid and t4.`Status` = '1'
+		WHERe t.platformtype = #{platformtype} and t.`Status`='1'
+		and t.vehclineid = t1.Id
+		<include refid="PubVehicleListByQueryParam"/>
+		ORDER BY
+		CONVERT (
+		getCityStr(t.city) USING gbk
+		) COLLATE gbk_chinese_ci,
+		t.vehicletype DESC,
+		CONVERT((t4.`name`)USING gbk)COLLATE gbk_chinese_ci,t_driver.`workstatus`  DESC
+	</select>
+	<select id="getPlateCode" resultType="PubDictionary" parameterType="string">
+		SELECT
+		pub_dictionary.VALUE,
+		pub_dictionary.id
+		FROM
+		pub_dictionary
+		WHERE
+		pub_dictionary.type = "车牌省"
+		AND pub_dictionary. STATUS = 1
+		AND pub_dictionary.text = #{plateOne}
+	</select>
+	<select id="getPlateCity" resultType="string" parameterType="PubDictionary">
+		SELECT
+		pub_dictionary.VALUE
+		FROM
+		pub_dictionary
+		WHERE
+		pub_dictionary.type = "车牌市"
+		AND pub_dictionary. STATUS = 1
+		AND pub_dictionary.text = #{text}
+		AND pub_dictionary.parentid = #{id}
+	</select>
+	<select id="getCityCode" resultType="PubCityAddr" parameterType="string">
+		SELECT
+		pub_cityaddr.id
+		FROM
+		pub_cityaddr
+		WHERE
+		pub_cityaddr.city like #{city}"市"
+		or pub_cityaddr.city = #{city}
+		AND pub_cityaddr. STATUS = 1
+	</select>
+	<select id="getVehclineId" resultType="string" parameterType="PubVehicle">
+
+		SELECT
+		pub_vehcline.id
+		FROM
+		pub_vehcbrand,
+		pub_vehcline
+		WHERE
+		pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		AND CONCAT(pub_vehcbrand.`Name`,' ',pub_vehcline.`name`) = #{brandCars}
+		<!-- 新增所属平台的过滤条件 -->
+		and pub_vehcline.platformtype = #{platformType}
+		and pub_vehcbrand.platformtype = #{platformType}
+		and pub_vehcline.status = '1'
+	</select>
+	<!-- 根据车辆id 查询经营区域 -->
+	<select id="getVehicleidByVehicleScope" resultType="PubVehicleScope" parameterType="string">
+		SELECT
+		pub_vehicle_scope.*, (
+		SELECT
+		city
+		FROM
+		pub_cityaddr
+		WHERE
+		pub_cityaddr.id = pub_vehicle_scope.cityid
+		AND pub_cityaddr.`status` = 1
+		) AS cityName
+		FROM
+		pub_vehicle_scope
+		WHERE
+		pub_vehicle_scope.vehicleid = #{id}
+		AND pub_vehicle_scope.`Status` = 1
+	</select>
+	<select id="listVehicleAndBindInfo" resultType="VehicleQueryDto" parameterType="QueryParam">
+		select t1.id,getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) as platenoStr,
+		getCityStr(t1.city) as cityStr,(@rownum := @rownum + 1) AS rownum,
+		t2.workstatus as driverState
+		from pub_vehicle t1
+		left join pub_driver t2 on t1.driverid = t2.id,
+		(SELECT @rownum := 0) r
+		where t1.platformtype = #{platformtype}
+		and t1.status ='1'
+		<include refid="queryParam"></include>
+		limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+
+	<sql id="queryParam">
+		<if test="leasesCompanyId != null and leasesCompanyId != ''">
+			and t1.leasescompanyid = #{leasesCompanyId}
+		</if>
+		<if test="vehicleId !=null  and vehicleId !=''">
+			and t1.id = #{vehicleId}
+		</if>
+
+		<if test="vehicletype != null  and vehicletype !=''">
+			and t1.vehicletype = #{vehicletype}
+		</if>
+
+		<if test="queryPlateNo != '' and queryPlateNo != null">
+			and getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) like "%"#{queryPlateNo}"%"
+		</if>
+
+		<if test="driverid != null  and driverid !=''">
+			and t1.id in (select a.vehicleid from pub_driver_vehicle_ref a where a.driverid = #{driverid} and a.vehicleid = t1.id)
+		</if>
+
+		<choose>
+			<when test="driverState =='-1'.toString()">
+				and t1.boundstate !='1'
+			</when>
+			<when test="driverState =='2'.toString()">
+				 /**下线状态需判断 车辆状态为维修且当班司机为空；或当班司机状态为下线*/
+				 and ((t1.vehiclestatus ='1' and t1.driverid ='')
+				 or t2.workstatus = #{driverState})
+			</when>
+			<when test="driverState != null and driverState !=''">
+				and t2.workstatus = #{driverState}
+			</when>
+
+			<otherwise>
+				and 1=1
+			</otherwise>
+		</choose>
+	</sql>
+
+	<select id="getlistVehicleAndBindInfoCount" resultType="Integer" parameterType="QueryParam">
+		select count(t1.id) from pub_vehicle t1
+		left join pub_driver t2 on t1.driverid = t2.id
+		where t1.platformtype = #{platformtype}
+		<include refid="queryParam"></include>
+	</select>
+
+	<update id="updateVehicleById" parameterType="PubVehicle">
+		UPDATE pub_vehicle
+		SET
+		<if test="vehicleStatus!=null and vehicleStatus!=''">
+			vehiclestatus = #{vehicleStatus},
+		</if>
+		<if test="boundState!=null and boundState!=''">
+			boundstate = #{boundState},
+		</if>
+		<if test="bindPersonNum!=null and bindPersonNum!= -1">
+			bindpersonnum = #{bindPersonNum},
+		</if>
+		updater=#{updater},
+		UpdateTime=#{updateTime}
+		WHERE
+		id = #{id}
+	</update>
+
+	<update id="updateDriverId" parameterType="PubVehicle">
+		UPDATE pub_vehicle
+		SET
+		driverid = #{driverId},
+		updater=#{updater},
+		UpdateTime=#{updateTime}
+		WHERE
+		id = #{id}
+	</update>
+
+    <!-- 根据用户查询对应所有的车辆(select2) -->
+    <select id="getPubVehicleSelectByUser" resultType="map" parameterType="map">
+        select
+        pub_vehicle.id, getPlatenoStr(pub_vehicle.platenoprovince,pub_vehicle.platenocity,pub_vehicle.plateno) text
+        from
+          pub_vehicle
+        where
+          pub_vehicle.leasescompanyid in
+            (select le_leasescompany.id from le_leasescompany where le_leasescompany.tocstate = 2)
+          <if test='usertype == "0"'>
+              and pub_vehicle.leasescompanyid in
+                  (select le_leasescompany.id
+                  from op_roleuser left join op_roledataauthority on op_roleuser.roleid = op_roledataauthority.roleid
+                  left join le_leasescompany on op_roledataauthority.rootdynamicid = le_leasescompany.id
+                  where op_roleuser.status = 1 and op_roledataauthority.status = 1
+                  and le_leasescompany.tocstate = 2 and op_roleuser.userid = #{userid})
+          </if>
+          <if test='null != plateno and "" != plateno'>
+               and getPlatenoStr(pub_vehicle.platenoprovince,pub_vehicle.platenocity,pub_vehicle.plateno) like concat('%', #{plateno}, '%')
+          </if>
+
+    </select>
+
+</mapper>

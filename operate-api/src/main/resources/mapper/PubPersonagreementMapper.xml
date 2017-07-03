@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.PubPersonagreementMapper">
+	
+	<!-- 添加个人用户协议信息 -->
+	<insert id="insertPubPersonagreement" parameterType="PubPersonagreement">
+		insert into pub_personagreement(id, content, creater, updater, createtime, updatetime, status)
+		values(#{id}, #{content}, #{creater}, #{updater}, #{createtime}, #{updatetime}, #{status})
+	</insert>
+	
+	<!-- 修改个人用户协议信息 -->
+	<update id="updatePubPersonagreement" parameterType="PubPersonagreement">
+		update pub_personagreement
+		set content = #{content}, updater = #{updater}, updatetime = #{updatetime}
+		where id = #{id}
+	</update>
+	
+	<!-- 查询个人用户协议信息 -->
+	<select id="getPubPersonagreementList" resultType="PubPersonagreement">
+		select * from pub_personagreement where status = 1
+	</select>
+	
+</mapper>
