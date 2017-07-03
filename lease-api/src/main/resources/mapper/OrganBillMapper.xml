@@ -1,0 +1,773 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.OrganBillMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getCurOrganBillListByQuery" resultType="OrgOrganBill" parameterType="OrganBillQueryParam">	    
+	    select t.* from 
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select org_organbill.id as id,org_organbill.organid as organId,org_organbill.source as source,
+	            (case org_organbill.source when '0' then '月结' when '1' then '季结' when '2' then '手动结算' end) as sourceName,
+	            org_organbill.name as name,org_organbill.money as money,org_organbill.createtime as createTime,
+	            org_organ.shortname as shortName,
+	            t2.billstate as billState,t2.operationtime as operationTime,
+	            (case t2.billstate when '2' then '待核对' when '3' then '待机构核对' when '4' then '待机构付款' when '5' then '机构退回账单' when '6' then '机构已付款' when '7' then '已结算' when '8' then '已作废' end) as billStateName,
+	            (select count(*) from org_organbilldetails where org_organbilldetails.billsid = org_organbill.id and org_organbilldetails.status = 1) as orderCount
+	    from org_organbill,org_organ,
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc
+	      ) t1 group by t1.billsid 
+	      ) t2
+	    where org_organbill.id = t2.billsid
+	      and org_organbill.organid = org_organ.id
+	      and org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if>
+	    <if test="organId == null or organId == ''">
+	        and org_organbill.organid IN (
+	        <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        org_organ.id as organid
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+              </otherwise>
+            </choose>)
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and org_organbill.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_organbill.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <choose>
+	      <when test="(billState == null or billState == '') and billClass == '0'.toString()">
+	        and (t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5)
+	      </when>
+	      <when test="(billState == null or billState == '') and billClass == '1'.toString()">
+	        and (t2.billstate = 7 or t2.billstate = 8)
+	      </when>
+	      <otherwise>
+	        and t2.billstate = #{billState}
+	      </otherwise>
+	    </choose>
+	    order by t2.operationtime desc ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getCurOrganBillListCountByQuery" resultType="int" parameterType="OrganBillQueryParam">	    
+	    select count(*)
+	    from org_organbill,org_organ,
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc
+	      ) t1 group by t1.billsid
+	      ) t2
+	    where org_organbill.id = t2.billsid
+	      and org_organbill.organid = org_organ.id
+	      and org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if>
+	    <if test="organId == null or organId == ''">
+	        and org_organbill.organid IN (
+	        <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        org_organ.id as organid
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+              </otherwise>
+            </choose>)
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and org_organbill.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_organbill.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <choose>
+	      <when test="(billState == null or billState == '') and billClass == '0'.toString()">
+	        and (t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5)
+	      </when>
+	      <when test="(billState == null or billState == '') and billClass == '1'.toString()">
+	        and (t2.billstate = 7 or t2.billstate = 8)
+	      </when>
+	      <otherwise>
+	        and t2.billstate = #{billState}
+	      </otherwise>
+	    </choose>
+	</select>
+	
+	<select id="getCurOrganBillListExport" resultType="OrgOrganBill" parameterType="OrganBillQueryParam">	    
+	    select org_organbill.id as id,org_organbill.organid as organId,org_organbill.source as source,
+	            (case org_organbill.source when '0' then '月结' when '1' then '季结' when '2' then '手动结算' end) as sourceName,
+	            org_organbill.name as name,org_organbill.money as money,org_organbill.createtime as createTime,
+	            org_organ.shortname as shortName,
+	            t2.billstate as billState,t2.operationtime as operationTime,
+	            (case t2.billstate when '2' then '待核对' when '3' then '待机构核对' when '4' then '待机构付款' when '5' then '机构退回账单' when '6' then '机构已付款' when '7' then '已结算' when '8' then '已作废' end) as billStateName
+	    from org_organbill,org_organ,
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc
+	      ) t1 group by t1.billsid 
+	      ) t2
+	    where org_organbill.id = t2.billsid
+	      and org_organbill.organid = org_organ.id
+	      and org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if>
+	    <if test="organId == null or organId == ''">
+	        and org_organbill.organid IN (
+	        <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        org_organ.id as organid
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+              </otherwise>
+            </choose>)
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and org_organbill.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_organbill.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <choose>
+	      <when test="(billState == null or billState == '') and billClass == '0'.toString()">
+	        and (t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5)
+	      </when>
+	      <when test="(billState == null or billState == '') and billClass == '1'.toString()">
+	        and (t2.billstate = 7 or t2.billstate = 8)
+	      </when>
+	      <otherwise>
+	        and t2.billstate = #{billState}
+	      </otherwise>
+	    </choose>
+	    order by t2.operationtime desc 
+	</select>
+
+	<select id="getOrganBillStateById" resultType="OrgOrganBillState" parameterType="string">	    
+	    select org_organbillstate.operationtime as operationTime,
+	        IFNULL(org_organbillstate.comment,'') as comment,
+	        (case org_organbillstate.billstate when '1' then (case org_organbill.source when '0' then '自动生成月结账单' when '1' then '自动生成季结账单' when '2' then '手动生成账单' end)        
+	                                           when '2' then '待核对账单'
+	                                           when '3' then '待机构核对账单'
+	                                           when '4' then '待机构付款'
+	                                           when '5' then '机构退回账单'
+	                                           when '6' then '机构已付款'
+	                                           when '7' then '已结算'
+	                                           when '8' then '已作废'
+	                                           when '9' then '重新生成账单' end) as billState
+	    from org_organbillstate inner join org_organbill on org_organbillstate.billsid = org_organbill.id
+	    where org_organbillstate.billsid = #{billsId}
+	      and org_organbillstate.status = 1
+	    order by org_organbillstate.operationtime
+	</select>
+	
+	<select id="getOrgOrderListByQuery" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
+	    select t.* from 
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,TIMESTAMPDIFF(MINUTE,org_order.starttime,org_order.endtime) as cumulativeTime,org_order.starttime,org_order.pricecopy, 
+	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
+	       (case org_order.paymentstatus when '4' then (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end)
+	                                     when '2' then '结算中' when '3' then '已结算' end) as orderstatus,
+	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
+	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers,
+	       (select CONCAT(pub_driver.name,' ',pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid and pub_driver.leasescompanyid = org_order.companyid) as driverid
+	    from org_order,org_organbilldetails
+	    where org_order.orderno = org_organbilldetails.orderid
+	      and org_organbilldetails.status = 1
+	      and org_organbilldetails.billsid = #{billsId}
+	      and org_order.companyid = #{leasesCompanyId}
+	      and org_order.status = 1
+	    order by org_order.endtime desc ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getOrgOrderListCountByQuery" resultType="int" parameterType="OrganBillQueryParam">	    
+	    select count(*)
+	    from org_order,org_organbilldetails
+	    where org_order.orderno = org_organbilldetails.orderid
+	      and org_organbilldetails.status = 1
+	      and org_organbilldetails.billsid = #{billsId}
+	      and org_order.companyid = #{leasesCompanyId}
+	      and org_order.status = 1
+	</select>
+	
+	<select id="getOrgOrderListExport" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
+	    select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,TIMESTAMPDIFF(MINUTE,org_order.starttime,org_order.endtime) as cumulativeTime,org_order.starttime,org_order.pricecopy, 
+	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
+	       (case org_order.paymentstatus when '4' then (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end)
+	                                     when '2' then '结算中' when '3' then '已结算' end) as orderstatus,
+	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
+	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers,
+	       (select CONCAT(pub_driver.name,' ',pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid and pub_driver.leasescompanyid = org_order.companyid) as driverid,
+	       (select pub_dictionary.value from pub_dictionary where pub_dictionary.id = org_order.vehiclessubjecttype) as vehiclessubjecttype,org_order.vehiclessubject
+	    from org_order,org_organbilldetails
+	    where org_order.orderno = org_organbilldetails.orderid
+	      and org_organbilldetails.status = 1
+	      and org_organbilldetails.billsid = #{billsId}
+	      and org_order.companyid = #{leasesCompanyId}
+	      and org_order.status = 1
+	    order by org_order.endtime desc 
+	</select>
+	
+	<select id="getManualOrgOrderListByQuery" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
+	    select t.* from 
+	    (select (@rownum := @rownum + 1) as rownum,t4.* from
+	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,org_order.reviewstatus,
+	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
+	       (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end) as orderstatus,
+	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
+	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers
+	    from org_order
+	    where org_order.companyid = #{leasesCompanyId}
+	      and org_order.usetype = 0
+	      and org_order.paymethod = 2
+	      and org_order.status = 1
+	      and org_order.orderstatus = 7
+	      and org_order.paymentstatus = 4
+	    <if test="organId != null and organId != ''">
+	        and org_order.organid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				  )
+	        )
+	    </if> 
+	    <if test="startTime != null and startTime != ''">
+	        and org_order.endtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_order.endtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="billState != null and billState != ''">
+	        and org_order.reviewstatus = #{billState}
+	    </if>
+	    <if test="billState == null or billState == ''">
+	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    and NOT EXISTS (
+	    select * from 
+	    (select org_organbilldetails.orderid
+	    from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid 
+	      inner join org_organbilldetails on org_organbill.id = org_organbilldetails.billsid
+	    where org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if> 
+	      and (t2.billstate = 1 or t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5 or t2.billstate = 6)
+	      and org_organbilldetails.status = 1) t3
+	    where org_order.orderno = t3.orderid
+	    )
+	    order by org_order.endtime desc ) t4, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getManualOrgOrderListCountByQuery" resultType="int" parameterType="OrganBillQueryParam">	    
+        select count(*)
+	    from org_order
+	    where org_order.companyid = #{leasesCompanyId}
+	      and org_order.usetype = 0
+	      and org_order.paymethod = 2
+	      and org_order.status = 1
+	      and org_order.orderstatus = 7
+	      and org_order.paymentstatus = 4
+	    <if test="organId != null and organId != ''">
+	        and org_order.organid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				  )
+	        )
+	    </if> 
+	    <if test="startTime != null and startTime != ''">
+	        and org_order.endtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_order.endtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="billState != null and billState != ''">
+	        and org_order.reviewstatus = #{billState}
+	    </if>
+	    <if test="billState == null or billState == ''">
+	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    and NOT EXISTS (
+	    select * from 
+	    (select org_organbilldetails.orderid
+	    from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid 
+	      inner join org_organbilldetails on org_organbill.id = org_organbilldetails.billsid
+	    where org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if> 
+	      and (t2.billstate = 1 or t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5 or t2.billstate = 6)
+	      and org_organbilldetails.status = 1) t3
+	    where org_order.orderno = t3.orderid
+	    )
+	</select>
+
+	<insert id="createOrganbill" parameterType="OrgOrganBill">
+	    insert into org_organbill(id,leasescompanyid,organid,source,name,money,remark,createtime,updatetime,creater,updater,status)
+	    values(#{id},#{leasesCompanyId},#{organId},#{source},#{name},#{money},#{remark},#{createTime},#{updateTime},#{creater},#{updater},1)
+	</insert>
+	
+	<insert id="createOrganBillState" parameterType="hashmap">
+	    insert into org_organbillstate(id,billstate,operationtime,billsid,comment,createtime,updatetime,status)
+	    values(#{id},#{billState},#{operationTime},#{billsId},#{comment},#{createTime},#{updateTime},1)
+	</insert>
+	
+	<insert id="createOrganBillDetails" parameterType="hashmap">
+	    insert into org_organbilldetails(id,billsid,orderid,createtime,updatetime,status)
+	    values(#{id},#{billsId},#{orderId},now(),now(),1)
+	</insert>
+	
+	<select id="getOrganBillStateCountById" resultType="int" parameterType="string">	    
+	    select count(*)
+	    from org_organbillstate
+	    where billsid = #{id}
+	      and billstate = '2'
+	      and status = 1
+	</select>
+	
+	<select id="getActualBalanceById" resultType="decimal" parameterType="hashmap">	    
+	    select actualbalance
+	    from org_organ_company_ref
+	    where organid = #{organId}
+	      and companyid = #{leasesCompanyId}
+	      and status = 1
+	</select>
+	
+	<update id = "reduceOrganAccount" parameterType="hashmap">
+		update org_organ_company_ref
+		set actualbalance=IFNULL(actualbalance,0) - #{money},updatetime=now()
+		where organid = #{organId}
+	      and companyid = #{leasesCompanyId}
+	      and status = 1
+	</update>
+	
+	<select id="getOrganBillById" resultType="OrgOrganBill" parameterType="string">	    
+	    select org_organbill.*,
+	      (select org_organ.fullname from org_organ where org_organ.id = org_organbill.organid) as shortName,
+	      (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_organbill.leasescompanyid) as leasesCompanyShortName
+	    from org_organbill
+	    where org_organbill.id = #{id}
+	      and org_organbill.status = 1
+	</select>
+	
+	<update id = "changeOrgOrderStatus" parameterType="hashmap">
+		update org_order
+		set paymentstatus = #{paymentStatus},updatetime=now()
+		where orderno in 
+		  (select orderid from org_organbilldetails where billsid = #{billsId} and status = 1)
+		  and status = 1
+	</update>
+	
+	<select id="getOrganList" resultType="OrgOrgan" parameterType="string">
+	    select org_organ.id as id,org_organ.shortname as shortName,org_organ.fullname as fullName,org_organ.initials as initials
+	    from org_organ,org_organ_company_ref
+	    where org_organ.id = org_organ_company_ref.organid
+	      and org_organ_company_ref.companyid = #{leasesCompanyId}
+	      and org_organ_company_ref.status = 1
+	      and org_organ.status = 1 
+	    group by org_organ.id  
+	    order by org_organ.initials
+	</select>
+	
+	<select id="getOrgOrderListById" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
+	    select t.* from 
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,   
+	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
+	       (case org_order.paymentstatus when '4' then (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end) 
+	                                     when '2' then '结算中' when '3' then '已结算' end) as orderstatus,
+	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
+	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers
+	    from org_order
+	    where org_order.orderno in (${orderNo})
+	      and org_order.companyid = #{leasesCompanyId}
+	      and org_order.status = 1
+	    order by org_order.endtime desc ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getOrgOrderListCountById" resultType="int" parameterType="OrganBillQueryParam">	    
+	    select count(*)
+	    from org_order
+	    where org_order.orderno in (${orderNo})
+	      and org_order.companyid = #{leasesCompanyId}
+	      and org_order.status = 1
+	</select>
+	
+	<update id = "changeOrderStatusToBalance" parameterType="string">
+		update org_order
+		set paymentstatus = 2,updatetime=now()
+		where orderno = #{orderId}
+		  and status = 1
+	</update>
+	
+	<select id="getOrderAmountByQuery" resultType="decimal" parameterType="OrgOrganBill">	    
+	    select IFNULL(SUM(org_order.orderamount),0) as orderAmount
+	    from org_order
+	    where org_order.companyid = #{leasesCompanyId}
+	      and org_order.usetype = 0
+	      and org_order.paymethod = 2
+	      and org_order.status = 1
+	      and org_order.orderstatus = 7
+	      and org_order.paymentstatus = 1
+	    <if test="organId != null and organId != ''">
+	        and org_order.organid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				  )
+	        )
+	    </if> 
+	    <if test="startTime != null and startTime != ''">
+	        and org_order.endtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_order.endtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="billState != null and billState != ''">
+	        and org_order.reviewstatus = #{billState}
+	    </if>
+	    <if test="billState == null or billState == ''">
+	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    and NOT EXISTS (
+	    select * from 
+	    (select org_organbilldetails.orderid
+	    from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid 
+	      inner join org_organbilldetails on org_organbill.id = org_organbilldetails.billsid
+	    where org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if> 
+	      and (t2.billstate = 1 or t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5 or t2.billstate = 6)
+	      and org_organbilldetails.status = 1) t3
+	    where org_order.orderno = t3.orderid
+	    )
+	</select>
+	
+	<select id="getOrderListByQuery" resultType="String" parameterType="OrgOrganBill">	    
+	    select org_order.orderno as orderNo
+	    from org_order
+	    where org_order.companyid = #{leasesCompanyId}
+	      and org_order.usetype = 0
+	      and org_order.paymethod = 2
+	      and org_order.status = 1
+	      and org_order.orderstatus = 7
+	      and org_order.paymentstatus = 1
+	    <if test="organId != null and organId != ''">
+	        and org_order.organid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				  )
+	        )
+	    </if> 
+	    <if test="startTime != null and startTime != ''">
+	        and org_order.endtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_order.endtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="billState != null and billState != ''">
+	        and org_order.reviewstatus = #{billState}
+	    </if>
+	    <if test="billState == null or billState == ''">
+	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    and NOT EXISTS (
+	    select * from 
+	    (select org_organbilldetails.orderid
+	    from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid 
+	      inner join org_organbilldetails on org_organbill.id = org_organbilldetails.billsid
+	    where org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if> 
+	      and (t2.billstate = 1 or t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5 or t2.billstate = 6)
+	      and org_organbilldetails.status = 1) t3
+	    where org_order.orderno = t3.orderid
+	    )
+	</select>
+	
+	<select id="selectOrganList" resultType="hashmap" parameterType="hashmap">
+	    <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              select org_organ.id as id,org_organ.fullname as text,org_organ.initials as initials
+              from org_organ
+              where org_organ.status=1
+                and org_organ.id IN ( 
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		        )
+		        <if test="fullName != null and fullName != ''">
+	                and org_organ.fullname like "%"#{fullName}"%"
+	            </if>
+	                group by org_organ.id
+	                order by org_organ.initials
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        org_organ.id as id,org_organ.fullname as text,org_organ.initials as initials
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+		      <if test="fullName != null and fullName != ''">
+	                and org_organ.fullname like "%"#{fullName}"%"
+	          </if>
+	                group by org_organ.id
+	                order by org_organ.initials
+              </otherwise>
+        </choose>
+	</select>
+	
+	<select id="getOrganUserIdByType" resultType="string" parameterType="string">	    
+	    select org_user.id 
+	    from org_user
+	    where org_user.status = 1
+	      and org_user.organid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				  )
+	      )
+	      and (org_user.usertype = '1'
+	           or org_user.id IN (select org_roleuser.userid
+	                                from org_roleuser,org_rolemanagement
+	                               where org_roleuser.roleid = org_rolemanagement.id  
+	                                 and org_roleuser.status = 1
+	                                 and (org_rolemanagement.name = '财务管理员' or org_rolemanagement.name = '财务&amp;部门管理员')
+	                                 and org_rolemanagement.status = 1)
+	      )
+	</select>
+	
+	<select id="checkUnBalanceBillCount" resultType="int" parameterType="hashmap">
+	    select count(*)
+        from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid
+        where org_organbill.leasescompanyid = #{leasesCompanyId}
+          and org_organbill.status = 1
+          and org_organbill.organid = #{organId}
+          and t2.billstate in ('1','2','3','4','5','6','9')
+	</select>
+	
+	<select id="getLineOfCredit" resultType="OrgOrganCompanyRef" parameterType="hashmap">
+	    select org_organ_company_ref.*
+	    from org_organ_company_ref
+	    where org_organ_company_ref.organid = #{organId} 
+	      and org_organ_company_ref.companyid = #{leasesCompanyId}
+	      and org_organ_company_ref.status = 1
+	</select>
+	
+	<update id = "updateLineOfCredit" parameterType="hashmap">
+		update org_organ_company_ref
+		set lineofcredit = #{lineOfCredit}, balance = #{balance} , updatetime = now()
+		where org_organ_company_ref.organid = #{organId} 
+	      and org_organ_company_ref.companyid = #{leasesCompanyId}
+	      and org_organ_company_ref.status = 1
+	</update>
+
+</mapper>

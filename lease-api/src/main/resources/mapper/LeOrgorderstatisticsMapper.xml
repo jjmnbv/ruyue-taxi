@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.LeOrgorderstatisticsMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOrganCountListCountByQuery" resultType="int" parameterType="LeOrgorderstatisticsParam">
+		select COUNT(t.shortname) from 
+		(select (@rownum := @rownum + 1) as rownum,aa.shortname,aa.organid,
+				(case when ISNULL(bb.ordermoney) then 0 else bb.ordermoney end) as ordermoney,
+				(case when ISNULL(bb.carorders) then 0 else bb.carorders end) as carorders,
+				(case when ISNULL(bb.pickuporders) then 0 else bb.pickuporders end) as pickuporders,
+				(case when ISNULL(bb.dropofforders) then 0 else bb.dropofforders end) as dropofforders,
+				(case when ISNULL(bb.allOrders) then 0 else bb.allOrders end) as allOrders,
+				(case when ISNULL(bb.alluporders) then 0 else bb.alluporders end) as alluporders
+			  from (select @rownum := 0)r,(SELECT organid,shortname,companyid FROM org_organ,org_organ_company_ref  WHERE
+			                               org_organ. STATUS = 1 AND org_organ_company_ref. STATUS = 1 AND org_organ_company_ref.organid = org_organ.id
+		                                    AND org_organ_company_ref.companyid = #{leasesCompanyId} GROUP BY fullname) aa
+		     LEFT JOIN (select o.id,o.shortname,SUM(c.ordermoney) as ordermoney,SUM(c.carorders) AS carorders,SUM(c.pickuporders) AS pickuporders,
+                         SUM(c.dropofforders) AS dropofforders,SUM(c.carorders+c.pickuporders+c.dropofforders) as allOrders,
+		                 SUM(c.processedorders+c.confirmedorders) AS alluporders
+                        from le_orgorderstatistics c,org_organ o,(select @rownum := 0)r where c.status=1 and o.id = c.organid
+             AND c.leasesCompanyId = #{leasesCompanyId}
+	     <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and c.organid in(select organ.id from org_organ organ where organ.status = 1 and organ.creditcode = (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id =  #{organId}))
+	    </if>
+	     GROUP BY c.organid ORDER BY  SUM(c.ordermoney) desc) bb
+         ON aa.organid = bb.id
+          ORDER BY ordermoney DESC)t  
+          <if test="organId != null and organId != ''">
+	        where organId = #{organId}
+	       </if>
+</select> 
+ <select id="getOrganCountListByQuery" resultType="LeOrgorderstatisticsParam" parameterType="LeOrgorderstatisticsParam">
+	    select * from(select rownum,shortname,sum(ordermoney) as ordermoney,sum(carorders) as carorders,organid,
+          sum(pickuporders) as pickuporders,sum(dropofforders) as dropofforders,sum(allOrders) as allOrders,sum(alluporders) as alluporders
+          from 
+			(select (@rownum := @rownum + 1) as rownum,aa.shortname,aa.creditcode,aa.organid,
+				(case when ISNULL(bb.ordermoney) then 0 else bb.ordermoney end) as ordermoney,
+				(case when ISNULL(bb.carorders) then 0 else bb.carorders end) as carorders,
+				(case when ISNULL(bb.pickuporders) then 0 else bb.pickuporders end) as pickuporders,
+				(case when ISNULL(bb.dropofforders) then 0 else bb.dropofforders end) as dropofforders,
+				(case when ISNULL(bb.allOrders) then 0 else bb.allOrders end) as allOrders,
+				(case when ISNULL(bb.alluporders) then 0 else bb.alluporders end) as alluporders
+			  from (select @rownum := 0)r,(SELECT organid,shortname,companyid,creditcode FROM org_organ,org_organ_company_ref  WHERE
+			                               org_organ. STATUS = 1 AND org_organ_company_ref. STATUS = 1 AND org_organ_company_ref.organid = org_organ.id
+		                                    AND org_organ_company_ref.companyid = #{leasesCompanyId} GROUP BY fullname) aa
+		     LEFT JOIN (select o.creditcode,o.shortname,SUM(c.ordermoney) as ordermoney,SUM(c.carorders) AS carorders,SUM(c.pickuporders) AS pickuporders,
+                         SUM(c.dropofforders) AS dropofforders,SUM(c.carorders+c.pickuporders+c.dropofforders) as allOrders,
+		                 SUM(c.processedorders+c.confirmedorders) AS alluporders
+                        from le_orgorderstatistics c,org_organ o,(select @rownum := 0)r where c.status=1 and o.creditcode in (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id = c.organid)
+                        and c.organid = o.id
+             AND c.leasesCompanyId = #{leasesCompanyId}
+	     <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and c.organid in(select organ.id from org_organ organ where organ.status = 1 and organ.creditcode = (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id =  #{organId})) 
+	    </if>
+	     GROUP BY c.organid ORDER BY  SUM(c.ordermoney) desc) bb
+        ON aa.creditcode = bb.creditcode
+         <if test="organId != null and organId != ''">
+	        where aa.organid = #{organId}
+	       </if>
+          ORDER BY ordermoney DESC)cc
+          group by creditcode ORDER BY ordermoney DESC,shortname 
+          )t
+          where t.rownum BETWEEN #{iDisplayStart} and (#{iDisplayStart} + #{iDisplayLength}) and t.rownum != #{iDisplayStart} 
+	</select> 
+	<select id="getOrganCountAll" resultType="LeOrgorderstatisticsParam" parameterType="LeOrgorderstatisticsParam">
+	    select c.*,o.shortname
+        from le_orgorderstatistics c ,org_organ o where c.status=1 and o.id = c.organid
+        AND c.leasesCompanyId = #{leasesCompanyId}
+	  <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and c.organid in(select organ.id from org_organ organ where organ.status = 1 and organ.creditcode = (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id =  #{organId}))
+	    </if>
+	</select> 
+	<select id="getOrganCountAll1" resultType="LeOrgorderstatisticsParam" parameterType="LeOrgorderstatisticsParam">
+	   select rownum,shortname,sum(ordermoney) as ordermoney,sum(carorders) as carorders,organid,
+          sum(pickuporders) as pickuporders,sum(dropofforders) as dropofforders,sum(allOrders) as allOrders,sum(alluporders) as alluporders
+          from 
+			(select (@rownum := @rownum + 1) as rownum,aa.shortname,aa.creditcode,aa.organid,
+				(case when ISNULL(bb.ordermoney) then 0 else bb.ordermoney end) as ordermoney,
+				(case when ISNULL(bb.carorders) then 0 else bb.carorders end) as carorders,
+				(case when ISNULL(bb.pickuporders) then 0 else bb.pickuporders end) as pickuporders,
+				(case when ISNULL(bb.dropofforders) then 0 else bb.dropofforders end) as dropofforders,
+				(case when ISNULL(bb.allOrders) then 0 else bb.allOrders end) as allOrders,
+				(case when ISNULL(bb.alluporders) then 0 else bb.alluporders end) as alluporders
+			  from (select @rownum := 0)r,(SELECT organid,shortname,companyid,creditcode FROM org_organ,org_organ_company_ref  WHERE
+			                               org_organ. STATUS = 1 AND org_organ_company_ref. STATUS = 1 AND org_organ_company_ref.organid = org_organ.id
+		                                    AND org_organ_company_ref.companyid = #{leasesCompanyId} GROUP BY fullname) aa
+		     LEFT JOIN (select o.creditcode,o.shortname,SUM(c.ordermoney) as ordermoney,SUM(c.carorders) AS carorders,SUM(c.pickuporders) AS pickuporders,
+                         SUM(c.dropofforders) AS dropofforders,SUM(c.carorders+c.pickuporders+c.dropofforders) as allOrders,
+		                 SUM(c.processedorders+c.confirmedorders) AS alluporders
+                        from le_orgorderstatistics c,org_organ o,(select @rownum := 0)r where c.status=1 and o.creditcode in (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id = c.organid)
+                        and c.organid = o.id
+             AND c.leasesCompanyId = #{leasesCompanyId}
+	     <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and c.organid in(select organ.id from org_organ organ where organ.status = 1 and organ.creditcode = (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id =  #{organId})) 
+	    </if>
+	     GROUP BY c.organid ORDER BY  SUM(c.ordermoney) desc) bb
+        ON aa.creditcode = bb.creditcode
+          ORDER BY ordermoney DESC)cc
+           <if test="organId != null and organId != ''">
+	        where organId = #{organId}
+	       </if>
+          group by creditcode ORDER BY ordermoney DESC
+	</select> 
+	<select id="getOrganCityCountAll" resultType="LeOrgorderstatisticsParam" parameterType="LeOrgorderstatisticsParam">
+	    select 
+        p.city,
+	    SUM(c.ordermoney) as ordermoney,
+        SUM(c.carorders) AS carorders,
+        SUM(c.pickuporders) AS pickuporders,
+        SUM(c.dropofforders) AS dropofforders,
+        SUM(c.carorders+c.pickuporders+c.dropofforders) as allOrders,
+		SUM(c.processedorders+c.confirmedorders) AS alluporders
+        from le_orgorderstatistics c,pub_cityaddr p where c.status=1
+        and p.id = c.cityid 
+        AND c.leasesCompanyId = #{leasesCompanyId}
+	    <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	       and c.organid in(select organ.id from org_organ organ where organ.status = 1 and organ.creditcode = (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id =  #{organId}))
+	    </if>
+	    group by p.city 
+	</select> 
+	<select id="getCityCountListCountByQuery" resultType="int" parameterType="LeOrgorderstatisticsParam">
+		select COUNT(t.city) FROM
+		(select 
+      p.city,
+	  SUM(c.ordermoney) as ordermoney,
+      SUM(c.carorders) AS carorders,
+      SUM(c.pickuporders) AS pickuporders,
+      SUM(c.dropofforders) AS dropofforders,
+      SUM(c.carorders+c.pickuporders+c.dropofforders) as allOrders,
+		SUM(c.processedorders+c.confirmedorders) AS alluporders
+        from le_orgorderstatistics c,pub_cityaddr p where c.status=1
+        and p.id = c.cityid 
+        AND c.leasesCompanyId = #{leasesCompanyId}
+        <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and c.organid in(select organ.id from org_organ organ where organ.status = 1 and organ.creditcode = (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id =  #{organId}))
+	    </if>
+	     GROUP by p.city)t
+</select> 
+ <select id="getCityCountListByQuery" resultType="LeOrgorderstatisticsParam" parameterType="LeOrgorderstatisticsParam">
+	     select t.* from 
+		(select (@rownum := @rownum + 1) as rownum,
+    p.city,
+	  SUM(c.ordermoney) as ordermoney,
+    SUM(c.carorders) AS carorders,
+    SUM(c.pickuporders) AS pickuporders,
+    SUM(c.dropofforders) AS dropofforders,
+    SUM(c.carorders+c.pickuporders+c.dropofforders) as allOrders,
+		SUM(c.processedorders+c.confirmedorders) AS alluporders
+        from le_orgorderstatistics c,pub_cityaddr p,(select @rownum := 0)r where c.status=1
+        and p.id = c.cityid 
+        AND c.leasesCompanyId = #{leasesCompanyId}
+	    <if test="startTime != null and startTime != ''">
+	        and STR_TO_DATE(c.startTime,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and STR_TO_DATE(c.endTime,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{endTime},'%Y-%m-%d')
+	    </if>
+	     <if test="cityid != null and cityid != ''">
+	        and c.cityid = #{cityid}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and c.organid in(select organ.id from org_organ organ where organ.status = 1 and organ.creditcode = (select org_organ.creditcode from org_organ where org_organ.status = 1 and org_organ.id =  #{organId}))
+	    </if>
+	     group by p.city desc ORDER BY  SUM(c.ordermoney) desc)t
+          where t.rownum BETWEEN #{iDisplayStart} and (#{iDisplayStart} + #{iDisplayLength}) and t.rownum != #{iDisplayStart}
+	</select> 
+	<select id="getOrganCity" resultType="map" parameterType="QueryParam">
+		SELECT
+		org_organ.city AS id,
+		(
+			SELECT
+				pub_cityaddr.city
+			FROM
+				pub_cityaddr
+			WHERE
+				pub_cityaddr.id = org_organ.city
+			AND pub_cityaddr. STATUS = 1
+		) AS text
+		FROM
+			org_organ,
+			org_organ_company_ref
+		WHERE
+			org_organ. STATUS = 1
+		AND org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.companyid = #{leasesCompanyId}
+		<if test="queryCity != null and queryCity != ''">
+			and (
+			SELECT
+				pub_cityaddr.city
+			FROM
+				pub_cityaddr
+			WHERE
+				pub_cityaddr.id = org_organ.city
+			AND pub_cityaddr. STATUS = 1
+		) like "%"#{queryCity}"%"
+		</if>
+		GROUP BY
+			city
+	</select>
+	<select id="getOrganShortName" resultType="map" parameterType="QueryParam">
+		SELECT
+		org_organ.id,
+		org_organ.shortName AS text
+	
+		FROM
+			org_organ,
+			org_organ_company_ref
+		WHERE
+			org_organ. STATUS = 1
+		AND org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.companyid = #{leasesCompanyId}
+		<if test="queryShortName != null and queryShortName != ''">
+			and fullname like "%"#{queryShortName}"%"
+		</if>
+		GROUP BY fullname
+	</select>
+	<select id="getCityListById" resultType="PubCityAddr" parameterType="String">
+	    SELECT
+		org_organ.city AS id,
+		(
+			SELECT
+				pub_cityaddr.city
+			FROM
+				pub_cityaddr
+			WHERE
+				pub_cityaddr.id = org_organ.city
+			AND pub_cityaddr. STATUS = 1
+		) AS city
+		FROM
+			org_organ,
+			org_organ_company_ref
+		WHERE
+			org_organ. STATUS = 1
+		AND org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.companyid = #{leasesCompanyId}
+		GROUP BY
+			city
+	</select>
+</mapper>

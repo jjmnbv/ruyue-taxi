@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.UserRefundMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOrgUserRefundListByQuery" resultType="OrgUserRefund" parameterType="UserRefundQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select org_userrefund.*,
+	       CONCAT(IFNULL(org_user.nickname,''),' ',org_user.account) as userName
+	    from org_userrefund,org_user
+	    where org_userrefund.userid = org_user.id
+	      and org_userrefund.status = 1
+	      and org_userrefund.leasescompanyid = #{leasesCompanyId}
+	      and org_userrefund.refundstatus = #{refundStatus}
+	      and org_user.organid IN (
+	      select org_organ.id
+	      from org_organ,
+	      (<choose>	      
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              select org_organ.creditcode
+              from org_organ,
+              (SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		      ) t2
+		      where org_organ.status = 1
+                and org_organ.id = t2.organid
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        org_organ.creditcode
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+              </otherwise>           
+          </choose>
+          ) t3
+          where org_organ.status = 1
+	        and org_organ.creditcode = t3.creditcode
+          )  	      
+	    <if test="refundStatus == '0'.toString()">
+	      order by org_userrefund.committime,org_user.account 
+	    </if>
+	    <if test="refundStatus == '1'.toString()">
+	      order by org_userrefund.updatetime desc,org_user.account 
+	    </if>
+	    ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getOrgUserRefundListCountByQuery" resultType="int" parameterType="UserRefundQueryParam">
+	    select count(*)
+	    from org_userrefund,org_user
+	    where org_userrefund.userid = org_user.id
+	      and org_userrefund.status = 1
+	      and org_userrefund.leasescompanyid = #{leasesCompanyId}
+	      and org_userrefund.refundstatus = #{refundStatus}
+	      and org_user.organid IN (
+	      select org_organ.id
+	      from org_organ,
+	      (<choose>	      
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              select org_organ.creditcode
+              from org_organ,
+              (SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		      ) t2
+		      where org_organ.status = 1
+                and org_organ.id = t2.organid
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        org_organ.creditcode
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+              </otherwise>           
+          </choose>
+          ) t3
+          where org_organ.status = 1
+	        and org_organ.creditcode = t3.creditcode
+          )
+	</select>
+
+	<update id = "updateOrgUserRefund" parameterType="hashmap">
+		update org_userrefund
+		set refundstatus = 1,updatetime = now(),updater = #{updater}
+		where id = #{id}
+		  and status = 1
+	</update>
+	
+	<update id = "updateOrgUserAccount" parameterType="hashmap">
+		update org_useraccount
+		set balance = IFNULL(balance,0) + #{amount},updatetime = now()
+		where userid = #{userId}
+		  and leasescompanyid = #{leasesCompanyId}
+		  and status = 1
+	</update>
+	
+	<insert id="createOrgUserExpenses" parameterType="OrgUserExpenses">
+	    insert into org_userexpenses(id,userid,leasescompanyid,expensetype,expensetime,amount,balance,remark,createtime,updatetime,creater,updater,status,tradetype,detailtype,operateresult)
+	    values(#{id},#{userId},#{leasesCompanyId},3,now(),#{amount},#{balance},#{remark},now(),now(),#{updater},#{updater},1,#{tradeType},#{detailType},0)
+	</insert>
+	
+	<select id="getOrgUserRefundById" resultType="OrgUserRefund" parameterType="string">
+	    select org_userrefund.*
+	    from org_userrefund
+	    where org_userrefund.id = #{id}
+	      and org_userrefund.status = 1
+	</select>
+	
+	<select id="getBalanceByUserId" resultType="decimal" parameterType="hashmap">
+	    select org_useraccount.balance
+	    from org_useraccount
+	    where org_useraccount.userid = #{userId}
+	      and org_useraccount.leasescompanyid = #{leasesCompanyId}
+	      and org_useraccount.status = 1
+	</select>
+	
+	<insert id="createOrgUserNews" parameterType="OrgUserNews">
+	    insert into org_usernews(id,orderno,userid,type,title,content,newsstate,createtime,updatetime,status)
+	    values(#{id},#{orderNo},#{userId},#{type},#{title},#{content},#{newsState},now(),now(),1)
+	</insert>
+	
+	<select id="checkOrgUserAccountExist" resultType="int" parameterType="hashmap">
+	    select count(*)
+	    from org_useraccount
+	    where org_useraccount.userid = #{userId}
+	      and org_useraccount.leasescompanyid = #{leasesCompanyId}
+	      and org_useraccount.status = 1
+	</select>
+	
+	<insert id="createOrgUserAccount" parameterType="hashmap">
+	    insert into org_useraccount(id,userid,leasescompanyid,balance,createtime,updatetime,status)
+	    values(#{id},#{userId},#{leasesCompanyId},#{amount},now(),now(),1)
+	</insert>
+	
+	<select id="getOrgOrderById" resultType="OrgOrder" parameterType="string">
+	    select org_order.*
+	    from org_order
+	    where org_order.orderno = #{orderNo}
+	</select>
+	
+	<select id="getUserIdByUserId" resultType="string" parameterType="string">
+	    select ou1.id
+	    from org_user ou1,org_user ou2
+	    where ou1.account = ou2.account
+          and ou2.id = #{userId}
+	    order by ou1.createtime desc
+        limit 0,1
+	</select>
+	
+	<!-- 查询租赁公司信息-->
+	<select id="getLeasesCompanyInfo" resultType="hashmap" parameterType="string">
+        select * from le_leasescompany where id = #{leasesCompanyId}
+    </select>
+    
+    <!-- 查询下单人信息-->
+	<select id="getOrgUserInfo" resultType="hashmap" parameterType="string">
+        select * from org_user where id = #{id} and status = 1
+    </select>
+	
+</mapper>

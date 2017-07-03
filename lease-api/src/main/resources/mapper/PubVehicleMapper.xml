@@ -1,0 +1,1628 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.PubVehicleMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 增加 -->
+	<insert id="createPubVehicle" parameterType="PubVehicle">
+		insert into pub_vehicle(id,leasescompanyid,vehclineid,platenoprovince,platenocity,plateno,vin,color,city,loads,CreateTime,UpdateTime,Creater,Updater,Status,vehicletype,vehiclestatus,platformtype,boundstate,belongleasecompany)
+			values (#{id},#{leasesCompanyId},#{vehclineId},#{plateNoProvince},#{plateNoCity},#{plateNo},#{vin},#{color},#{city},#{loads},now(),now(),#{creater},#{updater},1,#{vehicleType},0,1,0,#{belongleasecompany})
+	</insert>
+	<!-- 修改 -->
+	<update id="updatePubVehicle" parameterType="PubVehicle">
+		UPDATE pub_vehicle set leasescompanyid=#{leasesCompanyId},vehclineid=#{vehclineId},platenoprovince=#{plateNoProvince},
+		platenocity=#{plateNoCity},plateno=#{plateNo},vin=#{vin},color=#{color},city=#{city},loads=#{loads},updateTime=now(),
+		belongleasecompany=#{belongleasecompany},
+		Updater=#{updater},vehiclestatus=#{vehicleStatus} where id = #{id}
+	</update>
+	<!-- 检查 车牌、车架号 是否重复 新增、修改用到 -->
+	<select id="checkPubVehicle" parameterType="PubVehicle" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			pub_vehicle
+		WHERE 1 = 1
+		<if test="plateNoProvince !=null and plateNoProvince !='' and plateNoCity !=null and plateNoCity !='' and plateNo !=null and plateNo !='' or vin !=null and vin !=''">
+		AND (( platenoprovince = #{plateNoProvince} AND platenocity = #{plateNoCity} AND plateno = #{plateNo} ) OR vin = #{vin})
+		</if>
+		AND `Status` = 1
+		<if test="id != null and id !='' ">
+		AND id != #{id}
+		</if>
+		<if test="showPlateNo != null and showPlateNo !='' ">
+		AND CONCAT(
+					(
+						SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌省'
+						AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+						AND pub_dictionary.`status` = 1
+					),
+					(
+						SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌市'
+						AND pub_dictionary.`value` = pub_vehicle.platenocity
+						AND pub_dictionary.`status` = 1
+					),
+					pub_vehicle.plateno
+				) = #{showPlateNo}
+		</if>
+		and leasescompanyid=#{leasesCompanyId}
+		<!-- 新增所属平台的过滤条件 -->
+		and pub_vehicle.platformtype = 1
+	</select>
+	<!-- 检查删除 -->
+	<select id="checkDelete" resultType="int" parameterType="string">
+		SELECT
+		COUNT(*)
+		FROM
+		pub_vehicle,
+		pub_driver_vehicle_ref
+		WHERE
+		pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+		AND pub_vehicle.`Status` = 1
+		AND pub_driver_vehicle_ref.`Status` = 1
+		<!-- AND pub_driver_vehicle_ref.bindstate='0' -->
+		AND pub_vehicle.id=#{id}
+		<!-- 新增所属平台的过滤条件 -->
+		and pub_vehicle.platformtype = 1
+	</select>
+	<!-- 删除 -->
+	<update id="deletePubVehicle" parameterType="string">
+		UPDATE pub_vehicle set pub_vehicle.`Status` = 2 WHERE pub_vehicle.id=#{id}
+	</update>
+	<select id="getPubVehicleListByQuery" parameterType="QueryParam" resultType="PubVehicle">
+		<!-- SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							pub_vehicle.id,
+							pub_vehicle.vehclineid,
+							(
+								SELECT
+									CONCAT(
+										pub_vehcbrand.`Name`,
+										' ',
+										pub_vehcline.`name`
+									)
+								FROM
+									pub_vehicle AS pv,
+									pub_vehcline,
+									pub_vehcbrand
+								WHERE
+									pv.vehclineid = pub_vehcline.Id
+								AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+								AND pub_vehcline.platformtype=1
+								AND pub_vehcbrand.platformtype=1
+							) AS brandCars,
+							CONCAT(
+								(
+									SELECT
+										pub_dictionary.text
+									FROM
+										pub_dictionary
+									WHERE
+										pub_dictionary.type = '车牌省'
+									AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+									AND pub_dictionary.`status` = 1
+								),
+								(
+									SELECT
+										pub_dictionary.text
+									FROM
+										pub_dictionary
+									WHERE
+										pub_dictionary.type = '车牌市'
+									AND pub_dictionary.`value` = pub_vehicle.platenocity
+									AND pub_dictionary.`status` = 1
+								),
+								pub_vehicle.plateno
+							) AS showPlateNo,
+							(
+								SELECT
+									le_vehiclemodels.`name`
+								FROM
+									pub_vehicle AS pv,
+									le_vehcline_models_ref,
+									le_vehiclemodels
+								WHERE
+									le_vehcline_models_ref.`Status` = 1
+								AND le_vehiclemodels.`Status` = 1
+								AND pv.`Status` = 1
+								AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+							) AS serviceCars,
+							pub_vehicle.vin,
+							pub_vehicle.color,
+							(
+								SELECT
+									pub_cityaddr.city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.`status` = 1
+								AND pub_cityaddr.id = pub_vehicle.city
+							) AS city,
+							(
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							) AS workStatus1,
+							(
+								SELECT
+									text
+								FROM
+									pub_dictionary
+								WHERE
+									pub_dictionary.Type = '服务状态'
+								AND pub_dictionary.`Value` = workStatus1
+								AND pub_dictionary.`status` = 1
+							) AS workStatus,
+							pub_vehicle.boundstate,
+							pub_vehicle.loads,
+							pub_vehicle.vehicletype,
+							pub_vehicle.vehiclestatus
+						FROM
+							pub_vehicle,
+							(SELECT @rownum := 0) r
+						WHERE
+							pub_vehicle.`Status` = 1
+								and pub_vehicle.platformtype = 1
+								AND pub_vehicle.leasescompanyid=#{leasesCompanyId}
+						<if test="queryPlateNo != null and queryPlateNo !='' ">
+						AND CONCAT(
+								(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+								(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+								pub_vehicle.plateno
+							) like "%"#{queryPlateNo}"%"
+						</if>
+						<if test="queryServiceCars != null and queryServiceCars !='' ">
+						AND (
+								SELECT
+									le_vehiclemodels.`name`
+								FROM
+									pub_vehicle AS pv,
+									le_vehcline_models_ref,
+									le_vehiclemodels
+								WHERE
+									le_vehcline_models_ref.`Status` = 1
+								AND le_vehiclemodels.`Status` = 1
+								AND pv.`Status` = 1
+								AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+							) like "%"#{queryServiceCars}"%"
+						</if>
+						<if test="queryCity != null and queryCity !='' ">
+						AND (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city)=#{queryCity}
+						</if>
+						<if test="queryWorkStatus != null and queryWorkStatus !='' ">
+						AND (
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							) like "%"#{queryWorkStatus}"%"
+						</if>
+						<if test="queryBrandCars != null and queryBrandCars !='' ">
+						AND pub_vehicle.vehclineid = #{queryBrandCars}
+						</if>
+						<if test="queryVehicleType != null and queryVehicleType !='' ">
+						AND pub_vehicle.vehicletype = #{queryVehicleType}
+						</if>
+						<if test="queryVehicleStatus != null and queryVehicleStatus !='' ">
+						AND pub_vehicle.vehiclestatus = #{queryVehicleStatus}
+						</if>
+						<if test="queryBoundState != null and queryBoundState !='' ">
+						and	pub_vehicle.boundstate	= #{queryBoundState}					   
+						</if>
+						ORDER BY
+							CONVERT (
+								(
+									SELECT
+										pub_cityaddr.city
+									FROM
+										pub_cityaddr
+									WHERE
+										pub_cityaddr.`status` = 1
+									AND pub_cityaddr.id = pub_vehicle.city
+								) USING gbk
+							) COLLATE gbk_chinese_ci,
+							pub_vehicle.vehicletype DESC,
+							CONVERT (
+								(
+									SELECT
+										le_vehiclemodels.`level`
+									FROM
+										pub_vehicle AS pv,
+										le_vehcline_models_ref,
+										le_vehiclemodels
+									WHERE
+										le_vehcline_models_ref.`Status` = 1
+									AND le_vehiclemodels.`Status` = 1
+									AND pv.`Status` = 1
+									AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+									AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+									AND pv.id = pub_vehicle.id
+									AND pv.platformtype=1
+								) USING gbk
+							) COLLATE gbk_chinese_ci,
+							(
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							)
+					) m
+			) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]> -->
+		SELECT
+			pub_vehicle.leasescompanyid,
+			pub_vehicle.id,
+			pub_vehicle.vehclineid,
+			CONCAT(
+				pub_vehcbrand.`Name`,
+				" ",
+				pub_vehcline.`name`
+			) AS brandCars,
+			CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pub_vehicle.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pub_vehicle.plateno
+			) AS showPlateNo,
+			le_vehiclemodels.`name` AS serviceCars,
+			pub_vehicle.vin,
+			pub_vehicle.color,
+			(
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.`status` = 1
+				AND pub_cityaddr.id = pub_vehicle.city
+			) AS city,
+			(SELECT
+					(
+						CASE
+						WHEN pub_vehicle.boundstate = 0 THEN
+							'3'
+						ELSE
+							t1.workstatus
+						END
+					) workstatus
+				FROM
+					pub_driver t1,
+					pub_driver_vehicle_ref t2
+				WHERE
+					t1.`Status` = 1
+				AND t1.platformtype = 1
+				AND t2.`status` = 1
+				AND t2.driverid = t1.id
+				AND t2.vehicleid = pub_vehicle.id
+				AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+				<!-- AND (
+					(
+						pub_vehicle.id = t2.vehicleid
+						AND pub_vehicle.vehicletype = '0'
+					)
+					OR (
+						t1.id = pub_vehicle.driverid
+						AND pub_vehicle.vehicletype = '1'
+					)
+				) -->
+			) AS workStatus1,
+			(SELECT
+					(
+						CASE t1.workstatus
+						WHEN  2 THEN 1
+						WHEN  0 THEN 2
+						WHEN  1 THEN 3
+						ELSE 0
+						END
+					) workstatus
+				FROM
+					pub_driver t1,
+					pub_driver_vehicle_ref t2
+				WHERE
+					t1.`Status` = 1
+				AND t1.platformtype = 1
+				AND t2.`status` = 1
+				AND t2.driverid = t1.id
+				AND t2.vehicleid = pub_vehicle.id
+				AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+				<!-- AND (
+					(
+						pub_vehicle.id = t2.vehicleid
+						AND pub_vehicle.vehicletype = '0'
+					)
+					OR (
+						t1.id = pub_vehicle.driverid
+						AND pub_vehicle.vehicletype = '1'
+					)
+				) -->
+			),
+			(
+				SELECT
+					text
+				FROM
+					pub_dictionary
+				WHERE
+					pub_dictionary.Type = '服务状态'
+				AND pub_dictionary.`Value` = workStatus1
+				AND pub_dictionary.`status` = 1
+			) AS workStatus,
+			(
+				SELECT
+					pub_dictionary.text
+				FROM
+					pub_dictionary
+				WHERE
+					pub_dictionary.type = '租赁公司'
+				AND pub_dictionary.`value` = pub_vehicle.belongleasecompany
+			) AS belongleasecompanyName,
+			pub_vehicle.boundstate,
+			pub_vehicle.loads,
+			pub_vehicle.vehicletype,
+			pub_vehicle.vehiclestatus
+		FROM
+			pub_vehicle
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.Id
+		LEFT JOIN pub_vehcbrand ON pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		LEFT JOIN le_vehcline_models_ref ON pub_vehicle.vehclineid = le_vehcline_models_ref.vehclineid
+		LEFT JOIN le_vehiclemodels ON le_vehiclemodels.Id = le_vehcline_models_ref.vehiclemodelsid
+		WHERE
+			pub_vehcline.`Status` = 1
+		AND pub_vehcbrand.`Status` = 1
+		AND pub_vehicle.`Status` = 1
+		AND pub_vehicle.platformtype = 1
+		AND pub_vehcline.platformtype = 1
+		AND pub_vehcbrand.platformtype = 1
+		AND pub_vehicle.leasescompanyid=#{leasesCompanyId}
+		<if test="queryPlateNo != null and queryPlateNo !='' ">
+		AND CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pub_vehicle.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pub_vehicle.plateno
+			) like "%"#{queryPlateNo}"%"
+		</if>
+		<if test="queryServiceCars != null and queryServiceCars !='' ">
+		AND le_vehiclemodels.`name` like "%"#{queryServiceCars}"%" and pub_vehicle.vehicletype = '0'
+		</if>
+		<if test="queryCity != null and queryCity !='' ">
+		AND (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city)=#{queryCity}
+		</if>
+		<if test="queryWorkStatus != null and queryWorkStatus !='' ">
+		AND (
+				SELECT
+					(
+						CASE
+						WHEN pub_vehicle.boundstate = 0 THEN
+							'3'
+						ELSE
+							t1.workstatus
+						END
+					) workstatus
+				FROM
+					pub_driver t1,
+					pub_driver_vehicle_ref t2
+				WHERE
+					t1.`Status` = 1
+				AND t1.platformtype = 1
+				AND t2.`status` = 1
+				AND t2.driverid = t1.id
+				AND t2.vehicleid = pub_vehicle.id
+				AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+				<!-- AND (
+					(
+						pub_vehicle.id = t2.vehicleid
+						AND pub_vehicle.vehicletype = '0'
+					)
+					OR (
+						t1.id = pub_vehicle.driverid
+						AND pub_vehicle.vehicletype = '1'
+					)
+				) -->
+			) like "%"#{queryWorkStatus}"%"
+		</if>
+		<if test="queryBrandCars != null and queryBrandCars !='' ">
+		AND pub_vehicle.vehclineid = #{queryBrandCars}
+		</if>
+		<if test="queryVehicleType != null and queryVehicleType !='' ">
+		AND pub_vehicle.vehicletype = #{queryVehicleType}
+		</if>
+		<if test="queryVehicleStatus != null and queryVehicleStatus !='' ">
+		AND pub_vehicle.vehiclestatus = #{queryVehicleStatus}
+		</if>
+		<if test="queryBoundState != null and queryBoundState !='' ">
+		and	pub_vehicle.boundstate	= #{queryBoundState}					   
+		</if>
+		<if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
+			AND pub_vehicle.belongleasecompany=#{belongleasecompanyQuery}
+		</if>
+		ORDER BY
+		CONVERT (
+			(
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.`status` = 1
+				AND pub_cityaddr.id = pub_vehicle.city
+			) USING gbk
+		) COLLATE gbk_chinese_ci,
+		pub_vehicle.vehicletype DESC,
+		le_vehiclemodels.level,
+		CONVERT((le_vehiclemodels.`name`)USING gbk)COLLATE gbk_chinese_ci,
+		(SELECT
+					(
+						CASE t1.workstatus
+						WHEN  2 THEN 1
+						WHEN  0 THEN 2
+						WHEN  1 THEN 3
+						ELSE 0
+						END
+					) workstatus
+				FROM
+					pub_driver t1,
+					pub_driver_vehicle_ref t2
+				WHERE
+					t1.`Status` = 1
+				AND t1.platformtype = 1
+				AND t2.`status` = 1
+				AND t2.driverid = t1.id
+				AND t2.vehicleid = pub_vehicle.id
+				AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+				<!-- AND (
+					(
+						pub_vehicle.id = t2.vehicleid
+						AND pub_vehicle.vehicletype = '0'
+					)
+					OR (
+						t1.id = pub_vehicle.driverid
+						AND pub_vehicle.vehicletype = '1'
+					)
+				) -->
+			)
+		LIMIT #{iDisplayStart} ,#{iDisplayLength}
+	</select>
+	<select id="getPubVehicleListCountByQuery" parameterType="QueryParam" resultType="int">
+		<!-- SELECT
+			count(*)
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							pub_vehicle.id,
+							pub_vehicle.vehclineid,
+							(
+								SELECT
+									CONCAT(
+										pub_vehcbrand.`Name`,
+										' ',
+										pub_vehcline.`name`
+									)
+								FROM
+									pub_vehicle AS pv,
+									pub_vehcline,
+									pub_vehcbrand
+								WHERE
+									pv.vehclineid = pub_vehcline.Id
+								AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+								AND pub_vehcline.platformtype=1
+								AND pub_vehcbrand.platformtype=1
+							) AS brandCars,
+							CONCAT(
+								(
+									SELECT
+										pub_dictionary.text
+									FROM
+										pub_dictionary
+									WHERE
+										pub_dictionary.type = '车牌省'
+									AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+									AND pub_dictionary.`status` = 1
+								),
+								(
+									SELECT
+										pub_dictionary.text
+									FROM
+										pub_dictionary
+									WHERE
+										pub_dictionary.type = '车牌市'
+									AND pub_dictionary.`value` = pub_vehicle.platenocity
+									AND pub_dictionary.`status` = 1
+								),
+								pub_vehicle.plateno
+							) AS showPlateNo,
+							(
+								SELECT
+									le_vehiclemodels.`name`
+								FROM
+									pub_vehicle AS pv,
+									le_vehcline_models_ref,
+									le_vehiclemodels
+								WHERE
+									le_vehcline_models_ref.`Status` = 1
+								AND le_vehiclemodels.`Status` = 1
+								AND pv.`Status` = 1
+								AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+							) AS serviceCars,
+							pub_vehicle.vin,
+							pub_vehicle.color,
+							(
+								SELECT
+									pub_cityaddr.city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.`status` = 1
+								AND pub_cityaddr.id = pub_vehicle.city
+							) AS city,
+							(
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							) AS workStatus1,
+							(
+								SELECT
+									text
+								FROM
+									pub_dictionary
+								WHERE
+									pub_dictionary.Type = '服务状态'
+								AND pub_dictionary.`Value` = workStatus1
+								AND pub_dictionary.`status` = 1
+							) AS workStatus,
+							pub_vehicle.boundstate,
+							pub_vehicle.loads,
+							pub_vehicle.vehicletype,
+							pub_vehicle.vehiclestatus
+						FROM
+							pub_vehicle,
+							(SELECT @rownum := 0) r
+						WHERE
+							pub_vehicle.`Status` = 1
+								and pub_vehicle.platformtype = 1
+								AND pub_vehicle.leasescompanyid=#{leasesCompanyId}
+						<if test="queryPlateNo != null and queryPlateNo !='' ">
+						AND CONCAT(
+								(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+								(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+								pub_vehicle.plateno
+							) like "%"#{queryPlateNo}"%"
+						</if>
+						<if test="queryServiceCars != null and queryServiceCars !='' ">
+						AND (
+								SELECT
+									le_vehiclemodels.`name`
+								FROM
+									pub_vehicle AS pv,
+									le_vehcline_models_ref,
+									le_vehiclemodels
+								WHERE
+									le_vehcline_models_ref.`Status` = 1
+								AND le_vehiclemodels.`Status` = 1
+								AND pv.`Status` = 1
+								AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+							) like "%"#{queryServiceCars}"%"
+						</if>
+						<if test="queryCity != null and queryCity !='' ">
+						AND (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city)=#{queryCity}
+						</if>
+						<if test="queryWorkStatus != null and queryWorkStatus !='' ">
+						AND (
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							) like "%"#{queryWorkStatus}"%"
+						</if>
+						<if test="queryBrandCars != null and queryBrandCars !='' ">
+						AND pub_vehicle.vehclineid = #{queryBrandCars}
+						</if>
+						<if test="queryVehicleType != null and queryVehicleType !='' ">
+						AND pub_vehicle.vehicletype = #{queryVehicleType}
+						</if>
+						<if test="queryVehicleStatus != null and queryVehicleStatus !='' ">
+						AND pub_vehicle.vehiclestatus = #{queryVehicleStatus}
+						</if>
+						<if test="queryBoundState != null and queryBoundState !='' ">
+						and	pub_vehicle.boundstate	= #{queryBoundState}					   
+						</if>
+						ORDER BY
+							CONVERT (
+								(
+									SELECT
+										pub_cityaddr.city
+									FROM
+										pub_cityaddr
+									WHERE
+										pub_cityaddr.`status` = 1
+									AND pub_cityaddr.id = pub_vehicle.city
+								) USING gbk
+							) COLLATE gbk_chinese_ci,
+							pub_vehicle.vehicletype DESC,
+							CONVERT (
+								(
+									SELECT
+										le_vehiclemodels.`level`
+									FROM
+										pub_vehicle AS pv,
+										le_vehcline_models_ref,
+										le_vehiclemodels
+									WHERE
+										le_vehcline_models_ref.`Status` = 1
+									AND le_vehiclemodels.`Status` = 1
+									AND pv.`Status` = 1
+									AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+									AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+									AND pv.id = pub_vehicle.id
+									AND pv.platformtype=1
+								) USING gbk
+							) COLLATE gbk_chinese_ci,
+							(
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							)
+					) m
+			) t -->
+		SELECT
+			count(*)
+		FROM
+			pub_vehicle
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.Id
+		LEFT JOIN pub_vehcbrand ON pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		LEFT JOIN le_vehcline_models_ref ON pub_vehicle.vehclineid = le_vehcline_models_ref.vehclineid
+		LEFT JOIN le_vehiclemodels ON le_vehiclemodels.Id = le_vehcline_models_ref.vehiclemodelsid
+		WHERE
+			pub_vehcline.`Status` = 1
+		AND pub_vehcbrand.`Status` = 1
+		AND pub_vehicle.`Status` = 1
+		AND pub_vehicle.platformtype = 1
+		AND pub_vehcline.platformtype = 1
+		AND pub_vehcbrand.platformtype = 1
+		AND pub_vehicle.leasescompanyid=#{leasesCompanyId}
+		<if test="queryPlateNo != null and queryPlateNo !='' ">
+		AND CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pub_vehicle.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pub_vehicle.plateno
+			) like "%"#{queryPlateNo}"%"
+		</if>
+		<if test="queryServiceCars != null and queryServiceCars !='' ">
+		AND le_vehiclemodels.`name` like "%"#{queryServiceCars}"%" and pub_vehicle.vehicletype = '0'
+		</if>
+		<if test="queryCity != null and queryCity !='' ">
+		AND (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city)=#{queryCity}
+		</if>
+		<if test="queryWorkStatus != null and queryWorkStatus !='' ">
+		AND (
+				SELECT
+					(
+						CASE
+						WHEN pub_vehicle.boundstate = 0 THEN
+							'3'
+						ELSE
+							t1.workstatus
+						END
+					) workstatus
+				FROM
+					pub_driver t1,
+					pub_driver_vehicle_ref t2
+				WHERE
+					t1.`Status` = 1
+				AND t1.platformtype = 1
+				AND t2.`status` = 1
+				AND t2.driverid = t1.id
+				AND t2.vehicleid = pub_vehicle.id
+				AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+				<!-- AND (
+					(
+						pub_vehicle.id = t2.vehicleid
+						AND pub_vehicle.vehicletype = '0'
+					)
+					OR (
+						t1.id = pub_vehicle.driverid
+						AND pub_vehicle.vehicletype = '1'
+					)
+				) -->
+			) like "%"#{queryWorkStatus}"%"
+		</if>
+		<if test="queryBrandCars != null and queryBrandCars !='' ">
+		AND pub_vehicle.vehclineid = #{queryBrandCars}
+		</if>
+		<if test="queryVehicleType != null and queryVehicleType !='' ">
+		AND pub_vehicle.vehicletype = #{queryVehicleType}
+		</if>
+		<if test="queryVehicleStatus != null and queryVehicleStatus !='' ">
+		AND pub_vehicle.vehiclestatus = #{queryVehicleStatus}
+		</if>
+		<if test="queryBoundState != null and queryBoundState !='' ">
+		and	pub_vehicle.boundstate	= #{queryBoundState}					   
+		</if>
+		<if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
+			AND pub_vehicle.belongleasecompany=#{belongleasecompanyQuery}
+		</if>
+	</select>
+	<!-- 首页加载品牌车系 -->
+	<select id="getBrandCars" resultType="map" parameterType="PubVehicle">
+		SELECT
+		pub_vehcline.id AS id,
+		CONCAT(
+			CONCAT(pub_vehcbrand.`Name`, ' '),
+			pub_vehcline.`name`
+		) AS text
+		FROM
+		pub_vehcline,
+		pub_vehcbrand,
+		pub_vehicle
+		WHERE
+		pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		AND pub_vehcline.`Status` = 1
+		AND pub_vehcbrand.`Status` = 1
+		AND pub_vehicle.`Status` = 1
+		AND pub_vehicle.vehclineid = pub_vehcline.Id
+		AND pub_vehicle.leasescompanyid = #{leasesCompanyId}
+		<!-- 新增所属平台的过滤条件 -->
+		and pub_vehicle.platformtype = 1
+		and pub_vehcbrand.platformtype = 1
+		and pub_vehcline.platformtype = 1
+		<if test="id != null and id != '' ">
+			and CONCAT(
+					CONCAT(pub_vehcbrand.`Name`, ' '),
+					pub_vehcline.`name`
+				) like "%"#{id}"%"
+		</if>
+		GROUP BY id
+		ORDER BY convert(CONCAT(
+			CONCAT(pub_vehcbrand.`Name`, ' '),
+			pub_vehcline.`name`
+		) using gbk) ASC
+	</select>
+	<!-- 得到服务车型 -->
+	<select id="getServiceCars" resultType="PubVehicle" parameterType="string">
+		SELECT
+		le_vehiclemodels.`name` AS serviceCars
+		FROM
+		pub_vehicle,
+		pub_vehcline,
+		le_vehcline_models_ref,
+		le_vehiclemodels
+		WHERE
+		pub_vehicle.vehclineid=pub_vehcline.Id
+		AND le_vehcline_models_ref.vehclineid=pub_vehcline.Id
+		AND le_vehcline_models_ref.vehiclemodelsid=le_vehiclemodels.Id
+		AND pub_vehicle.leasescompanyid=#{leasesCompanyId}
+		AND pub_vehicle.`Status` = 1
+		AND pub_vehcline.`Status` = 1
+		AND le_vehcline_models_ref.`Status` = 1
+		AND le_vehiclemodels.`Status` = 1
+		<!-- 新增所属平台的过滤条件 -->
+		and pub_vehicle.platformtype = 1
+		and pub_vehcline.platformtype = 1
+		GROUP BY le_vehiclemodels.`name`
+		ORDER BY le_vehiclemodels.`level`
+	</select>
+	<!-- 得到城市  -->
+	<select id="getCity" resultType="PubVehicle" parameterType="string">
+		SELECT (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city)  AS city FROM pub_vehicle WHERE leasescompanyid=#{leasesCompanyId} AND `Status` = 1 
+		<!-- 新增所属平台的过滤条件 -->
+		and pub_vehicle.platformtype = 1
+		GROUP BY city
+	</select>
+	<!-- 根据id查询一条数据 -->
+	<select id="getById" parameterType="string" resultType="PubVehicle">
+		SELECT
+		pub_vehicle.*, CONCAT(
+			CONCAT(pub_vehcbrand.`Name`, ' '),
+			pub_vehcline.`name`
+		) AS brandCars,
+		(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1) AS plateNoProvinceName,
+		(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1) AS plateNoCityName,
+		(SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city) AS cityName,
+		(SELECT pub_cityaddr.markid FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city) AS citymarkid,
+		(
+				SELECT
+					pub_dictionary.text
+				FROM
+					pub_dictionary
+				WHERE
+					pub_dictionary.type = '租赁公司'
+				AND pub_dictionary.`value` = pub_vehicle.belongleasecompany
+			) AS belongleasecompanyName
+		FROM
+		pub_vehicle,
+		pub_vehcline,
+		pub_vehcbrand
+		WHERE
+		pub_vehicle.id = #{id}
+		AND pub_vehicle.vehclineid = pub_vehcline.Id
+		AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+	</select>
+	<!-- 拿到城市字典表所有数据 -->
+	<select id="getPubCityaddr" resultType="City">
+		SELECT * FROM pub_cityaddr where `status`=1
+	</select>
+	<!-- 拿到车牌省 -->
+	<select id="getPlateNoProvince" resultType="Dictionary">
+		SELECT * FROM pub_dictionary WHERE pub_dictionary.type="车牌省" AND pub_dictionary.`status`=1
+	</select>
+	<!-- 根据车牌省的id 关联查到下面的市 -->
+	<select id="getPlateNoCity" resultType="Dictionary" parameterType="string">
+		SELECT
+		*
+		FROM
+			pub_dictionary AS p
+		WHERE
+		p.parentid = (
+		SELECT
+			id
+		FROM
+			pub_dictionary
+		WHERE
+			pub_dictionary.type = "车牌省"
+		AND pub_dictionary.`status` = 1
+		AND pub_dictionary.`value` = #{id}
+		)
+	</select>
+	<!-- 导出 -->
+	<select id="exportExcel" parameterType="QueryParam" resultType="PubVehicle">
+		<!-- SELECT
+			t.*
+		FROM
+			(
+
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							pub_vehicle.id,
+							pub_vehicle.vehclineid,
+							(
+								SELECT
+									CONCAT(
+										pub_vehcbrand.`Name`,
+										' ',
+										pub_vehcline.`name`
+									)
+								FROM
+									pub_vehicle AS pv,
+									pub_vehcline,
+									pub_vehcbrand
+								WHERE
+									pv.vehclineid = pub_vehcline.Id
+								AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+								AND pub_vehcline.platformtype=1
+								AND pub_vehcbrand.platformtype=1
+							) AS brandCars,
+							CONCAT(
+								(
+									SELECT
+										pub_dictionary.text
+									FROM
+										pub_dictionary
+									WHERE
+										pub_dictionary.type = '车牌省'
+									AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+									AND pub_dictionary.`status` = 1
+								),
+								(
+									SELECT
+										pub_dictionary.text
+									FROM
+										pub_dictionary
+									WHERE
+										pub_dictionary.type = '车牌市'
+									AND pub_dictionary.`value` = pub_vehicle.platenocity
+									AND pub_dictionary.`status` = 1
+								),
+								pub_vehicle.plateno
+							) AS showPlateNo,
+							(
+								SELECT
+									le_vehiclemodels.`name`
+								FROM
+									pub_vehicle AS pv,
+									le_vehcline_models_ref,
+									le_vehiclemodels
+								WHERE
+									le_vehcline_models_ref.`Status` = 1
+								AND le_vehiclemodels.`Status` = 1
+								AND pv.`Status` = 1
+								AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+							) AS serviceCars,
+							pub_vehicle.vin,
+							pub_vehicle.color,
+							(
+								SELECT
+									pub_cityaddr.city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.`status` = 1
+								AND pub_cityaddr.id = pub_vehicle.city
+							) AS city,
+							(
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							) AS workStatus1,
+							(
+								SELECT
+									text
+								FROM
+									pub_dictionary
+								WHERE
+									pub_dictionary.Type = '服务状态'
+								AND pub_dictionary.`Value` = workStatus1
+								AND pub_dictionary.`status` = 1
+							) AS workStatus,
+							pub_vehicle.boundstate,
+							pub_vehicle.loads,
+							pub_vehicle.vehicletype,
+							pub_vehicle.vehiclestatus
+						FROM
+							pub_vehicle,
+							(SELECT @rownum := 0) r
+						WHERE
+							pub_vehicle.`Status` = 1
+								and pub_vehicle.platformtype = 1
+								AND pub_vehicle.leasescompanyid=#{leasesCompanyId}
+						<if test="queryPlateNo != null and queryPlateNo !='' ">
+						AND CONCAT(
+								(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+								(SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+								pub_vehicle.plateno
+							) like "%"#{queryPlateNo}"%"
+						</if>
+						<if test="queryServiceCars != null and queryServiceCars !='' ">
+						AND (
+								SELECT
+									le_vehiclemodels.`name`
+								FROM
+									pub_vehicle AS pv,
+									le_vehcline_models_ref,
+									le_vehiclemodels
+								WHERE
+									le_vehcline_models_ref.`Status` = 1
+								AND le_vehiclemodels.`Status` = 1
+								AND pv.`Status` = 1
+								AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+								AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+								AND pv.id = pub_vehicle.id
+								AND pv.platformtype=1
+							) like "%"#{queryServiceCars}"%"
+						</if>
+						<if test="queryCity != null and queryCity !='' ">
+						AND (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city)=#{queryCity}
+						</if>
+						<if test="queryWorkStatus != null and queryWorkStatus !='' ">
+						AND (
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							) like "%"#{queryWorkStatus}"%"
+						</if>
+						<if test="queryBrandCars != null and queryBrandCars !='' ">
+						AND pub_vehicle.vehclineid = #{queryBrandCars}
+						</if>
+						<if test="queryVehicleType != null and queryVehicleType !='' ">
+						AND pub_vehicle.vehicletype = #{queryVehicleType}
+						</if>
+						<if test="queryVehicleStatus != null and queryVehicleStatus !='' ">
+						AND pub_vehicle.vehiclestatus = #{queryVehicleStatus}
+						</if>
+						<if test="queryBoundState != null and queryBoundState !='' ">
+						and	pub_vehicle.boundstate	= #{queryBoundState}					   
+						</if>
+						ORDER BY
+							CONVERT (
+								(
+									SELECT
+										pub_cityaddr.city
+									FROM
+										pub_cityaddr
+									WHERE
+										pub_cityaddr.`status` = 1
+									AND pub_cityaddr.id = pub_vehicle.city
+								) USING gbk
+							) COLLATE gbk_chinese_ci,
+							pub_vehicle.vehicletype DESC,
+							CONVERT (
+								(
+									SELECT
+										le_vehiclemodels.`level`
+									FROM
+										pub_vehicle AS pv,
+										le_vehcline_models_ref,
+										le_vehiclemodels
+									WHERE
+										le_vehcline_models_ref.`Status` = 1
+									AND le_vehiclemodels.`Status` = 1
+									AND pv.`Status` = 1
+									AND le_vehcline_models_ref.vehclineid = pv.vehclineid
+									AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+									AND pv.id = pub_vehicle.id
+									AND pv.platformtype=1
+								) USING gbk
+							) COLLATE gbk_chinese_ci,
+							(
+								SELECT
+									pub_driver.workstatus
+								FROM
+									pub_driver_vehicle_ref,
+									pub_driver
+								WHERE
+									pub_driver.`Status` = 1
+								AND pub_driver_vehicle_ref.`Status` = 1
+								AND pub_driver_vehicle_ref.driverid = pub_driver.id
+								AND pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+								AND pub_driver.platformtype=1
+							)
+					) m
+			) t -->
+			SELECT
+			pub_vehicle.leasescompanyid,
+			pub_vehicle.id,
+			pub_vehicle.vehclineid,
+			CONCAT(
+				pub_vehcbrand.`Name`,
+				" ",
+				pub_vehcline.`name`
+			) AS brandCars,
+			CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pub_vehicle.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pub_vehicle.plateno
+			) AS showPlateNo,
+			le_vehiclemodels.`name` AS serviceCars,
+			pub_vehicle.vin,
+			pub_vehicle.color,
+			(
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.`status` = 1
+				AND pub_cityaddr.id = pub_vehicle.city
+			) AS city,
+			(
+				SELECT
+					(
+						CASE
+						WHEN pub_vehicle.boundstate = 0 THEN
+							'3'
+						ELSE
+							t1.workstatus
+						END
+					) workstatus
+				FROM
+					pub_driver t1,
+					pub_driver_vehicle_ref t2
+				WHERE
+					t1.`Status` = 1
+				AND t1.platformtype = 1
+				AND t2.`status` = 1
+				AND t2.driverid = t1.id
+				AND t2.vehicleid = pub_vehicle.id
+				AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+				<!-- AND (
+					(
+						pub_vehicle.id = t2.vehicleid
+						AND pub_vehicle.vehicletype = '0'
+					)
+					OR (
+						t1.id = pub_vehicle.driverid
+						AND pub_vehicle.vehicletype = '1'
+					)
+				) -->
+			) AS workStatus1,
+			(
+				SELECT
+					text
+				FROM
+					pub_dictionary
+				WHERE
+					pub_dictionary.Type = '服务状态'
+				AND pub_dictionary.`Value` = workStatus1
+				AND pub_dictionary.`status` = 1
+			) AS workStatus,
+			(
+				SELECT
+					pub_dictionary.text
+				FROM
+					pub_dictionary
+				WHERE
+					pub_dictionary.type = '租赁公司'
+				AND pub_dictionary.`value` = pub_vehicle.belongleasecompany
+			) AS belongleasecompanyName,
+			pub_vehicle.boundstate,
+			pub_vehicle.loads,
+			pub_vehicle.vehicletype,
+			pub_vehicle.vehiclestatus
+		FROM
+			pub_vehicle
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.Id
+		LEFT JOIN pub_vehcbrand ON pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		LEFT JOIN le_vehcline_models_ref ON pub_vehicle.vehclineid = le_vehcline_models_ref.vehclineid
+		LEFT JOIN le_vehiclemodels ON le_vehiclemodels.Id = le_vehcline_models_ref.vehiclemodelsid
+		WHERE
+			pub_vehcline.`Status` = 1
+		AND pub_vehcbrand.`Status` = 1
+		AND pub_vehicle.`Status` = 1
+		AND pub_vehicle.platformtype = 1
+		AND pub_vehcline.platformtype = 1
+		AND pub_vehcbrand.platformtype = 1
+		AND pub_vehicle.leasescompanyid=#{leasesCompanyId}
+		<if test="queryPlateNo != null and queryPlateNo !='' ">
+		AND CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pub_vehicle.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pub_vehicle.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pub_vehicle.plateno
+			) like "%"#{queryPlateNo}"%"
+		</if>
+		<if test="queryServiceCars != null and queryServiceCars !='' ">
+		AND le_vehiclemodels.`name` like "%"#{queryServiceCars}"%" and pub_vehicle.vehicletype = '0'
+		</if>
+		<if test="queryCity != null and queryCity !='' ">
+		AND (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city)=#{queryCity}
+		</if>
+		<if test="queryWorkStatus != null and queryWorkStatus !='' ">
+		AND (
+				SELECT
+					(
+						CASE
+						WHEN pub_vehicle.boundstate = 0 THEN
+							'3'
+						ELSE
+							t1.workstatus
+						END
+					) workstatus
+				FROM
+					pub_driver t1,
+					pub_driver_vehicle_ref t2
+				WHERE
+					t1.`Status` = 1
+				AND t1.platformtype = 1
+				AND t2.`status` = 1
+				AND t2.driverid = t1.id
+				AND t2.vehicleid = pub_vehicle.id
+				AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+				<!-- AND (
+					(
+						pub_vehicle.id = t2.vehicleid
+						AND pub_vehicle.vehicletype = '0'
+					)
+					OR (
+						t1.id = pub_vehicle.driverid
+						AND pub_vehicle.vehicletype = '1'
+					)
+				) -->
+			) like "%"#{queryWorkStatus}"%"
+		</if>
+		<if test="queryBrandCars != null and queryBrandCars !='' ">
+		AND pub_vehicle.vehclineid = #{queryBrandCars}
+		</if>
+		<if test="queryVehicleType != null and queryVehicleType !='' ">
+		AND pub_vehicle.vehicletype = #{queryVehicleType}
+		</if>
+		<if test="queryVehicleStatus != null and queryVehicleStatus !='' ">
+		AND pub_vehicle.vehiclestatus = #{queryVehicleStatus}
+		</if>
+		<if test="queryBoundState != null and queryBoundState !='' ">
+		and	pub_vehicle.boundstate	= #{queryBoundState}					   
+		</if>
+		<if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
+			AND pub_vehicle.belongleasecompany=#{belongleasecompanyQuery}
+		</if>
+		ORDER BY
+		CONVERT (
+			(
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.`status` = 1
+				AND pub_cityaddr.id = pub_vehicle.city
+			) USING gbk
+		) COLLATE gbk_chinese_ci,
+		pub_vehicle.vehicletype DESC,
+		CONVERT((le_vehiclemodels.`name`)USING gbk)COLLATE gbk_chinese_ci,
+		(
+			SELECT
+				(
+					CASE
+					WHEN pub_vehicle.boundstate = 0 THEN
+						'3'
+					ELSE
+						t1.workstatus
+					END
+				) workstatus
+			FROM
+				pub_driver t1,
+				pub_driver_vehicle_ref t2
+			WHERE
+				t1.`Status` = 1
+			AND t1.platformtype = 1
+			AND t2.`status` = 1
+			AND t2.driverid = t1.id
+			AND t2.vehicleid = pub_vehicle.id
+			AND ((t1.vehicletype = '1' AND t1.id = pub_vehicle.driverid AND t1.passworkstatus IN( '0' ,'1' ,'3')) OR (t1.vehicletype = '0'))
+			<!-- AND (
+				(
+					pub_vehicle.id = t2.vehicleid
+					AND pub_vehicle.vehicletype = '0'
+				)
+				OR (
+					t1.id = pub_vehicle.driverid
+					AND pub_vehicle.vehicletype = '1'
+				)
+			) -->
+		) DESC
+	</select>
+	<select id="getPlateCode" resultType="PubDictionary" parameterType="string">
+					SELECT
+						pub_dictionary.VALUE,
+						pub_dictionary.id
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = "车牌省"
+					AND pub_dictionary. STATUS = 1
+					AND pub_dictionary.text = #{plateOne}
+	</select>
+	<select id="getPlateCity" resultType="string" parameterType="PubDictionary">
+					SELECT
+						pub_dictionary.VALUE
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = "车牌市"
+					AND pub_dictionary. STATUS = 1
+					AND pub_dictionary.text = #{text}
+					AND pub_dictionary.parentid = #{id}
+	</select>
+	<select id="getCityCode" resultType="PubCityAddr" parameterType="string">
+				SELECT
+					pub_cityaddr.id
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.city like #{city}"市"
+					or pub_cityaddr.city = #{city}
+				AND pub_cityaddr. STATUS = 1
+	</select>
+	<select id="getVehclineId" resultType="string" parameterType="PubVehicle">
+				<!-- SELECT
+             distinct(pv.vehclineid)
+						FROM
+							pub_vehicle AS pv,
+							pub_vehcline,
+							pub_vehcbrand
+						WHERE
+							pv.vehclineid = pub_vehcline.Id
+						AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+            AND CONCAT(
+								pub_vehcbrand.`Name`,
+								' ',
+								pub_vehcline.`name`
+							) = #{vehcline} -->
+				SELECT
+					pub_vehcline.id
+				FROM
+					pub_vehcbrand,
+					pub_vehcline
+				WHERE
+					pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+				AND pub_vehcline.leasescompanyid = #{leasesCompanyId}
+				AND CONCAT(pub_vehcbrand.`Name`,' ',pub_vehcline.`name`) = #{brandCars}
+				<!-- 新增所属平台的过滤条件 -->
+				and pub_vehcline.platformtype = 1
+				and pub_vehcbrand.platformtype = 1
+	</select>
+	<!-- 根据车辆id 查询经营区域 -->
+	<select id="getVehicleidByVehicleScope" resultType="PubVehicleScope" parameterType="string">
+		SELECT
+			pub_vehicle_scope.*, (
+				SELECT
+					city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = pub_vehicle_scope.cityid
+				AND pub_cityaddr.`status` = 1
+			) AS cityName
+		FROM
+			pub_vehicle_scope
+		WHERE
+			pub_vehicle_scope.vehicleid = #{id}
+		AND pub_vehicle_scope.`Status` = 1
+	</select>
+	<select id="listVehicleAndBindInfo" resultType="VehicleQueryDto" parameterType="QueryParam">
+		select t1.id,getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) as platenoStr,
+		getCityStr(t1.city) as cityStr,(@rownum := @rownum + 1) AS rownum,
+		t2.workstatus as driverState
+		from pub_vehicle t1
+		left join pub_driver t2 on t1.driverid = t2.id,
+		(SELECT @rownum := 0) r
+		where t1.platformtype = #{platformtype}
+		and t1.status ='1'
+		<include refid="queryParam"></include>
+		limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+
+	 <sql id="queryParam">
+
+		 <if test="leasesCompanyId != null and leasesCompanyId != ''">
+			 and t1.leasescompanyid = #{leasesCompanyId}
+		 </if>
+
+		 <if test="vehicleId !=null  and vehicleId !=''">
+			and t1.id = #{vehicleId}
+		 </if>
+
+		 <if test="vehicletype != null  and vehicletype !=''">
+		 	and t1.vehicletype = #{vehicletype}
+	 	 </if>
+
+		 <if test="queryPlateNo != '' and queryPlateNo != null">
+			 and getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) like "%"#{queryPlateNo}"%"
+		 </if>
+
+		 <if test="driverid != null  and driverid !=''">
+			 and t1.id in (select a.vehicleid from pub_driver_vehicle_ref a where a.driverid = #{driverid} and a.vehicleid = t1.id)
+		 </if>
+
+		 <choose>
+			 <when test="driverState =='-1'.toString()">
+				 and t1.boundstate !='1'
+			 </when>
+			 <when test="driverState =='2'.toString()">
+				 /**下线状态需判断 车辆状态为维修且当班司机为空；或当班司机状态为下线*/
+				 and ((t1.vehiclestatus ='1' and t1.driverid ='')
+				 or t2.workstatus = #{driverState})
+			 </when>
+			 <when test="driverState != null and driverState !=''">
+				and t2.workstatus = #{driverState}
+			 </when>
+
+			 <otherwise>
+				and 1=1
+			 </otherwise>
+		 </choose>
+	 </sql>
+
+	<select id="getlistVehicleAndBindInfoCount" resultType="Integer" parameterType="QueryParam">
+		select count(t1.id) from pub_vehicle t1
+		left join pub_driver t2 on t1.driverid = t2.id
+		where t1.platformtype = #{platformtype}
+		and t1.leasescompanyid = #{leasesCompanyId}
+		<include refid="queryParam"></include>
+	</select>
+
+	<update id="updateVehicleById" parameterType="PubVehicle">
+		UPDATE pub_vehicle
+		SET
+		<if test="vehicleStatus!=null and vehicleStatus!=''">
+			vehiclestatus = #{vehicleStatus},
+		</if>
+		<if test="boundState!=null and boundState!=''">
+			boundstate = #{boundState},
+		</if>
+		<if test="bindPersonNum!=null and bindPersonNum!= -1">
+			bindpersonnum = #{bindPersonNum},
+		</if>
+		updater=#{updater},
+		UpdateTime=#{updateTime}
+		WHERE
+		id = #{id}
+	</update>
+
+	<update id="updateDriverId" parameterType="PubVehicle">
+		UPDATE pub_vehicle
+		SET
+		driverid = #{driverId},
+		updater=#{updater},
+		UpdateTime=#{updateTime}
+		WHERE
+		id = #{id}
+	</update>
+</mapper>

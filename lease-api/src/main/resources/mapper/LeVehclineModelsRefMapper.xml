@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.LeVehclineModelsRefMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<insert id="createLeVehclineModelsRef" parameterType="LeVehclineModelsRef">
+		insert into le_vehcline_models_ref(id,vehiclemodelsid,vehclineid,CreateTime,UpdateTime,Creater,Updater,Status)
+			values (#{id},#{vehicleModelsId},#{vehclineid},now(),now(),#{creater},#{updater},1)
+	</insert>
+	<delete id="deleteLeVehclineModelsRef" parameterType="LeVehclineModelsRef">
+		DELETE FROM le_vehcline_models_ref where vehiclemodelsid = #{vehiclemodelsid} and vehclineid = #{vehclineid}
+	</delete>
+	<delete id="deleteLeVehclineModelsRefAll" parameterType="String">
+		DELETE FROM le_vehcline_models_ref where vehiclemodelsid = #{id}
+	</delete>
+	<!-- 判断 在 车辆中添加了这个 服务车型的车系 -->
+	<select id="checkVelMod" parameterType="PubVehicle" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			pub_driver_vehicle_ref,
+			pub_vehicle
+		WHERE <!-- pub_driver_vehicle_ref.bindState= '0'
+		AND  -->pub_driver_vehicle_ref.vehicleId = pub_vehicle.id
+		AND pub_vehicle.vehclineid=#{vehclineId}  
+	</select>
+	<!-- 根据车型id 查已绑定的车系id -->
+	<select id="genVehiclineId" resultType="String" parameterType="String">
+		SELECT
+			le_vehcline_models_ref.vehclineid
+		FROM
+			le_vehcline_models_ref,
+			pub_vehicle
+		WHERE
+			le_vehcline_models_ref.STATUS = 1
+		AND pub_vehicle.`Status` = 1
+		AND pub_vehicle.platformtype = 1
+		AND le_vehcline_models_ref.vehclineid = pub_vehicle.vehclineid
+		AND pub_vehicle.boundstate = 1
+		AND le_vehcline_models_ref.vehiclemodelsid=#{id}
+	</select>
+	<select id="getBindVehclines" parameterType="List"  resultType="PubVehcline">
+		SELECT
+			pub_vehcline.*, pub_vehcbrand. NAME AS vehcBrandName
+		FROM
+			pub_vehcline,
+			pub_vehcbrand,
+			le_vehcline_models_ref
+		WHERE
+			pub_vehcline. STATUS = 1
+		AND pub_vehcbrand. STATUS = 1
+		AND pub_vehcline. platformtype = 1
+		AND pub_vehcbrand. platformtype = 1
+		AND pub_vehcline.leasescompanyid = pub_vehcbrand.leasescompanyid
+		AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		AND le_vehcline_models_ref. STATUS = 1
+		AND le_vehcline_models_ref.vehclineid = pub_vehcline.Id
+		AND le_vehcline_models_ref.vehclineid IN (
+			SELECT
+			pub_vehicle.vehclineid
+			FROM
+				pub_vehicle,
+				pub_driver_vehicle_ref
+			where pub_vehicle.`Status`=1
+			AND pub_vehicle.platformtype=1
+			AND pub_driver_vehicle_ref.`status`=1
+			AND pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+   			AND pub_vehicle.vehclineid in
+   			<foreach item="item" index="index" collection="list" open="(" separator="," close=")"> 
+   			  #{item}  
+   			</foreach>
+		)
+	</select>
+</mapper>

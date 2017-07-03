@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.szyciov.lease.mapper.PubDriverVehicleBindMapper" >
+
+  <select id="getPubDriverVehicleBindById" resultType="PubDriverVehicleBind" >
+    select `id` ,`vehicleid` ,`driverid` ,`drivertype` ,`bindstate` ,
+    `unbindreason` ,`bindpersonnum` ,`binddirverinfo` ,`createtime` ,
+    `updatetime` ,`operator` ,`creater` ,`updater` ,`status`
+    from pub_driver_vehicle_bind where  `id` = #{id}
+  </select>
+  
+
+  
+  <insert id="save" parameterType="PubDriverVehicleBind" useGeneratedKeys="true" >
+    insert into pub_driver_vehicle_bind
+    (`id` ,`vehicleid` ,`driverid` ,`drivertype` ,`bindstate` ,`unbindreason` ,
+    `bindpersonnum` ,`binddirverinfo` ,`createtime` ,`updatetime` ,`operator` ,
+    `creater` ,`updater` ,`status` ,unbindpersonnum,unbinddirverinfo )
+    values
+    (#{id},#{vehicleid},#{driverid},#{drivertype},#{bindstate},#{unbindreason},
+    #{bindpersonnum},#{binddirverinfo},#{createtime},#{updatetime},#{operator},
+    #{creater},#{updater},#{status},#{unbindpersonnum},#{unbinddirverinfo})
+  </insert>
+
+
+  <delete id="deleteByPrimaryKey">
+    delete from pub_driver_vehicle_bind where  `id` = #{id}
+  </delete>
+
+  <select id="listCarBindRecord" resultType="CarBindRecordDto" parameterType="CarBindRecordQueryParam">
+    SELECT
+    t1.jobnum,
+    t1.name,
+    t1.phone,
+    t.bindstate,
+    t5.`name` as modelName,
+    getPlatenoStr(t2.platenoprovince,t2.platenocity,t2.plateno) as platenoStr,
+    t.createtime,
+    t.unbindreason,
+    t3.nickname,
+    t2.vin as vinStr,
+    t6.text as belongLeasecompanyName
+    FROM
+    pub_driver_vehicle_bind t
+    LEFT JOIN pub_driver t1 on t1.id = t.driverid and t1.`Status`='1'
+    LEFT JOIN pub_vehicle t2 on t2.id = t.vehicleid  and t2.`Status`='1'
+    left join le_user t3 on t3.id = t.operator and t3.`status`='1'
+    left join pub_vehcline t4 on t2.vehclineid = t4.id and t4.status ='1'
+    left join le_vehiclemodels t5 on t5.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t4.id and a.status ='1')
+    left join pub_dictionary t6 on t1.belongleasecompany = t6.id and t6.status = '1' 
+    where t2.leasescompanyid = #{leaseId}
+        and t2.platformtype = #{platformType}
+    <include refid="listCarBindRecordParam"/>
+    order by t.createtime desc
+    limit #{iDisplayStart}, #{iDisplayLength}
+  </select>
+
+
+  <select id="countCarBindRecord" resultType="int" parameterType="CarBindRecordQueryParam">
+    SELECT
+    count(t.id)
+    FROM
+    pub_driver_vehicle_bind t
+    LEFT JOIN pub_driver t1 on t1.id = t.driverid and t1.`Status`='1'
+    LEFT JOIN pub_vehicle t2 on t2.id = t.vehicleid  and t2.`Status`='1'
+    left join le_user t3 on t3.id = t.operator and t3.`status`='1'
+    left join pub_vehcline t4 on t2.vehclineid = t4.id and t4.status ='1'
+    left join le_vehiclemodels t5 on t5.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t4.id and a.status ='1')
+    left join pub_dictionary t6 on t1.belongleasecompany = t6.id and t6.status = '1' 
+    where t2.leasescompanyid = #{leaseId}
+    and t2.platformtype = #{platformType}
+    <include refid="listCarBindRecordParam"/>
+  </select>
+  
+  <sql id="listCarBindRecordParam">
+    <if test="driverId!=null and driverId!=''">
+      and t1.id = #{driverId}
+    </if>
+
+    <if test="vehicleId!=null and vehicleId!=''">
+      and t2.id = #{vehicleId}
+    </if>
+    <if test="jobNum!=null and jobNum!=''">
+      and t1.jobnum = #{jobNum}
+    </if>
+
+    <if test="bindStatus!=null and bindStatus!=''">
+      and t.bindstate = #{bindStatus}
+    </if>
+    <if test="platenoStr!=null and platenoStr!=''">
+      and t2.id = #{platenoStr}
+    </if>
+
+    <if test="timeStart != '' and timeStart != null">
+      <![CDATA[
+             and t.createtime >= date_format(#{timeStart}, '%Y-%m-%d')
+        ]]>
+    </if>
+
+    <if test="timeEnd != '' and timeEnd != null">
+      <![CDATA[
+              and t.createtime < STR_TO_DATE(ADDDATE(#{timeEnd},1),'%Y-%m-%d')
+        ]]>
+
+    </if>
+    <if test="belongLeasecompany!=null and belongLeasecompany!=''">
+      and t1.belongleasecompany = #{belongLeasecompany}
+    </if>
+  </sql>
+
+
+
+  <select id="listTaxiBindRecord" resultType="TaxiBindRecordDto" parameterType="CarBindRecordQueryParam">
+    SELECT
+    t.createtime,
+    t.bindstate,
+    t1.name,
+    t1.phone,
+    t.unbindreason,
+    t3.nickname,
+    t.bindpersonnum,
+    t.binddirverinfo,
+    t.unbindpersonnum,
+    t.unbinddirverinfo
+    FROM
+    pub_driver_vehicle_bind t
+    LEFT JOIN pub_driver t1 on t1.id = t.driverid and t1.`Status`='1'
+    LEFT JOIN pub_vehicle t2 on t2.id = t.vehicleid  and t2.`Status`='1'
+    left join le_user t3 on t3.id = t.operator and t3.`status`='1'
+    left join pub_vehcline t4 on t2.vehclineid = t4.id and t4.status ='1'
+    left join le_vehiclemodels t5 on t5.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t4.id and a.status ='1')
+    where t2.leasescompanyid = #{leaseId}
+    and t2.platformtype = #{platformType}
+    and t.vehicleid = #{vehicleId}
+    order by t.createtime desc
+    limit #{iDisplayStart}, #{iDisplayLength}
+  </select>
+
+
+  <select id="countTaxiBindRecord" resultType="int" parameterType="CarBindRecordQueryParam">
+    SELECT
+    count(t.id)
+    FROM
+    pub_driver_vehicle_bind t
+    LEFT JOIN pub_driver t1 on t1.id = t.driverid and t1.`Status`='1'
+    LEFT JOIN pub_vehicle t2 on t2.id = t.vehicleid  and t2.`Status`='1'
+    left join le_user t3 on t3.id = t.operator and t3.`status`='1'
+    left join pub_vehcline t4 on t2.vehclineid = t4.id and t4.status ='1'
+    left join le_vehiclemodels t5 on t5.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t4.id and a.status ='1')
+    where t2.leasescompanyid = #{leaseId}
+    and t2.platformtype = #{platformType}
+    and t.vehicleid = #{vehicleId}
+  </select>
+
+
+
+
+</mapper>

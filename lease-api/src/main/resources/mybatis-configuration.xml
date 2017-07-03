@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!--整合Spring的时候 只有 settings typeAliases mapper 三个属性有用, 其余的要在spring总配置文件中会覆盖 -->
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="defaultExecutorType" value="REUSE" /> <!-- 使用预处理执行器 -->
+		<setting name="defaultStatementTimeout" value="25" />
+		<setting name="localCacheScope" value="SESSION" />
+		<setting name="callSettersOnNulls" value="true"/>
+	</settings>
+	<typeAliases>
+		<typeAlias type="com.szyciov.param.QueryParam" alias="QueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.UserQueryParam" alias="UserQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.RoleManagementQueryParam" alias="RoleManagementQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.LeAccountRulesModiLogQueryParam" alias="LeAccountRulesModiLogQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.LeAccountRulesQueryParam" alias="LeAccountRulesQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.IndividualAccountRulesQueryParam" alias="IndividualAccountRulesQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.LeSendRulesQueryParam" alias="LeSendRulesQueryParam"/>	
+		<typeAlias type="com.szyciov.lease.param.OrganAccountQueryParam" alias="OrganAccountQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.OrganBillQueryParam" alias="OrganBillQueryParam"/>	
+		<typeAlias type="com.szyciov.lease.param.OrganUserAccountQueryParam" alias="OrganUserAccountQueryParam"/>
+		<typeAlias type="com.szyciov.entity.Dictionary" alias="Dictionary"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrgan" alias="OrgOrgan"/>
+		<typeAlias type="com.szyciov.org.entity.OrgUser" alias="OrgUser"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganCompanyRef" alias="OrgOrganCompanyRef"/>
+		<typeAlias type="com.szyciov.lease.entity.PubDriver" alias="PubDriver"/>
+		<typeAlias type="com.szyciov.entity.PubDriver" alias="PubDriver2"/>
+		<typeAlias type="com.szyciov.lease.entity.PubVehicle" alias="PubVehicle"/>
+		<typeAlias type="com.szyciov.lease.entity.PubVehcbrand" alias="PubVehcbrand"/>
+		<typeAlias type="com.szyciov.lease.entity.PubVehcline" alias="PubVehcline"/>
+		<typeAlias type="com.szyciov.lease.entity.LeVehiclemodels" alias="LeVehiclemodels"/>
+		<typeAlias type="com.szyciov.lease.entity.LeVehclineModelsRef" alias="LeVehclineModelsRef"/>
+		<typeAlias type="com.szyciov.lease.entity.RoleManagement" alias="RoleManagement"/>
+		<typeAlias type="com.szyciov.lease.entity.User" alias="User"/>
+		<typeAlias type="com.szyciov.entity.MenuBar" alias="MenuBar"/>		
+		<typeAlias type="com.szyciov.lease.entity.LeAccountRules" alias="LeAccountRules"/>
+		<typeAlias type="com.szyciov.lease.entity.LeAccountRulesModiLog" alias="LeAccountRulesModiLog"/>		
+		<typeAlias type="com.szyciov.lease.entity.LeCompanyRulesRef" alias="LeCompanyRulesRef"/>		
+		<typeAlias type="com.szyciov.entity.PubSendrules" alias="PubSendrules2"/>
+		<typeAlias type="com.szyciov.op.entity.PubSendRules" alias="PubSendRules"/>
+		<typeAlias type="com.szyciov.op.entity.PubSendRulesHistory" alias="PubSendRulesHistory"/>
+		<typeAlias type="com.szyciov.op.param.PubSendRulesHistoryQueryParam" alias="PubSendRulesHistoryQueryParam"/>					
+		<typeAlias type="com.szyciov.lease.entity.OrganAccountInfo" alias="OrganAccountInfo"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganExpenses" alias="OrgOrganExpenses"/>						
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganBill" alias="OrgOrganBill"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganBillState" alias="OrgOrganBillState"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrderInfo" alias="OrgOrderInfo"/>					
+		<typeAlias type="com.szyciov.lease.entity.OrganUserAccountInfo" alias="OrganUserAccountInfo"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgUserExpenses" alias="OrgUserExpenses"/>
+		<typeAlias type="com.szyciov.lease.entity.PubVehicleScope" alias="PubVehicleScope"/>
+		<typeAlias type="com.szyciov.lease.entity.Menu" alias="Menu"/>
+		<typeAlias type="com.szyciov.org.entity.OrgOrder" alias="OrgOrder"/>
+		<typeAlias type="com.szyciov.lease.entity.FavUser" alias="FavUser"/>
+		<typeAlias type="com.szyciov.entity.City" alias="City"/>
+		<typeAlias type="com.szyciov.entity.Driver" alias="Driver"/>
+		<typeAlias type="com.szyciov.lease.entity.PubCityAddr" alias="PubCityAddr"/>
+		<typeAlias type="com.szyciov.lease.entity.PubDictionary" alias="PubDictionary"/>
+		<typeAlias type="com.szyciov.entity.PubAirPortAddr" alias="PubAirPortAddr"/>
+		<typeAlias type="com.szyciov.lease.entity.LeLeasescompany" alias="LeLeasescompany"/>
+		<typeAlias type="com.szyciov.org.entity.OrgOrganDriverRef" alias="OrgOrganDriverRef"/>
+		<typeAlias type="com.szyciov.lease.param.OrderManageQueryParam" alias="OrderManageQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.LeBaseQueryParam" alias="LeBaseQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.LeOrgorderstatisticsParam" alias="LeOrgorderstatisticsParam"/>
+		<typeAlias type="com.szyciov.lease.param.GetCarTypesParam" alias="GetCarTypesParam"/>
+		<typeAlias type="com.szyciov.driver.param.OrderCostParam" alias="OrderCostParam"/>
+		<typeAlias type="com.szyciov.org.param.OrgUserParam" alias="OrgUserParam"/>
+		<typeAlias type="com.szyciov.entity.OrderCost" alias="OrderCost"/>
+		<typeAlias type="com.szyciov.entity.Select2Entity" alias="Select2Entity"/>
+		<typeAlias type="com.szyciov.param.Select2Param" alias="Select2Param"/>
+		<typeAlias type="com.szyciov.lease.param.LeDriverorderstatisticsParam" alias="LeDriverorderstatisticsParam"/>
+		<typeAlias type="com.szyciov.lease.param.GetSendInfoParam" alias="GetSendInfoParam"/>
+		<typeAlias type="com.szyciov.lease.param.PubDriverInBoundParam" alias="PubDriverInBoundParam"/>
+		<typeAlias type="com.szyciov.lease.param.LePersonalorderstatisticsParam" alias="LePersonalorderstatisticsParam"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgSendrecord" alias="OrgSendrecord"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgDriverchanges" alias="OrgDriverchanges"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrdercomment" alias="OrgOrdercomment"/>
+		<typeAlias type="com.szyciov.org.entity.OrgOrderReview" alias="OrgOrderReview"/>
+		<typeAlias type="com.szyciov.org.param.BaseOrgParam" alias="BaseOrgParam"/>
+		<typeAlias type="com.szyciov.org.entity.OrgMostAddress" alias="OrgMostAddress"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgUseraccount" alias="OrgUseraccount"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgUserRefund" alias="OrgUserRefund"/>
+		<typeAlias type="com.szyciov.lease.param.UserRefundQueryParam" alias="UserRefundQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.GetCarTypesParam" alias="GetCarTypesParam"/>
+		<typeAlias type="com.szyciov.org.entity.OrgUserNews" alias="OrgUserNews"/>
+		<typeAlias type="com.szyciov.op.entity.OpTaxidriverchanges" alias="OpTaxidriverchanges"/>
+		<typeAlias type="com.szyciov.op.entity.OpUser" alias="OpUser"/>
+
+		<typeAlias type="com.szyciov.op.entity.LeCompanyAgreement" alias="LeCompanyAgreement"/>
+		<typeAlias type="com.szyciov.driver.entity.PubDriverNews" alias="PubDriverNews"/>
+		<typeAlias type="com.szyciov.lease.entity.LeUserNews" alias="LeUserNews"/>
+		<typeAlias type="com.szyciov.lease.entity.LeShiftRule" alias="LeShiftRule"/>
+		<typeAlias type="com.szyciov.entity.UserNews" alias="UserNews"/>
+		<typeAlias type="com.szyciov.entity.MinOrderInfo" alias="MinOrderInfo"/>
+		<typeAlias type="com.szyciov.lease.entity.PubDriverAccount" alias="PubDriverAccount"/>
+		<typeAlias type="com.szyciov.op.entity.PubDriverExpenses" alias="PubDriverExpenses"/>
+		<typeAlias type="com.szyciov.param.OrdercommentQueryParam" alias="OrdercommentQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.CashManageQueryParam" alias="CashManageQueryParam"/>
+		<typeAlias type="com.szyciov.lease.entity.LeCashManage" alias="LeCashManage"/>
+		<typeAlias type="com.szyciov.lease.param.PubAlarmprocessParam" alias="PubAlarmprocessParam"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganCreditRecord" alias="OrgOrganCreditRecord"/>
+		<typeAlias type="com.szyciov.lease.param.TocOrderManageQueryParam" alias="TocOrderManageQueryParam"/>
+		<typeAlias type="com.szyciov.op.entity.OpOrdercomment" alias="OpOrdercomment"/>
+		<typeAlias type="com.szyciov.entity.PeDrivershiftPending" alias="PeDrivershiftPending"/>
+		<typeAlias type="com.szyciov.entity.PeDrivershiftProcessed" alias="PeDrivershiftProcessed"/>
+
+		<typeAlias type="com.szyciov.entity.PubDriverVehicleBind" alias="PubDriverVehicleBind"/>
+		<typeAlias type="com.szyciov.entity.PubDriverVehicleRef" alias="PubDriverVehicleRef"/>
+		<typeAlias type="com.szyciov.param.PeDrivershiftPendingParam" alias="PeDrivershiftPendingParam"/>
+		<typeAlias type="com.szyciov.lease.param.drivervehiclebind.CarBindInfoQueryParam" alias="CarBindInfoQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.drivervehiclebind.CarBindRecordQueryParam" alias="CarBindRecordQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.drivervehiclebind.TaxiBindInfoQueryParam" alias="TaxiBindInfoQueryParam"/>
+
+		<!-- All Dto Start -->
+		<typeAlias type="com.szyciov.lease.dto.VehicleQueryDto" alias="VehicleQueryDto"/>
+
+		<typeAlias type="com.szyciov.dto.driverShiftManagent.PendingDto" alias="PendingDto"/>
+		<typeAlias type="com.szyciov.dto.driverShiftManagent.ProcessedQueryDto" alias="ProcessedQueryDto"/>
+		<typeAlias type="com.szyciov.dto.driverVehicleBindManage.VehicleBindInfoDto" alias="VehicleBindInfoDto"/>
+		<typeAlias type="com.szyciov.lease.dto.drivervehiclebind.taxi.TaxiBindInfoDto" alias="TaxiBindInfoDto"/>
+		<typeAlias type="com.szyciov.dto.driverVehicleBindManage.CarBindRecordDto" alias="CarBindRecordDto"/>
+		<typeAlias type="com.szyciov.lease.dto.drivervehiclebind.car.CarBindInfoDto" alias="CarBindInfoDto"/>
+		<typeAlias type="com.szyciov.lease.dto.drivervehiclebind.car.UnBindVehicleInfoDto" alias="UnBindVehicleInfoDto"/>
+		<typeAlias type="com.szyciov.lease.dto.drivervehiclebind.taxi.TaxiBindRecordDto" alias="TaxiBindRecordDto"/>
+		<typeAlias type="com.szyciov.dto.driver.PubDriverSelectDto" alias="PubDriverSelectDto"/>
+
+
+		<!-- All Dto End -->
+		
+		<typeAlias type="com.szyciov.entity.PubAlipayaccountHistory" alias="PubAlipayaccountHistory"/>
+		<typeAlias type="com.szyciov.entity.PubWechataccountHistory" alias="PubWechataccountHistory"/>
+		<typeAlias type="com.szyciov.lease.entity.PubRoleId" alias="PubRoleId"/>
+		<typeAlias type="com.szyciov.dto.pubAlarmprocess.PubAlarmprocessSaveDto" alias="PubAlarmprocessSaveDto"/>
+		
+		<typeAlias type="com.szyciov.op.entity.OpTaxiOrderReview" alias="OpTaxiOrderReview"/>
+
+	</typeAliases>
+</configuration>

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.RoleManagementMapper">
+	<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getByRoleName" resultType="int" parameterType="hashmap">
+		select count(*) from le_rolemanagement where le_rolemanagement.status=1 and le_rolemanagement.rolename =#{rolename} and le_rolemanagement.leasescompanyid=#{leasescompanyid}
+	</select>
+	
+	<!-- 角色拥有的机构公司权限 -->
+	<resultMap type="com.szyciov.lease.entity.RoleManagement" id="RoleManagement">
+		<id property="id" column="id"></id>
+		<result property="leasescompanyid" column="leasescompanyid"></result>
+		<result property="roletype" column="roletype"></result>
+		<result property="roledesc" column="roledesc"></result>
+		<result property="rolename" column="rolename"></result>
+		<result property="creater" column="creater"></result>
+		<result property="updater" column="updater"></result>
+		<result property="createtime" column="createtime"></result>
+		<result property="updatetime" column="updatetime"></result>
+		<result property="status" column="status"></result>
+		<result property="roletypecaption" column="roletypecaption"></result>
+		<association property="org4lease" column="id" select="org4lease"></association>
+	</resultMap>
+	
+	<select id="org4lease" parameterType="hashmap"  resultType="OrgOrgan">
+		select * from (
+		SELECT
+			org_organ.*,
+			(SELECT pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id=org_organ.city and pub_cityaddr.status=1) as citycaption
+		FROM
+			org_organ,
+			le_roledataauthority
+		WHERE
+			le_roledataauthority.roleid = #{id}
+		<!-- AND le_roledataauthority.dataauthorityconfigid = '01' //主要用户控制租赁端机构权，目前只有这个权限以后如果需要自己部门等限根据需要在加-->
+		AND org_organ.id = le_roledataauthority.dynamicid
+		AND le_roledataauthority.status = 1
+		AND org_organ.status = 1
+		<!-- 根据城市和机构名称排序 -->
+		) t
+		order by  CONVERT(t.citycaption USING gbk ) COLLATE gbk_chinese_ci ,CONVERT(t.fullname USING gbk ) COLLATE gbk_chinese_ci
+	</select>
+	
+	<select id="getAvailableOrgList" parameterType="String" resultType="OrgOrgan">
+		select * from (
+		SELECT
+			org_organ.*,
+			(SELECT pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id=org_organ.city and pub_cityaddr.status=1) as citycaption
+		FROM
+			org_organ,
+			org_organ_company_ref
+		WHERE
+		<!-- AND le_roledataauthority.dataauthorityconfigid = '01' //主要用户控制租赁端机构权，目前只有这个权限以后如果需要自己部门等限根据需要在加-->
+			org_organ.status = 1
+			and org_organ_company_ref.status=1
+			and org_organ_company_ref.organid = org_organ.id
+			and org_organ_company_ref.companyid = #{companyid}
+		<!-- 根据城市和机构名称排序 -->
+		) t
+		order by  CONVERT(t.citycaption USING gbk ) COLLATE gbk_chinese_ci ,CONVERT(t.fullname USING gbk ) COLLATE gbk_chinese_ci
+	</select>
+	
+	<select id="getRoleManagementListByQuery" resultMap="RoleManagement" parameterType="QueryParam">
+	    SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS rownum,
+					(select text from pub_dictionary where pub_dictionary.type='角色类型' and pub_dictionary.value=le_rolemanagement.roletype and pub_dictionary.status=1)as roletypecaption,
+					le_rolemanagement.*
+				FROM
+					le_rolemanagement,
+					(SELECT @rownum := 0) r
+				WHERE
+					le_rolemanagement.status = 1
+				AND le_rolemanagement.leasescompanyid = #{leasescompanyid}
+					<if test='null != id'>
+						and le_rolemanagement.id = #{id}
+					</if>
+					<if test='null != roletype'>
+						and le_rolemanagement.roletype = #{roletype}
+					</if>
+				ORDER BY
+					le_rolemanagement.updatetime DESC
+			) t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<select id="getRoleManagementListCountByQuery" resultType="int" parameterType="QueryParam">
+		select count(*)
+		from le_rolemanagement
+		where le_rolemanagement.status = 1 and le_rolemanagement.leasescompanyid=#{leasescompanyid}
+		<if test='null != id'>
+			and le_rolemanagement.id = #{id}
+		</if>
+		<if test='null != roletype'>
+			and le_rolemanagement.roletype = #{roletype}
+		</if>
+	</select>
+	
+	<update id = "deleteRoleManagement" parameterType="string">
+		update le_rolemanagement set le_rolemanagement.status=2,updatetime=now()  where id = #{id}	
+	</update>
+	
+	<select id = "getById" resultMap="RoleManagement" parameterType="string">
+		select le_rolemanagement.*,(select text from pub_dictionary where pub_dictionary.type='角色类型' and pub_dictionary.value=le_rolemanagement.roletype and pub_dictionary.status=1)as roletypecaption from le_rolemanagement where le_rolemanagement.id = #{id}
+	</select>
+	
+	<insert id="createRoleManagement" parameterType="RoleManagement">
+		insert into le_rolemanagement(id,leasescompanyid,rolename,roletype,roledesc,creater,createtime,updater,updatetime,status)
+		values (#{id},#{leasescompanyid},#{rolename},#{roletype},#{roledesc},#{creater},now(),#{updater},now(),1)
+	</insert>
+	
+	<update id = "updateRoleManagement" parameterType="RoleManagement">
+		update le_rolemanagement
+		set rolename=#{rolename},roledesc=#{roledesc},updater=#{updater},updatetime=now()
+		where le_rolemanagement.id = #{id}
+	</update>
+	
+	<delete id="deleteDataAuthorityByRole" parameterType="string">
+		delete from le_roledataauthority where le_roledataauthority.roleid=#{roleid}
+		<!-- and le_roledataauthority.dataauthorityconfigid=1 //根据需要如果权限众多在考虑删除条件、目前就只有一种权限类型可以直接根据角色id删除  -->
+	</delete>
+	
+	<insert id="addDataAuthority" parameterType="List">
+		INSERT INTO le_roledataauthority (
+			id,
+			roleid,
+			dataauthorityconfigid,
+			rootdynamicid,
+			dynamicid,
+			STATUS
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator="," >
+        	(#{item.id},#{item.roleid},'01',#{item.orgid},#{item.orgid},1)
+   		</foreach>
+	</insert>
+	
+	<select id="getAvailableMenuList" resultType="Menu">
+		select * from le_menu where le_menu.status=1 and le_menu.notassign!=1 or le_menu.notassign is null ORDER BY le_menu.level,le_menu.sequence
+	</select>
+	
+	<select id="getMenuFunctionIdByRoleId" parameterType="String" resultType="string">
+		SELECT
+			le_functionmanagement.id
+		FROM
+			le_functionmanagement,
+			le_rolefunction
+		where 
+				le_rolefunction.roleid = #{id}
+		AND le_rolefunction.dynamicid = le_functionmanagement.id
+		AND le_rolefunction.status=1
+		AND le_functionmanagement.status=1
+	</select>
+	
+	<delete id="deleteFunctionAuthorityByRole" parameterType="string">
+		delete from le_rolefunction where le_rolefunction.roleid=#{roleid}
+	</delete>
+	
+	<insert id="addFunctionAuthority" parameterType="List">
+		INSERT INTO le_rolefunction (
+			id,
+			roleid,
+			typeid,
+			dynamicid,
+			createtime,
+			STATUS
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index" separator="," >
+        	(#{item.id},#{item.roleid},'1',#{item.functionid},now(),1)
+   		</foreach>
+	</insert>
+	
+	<select id="hasFeature" parameterType="HashMap" resultType="boolean">
+		SELECT
+			(
+				CASE le_user.specialstate
+				WHEN 1 THEN
+					1
+				ELSE
+					(
+						SELECT
+							count(*) > 0
+						FROM
+							le_user,
+							le_roleuser,
+							le_rolefunction,
+							le_functionmanagement
+						WHERE
+							le_user. STATUS = 1
+						AND le_roleuser. STATUS = 1
+						AND le_rolefunction. STATUS = 1
+						AND le_functionmanagement. STATUS = 1
+						AND le_user.id = le_roleuser.userid
+						AND le_roleuser.roleid = le_rolefunction.roleid
+						AND le_rolefunction.dynamicid = le_functionmanagement.id
+						AND le_user.account = #{loginName}
+						AND le_functionmanagement.controllername = #{controllerName}
+						AND le_functionmanagement.actionname = #{actionName}
+					)
+				END
+			) hasfeature
+		FROM
+			le_user
+		WHERE
+			le_user. STATUS = 1
+		AND le_user.account = #{loginName}
+	</select>
+	
+	<!-- 查看某个角色是否已经拥有用户 -->
+	<select id="hasUser4ThisRole" parameterType="String" resultType="boolean">
+		select case when count(*)>0 then 1 else 0 end as flag from le_roleuser,le_user where le_roleuser.status=1 and le_user.status=1 and le_user.id=le_roleuser.userid and le_roleuser.roleid=#{id}
+	</select>
+	
+	<!-- 查询租赁公司下的所有角色(select2) -->
+	<select id="getLeRolemanagementBySelect" resultType="map" parameterType="RoleManagement">
+		select
+			id, rolename text
+		from
+			le_rolemanagement
+		where
+			leasescompanyid = #{leasescompanyid} and status = 1
+			<if test='null != rolename'>
+				and rolename like concat('%', #{rolename}, '%')
+			</if>
+	</select>
+
+
+	<select id="listRoleId" resultType="String" parameterType="String">
+		select t2.roleid from le_roledataauthority t2 left join (
+		SELECT t.roleid FROM le_rolefunction t
+		LEFT JOIN le_functionmanagement a ON a.id = t.dynamicid
+		WHERE t.`status` = '1' AND a.functionname = #{functionName}
+		)  t3
+		on t2.roleid = t3.roleid
+		where t2.dynamicid = #{leaseId};
+	</select>
+	<select id="AllListRoleId" resultType="String" parameterType="String">
+		<!-- SELECT   le_rolemanagement.id
+				FROM
+					le_rolemanagement
+				WHERE
+					le_rolemanagement.status = 1
+          and le_rolemanagement.roletype = 123
+          and  le_rolemanagement.leasescompanyid = #{leaseId} -->
+          select id from le_user where id in(select userid from le_roleuser where roleid in (SELECT le_rolemanagement.id
+				FROM
+					le_rolemanagement
+				WHERE
+					le_rolemanagement.status = 1
+          and le_rolemanagement.roletype = 123
+          and  le_rolemanagement.leasescompanyid = #{leaseId}))
+	</select>
+	
+	<!-- 根据角色名称查询详情 -->
+	<select id="getRolemanagementByName" parameterType="RoleManagement" resultType="RoleManagement">
+		select * from le_rolemanagement where rolename = #{rolename} and leasescompanyid = #{leasescompanyid} and status = 1
+	</select>
+
+</mapper>

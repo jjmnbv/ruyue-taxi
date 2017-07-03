@@ -1,0 +1,20 @@
+package com.szyciov.lease.mapper;
+
+import java.util.List;
+
+import com.szyciov.lease.entity.PubDictionary;
+import com.szyciov.lease.param.LePersonalorderstatisticsParam;
+
+public interface LePersonalorderstatisticsMapper {
+	List<LePersonalorderstatisticsParam> getPersonalCountListByQuery(LePersonalorderstatisticsParam lePersonalorderstatisticsParam);
+	int getPersonalCountListCountByQuery(LePersonalorderstatisticsParam lePersonalorderstatisticsParam);
+	List<LePersonalorderstatisticsParam> getPersonalAll(LePersonalorderstatisticsParam lePersonalorderstatisticsParam);
+	List<LePersonalorderstatisticsParam> getPersonalAll1(LePersonalorderstatisticsParam lePersonalorderstatisticsParam);
+	List<LePersonalorderstatisticsParam> getPersonalAll2(LePersonalorderstatisticsParam lePersonalorderstatisticsParam);
+	List<PubDictionary> getordertype(String leasesCompanyId);
+	List<PubDictionary> getPaymethod(String leasesCompanyId);
+	List<LePersonalorderstatisticsParam> getPersonalCountListByQuery1(LePersonalorderstatisticsParam lePersonalorderstatisticsParam);
+	int getPersonalCountListCountByQuery1(LePersonalorderstatisticsParam lePersonalorderstatisticsParam);
+	LePersonalorderstatisticsParam getTheUser(String leasesCompanyId);
+
+}

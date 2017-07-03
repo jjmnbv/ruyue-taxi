@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.OrgOrganMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<insert id="createOrgOrgan" parameterType="OrgOrgan">
+		insert into org_organ(id,fullname,shortname,cooperationstatus,contacts,phone,email,city,address,billtype,billdate,creditcodepic,creditcode,businesslicensepic,businesslicense,idcardfront,idcardback,idcardno,CreateTime,UpdateTime,Creater,Updater,Status,initials,regorder,customertype)
+			values (#{id},#{fullName},#{shortName},#{cooperationStatus},#{contacts},#{phone},#{email},#{city},#{address},#{billType},#{billDate},#{creditCodePic},#{creditCode},#{businessLicensePic},#{businessLicense},#{idCardFront},#{idCardBack},#{idCardNo},now(),now(),#{creater},#{updater},1,#{initials},#{regorder},#{customertype})
+	</insert>
+	<update id="updateOrgOrgan" parameterType="OrgOrgan">
+		update org_organ
+		set cooperationstatus=#{cooperationStatus},contacts=#{contacts},email=#{email},city=#{city},address=#{address},billtype=#{billType},billdate=#{billDate},creditcodepic=#{creditCodePic},businesslicensepic=#{businessLicensePic},businesslicense=#{businessLicense},idcardfront=#{idCardFront}
+		,idcardback=#{idCardBack},idcardno=#{idCardNo},UpdateTime=now(),Updater=#{updater}
+		<if test="phone != null and phone != ''">
+			,phone=#{phone}
+		</if>
+		<if test="fullName != null and fullName != ''">
+			,fullname=#{fullName}
+		</if>
+		<if test="shortName != null and shortName != ''">
+			,shortname=#{shortName}
+		</if>
+		<if test="creditCode != null and creditCode != ''">
+			,creditcode=#{creditCode}
+		</if>
+		<if test="customertype != null and customertype != ''">
+			,customertype=#{customertype}
+		</if>
+		<if test="initials != null and initials != ''">
+			,initials=#{initials}
+		</if>
+		where id=#{id}
+	</update>
+	<!--  修改  账号 -->
+	<select id="updateAccount" parameterType="OrgUser">
+		update org_user set updatetime = now(),account = #{account}
+		where organid = #{organId} and usertype = '1'
+	</select>
+	<select id="checkOrgOrgan" parameterType="OrgOrgan" resultType="int">
+		SELECT COUNT(*) FROM 
+		(
+		SELECT
+		org_organ.*,org_user.account,org_organ_company_ref.companyid
+		FROM
+		org_organ,
+		org_user,
+		org_organ_company_ref
+		WHERE
+		org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.userid = org_user.id
+		AND org_organ.`Status` = 1
+		AND org_user.`Status` = 1
+		AND org_organ_company_ref.`Status` = 1
+		AND org_organ_company_ref.companyid = #{companyId}) t
+		WHERE
+		( t.fullname = #{fullName}
+		or t.shortname = #{shortName}
+		or t.account = #{account}
+		or t.email = #{email}
+		or t.creditcode = #{creditCode}
+		or t.businesslicense = #{businessLicense} ) and t.id != #{id}
+	</select>
+	<!-- 检查  账号的 的重复性 -->
+	<select id="checkAccount" parameterType="OrgOrgan" resultType="int">
+		SELECT COUNT(*) FROM 
+		(
+		SELECT
+		org_organ.*,org_user.account,org_organ_company_ref.companyid
+		FROM
+		org_organ,
+		org_user,
+		org_organ_company_ref
+		WHERE
+		org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.userid = org_user.id
+		AND org_organ.`Status` = 1
+		AND org_user.`Status` = 1
+		AND org_organ_company_ref.`Status` = 1
+		) t
+		WHERE t.account = #{account} and t.id != #{id}
+	</select>
+	<select id = "getByOrgOrganId" resultType="OrgOrgan" parameterType="string">
+		SELECT
+		org_organ.*,org_user.account,org_organ_company_ref.lineofcredit,org_user.id as userId,
+		(SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.id=org_organ.city) AS citycaption,org_organ_company_ref.nextlineofcredit,org_organ_company_ref.companyid
+		FROM
+		org_organ,
+		org_user,
+		org_organ_company_ref
+		WHERE
+		org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.userid = org_user.id AND org_organ.id=#{id}
+	</select>
+	<!-- 检查，这个机构的账单是否结算完成 -->
+	<select id="checkOrganbill" parameterType="OrgOrgan" resultType="int">
+		select count(*)
+		from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid
+		where org_organbill.leasescompanyid = #{companyId}
+	  and org_organbill.status = 1
+	  and org_organbill.organid = #{id}
+	  and t2.billstate in ('1','2','3','4','5','6','9')
+	</select>
+	<select id="getOrgOrganListByQuery" parameterType="QueryParam" resultType="OrgOrgan">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							org_organ.*, org_user.account,
+							(
+								SELECT
+									pub_cityaddr.city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.id = org_organ.city
+								AND pub_cityaddr. STATUS = 1
+							) AS citycaption
+						FROM
+							org_organ,
+							org_organ_company_ref,
+							org_user,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ_company_ref. STATUS = 1
+						AND org_organ_company_ref.organid = org_organ.id
+						AND org_organ_company_ref.userid = org_user.id
+						AND org_organ_company_ref.companyid = #{leasesCompanyId}
+						AND org_organ.`Status` = 1
+						AND org_organ_company_ref.`Status` = 1
+						AND org_user.`Status` = 1
+						<if test="queryShortName != null and queryShortName != ''">
+							and org_organ.id like "%"#{queryShortName}"%"
+						</if>
+						<if test="queryShortName == null or queryShortName == ''">
+					          <!-- 普通 -->
+			              <if test="specialState != '1'.toString()">
+				              and org_organ.id IN (
+				              SELECT
+							        le_roledataauthority.dynamicid as organid
+						      FROM
+							        le_roledataauthority,
+							        le_roleuser,
+							        le_user
+						      WHERE
+						            le_roledataauthority.status=1
+						            and le_roleuser.status=1
+						            and le_user.status=1
+						            and le_user.id = le_roleuser.userid
+						            and le_roleuser.roleid = le_roledataauthority.roleid
+						            and le_user.account=#{account}
+						            and le_user.leasescompanyid = #{leasesCompanyId}
+						      )
+				            </if>
+						</if>
+						<if test="queryCity != null and queryCity != ''">
+							and org_organ.city like "%"#{queryCity}"%"
+						</if>
+						<if test="cooperationStatus != null and cooperationStatus != ''">
+							and org_organ.cooperationstatus = #{cooperationStatus}
+						</if>
+						<if test="queryCustomertype != null and queryCustomertype != ''">
+							and org_organ.customertype = #{queryCustomertype}
+						</if>
+						ORDER BY
+						CONVERT(citycaption USING gbk ) COLLATE gbk_chinese_ci ,
+						org_organ.CreateTime
+						
+					) m
+			) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	<select id="getOrgOrganListCountByQuery" parameterType="QueryParam" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							org_organ.*, org_user.account,
+							(
+								SELECT
+									pub_cityaddr.city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.id = org_organ.city
+								AND pub_cityaddr. STATUS = 1
+							) AS citycaption
+						FROM
+							org_organ,
+							org_organ_company_ref,
+							org_user,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ_company_ref. STATUS = 1
+						AND org_organ_company_ref.organid = org_organ.id
+						AND org_organ_company_ref.userid = org_user.id
+						AND org_organ_company_ref.companyid = #{leasesCompanyId}
+						AND org_organ.`Status` = 1
+						AND org_organ_company_ref.`Status` = 1
+						AND org_user.`Status` = 1
+						<if test="queryShortName != null and queryShortName != ''">
+							and org_organ.id like "%"#{queryShortName}"%"
+						</if>
+						<if test="queryShortName == null or queryShortName == ''">
+					          <!-- 普通 -->
+			              <if test="specialState != '1'.toString()">
+				              and org_organ.id IN (
+				              SELECT
+							        le_roledataauthority.dynamicid as organid
+						      FROM
+							        le_roledataauthority,
+							        le_roleuser,
+							        le_user
+						      WHERE
+						            le_roledataauthority.status=1
+						            and le_roleuser.status=1
+						            and le_user.status=1
+						            and le_user.id = le_roleuser.userid
+						            and le_roleuser.roleid = le_roledataauthority.roleid
+						            and le_user.account=#{account}
+						            and le_user.leasescompanyid = #{leasesCompanyId}
+						      )
+				            </if>
+						</if>
+						<if test="queryCity != null and queryCity != ''">
+							and org_organ.city like "%"#{queryCity}"%"
+						</if>
+						<if test="cooperationStatus != null and cooperationStatus != ''">
+							and org_organ.cooperationstatus = #{cooperationStatus}
+						</if>
+						<if test="queryCustomertype != null and queryCustomertype != ''">
+							and org_organ.customertype = #{queryCustomertype}
+						</if>
+						ORDER BY
+						CONVERT(citycaption USING gbk ) COLLATE gbk_chinese_ci ,
+						org_organ.CreateTime
+					) m
+			) t
+	</select>
+	<select id="getOrgOrganShortName" resultType="map" parameterType="QueryParam">
+	<choose>
+		<when test="specialState != '1'.toString()">
+			SELECT
+			org_organ.id,
+			org_organ.shortname AS text
+		
+			FROM
+				org_organ
+				<!-- ,org_organ_company_ref -->
+			WHERE
+				 org_organ. STATUS = 1
+			<!-- AND org_organ_company_ref. STATUS = 1
+			AND org_organ_company_ref.organid = org_organ.id
+			AND org_organ_company_ref.companyid = #{leasesCompanyId} -->
+			and  org_organ.id IN ( 
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		        )
+			<if test="queryShortName != null and queryShortName != ''">
+				and shortname like "%"#{queryShortName}"%"
+			</if>
+			GROUP BY shortname
+		</when>
+		<otherwise>
+			SELECT
+			org_organ.id,
+			org_organ.shortname AS text
+		
+			FROM
+				org_organ,
+				org_organ_company_ref
+			WHERE
+				org_organ. STATUS = 1
+			AND org_organ_company_ref. STATUS = 1
+			AND org_organ_company_ref.organid = org_organ.id
+			AND org_organ_company_ref.companyid = #{leasesCompanyId}
+			<if test="queryShortName != null and queryShortName != ''">
+				and shortname like "%"#{queryShortName}"%"
+			</if>
+			GROUP BY shortname
+		</otherwise>
+	</choose>
+	</select>
+	<select id="getOrgOrganCity" resultType="map" parameterType="QueryParam">
+	<choose>
+		<when test="specialState != '1'.toString()">
+			SELECT
+			org_organ.city AS id,
+			(
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = org_organ.city
+				AND pub_cityaddr. STATUS = 1
+			) AS text
+			FROM
+				org_organ<!-- ,
+				org_organ_company_ref -->
+			WHERE
+				org_organ. STATUS = 1
+			<!-- AND org_organ_company_ref. STATUS = 1
+			AND org_organ_company_ref.organid = org_organ.id
+			AND org_organ_company_ref.companyid = #{leasesCompanyId} -->
+			and  org_organ.id IN ( 
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		        )
+			<if test="queryCity != null and queryCity != ''">
+				and (
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = org_organ.city
+				AND pub_cityaddr. STATUS = 1
+			) like "%"#{queryCity}"%"
+			</if>
+			GROUP BY
+				city
+		</when>
+		<otherwise>
+			SELECT
+			org_organ.city AS id,
+			(
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = org_organ.city
+				AND pub_cityaddr. STATUS = 1
+			) AS text
+			FROM
+				org_organ,
+				org_organ_company_ref
+			WHERE
+				org_organ. STATUS = 1
+			AND org_organ_company_ref. STATUS = 1
+			AND org_organ_company_ref.organid = org_organ.id
+			AND org_organ_company_ref.companyid = #{leasesCompanyId}
+			<if test="queryCity != null and queryCity != ''">
+				and (
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = org_organ.city
+				AND pub_cityaddr. STATUS = 1
+			) like "%"#{queryCity}"%"
+			</if>
+			GROUP BY
+				city
+		</otherwise>
+	</choose>
+	</select>
+	<select id="exportData" parameterType="QueryParam" resultType="OrgOrgan">
+		<!-- SELECT
+			org_organ.*, org_user.account,
+			(
+				SELECT
+					pub_cityaddr.city
+				FROM
+					pub_cityaddr
+				WHERE
+					pub_cityaddr.id = org_organ.city
+				AND pub_cityaddr. STATUS = 1
+			) AS citycaption,
+			org_organ_company_ref.lineofcredit
+		FROM
+			org_organ,
+			org_organ_company_ref,
+			org_user
+		WHERE
+			org_organ. STATUS = 1
+		AND org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.userid = org_user.id
+		AND org_organ_company_ref.companyid = #{leasesCompanyId}
+		AND org_organ.`Status` = 1
+		AND org_organ_company_ref.`Status` = 1
+		AND org_user.`Status` = 1
+		ORDER BY
+			org_organ.UpdateTime DESC,
+			org_organ.city -->
+			SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							org_organ.*, org_user.account,
+							(
+								SELECT
+									pub_cityaddr.city
+								FROM
+									pub_cityaddr
+								WHERE
+									pub_cityaddr.id = org_organ.city
+								AND pub_cityaddr. STATUS = 1
+							) AS citycaption,
+							org_organ_company_ref.lineofcredit
+						FROM
+							org_organ,
+							org_organ_company_ref,
+							org_user,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ_company_ref. STATUS = 1
+						AND org_organ_company_ref.organid = org_organ.id
+						AND org_organ_company_ref.userid = org_user.id
+						AND org_organ_company_ref.companyid = #{leasesCompanyId}
+						AND org_organ.`Status` = 1
+						AND org_organ_company_ref.`Status` = 1
+						AND org_user.`Status` = 1
+						<if test="queryShortName != null and queryShortName != ''">
+							and org_organ.id like "%"#{queryShortName}"%"
+						</if>
+						<if test="queryCity != null and queryCity != ''">
+							and org_organ.city like "%"#{queryCity}"%"
+						</if>
+						<if test="cooperationStatus != null and cooperationStatus != ''">
+							and org_organ.cooperationstatus = #{cooperationStatus}
+						</if>
+						ORDER BY
+						CONVERT(citycaption USING gbk ) COLLATE gbk_chinese_ci ,
+						org_organ.CreateTime
+					) m
+			) t
+	</select>
+	<!-- 判断是否是第一次登陆 -->
+	<select id="getFristTime" parameterType="OrgOrgan" resultType="int">
+		SELECT count(*) FROM org_organ_company_ref WHERE companyid=#{companyId} AND organid=#{id} AND firsttime = '1'
+	</select>
+	
+	<select id="getOrgOrganByName" parameterType="map" resultType="map">
+		select t1.id id, t1.fullname text from org_organ_company_ref t, org_organ t1 
+		where t.organid = t1.id and t1.`Status` = 1 and t.`Status` = 1 
+		and t.companyid = #{leasescompanyid}
+		<if test="organName != null and organName != ''">
+			and t1.fullname like "%"#{organName}"%"
+		</if>
+		limit 0, 10
+	</select>
+	<!-- 修改信用额度 -->
+	<update id="updateLineOfCredit" parameterType="OrgOrganCompanyRef">
+		update org_organ_company_ref set nextlineofcredit = #{nextLineOfCredit},UpdateTime = now() where companyid = #{companyId} and organid = #{organId}
+	</update>
+	<!-- 城市名字    反向查城市id -->
+	<select id="getCityId" resultType="PubCityAddr" parameterType="string">
+		select * from pub_cityaddr where city = #{cityName} and `status`=1
+	</select>
+	<!-- 查询  最新添加的一条数据  SELECT * FROM org_organ WHERE org_organ.`Status`=1 ORDER BY org_organ.CreateTime DESC LIMIT 1 -->
+	<select id="getCreateFristData" resultType="OrgOrgan" parameterType="string">
+		SELECT
+			org_organ.*
+		FROM
+			org_organ,
+			org_organ_company_ref
+		WHERE
+			org_organ.`Status` = 1
+		AND org_organ_company_ref.`Status`=1
+		AND org_organ.id = org_organ_company_ref.organid
+		AND org_organ_company_ref.companyid = #{id}
+		ORDER BY
+			org_organ.CreateTime DESC
+		LIMIT 1
+	</select>
+	<!-- 查询信用额度变更记录 -->
+	<select id="getOrganCreditRecordList" resultType="OrgOrganCreditRecord" parameterType="QueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select org_organcreditrecord.*,
+	           (select le_user.nickname from le_user where le_user.id = org_organcreditrecord.updater and le_user.leasescompanyid = org_organcreditrecord.leasescompanyid) as operator
+	    from org_organcreditrecord
+	    where org_organcreditrecord.organid = #{organId}
+	      and org_organcreditrecord.leasescompanyid = #{leasesCompanyId}
+	      and org_organcreditrecord.status = 1
+	    order by org_organcreditrecord.changetime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	<select id="getOrganCreditRecordListCount" resultType="int" parameterType="QueryParam">
+	    select count(*)
+	    from org_organcreditrecord
+	    where org_organcreditrecord.organid = #{organId}
+	      and org_organcreditrecord.leasescompanyid = #{leasesCompanyId}
+	      and org_organcreditrecord.status = 1
+	</select>
+	<!-- 插入信用额度变更记录 -->
+	<insert id="insertOrganCreditRecord" parameterType="OrgOrganCreditRecord">
+		insert into org_organcreditrecord(id,organid,leasescompanyid,oldcredit,currentcredit,changetime,effectivetime,createtime,updatetime,creater,updater,status)
+		values(#{id},#{organId},#{leasesCompanyId},#{oldCredit},#{currentCredit},now(),null,now(),now(),#{creater},#{updater},1)
+	</insert>
+	<!-- 判断 改机构下是否有个交易 -->
+	<select id="checkOrgOrganAccout" resultType="int" parameterType="QueryParam">
+		SELECT count(*) FROM 
+			(
+			SELECT DISTINCT t4.organid FROM org_order t3, org_user t4
+			WHERE t3.companyid = #{leasesCompanyId}
+			AND t3.userid = t4.id 
+			) t5
+			WHERE t5.organid IN 
+			( 
+				SELECT t1.id FROM org_organ t1 
+				WHERE t1.creditcode = (
+					SELECT
+						t2.creditcode
+					FROM
+						org_organ t2
+					WHERE
+						t2.id = #{organId}
+				)
+			)
+	</select>
+	<!-- 在创建机构客户的时候，当为渠道客户时，产生一条相关信息 -->
+	<insert id="CrerateChInfo" parameterType="map">
+		insert into ch_info(id,organid,channelkey,signprivatekey,createtime,updatetime,status)
+		values(#{id},#{organid},#{channelkey},#{signprivatekey},now(),now(),1)
+	</insert>
+	<!-- 根据organid判断ch_info是否有值 -->
+	<select id="CheckChInfo" parameterType="string" resultType="int">
+		select count(*) from ch_info where ch_info.status = 1 and organid = #{id}
+	</select>
+	<!-- 根据 organid 删除ch_info中这条数据-->
+	<update id="DeleteChInfo" parameterType="string">
+		update ch_info set ch_info.status = 2 where organid = #{id}
+	</update>
+</mapper>

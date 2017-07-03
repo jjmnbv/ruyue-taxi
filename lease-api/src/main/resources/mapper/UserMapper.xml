@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.UserMapper">
+	<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<insert id="createUser" parameterType="User">
+		INSERT INTO le_user (
+			id,
+			leasescompanyid,
+			account,
+			telphone,
+			email,
+			nickname,
+			userpassword,
+			specialstate,
+			registertime,
+			disablestate,
+			disablehis,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+			#{id},
+			#{leasescompanyid},
+			#{account},
+			#{telphone},
+			#{email},
+			#{nickname},
+			#{userpassword},
+			'0',
+			now(),
+			'0',
+			'0',
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<update id="updateUser"  parameterType="User">
+		UPDATE le_user
+		SET 
+			<if test=" userpassword !=null and userpassword != '' ">
+				le_user.userpassword = #{userpassword},
+			</if>
+			<if test=" nickname !=null and nickname != '' ">
+				le_user.nickname = #{nickname},
+			</if>
+			<if test=" telphone !=null and telphone != '' ">
+				le_user.telphone = #{telphone},
+			</if>
+			<if test=" email !=null and email != '' ">
+				le_user.email = #{email},
+			</if>
+		 le_user.updatetime = now()
+		WHERE
+			le_user.id = #{id}
+	</update>
+	
+	<select id="getUserListByQuery" resultType="User" parameterType="UserQueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS rownum,
+					le_user.*, le_roleuser.roleid, le_rolemanagement.rolename
+				FROM
+					le_user left join le_roleuser on le_user.id = le_roleuser.userid
+					left join le_rolemanagement on le_roleuser.roleid = le_rolemanagement.id,
+					(SELECT @rownum := 0) r
+				WHERE
+					le_user.status = 1
+				AND le_user.leasescompanyid = #{leasescompanyid}
+				AND le_user.specialstate != 1
+					<if test='null != accountid'>
+						and le_user.id = #{accountid}
+					</if>
+					<if test='null != nicknameid'>
+						and le_user.id = #{nicknameid}
+					</if>
+					<if test='null != roleid'>
+						and le_roleuser.roleid = #{roleid}
+					</if>
+				order by  CONVERT(rolename USING gbk ),updatetime DESC
+			) t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<select id="getUserListCountByQuery" resultType="int" parameterType="UserQueryParam">
+		select count(*) from le_user le_user left join le_roleuser on le_user.id = le_roleuser.userid
+		where le_user.status = 1
+				AND le_user.leasescompanyid = #{leasescompanyid}
+				AND le_user.specialstate != 1
+				<if test='null != accountid'>
+					and le_user.id = #{accountid}
+				</if>
+				<if test='null != nicknameid'>
+					and le_user.id = #{nicknameid}
+				</if>
+				<if test='null != roleid'>
+					and le_roleuser.roleid = #{roleid}
+				</if>
+	</select>
+	
+	<select id="getPasswordByName" resultType="string" parameterType="string">
+		SELECT userpassword from le_user where account = #{loginname} and status=1
+	</select>
+	
+	<select id="getByLoginName" resultType="User" parameterType="string">
+		select t.*, t1.roleid from le_user t left join le_roleuser t1 on t.id = t1.userid and t1.status=1
+		where t.account = #{loginname} and t.status=1
+	</select>
+	
+	<select id="getById" resultType="User" parameterType="string">
+		select 
+			le_user.*,
+  			(select le_roleuser.roleid from le_roleuser where le_roleuser.status=1 and le_roleuser.userid = le_user.id LIMIT 0,1) as roleid,
+  			(select le_rolemanagement.rolename from le_rolemanagement where le_rolemanagement.status=1 and le_rolemanagement.id = roleid LIMIT 0,1) as rolename,
+ 			(select le_rolemanagement.roletype from le_rolemanagement where le_rolemanagement.status=1 and le_rolemanagement.id = roleid LIMIT 0,1) as roletype,
+  			(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='角色类型' and pub_dictionary.value= roletype) as roletypecaption
+		from le_user where le_user.id = #{id} and le_user.status = 1
+	</select>
+	
+	<update id="deleteUser"  parameterType="string">
+		UPDATE le_user
+		SET le_user.status = 2,
+		le_user.updatetime = now()
+		WHERE
+			le_user.id = #{id}
+	</update>
+	
+	<select id="getUserMenuList" resultType="MenuBar" parameterType="User">
+		SELECT
+			t4.url,
+			t5.applicationdomain,
+			t6.menuname,
+			t6.cssclass,
+			t6.level,
+			t6.sequence,
+			t6.parentid,
+			t6.id
+		FROM
+			<if test="specialstate != 1">
+			le_rolefunction t1,
+			le_user t2,
+			le_roleuser t3,
+			</if>
+			le_functionmanagement t4,
+			le_applicationmodule t5,
+			le_menu t6
+		WHERE
+		<if test="specialstate != 1">
+			t2.account = #{account} and t3.roleid = t1.roleid
+		AND t2.id = t3.userid
+		AND t1.dynamicId = t4.id
+		AND t1.status = 1
+		AND t2.status = 1
+		AND t3.status = 1
+		AND
+		</if>
+			t4.applicationid = t5.id
+		AND t6.functionid = t4.id
+		AND t4.status = 1
+		AND t5.status = 1
+		AND t6.status = 1
+		UNION
+			SELECT
+				NULL,
+				NULL,
+				t7.menuname,
+				t7.cssclass,
+				t7.level,
+				t7.sequence,
+				t7.parentid,
+				t7.id
+			FROM
+				le_menu t7
+			WHERE
+				t7.id IN (
+					SELECT
+						t6.parentid
+					FROM
+						<if test="specialstate != 1">
+						le_rolefunction t1,
+						le_user t2,
+						le_roleuser t3,
+						</if>
+						le_functionmanagement t4,
+						le_applicationmodule t5,
+						le_menu t6
+					WHERE
+					<if test="specialstate != 1">
+						t2.account = #{account} and t3.roleid = t1.roleid
+					AND t2.id = t3.userid
+					AND t1.dynamicId = t4.id
+					AND t1.status = 1
+					AND t2.status = 1
+					AND t3.status = 1
+					AND
+					</if>
+						t4.applicationid = t5.id
+					AND t6.functionid = t4.id
+					AND t4.status = 1
+					AND t5.status = 1
+					AND t6.status = 1
+				)
+			AND t7.status = 1
+			ORDER BY
+				level,
+				sequence
+	</select>
+	
+	<select id="getRoleManagementByUserId"  parameterType="String" resultType="RoleManagement">
+		SELECT
+			*
+		FROM
+			le_rolemanagement,
+			le_roleuser
+		WHERE
+			le_rolemanagement. STATUS = 1
+		AND le_roleuser. STATUS = 1
+		AND le_roleuser.roleid = le_rolemanagement.id
+		AND le_roleuser.userid = #{userid}
+	</select>
+	
+	<select id="getValiableRoles" parameterType="String" resultType="RoleManagement">
+		SELECT
+			*
+		FROM
+			le_rolemanagement
+		WHERE
+			le_rolemanagement. STATUS = 1
+		AND le_rolemanagement.leasescompanyid = #{leasescompanyid}
+	</select>
+	
+	<delete id="deleteRoleById" parameterType="String">
+		delete from le_roleuser where le_roleuser.userid = #{userid}
+	</delete>
+	
+	<insert id="addRole4User" parameterType="HashMap">
+		INSERT INTO le_roleuser (id, roleid, userid, STATUS)
+		VALUES
+		(
+			#{id},
+			#{roleid},
+			#{userid},
+			1
+		)
+	</insert>
+	<select id="forbidUser"  parameterType="String" resultType="String">
+		SELECT
+	           *
+			FROM
+				le_user,
+				le_leasescompany
+			WHERE
+				le_leasescompany.id = le_user.leasescompanyid
+			AND le_user.account = #{loginName}
+			AND le_user.specialstate = 1
+			AND le_leasescompany.companystate = 1
+			and le_user.status = 1
+            and le_leasescompany.Status = 1
+	</select>
+	
+	<!-- 查询租赁公司下所有账号(select2) -->
+	<select id="getLeUserAccountBySelect" resultType="map" parameterType="User">
+		select
+			id, account text
+		from
+			le_user
+		where
+			leasescompanyid = #{leasescompanyid} and status = 1 and specialstate = '0'
+			<if test='null != account'>
+				and account like concat('%', #{account}, '%')
+			</if>
+	</select>
+	
+	<!-- 查询租赁公司下所有用户姓名和手机号 -->
+	<select id="getLeUserNicknameBySelect" resultType="map" parameterType="User">
+		select
+			id, concat(nickname, " ", telphone) text
+		from
+			le_user
+		where
+			leasescompanyid = #{leasescompanyid} and status = 1 and specialstate = '0'
+			<if test='null != nickname'>
+				and (nickname like concat('%', #{nickname}, '%') or telphone like concat('%', #{nickname}, '%'))
+			</if>
+	</select>
+	
+	<!-- 查询租赁公司下所有角色名称 -->
+	<select id="getLeRolename" resultType = "map" parameterType="RoleManagement">
+		select id, rolename from le_rolemanagement where status = 1 and leasescompanyid = #{leasescompanyid}
+	</select>
+	
+	<!-- 添加登录日志 -->
+	<insert id="addUserLoginLog" parameterType="HashMap">
+		INSERT INTO le_userloginlog (
+			id,
+			userid,
+			ipaddr,
+			device,
+			version,
+			phonebrand,
+			phonemodel,
+			browserversion,
+			browsertype,
+			loginstatus,
+			loginmessage,
+			logintime,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{ipaddr},
+				#{device},
+				#{version},
+				#{phonebrand},
+				#{phonemodel},
+				#{browserversion},
+				#{browsertype},
+				#{loginstatus},
+				#{loginmessage},
+				now(),
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 查询租赁公司是否加入toC -->
+	<select id="getTocstateByLeasescompanyid" resultType="String" parameterType="String">
+		select
+			tocstate
+		from
+			le_leasescompany
+		where
+			id = #{leasescompanyid}
+		and status = 1
+	</select>
+	
+	<!-- 查询租赁公司是否有toC订单 -->
+	<select id="getTocOrderCountByLeasescompanyid" resultType="int" parameterType="String">
+		select 
+		      count(*)
+		from
+		    (select
+		           op_order.orderno
+		     from 
+		           op_order
+		     where 
+		           op_order.companyid = #{leasescompanyid}
+		       and op_order.status = 1
+		     union
+		     select
+		           op_taxiorder.orderno
+		     from 
+		           op_taxiorder
+		     where 
+		           op_taxiorder.companyid = #{leasescompanyid}
+		       and op_taxiorder.status = 1) t
+	</select>
+</mapper>

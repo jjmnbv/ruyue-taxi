@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.OrganAccountMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getOrganAccountInfoListByQuery" resultType="OrganAccountInfo" parameterType="OrganAccountQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select org_organ.shortname as shortName,org_organ.city as city,org_organ_company_ref.actualbalance as actualBalance,org_organ_company_ref.balance as balance,org_organ_company_ref.lineofcredit as lineOfCredit,org_organ.fullname as fullName,org_organ_company_ref.id as id,org_organ.id as organId,
+	            pub_cityaddr.city as cityName,(org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit - org_organ_company_ref.balance) as unbalance
+	    from org_organ_company_ref inner join org_organ on (org_organ_company_ref.organid = org_organ.id)
+	                               left join pub_cityaddr on (pub_cityaddr.id = org_organ.city and pub_cityaddr.status = 1)
+	    where org_organ.status = 1
+	      and org_organ_company_ref.companyid = #{leasesCompanyId}
+	      and org_organ_company_ref.status = 1
+	    <if test="city != null and city != ''">
+	        and org_organ.city = #{city}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and org_organ_company_ref.organid = #{organId}
+	    </if>
+	    <if test="organId == null or organId == ''">
+	        <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              and org_organ_company_ref.organid IN (
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		      )
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+              </otherwise>
+            </choose>
+	    </if>
+	    <if test="unbalance != null and unbalance != ''">
+	        and (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit - org_organ_company_ref.balance) > #{unbalance}
+	    </if>
+	    order by pub_cityaddr.cityInitials,org_organ_company_ref.actualbalance) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getOrganAccountInfoListCountByQuery" resultType="int" parameterType="OrganAccountQueryParam">
+	    select count(*)
+	    from org_organ_company_ref,org_organ
+	    where org_organ_company_ref.organid = org_organ.id
+	      and org_organ.status = 1
+	      and org_organ_company_ref.companyid = #{leasesCompanyId}
+	      and org_organ_company_ref.status = 1
+	    <if test="city != null and city != ''">
+	        and org_organ.city = #{city}
+	    </if>
+	    <if test="organId != null and organId != ''">
+	        and org_organ_company_ref.organid = #{organId}
+	    </if>
+	    <if test="organId == null or organId == ''">
+	        <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              and org_organ_company_ref.organid IN (
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		      )
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+              </otherwise>
+            </choose>
+	    </if>
+	    <if test="unbalance != null and unbalance != ''">
+	        and (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit - org_organ_company_ref.balance) > #{unbalance}
+	    </if>
+	</select>
+	
+	<select id="getOrganExpensesListByQuery" resultType="OrgOrganExpenses" parameterType="OrganAccountQueryParam">
+	    select t.* from 
+	    (select (@rownum := @rownum + 1) as rownum,org_organexpenses.*,
+	    (case org_organexpenses.type when '0' then '机构充值' when '1' then '机构提现' when '2' then '账单结算扣款' end) as typeName,
+	     CONCAT((case org_organexpenses.type when '0' then '+' when '1' then case org_organexpenses.operateresult when '0' then '-' when '1' then '+' end when '2' then '-' end),org_organexpenses.amount) as amountVisual,
+	     IFNULL(org_organexpenses.remark,'无') as remarkVisual
+	    from org_organexpenses, (select @rownum := 0) r
+	    where org_organexpenses.organid = #{organId}
+	      and org_organexpenses.leasescompanyid = #{leasesCompanyId}
+	      and org_organexpenses.status = 1
+	    <if test="type != null and type != ''">
+	        and org_organexpenses.type = #{type}
+	    </if>
+	    <if test="startTime != null and startTime != ''">
+	        and org_organexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_organexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by org_organexpenses.expensetime desc) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getOrganExpensesListCountByQuery" resultType="int" parameterType="OrganAccountQueryParam">
+	    select count(*)
+	    from org_organexpenses
+	    where org_organexpenses.organid = #{organId}
+	      and org_organexpenses.leasescompanyid = #{leasesCompanyId}
+	      and org_organexpenses.status = 1
+	    <if test="type != null and type != ''">
+	        and org_organexpenses.type = #{type}
+	    </if>
+	    <if test="startTime != null and startTime != ''">
+	        and org_organexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_organexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	</select>
+	
+	<select id="getOrganExpensesListExport" resultType="OrgOrganExpenses" parameterType="OrganAccountQueryParam">
+	    select org_organexpenses.*,
+	     (case org_organexpenses.type when '0' then '机构充值' when '1' then '机构提现' when '2' then '账单结算扣款' end) as typeName,
+	     CONCAT((case org_organexpenses.type when '0' then '+' when '1' then case org_organexpenses.operateresult when '0' then '-' when '1' then '+' end when '2' then '-' end),org_organexpenses.amount) as amountVisual,
+	     IFNULL(org_organexpenses.remark,'无') as remarkVisual
+	    from org_organexpenses
+	    where org_organexpenses.organid = #{organId}
+	      and org_organexpenses.leasescompanyid = #{leasesCompanyId}
+	      and org_organexpenses.status = 1
+	    <if test="type != null and type != ''">
+	        and org_organexpenses.type = #{type}
+	    </if>
+	    <if test="startTime != null and startTime != ''">
+	        and org_organexpenses.expensetime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_organexpenses.expensetime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by org_organexpenses.expensetime desc
+	</select>
+	
+	<update id = "rechargeOrganAccount" parameterType="hashmap">
+		update org_organ_company_ref
+		set actualbalance=IFNULL(actualbalance,0) + #{value},balance=IFNULL(balance,0) + #{value},updatetime=now()
+		where id = #{id}
+		  and status = 1
+	</update>
+	
+	<update id = "reduceOrganAccount" parameterType="hashmap">
+		update org_organ_company_ref
+		set actualbalance=IFNULL(actualbalance,0) - #{value},balance=IFNULL(balance,0) - #{value},updatetime=now()
+		where id = #{id}
+		  and status = 1
+	</update>
+	
+	<insert id="createOrganExpenses" parameterType="OrgOrganExpenses">
+	    insert into org_organexpenses(id,organid,leasescompanyid,type,expensetime,amount,balance,remark,createtime,updatetime,creater,updater,status,operatortype,operateresult)
+        select #{id},#{organId},#{leasesCompanyId},#{type},now(),#{amount},IFNULL(actualbalance,0),#{remark},now(),now(),#{creater},#{updater},1,0,#{operateResult} 
+        from org_organ_company_ref 
+        where organid = #{organId} 
+          and companyid = #{leasesCompanyId} 
+          and status = 1
+	</insert>
+	
+	<select id="getExistCityList" resultType="PubCityAddr" parameterType="hashmap">
+	    <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              select distinct org_organ.city as id,
+			        (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_organ.city) as city
+              from org_organ
+              where org_organ.status=1
+                and org_organ.id IN (
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		      )
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        distinct org_organ.city as id,
+			        (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_organ.city) as city
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+              </otherwise>
+         </choose>
+	</select>
+	
+	<select id="getExistOrganList" resultType="hashmap" parameterType="hashmap">
+	    <choose>
+	          <!-- 普通 -->
+              <when test="specialState != '1'.toString()">
+              select org_organ.id as id,org_organ.shortname as text
+              from org_organ
+              where org_organ.status=1
+                and org_organ.id IN ( 
+              SELECT
+			        le_roledataauthority.dynamicid as organid
+		      FROM
+			        le_roledataauthority,
+			        le_roleuser,
+			        le_user
+		      WHERE
+		            le_roledataauthority.status=1
+		            and le_roleuser.status=1
+		            and le_user.status=1
+		            and le_user.id = le_roleuser.userid
+		            and le_roleuser.roleid = le_roledataauthority.roleid
+		            and le_user.account=#{account}
+		            and le_user.leasescompanyid = #{leasesCompanyId}
+		        )
+		        <if test="shortName != null and shortName != ''">
+	                and org_organ.shortname like "%"#{shortName}"%"
+	            </if>
+	                group by org_organ.id
+              </when>
+              <otherwise>
+     	      <!-- 超管 -->
+		      SELECT
+			        org_organ.id as id,org_organ.shortname as text
+		      FROM
+			        org_organ,
+			        org_organ_company_ref
+		      WHERE
+		            org_organ.status=1
+		            and org_organ_company_ref.status=1
+		            and org_organ_company_ref.organid = org_organ.id
+		            and org_organ_company_ref.companyid = #{leasesCompanyId}
+		      <if test="shortName != null and shortName != ''">
+	                and org_organ.shortname like "%"#{shortName}"%"
+	          </if>
+	                group by org_organ.id
+              </otherwise>
+        </choose>
+	</select>
+
+</mapper>

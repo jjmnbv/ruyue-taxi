@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.DictionaryMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getDictionaryByType" resultType="Dictionary" parameterType="string">
+		select * from pub_dictionary where pub_dictionary.type = #{queryType}
+		and pub_dictionary.status=1
+		order by pub_dictionary.sort;
+	</select>
+	
+	<select id="getDictionaryByTypeText" resultType="Dictionary" parameterType="hashmap">
+		select * from pub_dictionary where pub_dictionary.type = #{queryType}
+		<if test="text != null and text!=''">
+			and pub_dictionary.text = #{text}
+		</if>
+		order by pub_dictionary.sort;
+	</select>
+	
+	<select id="getDictionaryByQuery" resultType="Dictionary" parameterType="hashmap">
+		select * from pub_dictionary
+		order by pub_dictionary.sort;
+	</select>
+	
+	<select id="getDictionaryListByQuery" resultType="Dictionary" parameterType="QueryParam">
+	    select t.* from 
+		(select (@rownum := @rownum + 1) as rownum, pub_dictionary.*
+        from pub_dictionary, (select @rownum := 0) r
+		where pub_dictionary.status = 1
+		<if test="key != null and key!='' ">
+		    AND (pub_dictionary.type like "%"#{key}"%"  or pub_dictionary.text like "%"#{key}"%"
+		    or pub_dictionary.desc like "%"#{key}"%")
+		</if>
+		<if test="iSortColName == 'Type' or iSortColName == 'Text' or iSortColName == 'Desc'">
+		  order by updateTime desc) t 
+		</if>
+		<if test="iSortColName != 'Type' and iSortColName != 'Text' and iSortColName != 'Desc'">
+		  order by updateTime desc) t 
+		</if>
+		<![CDATA[
+		where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	
+	<select id="getDictionaryListCountByEqualQuery" resultType="int" parameterType="Dictionary">
+		SELECT count(*)
+		FROM pub_dictionary
+		where pub_dictionary.status = 1
+		<if test="type != null and type !='' and value != null and value !='' ">
+		     and pub_dictionary.type=#{type} and pub_dictionary.value=#{value}
+		</if>
+		<if test="id != null">
+			 and Id != #{id}
+		</if>
+	</select>
+	
+	<select id="getDictionaryListCountByQuery" resultType="int" parameterType="QueryParam">
+		SELECT count(*)
+		FROM pub_dictionary
+		where pub_dictionary.Status = 1
+		<if test="key != null and key!='' ">
+		    AND (pub_dictionary.Type like "%"#{key}"%"  or pub_dictionary.text like "%"#{key}"%"
+		    or pub_dictionary.Desc  like "%"#{key}"%")
+		</if>
+	</select>
+	
+	<update id = "deleteDictionary" parameterType="string">
+		update pub_dictionary
+	    set pub_dictionary.status=2 
+	    where id = #{id}
+	</update>
+	
+	<select id = "getById" resultType="Dictionary" parameterType="string">
+		select pub_dictionary.* 
+		from pub_dictionary
+		where id =#{id}
+		  and status=1
+	</select>
+	
+	<insert id="createDictionary" parameterType="Dictionary">
+		insert into pub_dictionary(id,parentid, type,value,pub_dictionary.desc,sort,text,status,createtime,updatetime)
+			values (#{id},#{parentId}, #{type},#{value},#{desc},#{sort},#{text},1,now(),now())
+	</insert>
+	
+	<update id = "updateDictionary" parameterType="Dictionary">
+		update pub_dictionary
+		set parentid=#{parentId},type=#{type},value=#{value},pub_dictionary.desc=#{desc},sort=#{sort},text=#{text},status=1,updatetime=now()
+		where pub_dictionary.id = #{id}
+	</update>
+	
+</mapper>

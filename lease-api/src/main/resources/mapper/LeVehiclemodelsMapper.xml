@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.LeVehiclemodelsMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<insert id="createLeVehiclemodels" parameterType="LeVehiclemodels">
+		insert into le_vehiclemodels(id,leasescompanyid,logo,name,level,Remark,CreateTime,UpdateTime,Creater,Updater,Status,modelstatus)
+			values (#{id},#{leasesCompanyId},#{logo},#{name},#{level},#{remark},now(),now(),#{creater},#{updater},1,'0')
+	</insert>
+	<update id="updateLeVehiclemodels" parameterType="LeVehiclemodels">
+		UPDATE le_vehiclemodels set name=#{name},logo=#{logo},level=#{level},Remark=#{remark},updateTime=now(),Updater=#{updater} WHERE id=#{id}
+	</update>
+	<select id="checkLeVehiclemodels" parameterType="LeVehiclemodels" resultType="int">
+		SELECT COUNT(*) FROM le_vehiclemodels WHERE (`name`=#{name} OR `level`=#{level}) AND leasescompanyid=#{leasesCompanyId} and id != #{id} and Status=1
+	</select>
+	<select id="checkDelete" parameterType="string" resultType="int">
+		SELECT
+			COUNT(c.brandCars)
+		FROM
+			(
+		SELECT
+			GROUP_CONCAT(a) AS brandCars
+		FROM
+			(
+				SELECT
+					CONCAT(
+						CONCAT(pub_vehcbrand.`Name`, '-'),
+						pub_vehcline.`name`
+					) AS a
+				FROM
+					le_vehiclemodels,
+					le_vehcline_models_ref,
+					pub_vehcbrand,
+					pub_vehcline
+				WHERE
+					le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+				AND le_vehcline_models_ref.vehclineid = pub_vehcline.Id
+				AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+				AND le_vehiclemodels.id = #{id}
+				AND	le_vehiclemodels.`Status`=1
+				AND	le_vehcline_models_ref.`Status`=1
+				AND	pub_vehcbrand.`Status`=1
+				AND	pub_vehcline.`Status`=1
+			) b
+		) c
+	</select>
+	<update id="deleteLeVehiclemodels">
+		UPDATE le_vehiclemodels set `Status`=2 WHERE id = #{id} 
+	</update>
+	<select id="getLeVehiclemodelsListByQuery" parameterType="QueryParam" resultType="LeVehiclemodels">
+		SELECT
+			t.*
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					le_vehiclemodels.*
+				FROM
+					le_vehiclemodels,
+					(SELECT @rownum := 0) r
+				WHERE
+					le_vehiclemodels.`Status` = 1
+					AND le_vehiclemodels.leasescompanyid=#{key}
+				ORDER BY
+					le_vehiclemodels.`level`
+			) m
+		) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	<select id="getLeVehiclemodelsListCountByQuery" parameterType="QueryParam" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					le_vehiclemodels.*
+				FROM
+					le_vehiclemodels,
+					(SELECT @rownum := 0) r
+				WHERE
+					le_vehiclemodels.`Status` = 1
+					AND le_vehiclemodels.leasescompanyid=#{key}
+				ORDER BY
+					le_vehiclemodels.`level`
+			) m
+		) t
+	</select>
+	<select id="getBrandCars" parameterType="string" resultType="LeVehiclemodels">
+		SELECT
+			GROUP_CONCAT(a) AS brandCars
+		FROM
+			(
+		SELECT
+			CONCAT(
+				CONCAT(pub_vehcbrand.`Name`, ' '),
+				pub_vehcline.`name`
+			) AS a
+		FROM
+			le_vehiclemodels,
+			le_vehcline_models_ref,
+			pub_vehcbrand,
+			pub_vehcline
+		WHERE
+			le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+		AND le_vehcline_models_ref.vehclineid = pub_vehcline.Id
+		AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+		AND le_vehiclemodels.id = #{id}
+		AND	le_vehiclemodels.`Status`=1
+		AND	le_vehcline_models_ref.`Status`=1
+		AND	pub_vehcbrand.`Status`=1
+		AND	pub_vehcline.`Status`=1
+		) b
+	</select>
+	<select id="getById" parameterType="string" resultType="LeVehiclemodels">
+		SELECT * FROM le_vehiclemodels WHERE Id = #{id}
+	</select>
+	<select id="getPubVehcbrand" resultType="map" parameterType="string">
+		SELECT
+			pub_vehcline.*,pub_vehcbrand.`Name` brandName,pub_vehcbrand.initials
+		FROM
+			pub_vehcbrand,
+			pub_vehcline
+		WHERE
+		pub_vehcline.`Status`=1
+		AND	pub_vehcbrand.`Status` = 1
+		AND pub_vehcbrand.leasescompanyid = #{leasesCompanyId}
+		AND pub_vehcline.leasescompanyid = #{leasesCompanyId}
+		AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+		ORDER BY convert(pub_vehcbrand.`Name` using gbk) ASC
+	</select>
+	<!-- 拿到车的车型-->
+	<select id="getVehicleModelsName" resultType="LeVehiclemodels" parameterType="string">
+		SELECT
+		le_vehiclemodels.`name`
+		FROM
+			le_vehcline_models_ref,
+			le_vehiclemodels
+		WHERE
+			le_vehcline_models_ref.`Status` = 1
+		AND le_vehiclemodels.`Status` = 1
+		AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+		AND le_vehcline_models_ref.vehclineid = #{id}
+	</select>
+	<!-- 根据车系id  查询  改车系 是否 被分配了  并且 车 被司机绑定了 -->
+	<select id="getVehclineBindstate" parameterType="PubVehicle" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			pub_vehicle,
+			pub_driver_vehicle_ref
+		WHERE
+			pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+		<!-- AND pub_driver_vehicle_ref.bindState = '0' -->
+		
+		AND pub_vehicle.`Status`=1
+		AND pub_driver_vehicle_ref.`Status`=1
+		
+		AND pub_vehicle.vehclineid = #{vehclineId}
+		AND pub_vehicle.leasescompanyid = #{leasesCompanyId}
+	</select>
+	<!-- 检查服务车型能否禁用 -->
+	<select id="checkDisable" parameterType="String" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			le_vehcline_models_ref
+		WHERE
+			le_vehcline_models_ref.vehiclemodelsid = #{id}
+		AND le_vehcline_models_ref.`Status` = 1
+	</select>
+	<!-- 修改  禁用启用状态 -->
+	<update id="updateEnableOrDisable" parameterType="LeVehiclemodels">
+		UPDATE le_vehiclemodels set updateTime=now(),Updater=#{updater},modelstatus=#{modelstatus} where id=#{id}
+	</update>
+	<!-- 查询 分配车系并分配服务车型的车系是否被绑定了司机-->
+	<select id="checkAllocationVehcline" parameterType="String" resultType="int">
+		SELECT
+		count(*)
+		FROM
+			pub_vehicle,
+			pub_driver_vehicle_ref
+		WHERE pub_vehicle.vehclineid = #{id}
+		AND pub_vehicle.`Status`=1
+		AND pub_vehicle.platformtype=1
+		AND pub_driver_vehicle_ref.`status`=1
+		AND pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+	</select>
+	<!-- 根据车系id  查品牌车系的名称 -->
+	<select id="getBrandcar" resultType="LeVehiclemodels" parameterType="String">
+		SELECT
+			CONCAT(pub_vehcbrand.`Name`," ",pub_vehcline.`name`) as brandCars
+		FROM
+			pub_vehcline,
+			pub_vehcbrand
+		WHERE
+			pub_vehcline.id = #{id}
+		AND pub_vehcline.`Status`=1
+		AND pub_vehcbrand.`Status`=1
+		AND pub_vehcline.platformtype=1
+		AND pub_vehcbrand.platformtype=1
+		AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+	</select>
+</mapper>

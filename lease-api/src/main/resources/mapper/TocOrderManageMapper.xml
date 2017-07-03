@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.TocOrderManageMapper">
+	<!-- 网约车订单查询 -->
+	<select id="getNetAboutCarOrderListByQuery" resultType="map" parameterType="TocOrderManageQueryParam">   
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select op_order.ordersource,op_order.orderno,op_order.ordertype,op_order.orderstatus,op_order.paymentstatus,op_order.paytype,op_order.orderamount,op_order.mileage,op_order.shouldpayamount,
+	           op_order.starttime,op_order.endtime,op_order.pricecopy,op_order.passengers,op_order.passengerphone,
+	           date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,op_order.cancelparty,op_orderpaymentrecord.tradeno,
+	           (select concat(pe_user.nickname,' ',pe_user.account) from pe_user where pe_user.id = op_order.userid) as orderperson,
+	           (select concat(pub_driver.name,' ',pub_driver.phone) from pub_driver where pub_driver.id = op_order.driverid) as driver,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.oncity) as oncity,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.offcity) as offcity,
+	           op_order.onaddress,op_order.offaddress,orderreview2.times,orderreview2.counttimes,orderreview2.mileage as orderreviewmileage,orderreview2.orderno as revieworderno ,
+                ifnull(pub_dictionary.text, '/') shortname
+	    from op_order left join op_orderpaymentrecord on (op_order.orderno = op_orderpaymentrecord.orderno and op_orderpaymentrecord.operateresult = 0)
+	                  left join (
+	                             select orderreview1.* from
+	                             (select op_orderreview.orderno,op_orderreview.times,op_orderreview.counttimes,op_orderreview.mileage,op_orderreview.createtime 
+	                             from op_orderreview
+	                             where op_orderreview.status = 1
+	                             order by op_orderreview.createtime desc) orderreview1
+	                             group by orderreview1.orderno
+	                  ) orderreview2 on (op_order.orderno = orderreview2.orderno)
+        left join pub_dictionary on pub_dictionary.id = op_order.belongleasecompany
+	    where op_order.companyid = #{companyId}
+	      and op_order.status = 1
+	    <if test="orderNo != null and orderNo != ''">
+	        and op_order.orderno like concat('%',#{orderNo},'%')
+	    </if>
+        <if test='null != belongleasecompany and "" != belongleasecompany'>
+            <if test='"运管平台" == belongleasecompany'>
+                and ifnull(op_order.belongleasecompany, '') = ''
+            </if>
+            <if test='"运管平台" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+        </if>
+	    <if test="orderType != null and orderType != ''">
+	        and op_order.ordertype = #{orderType}
+	    </if>
+	    <choose>
+			<when test="orderStatus == '2'.toString() || orderStatus == '3'.toString() || orderStatus == '4'.toString() || orderStatus == '6'.toString() || orderStatus == '8'.toString()">
+				and op_order.orderstatus = #{orderStatus}
+			</when>
+			<when test="orderStatus == '70'.toString()">
+				and op_order.orderstatus = '7'
+				and op_order.paymentstatus = '0'
+			</when>
+			<when test="orderStatus == '71'.toString()">
+				and op_order.orderstatus = '7'
+				and op_order.paymentstatus = '1'
+			</when>
+			<otherwise>and op_order.orderstatus in ('2','3','4','6','7','8')</otherwise>
+		</choose>
+	    <if test="orderPerson != null and orderPerson != ''">
+	        and op_order.userid like concat('%',#{orderPerson},'%')
+	    </if>
+	    <if test="driver != null and driver != ''">
+	        and op_order.driverid like concat('%',#{driver},'%')
+	    </if>
+	    <if test="payType != null and payType != ''">
+	        and op_order.paytype = #{payType}
+	    </if>
+	    <if test="cancelParty != null and cancelParty != ''">
+	        and op_order.cancelparty = #{cancelParty}
+	    </if>
+	    <if test="orderSource != null and orderSource != ''">
+	        and op_order.orderno like concat(#{orderSource},'%') 
+	    </if>
+	    <if test="orderSource == null or orderSource == ''">
+	        and (op_order.orderno like concat('CG','%') or op_order.orderno like concat('CY','%')) 
+	    </if>
+	    <if test="tradeNo != null and tradeNo != ''">
+	        and op_orderpaymentrecord.tradeno like concat('%',#{tradeNo},'%')
+	    </if>
+	    <if test="minUseTime != null and minUseTime != ''">
+	        and op_order.usetime <![CDATA[ >= ]]> #{minUseTime}
+	    </if>
+	    <if test="maxUseTime != null and maxUseTime != ''">
+	        and op_order.usetime <![CDATA[ <= ]]> #{maxUseTime}
+	    </if>
+	    order by op_order.orderstatus,op_order.paymentstatus,
+	    case when op_order.orderstatus = '0' or op_order.orderstatus = '1' or op_order.orderstatus = '2' then op_order.usetime else '' end asc,
+	    case when op_order.orderstatus != '0' and op_order.orderstatus != '1' and op_order.orderstatus != '2' then op_order.usetime else '' end desc
+	    ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getNetAboutCarOrderListCountByQuery" resultType="int" parameterType="TocOrderManageQueryParam">   
+	    select count(*)
+	    from op_order left join op_orderpaymentrecord on (op_order.orderno = op_orderpaymentrecord.orderno and op_orderpaymentrecord.operateresult = 0)
+	                  left join (
+	                             select orderreview1.* from
+	                             (select op_orderreview.orderno,op_orderreview.times,op_orderreview.counttimes,op_orderreview.mileage,op_orderreview.createtime 
+	                             from op_orderreview
+	                             where op_orderreview.status = 1
+	                             order by op_orderreview.createtime desc) orderreview1
+	                             group by orderreview1.orderno
+	                  ) orderreview2 on (op_order.orderno = orderreview2.orderno)
+	    where op_order.companyid = #{companyId}
+	      and op_order.status = 1
+	    <if test="orderNo != null and orderNo != ''">
+	        and op_order.orderno like concat('%',#{orderNo},'%')
+	    </if>
+        <if test='null != belongleasecompany and "" != belongleasecompany'>
+            <if test='"运管平台" == belongleasecompany'>
+                and ifnull(op_order.belongleasecompany, '') = ''
+            </if>
+            <if test='"运管平台" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+        </if>
+	    <if test="orderType != null and orderType != ''">
+	        and op_order.ordertype = #{orderType}
+	    </if>
+	    <choose>
+			<when test="orderStatus == '2'.toString() || orderStatus == '3'.toString() || orderStatus == '4'.toString() || orderStatus == '6'.toString() || orderStatus == '8'.toString()">
+				and op_order.orderstatus = #{orderStatus}
+			</when>
+			<when test="orderStatus == '70'.toString()">
+				and op_order.orderstatus = '7'
+				and op_order.paymentstatus = '0'
+			</when>
+			<when test="orderStatus == '71'.toString()">
+				and op_order.orderstatus = '7'
+				and op_order.paymentstatus = '1'
+			</when>
+			<otherwise>and op_order.orderstatus in ('2','3','4','6','7','8')</otherwise>
+		</choose>
+	    <if test="orderPerson != null and orderPerson != ''">
+	        and op_order.userid like concat('%',#{orderPerson},'%')
+	    </if>
+	    <if test="driver != null and driver != ''">
+	        and op_order.driverid like concat('%',#{driver},'%')
+	    </if>
+	    <if test="payType != null and payType != ''">
+	        and op_order.paytype = #{payType}
+	    </if>
+	    <if test="cancelParty != null and cancelParty != ''">
+	        and op_order.cancelparty = #{cancelParty}
+	    </if>
+	    <if test="orderSource != null and orderSource != ''">
+	        and op_order.orderno like concat(#{orderSource},'%') 
+	    </if>
+	    <if test="orderSource == null or orderSource == ''">
+	        and (op_order.orderno like concat('CG','%') or op_order.orderno like concat('CY','%')) 
+	    </if>
+	    <if test="tradeNo != null and tradeNo != ''">
+	        and op_orderpaymentrecord.tradeno like concat('%',#{tradeNo},'%')
+	    </if>
+	    <if test="minUseTime != null and minUseTime != ''">
+	        and op_order.usetime <![CDATA[ >= ]]> #{minUseTime}
+	    </if>
+	    <if test="maxUseTime != null and maxUseTime != ''">
+	        and op_order.usetime <![CDATA[ <= ]]> #{maxUseTime}
+	    </if>
+	</select>
+	
+	<!-- 出租车订单查询 -->
+	<select id="getTaxiOrderListByQuery" resultType="map" parameterType="TocOrderManageQueryParam">   
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select op_taxiorder.ordersource,op_taxiorder.orderno,op_taxiorder.orderstatus,op_taxiorder.paymentstatus,op_taxiorder.paymentmethod,op_taxiorder.paytype,op_taxiorder.orderamount,IFNULL(op_taxiorder.schedulefee,0) as schedulefee,op_taxiorder.shouldpayamount,
+	           op_taxiorder.passengers,op_taxiorder.passengerphone,
+	           date_format(op_taxiorder.usetime, '%Y/%m/%d %H:%i') usetime,op_taxiorder.cancelparty,op_taxiorderpaymentrecord.tradeno,
+	           (select concat(pe_user.nickname,' ',pe_user.account) from pe_user where pe_user.id = op_taxiorder.userid) as orderperson,
+	           (select concat(pub_driver.name,' ',pub_driver.phone) from pub_driver where pub_driver.id = op_taxiorder.driverid) as driver,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.oncity) as oncity,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.offcity) as offcity,
+	           op_taxiorder.onaddress,op_taxiorder.offaddress,
+                ifnull(pub_dictionary.text, '/') shortname,
+	           (case op_taxiorder.ordersortcolumn when 1 then 1 when 2 then 2 when 3 then 3 when 4 then 4 when 5 then 5 when 6 then 6 when 7 then 8 when 8 then 11 when 9 then 9 when 11 then 12 when 12 then 7 when 13 then 10 when 14 then 13 end) as ordersortcolumn	    
+	    from op_taxiorder left join op_taxiorderpaymentrecord on (op_taxiorder.orderno = op_taxiorderpaymentrecord.orderno and op_taxiorderpaymentrecord.operateresult = 0)
+        left join pub_dictionary on pub_dictionary.id = op_taxiorder.belongleasecompany
+	    where op_taxiorder.companyid = #{companyId}
+	      and op_taxiorder.status = 1
+	    <if test="orderNo != null and orderNo != ''">
+	        and op_taxiorder.orderno like concat('%',#{orderNo},'%')
+	    </if>
+        <if test='null != belongleasecompany and "" != belongleasecompany'>
+            <if test='"运管平台" == belongleasecompany'>
+                and ifnull(op_taxiorder.belongleasecompany, '') = ''
+            </if>
+            <if test='"运管平台" != belongleasecompany'>
+                and op_taxiorder.belongleasecompany = #{belongleasecompany}
+            </if>
+        </if>
+	    <choose>
+			<when test="orderStatus == '2'.toString() || orderStatus == '3'.toString() || orderStatus == '4'.toString() || orderStatus == '6'.toString() || orderStatus == '8'.toString()  || orderStatus == '9'.toString()">
+				and op_taxiorder.orderstatus = #{orderStatus}
+			</when>
+			<when test="orderStatus == '7567'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and (op_taxiorder.paymentstatus = '5' or op_taxiorder.paymentstatus = '6' or op_taxiorder.paymentstatus = '7')
+			</when>
+			<when test="orderStatus == '70'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '0'
+			</when>
+			<when test="orderStatus == '74'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '4'
+			</when>
+			<when test="orderStatus == '78'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '8'
+			</when>
+			<when test="orderStatus == '71'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '1'
+			</when>
+			<when test="orderStatus == '73'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '3'
+			</when>
+			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','8','9')</otherwise>
+		</choose>
+	    <if test="orderPerson != null and orderPerson != ''">
+	        and op_taxiorder.userid like concat('%',#{orderPerson},'%')
+	    </if>
+	    <if test="driver != null and driver != ''">
+	        and op_taxiorder.driverid like concat('%',#{driver},'%')
+	    </if>
+	    <if test="payType != null and payType != ''">
+	        and op_taxiorder.paytype = #{payType}
+	    </if>
+	    <if test="cancelParty != null and cancelParty != ''">
+	        and op_taxiorder.cancelparty = #{cancelParty}
+	    </if>
+	    <if test="orderSource != null and orderSource != ''">
+	        and op_taxiorder.orderno like concat(#{orderSource},'%') 
+	    </if>
+	    <if test="orderSource == null or orderSource == ''">
+	        and (op_taxiorder.orderno like concat('CG','%') or op_taxiorder.orderno like concat('CY','%')) 
+	    </if>
+	    <if test="tradeNo != null and tradeNo != ''">
+	        and op_taxiorderpaymentrecord.tradeno like concat('%',#{tradeNo},'%')
+	    </if>
+	    <if test="minUseTime != null and minUseTime != ''">
+	        and op_taxiorder.usetime <![CDATA[ >= ]]> #{minUseTime}
+	    </if>
+	    <if test="maxUseTime != null and maxUseTime != ''">
+	        and op_taxiorder.usetime <![CDATA[ <= ]]> #{maxUseTime}
+	    </if>
+	    order by ordersortcolumn,
+	    case when ordersortcolumn = 2 then op_taxiorder.usetime else '' end asc,
+	    case when ordersortcolumn != 2 then op_taxiorder.usetime else '' end desc
+	    ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getTaxiOrderListCountByQuery" resultType="int" parameterType="TocOrderManageQueryParam">   
+	    select count(*)
+	    from op_taxiorder left join op_taxiorderpaymentrecord on (op_taxiorder.orderno = op_taxiorderpaymentrecord.orderno and op_taxiorderpaymentrecord.operateresult = 0)
+	    where op_taxiorder.companyid = #{companyId}
+	      and op_taxiorder.status = 1
+	    <if test="orderNo != null and orderNo != ''">
+	        and op_taxiorder.orderno like concat('%',#{orderNo},'%')
+	    </if>
+        <if test='null != belongleasecompany and "" != belongleasecompany'>
+            <if test='"运管平台" == belongleasecompany'>
+                and ifnull(op_taxiorder.belongleasecompany, '') = ''
+            </if>
+            <if test='"运管平台" != belongleasecompany'>
+                and op_taxiorder.belongleasecompany = #{belongleasecompany}
+            </if>
+        </if>
+	    <choose>
+			<when test="orderStatus == '2'.toString() || orderStatus == '3'.toString() || orderStatus == '4'.toString() || orderStatus == '6'.toString() || orderStatus == '8'.toString()  || orderStatus == '9'.toString()">
+				and op_taxiorder.orderstatus = #{orderStatus}
+			</when>
+			<when test="orderStatus == '7567'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and (op_taxiorder.paymentstatus = '5' or op_taxiorder.paymentstatus = '6' or op_taxiorder.paymentstatus = '7')
+			</when>
+			<when test="orderStatus == '70'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '0'
+			</when>
+			<when test="orderStatus == '74'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '4'
+			</when>
+			<when test="orderStatus == '78'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '8'
+			</when>
+			<when test="orderStatus == '71'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '1'
+			</when>
+			<when test="orderStatus == '73'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '3'
+			</when>
+			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','8','9')</otherwise>
+		</choose>
+	    <if test="orderPerson != null and orderPerson != ''">
+	        and op_taxiorder.userid like concat('%',#{orderPerson},'%')
+	    </if>
+	    <if test="driver != null and driver != ''">
+	        and op_taxiorder.driverid like concat('%',#{driver},'%')
+	    </if>
+	    <if test="payType != null and payType != ''">
+	        and op_taxiorder.paytype = #{payType}
+	    </if>
+	    <if test="cancelParty != null and cancelParty != ''">
+	        and op_taxiorder.cancelparty = #{cancelParty}
+	    </if>
+	    <if test="orderSource != null and orderSource != ''">
+	        and op_taxiorder.orderno like concat(#{orderSource},'%') 
+	    </if>
+	    <if test="orderSource == null or orderSource == ''">
+	        and (op_taxiorder.orderno like concat('CG','%') or op_taxiorder.orderno like concat('CY','%')) 
+	    </if>
+	    <if test="tradeNo != null and tradeNo != ''">
+	        and op_taxiorderpaymentrecord.tradeno like concat('%',#{tradeNo},'%')
+	    </if>
+	    <if test="minUseTime != null and minUseTime != ''">
+	        and op_taxiorder.usetime <![CDATA[ >= ]]> #{minUseTime}
+	    </if>
+	    <if test="maxUseTime != null and maxUseTime != ''">
+	        and op_taxiorder.usetime <![CDATA[ <= ]]> #{maxUseTime}
+	    </if>
+	</select>
+	
+	<!-- 网约车订单号查询 -->
+	<select id="getNetAboutCarOrderNOByQuery" resultType="hashmap" parameterType="hashmap">   
+	    select op_order.orderno as id,op_order.orderno as text
+	    from op_order
+	    where op_order.companyid = #{companyId}
+	      and op_order.status = 1
+	    <if test="orderNo != null and orderNo != ''">
+	      and op_order.orderno like concat("%",#{orderNo},"%")
+	    </if>
+	    limit 0,10
+	</select>
+	
+	<!-- 网约车下单人查询 -->
+	<select id="getNetAboutCarOrderUserByQuery" resultType="hashmap" parameterType="hashmap">   
+	    select pe_user.id as id,if(isnull(pe_user.nickname) || pe_user.nickname = '', pe_user.account, concat(pe_user.nickname, " ", pe_user.account)) as text
+	    from pe_user
+	    where pe_user.status = 1
+	    <if test="orderPerson != null and orderPerson != ''">
+	      and (pe_user.nickname like concat("%",#{orderPerson},"%")
+	        or pe_user.account like concat("%",#{orderPerson},"%"))
+	    </if>
+	    limit 0,10
+	</select>
+	
+	<!-- 网约车司机查询 -->
+	<select id="getNetAboutCarOrderDriverByQuery" resultType="hashmap" parameterType="hashmap">   
+	    select pub_driver.id as id,if(isnull(pub_driver.name) || pub_driver.name = '', pub_driver.phone, concat(pub_driver.name, " ", pub_driver.phone)) as text
+	    from pub_driver
+	    where pub_driver.leasescompanyid = #{companyId}
+	      and pub_driver.vehicletype = #{vehicleType}
+	      and pub_driver.status = 1
+	    <if test="driver != null and driver != ''">
+	      and (pub_driver.name like concat("%",#{driver},"%")
+	        or pub_driver.phone like concat("%",#{driver},"%"))
+	    </if>  
+	    limit 0,10
+	</select>
+	
+	<!-- 网约车订单导出 -->
+	<select id="getNetAboutCarOrderExport" resultType="map" parameterType="TocOrderManageQueryParam">   
+	    select op_order.ordersource,op_order.orderno,op_order.ordertype,op_order.orderstatus,op_order.paymentstatus,op_order.paytype,op_order.orderamount,op_order.mileage,
+	           op_order.starttime,op_order.endtime,op_order.pricecopy,op_order.passengers,op_order.passengerphone,
+	           date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,op_order.cancelparty,op_orderpaymentrecord.tradeno,
+	           (select concat(pe_user.nickname,' ',pe_user.account) from pe_user where pe_user.id = op_order.userid) as orderperson,
+	           concat(pub_driver.name,' ',pub_driver.phone) as driver,pub_driver.jobnum,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.oncity) as oncity,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.offcity) as offcity,
+	           op_order.onaddress,op_order.offaddress,op_order.estimatedtime,op_order.estimatedmileage,
+	           op_order.selectedmodelname,op_order.shouldpayamount,op_order.plateno,le_leasescompany.shortname as leasescompanyname,
+	           date_format(op_order.undertime, '%Y/%m/%d %H:%i') undertime,
+	           date_format(op_order.ordertime, '%Y/%m/%d %H:%i') ordertime,
+	           date_format(op_order.starttime, '%Y/%m/%d %H:%i') starttimeexport,
+	           date_format(op_order.endtime, '%Y/%m/%d %H:%i') endtimeexport,
+	           orderreview2.times,orderreview2.counttimes,orderreview2.mileage as orderreviewmileage,orderreview2.orderno as revieworderno,
+                ifnull(pub_dictionary.text, '/') shortname
+	    from op_order left join op_orderpaymentrecord on (op_order.orderno = op_orderpaymentrecord.orderno and op_orderpaymentrecord.operateresult = 0)
+	                  left join pub_driver on (pub_driver.id = op_order.driverid)
+	                  left join le_leasescompany on (le_leasescompany.id = op_order.companyid and le_leasescompany.status = 1)
+	                  left join (
+	                             select orderreview1.* from
+	                             (select op_orderreview.orderno,op_orderreview.times,op_orderreview.counttimes,op_orderreview.mileage,op_orderreview.createtime 
+	                             from op_orderreview
+	                             where op_orderreview.status = 1
+	                             order by op_orderreview.createtime desc) orderreview1
+	                             group by orderreview1.orderno
+	                  ) orderreview2 on (op_order.orderno = orderreview2.orderno)
+                    left join pub_dictionary on pub_dictionary.id = op_order.belongleasecompany
+	    where op_order.companyid = #{companyId}
+	      and op_order.status = 1
+	    <if test="orderNo != null and orderNo != ''">
+	        and op_order.orderno like concat('%',#{orderNo},'%')
+	    </if>
+        <if test='null != belongleasecompany and "" != belongleasecompany'>
+            <if test='"运管平台" == belongleasecompany'>
+                and ifnull(op_order.belongleasecompany, '') = ''
+            </if>
+            <if test='"运管平台" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+        </if>
+	    <if test="orderType != null and orderType != ''">
+	        and op_order.ordertype = #{orderType}
+	    </if>
+	    <choose>
+			<when test="orderStatus == '2'.toString() || orderStatus == '3'.toString() || orderStatus == '4'.toString() || orderStatus == '6'.toString() || orderStatus == '8'.toString()">
+				and op_order.orderstatus = #{orderStatus}
+			</when>
+			<when test="orderStatus == '70'.toString()">
+				and op_order.orderstatus = '7'
+				and op_order.paymentstatus = '0'
+			</when>
+			<when test="orderStatus == '71'.toString()">
+				and op_order.orderstatus = '7'
+				and op_order.paymentstatus = '1'
+			</when>
+			<otherwise>and op_order.orderstatus in ('2','3','4','6','7','8')</otherwise>
+		</choose>
+	    <if test="orderPerson != null and orderPerson != ''">
+	        and op_order.userid like concat('%',#{orderPerson},'%')
+	    </if>
+	    <if test="driver != null and driver != ''">
+	        and op_order.driverid like concat('%',#{driver},'%')
+	    </if>
+	    <if test="payType != null and payType != ''">
+	        and op_order.paytype = #{payType}
+	    </if>
+	    <if test="cancelParty != null and cancelParty != ''">
+	        and op_order.cancelparty = #{cancelParty}
+	    </if>
+	    <if test="orderSource != null and orderSource != ''">
+	        and op_order.orderno like concat(#{orderSource},'%') 
+	    </if>
+	    <if test="orderSource == null or orderSource == ''">
+	        and (op_order.orderno like concat('CG','%') or op_order.orderno like concat('CY','%')) 
+	    </if>
+	    <if test="tradeNo != null and tradeNo != ''">
+	        and op_orderpaymentrecord.tradeno like concat('%',#{tradeNo},'%')
+	    </if>
+	    <if test="minUseTime != null and minUseTime != ''">
+	        and op_order.usetime <![CDATA[ >= ]]> #{minUseTime}
+	    </if>
+	    <if test="maxUseTime != null and maxUseTime != ''">
+	        and op_order.usetime <![CDATA[ <= ]]> #{maxUseTime}
+	    </if>
+	    order by op_order.orderstatus,op_order.paymentstatus,
+	    case when op_order.orderstatus = '0' or op_order.orderstatus = '1' or op_order.orderstatus = '2' then op_order.usetime else '' end asc,
+	    case when op_order.orderstatus != '0' and op_order.orderstatus != '1' and op_order.orderstatus != '2' then op_order.usetime else '' end desc	    	    
+	</select>
+	
+	<!-- 出租车订单导出 -->
+	<select id="getTaxiOrderExport" resultType="map" parameterType="TocOrderManageQueryParam">   
+	    select op_taxiorder.ordersource,op_taxiorder.orderno,op_taxiorder.orderstatus,op_taxiorder.paymentstatus,op_taxiorder.paymentmethod,op_taxiorder.paytype,op_taxiorder.orderamount,IFNULL(op_taxiorder.schedulefee,0) as schedulefee,op_taxiorder.shouldpayamount,
+	           op_taxiorder.passengers,op_taxiorder.passengerphone,op_taxiorder.starttime,op_taxiorder.endtime,
+	           date_format(op_taxiorder.usetime, '%Y/%m/%d %H:%i') usetime,op_taxiorder.cancelparty,op_taxiorderpaymentrecord.tradeno,
+	           (select concat(pe_user.nickname,' ',pe_user.account) from pe_user where pe_user.id = op_taxiorder.userid) as orderperson,
+	           concat(pub_driver.name,' ',pub_driver.phone) as driver,pub_driver.jobnum,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.oncity) as oncity,
+	           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.offcity) as offcity,
+	           op_taxiorder.onaddress,op_taxiorder.offaddress,op_taxiorder.estimatedtime,op_taxiorder.estimatedmileage,op_taxiorder.mileage,
+	           op_taxiorder.plateno,le_leasescompany.shortname as leasescompanyname,
+	           date_format(op_taxiorder.undertime, '%Y/%m/%d %H:%i') undertime,
+	           date_format(op_taxiorder.ordertime, '%Y/%m/%d %H:%i') ordertime,
+	           date_format(op_taxiorder.starttime, '%Y/%m/%d %H:%i') starttimeexport,
+	           date_format(op_taxiorder.endtime, '%Y/%m/%d %H:%i') endtimeexport,
+               ifnull(pub_dictionary.text, '/') shortname,
+	           (case op_taxiorder.ordersortcolumn when 1 then 1 when 2 then 2 when 3 then 3 when 4 then 4 when 5 then 5 when 6 then 6 when 7 then 8 when 8 then 11 when 9 then 9 when 11 then 12 when 12 then 7 when 13 then 10 when 14 then 13 end) as ordersortcolumn
+	    from op_taxiorder left join op_taxiorderpaymentrecord on (op_taxiorder.orderno = op_taxiorderpaymentrecord.orderno and op_taxiorderpaymentrecord.operateresult = 0)
+	                      left join pub_driver on (pub_driver.id = op_taxiorder.driverid)
+	                      left join le_leasescompany on (le_leasescompany.id = op_taxiorder.companyid and le_leasescompany.status = 1)
+                          left join pub_dictionary on pub_dictionary.id = op_taxiorder.belongleasecompany
+	    where op_taxiorder.companyid = #{companyId}
+	      and op_taxiorder.status = 1
+	    <if test="orderNo != null and orderNo != ''">
+	        and op_taxiorder.orderno like concat('%',#{orderNo},'%')
+	    </if>
+        <if test='null != belongleasecompany and "" != belongleasecompany'>
+            <if test='"运管平台" == belongleasecompany'>
+                and ifnull(op_taxiorder.belongleasecompany, '') = ''
+            </if>
+            <if test='"运管平台" != belongleasecompany'>
+                and op_taxiorder.belongleasecompany = #{belongleasecompany}
+            </if>
+        </if>
+	    <choose>
+			<when test="orderStatus == '2'.toString() || orderStatus == '3'.toString() || orderStatus == '4'.toString() || orderStatus == '6'.toString() || orderStatus == '8'.toString()  || orderStatus == '9'.toString()">
+				and op_taxiorder.orderstatus = #{orderStatus}
+			</when>
+			<when test="orderStatus == '7567'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and (op_taxiorder.paymentstatus = '5' or op_taxiorder.paymentstatus = '6' or op_taxiorder.paymentstatus = '7')
+			</when>
+			<when test="orderStatus == '70'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '0'
+			</when>
+			<when test="orderStatus == '74'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '4'
+			</when>
+			<when test="orderStatus == '78'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '8'
+			</when>
+			<when test="orderStatus == '71'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '1'
+			</when>
+			<when test="orderStatus == '73'.toString()">
+				and op_taxiorder.orderstatus = '7'
+				and op_taxiorder.paymentstatus = '3'
+			</when>
+			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','8','9')</otherwise>
+		</choose>
+	    <if test="orderPerson != null and orderPerson != ''">
+	        and op_taxiorder.userid like concat('%',#{orderPerson},'%')
+	    </if>
+	    <if test="driver != null and driver != ''">
+	        and op_taxiorder.driverid like concat('%',#{driver},'%')
+	    </if>
+	    <if test="payType != null and payType != ''">
+	        and op_taxiorder.paytype = #{payType}
+	    </if>
+	    <if test="cancelParty != null and cancelParty != ''">
+	        and op_taxiorder.cancelparty = #{cancelParty}
+	    </if>
+	    <if test="orderSource != null and orderSource != ''">
+	        and op_taxiorder.orderno like concat(#{orderSource},'%') 
+	    </if>
+	    <if test="orderSource == null or orderSource == ''">
+	        and (op_taxiorder.orderno like concat('CG','%') or op_taxiorder.orderno like concat('CY','%')) 
+	    </if>
+	    <if test="tradeNo != null and tradeNo != ''">
+	        and op_taxiorderpaymentrecord.tradeno like concat('%',#{tradeNo},'%')
+	    </if>
+	    <if test="minUseTime != null and minUseTime != ''">
+	        and op_taxiorder.usetime <![CDATA[ >= ]]> #{minUseTime}
+	    </if>
+	    <if test="maxUseTime != null and maxUseTime != ''">
+	        and op_taxiorder.usetime <![CDATA[ <= ]]> #{maxUseTime}
+	    </if>
+	    order by ordersortcolumn,
+	    case when ordersortcolumn = 2 then op_taxiorder.usetime else '' end asc,
+	    case when ordersortcolumn != 2 then op_taxiorder.usetime else '' end desc	    	    
+	</select>
+	
+	
+	
+	
+	
+	
+	<!--   网约车订单详情      -->
+	<!-- 查询订单详情 -->
+	<select id="getOpOrderByOrderno" resultType="map" parameterType="string">
+		select 
+			a.*, b.nickname, b.account, d.name drivername, d.phone driverphone,
+			(select city from pub_cityaddr where pub_cityaddr.id = a.oncity) oncityName, 
+			(select city from pub_cityaddr where pub_cityaddr.id = a.offcity) offcityName,
+			ifnull(tmp.price, 0) price, tmp.starttime reviewstarttime, tmp.endtime reviewendtime, tmp.times reviewtimes, tmp.counttimes reviewcounttimes,
+			tmp.mileage reviewmileage, tmp.timesubsidies reviewtimesubsidies, tmp.mileageprices reviewmileageprices,
+			ifnull(pub_dictionary.text, '运管平台') belongleasecompanytext
+		from op_order a left join pe_user b on a.userid = b.id
+			left join (select * from (select * from op_orderreview order by createtime desc) review group by orderno) tmp
+				on a.orderno = tmp.orderno
+			left join pub_driver d on a.driverid = d.id
+            left join pub_dictionary on pub_dictionary.id = a.belongleasecompany
+		where a.status = 1 and a.orderno = #{orderno} limit 1
+	</select>
+	
+	<!-- 查询最原始订单数据 -->
+	<select id="getFirstOpOrderByOrderno" parameterType="string" resultType="map">
+		select
+		op_orderreview.*,
+		ifnull((select reviewedprice from op_orderreview where orderno = #{orderno} and status = 1 order by createtime desc limit 1), 0) recheckprice,
+		(select pricecopy from op_order where orderno = #{orderno}) pricecopy
+		from op_orderreview where orderno = #{orderno} order by createtime asc limit 1
+	</select>
+	
+	<!-- 查询订单的人工派单记录 -->
+	<select id="getOpSendOrderRecord" resultType="map" parameterType="string">
+		select id, orderno, driverid, reason, operator, date_format(createtime, '%Y-%m-%d %H:%i') createtime, updatetime, status, 
+		(select t1.nickname from op_user t1 where t.operator = t1.id) operatorname,
+		(select CONCAT(t1.name,' ', t1.phone) from pub_driver t1 where t.driverid = t1.id) driverinfo
+		from op_sendrecord t
+		where orderno = #{orderno} and status = 1 limit 1
+	</select>
+	
+	<!-- 查询订单更换司机记录 -->
+	<select id="getOpChangeDriverListByQuery" resultType="map" parameterType="OrderManageQueryParam">
+		select (@rownum := @rownum + 1) rownum, t.*, (select CONCAT(t1.name, ' ', t1.phone) from pub_driver t1 where t1.id = t.beforedriverid) beforedriverinfo,  
+		(select CONCAT(t1.name, ' ', t1.phone) from pub_driver t1 where t1.id = t.afterdriverid) afterdriverinfo,
+		(select t1.nickname from op_user t1 where t.operator = t1.id) operatorname,
+		date_format(t.sendtime, '%Y/%m/%d %H:%i') changetime
+		from op_driverchanges t, (select @rownum :=0) b
+		where orderno = #{orderNo} and status = 1 order by createtime desc
+	</select>
+	<select id="getOpChangeDriverCountByQuery" resultType="int" parameterType="OrderManageQueryParam">
+		select count(*) from op_driverchanges where orderno = #{orderNo} and status = 1
+	</select>
+	
+	<!-- 查询订单的复核记录 -->
+	<select id="getOpOrderReviewListByQuery" resultType="map" parameterType="OrderManageQueryParam">
+		select (@rownum := @rownum + 1) rownum, t.*, (select t1.nickname from op_user t1 where t1.id = t.operator) operatorname,
+		(select pricecopy from op_order where orderno = #{orderNo}) pricecopy
+		from op_orderreview t, (select @rownum :=0) b where orderno = #{orderNo} and status = 1
+		order by reviewtime desc
+	</select>
+	<select id="getOpOrderReviewCountByQuery" resultType="int" parameterType="OrderManageQueryParam">
+		select count(*) from op_orderreview where orderno = #{orderNo} and status = 1
+	</select>
+	
+	<!-- 查询客服备注列表 -->
+	<select id="getOpOrderCommentListByQuery" resultType="map" parameterType="OrdercommentQueryParam">
+		select
+			op_ordercomment.id, op_ordercomment.remark, op_ordercomment.operator, op_ordercomment.remarktype,
+			date_format(op_ordercomment.createtime, '%Y.%m.%d %H:%i') createtime,
+			op_rolemanagement.rolename, op_user.nickname, op_user.usertype
+		from
+			op_ordercomment left join op_roleuser on op_ordercomment.operator = op_roleuser.userid
+			left join op_rolemanagement on op_roleuser.roleid = op_rolemanagement.id
+			left join op_user on op_ordercomment.operator = op_user.id
+		where
+			op_ordercomment.orderno = #{orderno} and op_ordercomment.status = 1
+		order by op_ordercomment.createtime desc
+		limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+	<select id="getOpOrderCommentCountByQuery" resultType="int" parameterType="OrdercommentQueryParam">
+		select
+			count(*)
+		from
+			op_ordercomment
+		where
+			op_ordercomment.orderno = #{orderno} and op_ordercomment.status = 1
+	</select>
+	
+	
+	
+	<!-- 网约车订单详情 -->
+	<!-- 根据订单号查询订单详情 -->
+	<select id="getOpTaxiOrderByOrderno" resultType="map" parameterType="string">
+		select
+			op_taxiorder.*, pe_user.nickname, pe_user.account, pub_driver.name drivername, pub_driver.phone driverphone,
+			(select city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.oncity) oncityName, 
+			(select city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.offcity) offcityName,
+			ifnull(tmp.price, 0) price,
+			ifnull(pub_dictionary.text, '运管平台') belongleasecompanytext
+		from
+			op_taxiorder left join pe_user on op_taxiorder.userid = pe_user.id
+			left join (select * from (select * from op_taxiorderreview order by createtime desc) review group by orderno) tmp
+				on op_taxiorder.orderno = tmp.orderno
+			left join pub_driver on op_taxiorder.driverid = pub_driver.id
+			left join pub_dictionary on pub_dictionary.id = op_taxiorder.belongleasecompany
+		where
+			op_taxiorder.status = 1 and op_taxiorder.orderno = #{orderno} limit 1
+	</select>
+	
+	<!-- 查询原始订单数据(第一条复核记录) -->
+	<select id="getFirstTaxiOrderByOrderno" parameterType="string" resultType="map">
+		select
+			op_taxiorderreview.*,
+			ifnull((select reviewedprice from op_taxiorderreview where orderno = #{orderno} and status = 1 order by createtime desc limit 1), 0) recheckprice
+		from op_taxiorderreview
+		where orderno = #{orderno}
+		order by createtime asc limit 1
+	</select>
+	
+	<!-- 查询人工派单记录 -->
+	<select id="getOpSendTaxiOrderRecord" resultType="map" parameterType="string">
+		select
+			id, orderno, driverid, reason, operator, date_format(createtime, '%Y-%m-%d %H:%i') createtime, updatetime, status, 
+			(select op_user.nickname from op_user where op_taxisendrecord.operator = op_user.id) operatorname,
+			(select CONCAT(pub_driver.name,' ', pub_driver.phone) from pub_driver where op_taxisendrecord.driverid = pub_driver.id) driverinfo
+		from op_taxisendrecord
+		where orderno = #{orderno} and status = 1 limit 1
+	</select>
+	
+	<!-- 查询更换司机记录 -->
+	<select id="getOpChangeDriverList" resultType="map" parameterType="OrderManageQueryParam">
+		select
+			(@rownum := @rownum + 1) rownum, t.*,
+			(select CONCAT(t1.name, ' ', t1.phone) from pub_driver t1 where t1.id = t.beforedriverid) beforedriverinfo,  
+			(select CONCAT(t1.name, ' ', t1.phone) from pub_driver t1 where t1.id = t.afterdriverid) afterdriverinfo,
+			(select t1.nickname from op_user t1 where t.operator = t1.id) operatorname,
+			date_format(t.sendtime, '%Y/%m/%d %H:%i') changetime
+		from op_taxidriverchanges t, (select @rownum :=0) b
+		where orderno = #{orderNo} and status = 1 order by createtime desc
+	</select>
+	
+	<!-- 查询更换车辆记录 -->
+	<select id="getOpChangeVehicleList" resultType="map" parameterType="OrderManageQueryParam">
+		select
+			(@rownum := @rownum + 1) rownum, op_taxivehiclechanges.*,
+			(select concat(pub_driver.name, ' ', pub_driver.phone) from pub_driver where pub_driver.id = op_taxivehiclechanges.orderdriverid) drivername,
+			(select op_user.nickname from op_user where op_taxivehiclechanges.operator = op_user.id) operatorname,
+			date_format(op_taxivehiclechanges.sendtime, '%Y/%m/%d %H:%i') changetime
+		from
+			op_taxivehiclechanges, (select @rownum :=0) b
+		where
+			orderno = #{orderNo} and status = 1
+		order by createtime desc
+	</select>
+	
+	<!-- 查询订单复核记录列表 -->
+	<select id="getOpTaxiOrderReviewListByQuery" parameterType="OpTaxiOrderReview" resultType="map">
+		select
+			(@rownum := @rownum + 1) rownum, op_taxiorderreview.*, 
+			(select op_user.nickname from op_user where op_user.id = op_taxiorderreview.operator) operatorname
+		from
+			op_taxiorderreview,
+			(select @rownum :=0) b
+		where
+			op_taxiorderreview.orderno = #{orderno} and op_taxiorderreview.status = 1
+		order by
+			op_taxiorderreview.reviewtime desc
+	</select>
+	<select id="getOpTaxiOrderReviewCountByQuery" parameterType="OpTaxiOrderReview" resultType="int">
+		select
+			count(*)
+		from
+			op_taxiorderreview
+		where
+			op_taxiorderreview.orderno = #{orderno} and op_taxiorderreview.status = 1
+	</select>
+	
+	<!-- 查询客服备注列表 -->
+	<select id="getOpTaxiOrderCommentListByQuery" resultType="map" parameterType="OrdercommentQueryParam">
+		select
+			op_taxiordercomment.id, op_taxiordercomment.remark, op_taxiordercomment.operator, op_taxiordercomment.remarktype,
+			date_format(op_taxiordercomment.createtime, '%Y.%m.%d %H:%i') createtime,
+			op_rolemanagement.rolename, op_user.nickname, op_user.usertype
+		from
+			op_taxiordercomment left join op_roleuser on op_taxiordercomment.operator = op_roleuser.userid
+			left join op_rolemanagement on op_roleuser.roleid = op_rolemanagement.id
+			left join op_user on op_taxiordercomment.operator = op_user.id
+		where
+			op_taxiordercomment.orderno = #{orderno} and op_taxiordercomment.status = 1
+		order by op_taxiordercomment.createtime desc
+		limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+	<select id="getOpTaxiOrderCommentCountByQuery" resultType="int" parameterType="OrdercommentQueryParam">
+		select
+			count(*)
+		from
+			op_taxiordercomment
+		where
+			op_taxiordercomment.orderno = #{orderno} and op_taxiordercomment.status = 1
+	</select>
+	
+</mapper>

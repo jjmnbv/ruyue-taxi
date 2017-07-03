@@ -1,0 +1,1056 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.OrderMapper">
+	<!-- All Select -->
+	<select id="getCities" resultType="City">
+		SELECT * FROM `pub_cityaddr` WHERE `pub_cityaddr`.`status` = 1
+	</select>
+
+	<select id="getOrgBalance" parameterType="OrderCostParam" resultType="OrgOrganCompanyRef">
+		SELECT 
+			oocr.* 
+		FROM 
+			org_organ_company_ref oocr,
+			org_user ou
+		WHERE 1=1
+		AND ou.`Status` = 1
+		AND oocr.`Status` = 1
+		AND oocr.bindstate = 1
+		AND oocr.organid IN (
+			SELECT
+				org.id
+			FROM
+				org_organ org
+			WHERE
+				org.creditcode = (
+					SELECT
+						org2.creditcode
+					FROM
+						org_organ org2
+					WHERE
+						org2. STATUS = 1
+					AND org2.id = ou.organid
+				)
+		)
+		AND oocr.companyid = #{companyid}
+		AND ou.id = #{userid}
+	</select>
+	
+	<select id="getSendRule" resultType="PubSendrules" parameterType="PubSendrules">
+		SELECT
+			psr.*,
+			pca.city as citycaption
+		FROM
+			pub_sendrules psr,
+			pub_cityaddr pca
+		WHERE 1=1
+		AND psr.STATUS = 1
+		AND pca.STATUS = 1
+		AND pca.id = psr.city
+ 		AND psr.rulesstate='0'
+		AND psr.leasescompanyid=#{leasescompanyid}
+		AND psr.vehicletype=#{vehicletype}
+ 		AND psr.usetype=#{usetype}
+ 		AND psr.city=#{city}
+	</select>
+	
+	<select id="getSpecialDrivers" parameterType="PubDriverInBoundParam" resultType="PubDriver2">
+		SELECT
+			pd.*, pv.id vehicleid
+		FROM
+			pub_vehicle_scope pvs,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_driver pd
+		WHERE
+			1 = 1
+		AND pvs.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		AND pd.jobstatus = 0
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = 0
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		<!-- 除了机构跟司机有关联关系,司机本身也必须是特殊司机,如果租赁公司取消了司机的特殊身份,那么就不算是特殊司机 -->
+		AND pd.identitytype = 1
+		AND pd.workstatus IN(${workstatuslist})
+		AND pvs.cityid = #{city}
+		AND pd.id IN (
+			SELECT
+				oudr.driverid
+			FROM
+				org_user_driver_ref oudr
+			WHERE 1=1
+			AND oudr.`status` = 1
+			AND oudr.userid = #{userid}
+		)
+	</select>
+	
+	<select id="getTaxiInBoundWithSimple" parameterType="PubDriverInBoundParam" resultType="PubDriver2">
+		SELECT
+			pd.*,
+			pv.id vehicleid
+		FROM
+			pub_driver pd,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_vehcline pvc,
+			pub_vehcbrand pvb,
+			pub_vehicle_scope pvs,
+			op_vehiclemodels_vehicle_ref ovvr,
+			op_vehiclemodels ov
+		WHERE 1 = 1
+		AND pvs.`Status` = 1
+		AND pvc.`Status` = 1
+		AND pvb.`Status` = 1
+		AND ov.`Status` = 1
+		AND pv.`Status` = 1
+		AND ovvr.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		<!-- 指定只推送出租车司机 -->
+		AND pd.vehicletype = 1
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		AND ovvr.vehicleid = pv.id
+		AND ovvr.vehiclemodelsid = ov.Id
+		AND pv.vehclineid = pvc.Id
+		AND pvc.vehcBrandID = pvb.Id
+		AND pd.workstatus = 0
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		AND pvs.cityid = #{city}
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+	</select>
+	
+	<select id="getOpDriversInBoundWithSimple" parameterType="PubDriverInBoundParam" resultType="PubDriver2">
+		SELECT
+			pd.*,
+			pv.id vehicleid
+		FROM
+			pub_driver pd,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_vehcline pvc,
+			pub_vehcbrand pvb,
+			pub_vehicle_scope pvs,
+			op_vehiclemodels_vehicle_ref ovvr,
+			op_vehiclemodels ov
+		WHERE 1 = 1
+		AND pvs.`Status` = 1
+		AND pvc.`Status` = 1
+		AND pvb.`Status` = 1
+		AND ov.`Status` = 1
+		AND pv.`Status` = 1
+		AND ovvr.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = 0
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		AND ovvr.vehicleid = pv.id
+		AND ovvr.vehiclemodelsid = ov.Id
+		AND pv.vehclineid = pvc.Id
+		AND pvc.vehcBrandID = pvb.Id
+		AND pd.workstatus = 0
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		AND pvs.cityid = #{city}
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+	</select>
+	
+	<select id="getOrgDriversInBoundWithSimple" parameterType="PubDriverInBoundParam" resultType="PubDriver2">
+		SELECT
+			pd.* ,pv.id vehicleid
+		FROM
+			pub_driver pd,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_vehcline pvc,
+			pub_vehcbrand pvb,
+			pub_vehicle_scope pvs,
+			le_vehcline_models_ref lvmr,
+			le_vehiclemodels lv
+		WHERE 1 = 1
+		AND pvs.`Status` = 1
+		AND pvc.`Status` = 1
+		AND pvb.`Status` = 1
+		AND lv.`Status` = 1
+		AND pv.`Status` = 1
+		AND lvmr.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		AND pd.jobstatus = 0
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = 0
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		AND lvmr.vehclineid = pv.vehclineid
+		AND lvmr.vehiclemodelsid = lv.Id
+		AND pv.vehclineid = pvc.Id
+		AND pvc.vehcBrandID = pvb.Id 
+		AND pd.workstatus = 0
+		AND pd.leasescompanyid = #{companyid}
+		AND pvs.cityid = #{city}
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+	</select>
+	
+	<select id="getOpDriverInBound" parameterType="PubDriverInBoundParam" resultType="PubDriver2">
+		SELECT
+			oo.orderno,
+			pd.id,
+			pd.`name`,
+			pd.phone,
+			pd.lng,
+			pd.lat
+		FROM pub_driver pd,pub_driver_vehicle_ref pdvr,pub_vehicle pv,pub_vehicle_scope pvs,
+		op_vehcline_models_ref ovmr,op_vehiclemodels ov,op_order oo
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`status` = 1
+		AND ovmr.`status` = 1
+		AND ov.`status` = 1
+		AND oo.`status` = 1
+		AND pvs.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pdvr.driverid = pd.id
+		AND pdvr.vehicleid = pv.id
+		AND ovmr.vehclineid = pv.vehclineid
+		AND ovmr.vehiclemodelsid = ov.Id
+		AND pvs.vehicleid = pv.id
+		AND (oo.oncity = pvs.cityid OR oo.offcity = pvs.cityid)
+		AND oo.orderno = #{orderno}
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		<if test="allowgrade == false">
+		AND ov.Id = #{cartype}
+		</if>
+		<if test="allowgrade == true">
+		AND ov.level >= (SELECT tov.level FROM op_vehiclemodels tov WHERE tov.`Status` = 1 AND tov.id = #{cartype})
+		</if>
+		AND pd.workstatus IN(${workstatuslist})
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+		<if test="alreadySendDrivers != null and alreadySendDrivers != ''">
+		AND pd.id NOT IN(${alreadySendDrivers})
+		</if>
+		UNION ALL 
+		SELECT
+			oo.orderno,
+			pd.id,
+			pd.`name`,
+			pd.phone,
+			pd.lng,
+			pd.lat
+		FROM pub_driver pd,pub_driver_vehicle_ref pdvr,pub_vehicle pv,pub_vehicle_scope pvs,
+		op_vehiclemodels_vehicle_ref ovvr,op_vehiclemodels ov,op_order oo
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`status` = 1
+		AND ovvr.`status` = 1
+		AND ov.`status` = 1
+		AND oo.`status` = 1
+		AND pvs.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pdvr.driverid = pd.id
+		AND pdvr.vehicleid = pv.id
+		AND ovvr.vehicleid = pv.id
+		AND ovvr.vehiclemodelsid = ov.Id
+		AND pvs.vehicleid = pv.id
+		AND (oo.oncity = pvs.cityid OR oo.offcity = pvs.cityid)
+		AND oo.orderno = #{orderno}
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		<if test="allowgrade == false">
+		AND ov.Id = #{cartype}
+		</if>
+		<if test="allowgrade == true">
+		AND ov.level >= (SELECT tov.level FROM op_vehiclemodels tov WHERE tov.`Status` = 1 AND tov.id = #{cartype})
+		</if>
+		AND pd.workstatus IN(${workstatuslist})
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+		<if test="alreadySendDrivers != null and alreadySendDrivers != ''">
+		AND pd.id NOT IN(${alreadySendDrivers})
+		</if>
+	</select>
+	
+	<select id="getOrgDriverInBound" parameterType="PubDriverInBoundParam" resultType="PubDriver2">
+		SELECT
+			oo.orderno,
+			pd.id,
+			pd.`name`,
+			pd.phone,
+			pd.lng,
+			pd.lat
+		FROM
+			pub_driver pd,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_vehcline pvc,
+			pub_vehcbrand pvb,
+			pub_vehicle_scope pvs,
+			le_vehcline_models_ref lvmr,
+			le_vehiclemodels lv,
+			org_order oo
+		WHERE 1 = 1
+		AND oo.`status` = 1
+		AND pvs.`Status` = 1
+		AND pvc.`Status` = 1
+		AND pvb.`Status` = 1
+		AND lv.`Status` = 1
+		AND pv.`Status` = 1
+		AND lvmr.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = 0
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		AND lvmr.vehclineid = pv.vehclineid
+		AND lvmr.vehiclemodelsid = lv.Id
+		AND pv.vehclineid = pvc.Id
+		AND pvc.vehcBrandID = pvb.Id
+		AND (oo.oncity = pvs.cityid OR oo.offcity = pvs.cityid)
+		AND oo.orderno = #{orderno}
+		AND pd.leasescompanyid = #{companyid}
+		<if test="allowgrade == false">
+		AND lv.Id = #{cartype}
+		</if>
+		<if test="allowgrade == true">
+		AND lv.level >= (SELECT tlv.level FROM le_vehiclemodels tlv WHERE tlv.`Status` = 1 AND tlv.id = #{cartype})
+		</if>
+		AND pd.workstatus IN(${workstatuslist})
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+		<if test="alreadySendDrivers != null and alreadySendDrivers != ''">
+		AND pd.id NOT IN(${alreadySendDrivers})
+		</if>
+	</select>
+	
+	<select id="getOrgOrderById" resultType="OrgOrder" parameterType="String">
+		SELECT oo.* FROM org_order oo WHERE oo.`status` = 1 AND oo.orderno = #{orderno}
+	</select>
+	
+	<select id="getMinOrderInfo" resultType="MinOrderInfo" parameterType="String">
+		select
+			org_order.orderno, org_order.ordertype, org_order.plateno, org_order.factmodelname cartype,
+			concat(org_order.vehcbrandname, " ", org_order.vehclinename) carbrand,
+			pub_driver.name drivername, pub_driver.phone driverphone, org_order.paymethod, org_order.usetype
+		from
+			org_order left join pub_driver on org_order.driverid = pub_driver.id
+		where
+			org_order.orderno = #{orderno}
+	</select>
+	
+	<select id="getUseCarReason" resultType="Dictionary">
+		SELECT * FROM `pub_dictionary` WHERE `pub_dictionary`.`status` = 1 AND type = '用车事由' AND type != value
+	</select>
+	
+	<select id="getOrgByUser" resultType="OrgOrgan" parameterType="String">
+		SELECT
+			oo.*,
+			(SELECT city FROM pub_cityaddr WHERE pub_cityaddr.status=1 AND pub_cityaddr.id=oo.city) AS citycaption
+		FROM
+			`org_organ` oo
+		WHERE
+			id IN (
+				SELECT
+					ou.organid
+				FROM
+					org_user ou
+				<if test="userid != null and userid != ''">
+				WHERE
+					ou.`status` = 1
+					<if test="usetype == 1">
+					OR (
+						ou.`Status` = 2
+						AND (
+							SELECT
+								oua.balance
+							FROM
+								org_useraccount oua
+							WHERE
+								oua.status = 1
+							AND oua.userid = ou.id
+							AND oua.leasescompanyid = #{companyid}
+						) > 0
+					)
+					</if>
+					AND ou.id = #{userid}
+				</if>
+			)
+	</select>
+	
+	<select id="getOrganList" resultType="OrgOrgan" parameterType="String">
+		select
+			org_organ.id, org_organ.fullname, org_organ.shortname, org_organ.contacts, org_organ.cooperationstatus, org_organ.phone,
+			org_organ.email, pub_cityaddr.city, org_organ.address, org_organ.billtype, org_organ.billdate, org_organ.creditcodepic, org_organ.creditcode,
+			org_organ.businesslicensepic, org_organ.businesslicense, org_organ.idcardfront, org_organ.idcardback, org_organ.idcardno, org_organ.CreateTime,
+			org_organ.UpdateTime, org_organ.Creater, org_organ.Updater, org_organ.status
+		from
+			org_organ left join pub_cityaddr on org_organ.city = pub_cityaddr.id
+			left join le_company_rules_ref on org_organ.id = le_company_rules_ref.organid
+			left join org_organ_company_ref on org_organ.id = org_organ_company_ref.organid
+		where
+			org_organ.status = 1 and le_company_rules_ref.status = 1 and le_company_rules_ref.rulestate = "1" and org_organ_company_ref.status = 1
+			and le_company_rules_ref.leasescompanyid = #{companyid} and org_organ_company_ref.companyid = #{companyid}
+			and org_organ_company_ref.bindstate = "1"
+	</select>
+	<select id="getPriOrganList" resultType="OrgOrgan" parameterType="String">
+		select
+			org_organ.id, org_organ.fullname, org_organ.shortname, org_organ.contacts, org_organ.cooperationstatus, org_organ.phone,
+			org_organ.email, pub_cityaddr.city, org_organ.address, org_organ.billtype, org_organ.billdate, org_organ.creditcodepic,
+			org_organ.creditcode, org_organ.businesslicensepic, org_organ.businesslicense, org_organ.idcardfront, org_organ.idcardback,
+			org_organ.idcardno, org_organ.createtime, org_organ.updatetime, org_organ.creater, org_organ.updater, org_organ.status
+		from
+			org_organ_company_ref left join org_organ on org_organ_company_ref.organid = org_organ.id
+			left join pub_cityaddr on org_organ.city = pub_cityaddr.id
+		where
+			org_organ_company_ref.status = 1 and org_organ.status = 1 and org_organ_company_ref.companyid = #{companyid}
+	</select>
+	
+	<select id="getFavUserCount" resultType="int" parameterType="Select2Param">
+		select count(*) from (SELECT
+			fav.*,CONCAT(fav.name,fav.phone) namephone 
+		FROM
+		(
+			(
+				SELECT
+					om.*
+				FROM
+					pub_mostcontact om,
+					org_user ou
+		  	WHERE
+					om.`status` = 1
+				AND ou.`status` = 1
+				AND om.userphone = ou.account
+				AND ou.account = #{userid}
+			)
+			UNION
+			(
+				SELECT
+					ou.id,
+					ou.id userid,
+					ou.nickname `name`,
+					ou.account phone,
+					ou.createtime,
+					ou.updatetime,
+					ou.id creater,
+					ou.id updater,
+					ou.`Status`
+				FROM
+					org_user ou
+				WHERE
+				 	ou.`status` = 1
+					AND ou.account = #{userid}
+			)
+		) fav 
+		<if test="sSearch != null and sSearch != ''">
+		WHERE (fav.phone like '%${sSearch}%' OR fav.name like '%${sSearch}%')
+		</if>
+		group by CONCAT(fav.name,fav.phone))aa
+	</select>
+	
+	<select id="getFavUser" resultType="FavUser" parameterType="Select2Param">
+		SELECT
+			fav.*,CONCAT(fav.name,fav.phone) namephone 
+		FROM
+		(
+			(
+				SELECT
+					ou.id,
+					ou.id userid,
+					ou.nickname `name`,
+					ou.account phone,
+					ou.createtime,
+					ou.updatetime,
+					ou.id creater,
+					ou.id updater,
+					ou.`Status`
+				FROM
+					org_user ou
+				WHERE
+				 	ou.`status` = 1
+					AND ou.account = #{userid}
+			)
+			UNION
+			(
+				SELECT
+					om.*
+				FROM
+					pub_mostcontact om,
+					org_user ou
+		  	WHERE
+					om.`status` = 1
+				AND ou.`status` = 1
+				AND om.userphone = ou.account
+				AND ou.account = #{userid}
+			)
+		) fav
+		<if test="sSearch != null and sSearch != ''">
+		WHERE
+			(fav.phone like '%${sSearch}%' OR fav.name like '%${sSearch}%')
+		</if>
+		group by CONCAT(fav.name,fav.phone)
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+
+	<select id="getMostAddress" resultType="OrgMostAddress" parameterType="BaseOrgParam">
+		SELECT
+			om.*,pca.city citycaption
+		FROM
+			pub_mostaddress om,
+			pub_cityaddr pca
+		WHERE 1=1
+		AND pca.`status` = 1 
+		AND om.`status` = 1
+		AND pca.id = om.city 
+		AND om.userphone = #{userid}
+		AND (
+			pca.city LIKE '%${sSearch}%'
+			OR om.address LIKE '%${sSearch}%'
+		)
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+
+	<select id="getFavUserForSelect" resultType="Select2Entity" parameterType="Select2Param">
+		SELECT
+		<if test="type == 0">
+			fav.name id,
+			CONCAT(fav.phone, " ", IFNULL(fav.name,'')) text
+		</if>
+		<if test="type == 1">
+			fav.phone id,
+			CONCAT(fav.phone, " ", IFNULL(fav.name,'')) text
+		</if>
+		FROM
+		(
+			(
+				SELECT
+					ou.id,
+					ou.id userid,
+					ou.nickname `name`,
+					ou.account phone,
+					ou.createtime,
+					ou.updatetime,
+					ou.id creater,
+					ou.id updater,
+					ou.`Status`
+				FROM
+					org_user ou
+				WHERE
+					ou.account = (select account from org_user where id = #{userid})
+					and ou.`Status` = 1
+			)
+			UNION
+			(
+				SELECT
+					om.*
+				FROM
+					pub_mostcontact om,
+					org_user ou
+		  	WHERE
+					om.`status` = 1
+				AND
+		 			om.userphone = ou.account
+				AND
+					ou.account = (select account from org_user where id = #{userid})
+			)
+		) fav 
+		<if test="sSearch != null and sSearch != ''">
+		WHERE
+			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
+		</if>group by CONCAT(fav.phone, ' ',IFNULL(fav.name,''))
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getOrgUserForSelectInPub" resultType="Select2Entity" parameterType="Select2Param">
+		select
+			org_user.id,
+			case
+				when (select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id
+					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))) > 0
+				then concat(org_user.account, " ", ifnull(org_user.nickname, ""), "(未支付)")
+				else concat(org_user.account, " ", ifnull(org_user.nickname, ""))
+			end text
+		from
+			org_user left join org_organ on org_user.organid = org_organ.id
+			left join 
+				(
+					select org_organ.* from le_company_rules_ref left join org_organ on le_company_rules_ref.organid = org_organ.id
+					where le_company_rules_ref.leasescompanyid = #{companyid} and le_company_rules_ref.rulestate = "1"
+					and le_company_rules_ref.status = 1
+					<if test='null != organid and "" != organid'>
+						and le_company_rules_ref.organid = #{organid}
+					</if>
+				) tmpOrgan on org_organ.creditcode = tmpOrgan.creditcode
+			left join pub_cityaddr on tmpOrgan.city = pub_cityaddr.id
+		where
+			org_user.status = 1 and tmpOrgan.status = 1 and org_user.usertype = "0" and org_organ.status = 1
+			and org_user.id in
+			(
+				select
+					org_user_rules_ref.userid
+				from
+					org_usecarrules left join org_user_rules_ref on org_usecarrules.id = org_user_rules_ref.userulesid
+				where
+					org_usecarrules.status = 1 and org_user_rules_ref.status = 1 and org_usecarrules.leasescompanyid = #{companyid}
+					and org_usecarrules.usetype = #{ordertype}
+			)
+			and org_organ.creditcode in
+			(
+				select org_organ.creditcode from org_organ_company_ref left join org_organ on org_organ_company_ref.organid = org_organ.id
+				where org_organ_company_ref.status = 1 and org_organ_company_ref.bindstate = "1" and org_organ_company_ref.companyid = #{companyid}
+			)
+			<if test="sSearch != null and sSearch != ''">
+				and ( org_user.account like concat("%", #{sSearch}, "%") or org_user.nickname like concat("%", #{sSearch}, "%") )
+			</if>
+			group by org_user.id
+			limit 0,10
+	</select>
+	
+	<select id="getOrgUserForSelectInPri" resultType="Select2Entity" parameterType="Select2Param">
+		select
+			org_user.id,
+			case
+				when (select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id
+					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))) > 0
+				then concat(org_user.account, " ", ifnull(org_user.nickname, ""), "(未支付)")
+				else concat(org_user.account, " ", ifnull(org_user.nickname, ""))
+			end text
+		from
+			org_user left join org_organ on org_user.organid = org_organ.id
+			left join (select org_organ.*, org_organ_company_ref.bindstate from org_organ_company_ref left join org_organ on org_organ_company_ref.organid = org_organ.id 
+				where org_organ_company_ref.companyid = #{companyid} and org_organ_company_ref.status = 1
+				<if test='null != organid and "" != organid'>
+					and org_organ_company_ref.organid = #{organid}
+				</if>
+				) tmpOrgan
+				on org_organ.creditcode = tmpOrgan.creditcode
+			left join pub_cityaddr on tmpOrgan.city = pub_cityaddr.id
+		where
+			org_organ.status = 1 and tmpOrgan.status = 1 and org_user.usertype = "0"
+			and ((org_user.status = 1 and tmpOrgan.bindstate = '1') or ((org_user.status != 1 or tmpOrgan.bindstate = '0')
+				and (select org_useraccount.balance from org_useraccount where org_useraccount.userid = org_user.id and org_useraccount.status = 1 and org_useraccount.leasescompanyid = #{companyid}) > 0
+			))
+			<if test="sSearch != null and sSearch != ''">
+				and ( org_user.account like concat("%", #{sSearch}, "%") or org_user.nickname like concat("%", #{sSearch}, "%") )
+			</if>
+			group by org_user.id
+			limit 0,10
+	</select>
+	
+	<select id="getOrgUserCountInPub" resultType="int" parameterType="Select2Param">
+		select
+			count(*)
+		from
+			(select 
+				org_user.id
+			from
+				org_user left join org_organ on org_user.organid = org_organ.id
+				left join 
+					(
+						select org_organ.* from le_company_rules_ref left join org_organ on le_company_rules_ref.organid = org_organ.id
+						where le_company_rules_ref.leasescompanyid = #{companyid} and le_company_rules_ref.rulestate = "1"
+						and le_company_rules_ref.status = 1
+						<if test='null != organid and "" != organid'>
+							and le_company_rules_ref.organid = #{organid}
+						</if>
+					) tmpOrgan on org_organ.creditcode = tmpOrgan.creditcode
+				left join pub_cityaddr on tmpOrgan.city = pub_cityaddr.id
+			where
+				org_user.status = 1 and tmpOrgan.status = 1 and org_user.usertype = "0" and org_organ.status = 1
+				and org_user.id in
+				(
+					select
+						org_user_rules_ref.userid
+					from
+						org_usecarrules left join org_user_rules_ref on org_usecarrules.id = org_user_rules_ref.userulesid
+					where
+						org_usecarrules.status = 1 and org_user_rules_ref.status = 1 and org_usecarrules.leasescompanyid = #{companyid}
+						and org_usecarrules.usetype = #{ordertype}
+				)
+				and org_organ.creditcode in
+				(
+					select org_organ.creditcode from org_organ_company_ref left join org_organ on org_organ_company_ref.organid = org_organ.id
+					where org_organ_company_ref.status = 1 and org_organ_company_ref.bindstate = "1" and org_organ_company_ref.companyid = #{companyid}
+				)
+				<if test="sSearch != null and sSearch != ''">
+					and (org_user.account like concat("%", #{sSearch}, "%") or org_user.nickname like concat("%", #{sSearch}, "%"))
+				</if>
+				group by org_user.id) tmpUser
+	</select>
+	
+	<select id="getOrgUserCountInPri" resultType="int" parameterType="Select2Param">
+		select
+			count(*)
+		from
+			(
+			select
+				org_user.id
+			from
+				org_user left join org_organ on org_user.organid = org_organ.id
+				left join (select org_organ.*, org_organ_company_ref.bindstate from org_organ_company_ref left join org_organ on org_organ_company_ref.organid = org_organ.id 
+					where org_organ_company_ref.companyid = #{companyid} and org_organ_company_ref.status = 1
+					<if test='null != organid and "" != organid'>
+						and org_organ_company_ref.organid = #{organid}
+					</if>
+					) tmpOrgan
+					on org_organ.creditcode = tmpOrgan.creditcode
+				left join pub_cityaddr on tmpOrgan.city = pub_cityaddr.id
+			where
+				org_organ.status = 1 and tmpOrgan.status = 1 and org_user.usertype = "0"
+				and ((org_user.status = 1 and tmpOrgan.bindstate = '1') or ((org_user.status != 1 or tmpOrgan.bindstate = '0')
+					and (select org_useraccount.balance from org_useraccount where org_useraccount.userid = org_user.id and org_useraccount.status = 1 and org_useraccount.leasescompanyid = #{companyid}) > 0
+				))
+				<if test="sSearch != null and sSearch != ''">
+					and ( org_user.account like concat("%", #{sSearch}, "%") or org_user.nickname like concat("%", #{sSearch}, "%") )
+				</if>
+				group by org_user.id) tmpUser
+	</select>
+	
+	<select id="getOrgUserInPub" resultType="OrgUser" parameterType="Select2Param">
+		select
+			*
+		from
+			(select 
+				tmpOrgan.fullname orgcaption, pub_cityaddr.city citycaption,
+				(select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id
+					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))) > 0 notpay,
+				(select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id
+					and org_order.orderstatus in (#{orderstatuslist})) notdone, org_user.*
+			from
+				org_user left join org_organ on org_user.organid = org_organ.id
+				left join 
+					(
+						select org_organ.* from le_company_rules_ref left join org_organ on le_company_rules_ref.organid = org_organ.id
+						where le_company_rules_ref.leasescompanyid = #{companyid} and le_company_rules_ref.rulestate = "1"
+						and le_company_rules_ref.status = 1
+						<if test='null != organid and "" != organid'>
+							and le_company_rules_ref.organid = #{organid}
+						</if>
+					) tmpOrgan on org_organ.creditcode = tmpOrgan.creditcode
+				left join pub_cityaddr on tmpOrgan.city = pub_cityaddr.id
+			where
+				org_user.status = 1 and tmpOrgan.status = 1 and org_user.usertype = "0" and org_organ.status = 1
+				and org_user.id in
+				(
+					select
+						org_user_rules_ref.userid
+					from
+						org_usecarrules left join org_user_rules_ref on org_usecarrules.id = org_user_rules_ref.userulesid
+					where
+						org_usecarrules.status = 1 and org_user_rules_ref.status = 1 and org_usecarrules.leasescompanyid = #{companyid}
+						and org_usecarrules.usetype = #{ordertype}
+				)
+				and org_organ.creditcode in
+				(
+					select org_organ.creditcode from org_organ_company_ref left join org_organ on org_organ_company_ref.organid = org_organ.id
+					where org_organ_company_ref.status = 1 and org_organ_company_ref.bindstate = "1" and org_organ_company_ref.companyid = #{companyid}
+				)
+				<if test="sSearch != null and sSearch != ''">
+					and ( org_user.account like concat("%", #{sSearch}, "%") or org_user.nickname like concat("%", #{sSearch}, "%") )
+				</if>
+				group by org_user.id) tmpUser
+		limit ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getOrgUserInPri" resultType="OrgUser" parameterType="Select2Param">
+		select
+			*
+		from
+			(select
+				tmpOrgan.fullname orgcaption, pub_cityaddr.city citycaption,
+				(select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id
+					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))) > 0 notpay,
+				(select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id and org_order.orderstatus in (#{orderstatuslist})) notdone,
+				org_user.*
+			from
+				org_user left join org_organ on org_user.organid = org_organ.id
+				left join (select org_organ.*, org_organ_company_ref.bindstate from org_organ_company_ref left join org_organ on org_organ_company_ref.organid = org_organ.id 
+					where org_organ_company_ref.companyid = #{companyid} and org_organ_company_ref.status = 1
+					<if test='null != organid and "" != organid'>
+						and org_organ_company_ref.organid = #{organid}
+					</if>
+					) tmpOrgan
+					on org_organ.creditcode = tmpOrgan.creditcode
+				left join pub_cityaddr on tmpOrgan.city = pub_cityaddr.id
+			where
+				org_organ.status = 1 and tmpOrgan.status = 1 and org_user.usertype = "0"
+				and ((org_user.status = 1 and tmpOrgan.bindstate = '1') or ((org_user.status != 1 or tmpOrgan.bindstate = '0')
+					and (select org_useraccount.balance from org_useraccount where org_useraccount.userid = org_user.id and org_useraccount.status = 1 and org_useraccount.leasescompanyid = #{companyid}) > 0
+				))
+				<if test="sSearch != null and sSearch != ''">
+					and ( org_user.account like concat("%", #{sSearch}, "%") or org_user.nickname like concat("%", #{sSearch}, "%") )
+				</if>
+			group by org_user.id) tmpUser
+		limit ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getOrgUserById" parameterType="OrgUserParam" resultType="OrgUser">
+		SELECT
+		(
+			SELECT
+				COUNT(oo.orderno)
+			FROM
+				org_order oo
+			WHERE
+				oo.`status` = 1
+			AND oo.userid = ou.id
+			AND oo.orderstatus = #{orderstatus}
+			AND (
+				oo.paymentstatus = #{paymentstatus}
+				OR ISNULL(oo.paymentstatus)
+			)
+		) > 0 notpay,
+		(
+			SELECT
+				COUNT(oo.orderno)
+			FROM
+				org_order oo
+			WHERE
+				oo.`status` = 1
+			AND oo.userid = ou.id
+			AND oo.orderstatus IN (#{orderstatuslist})
+		) notdone,
+		ou.*
+		FROM
+			org_user ou
+		WHERE 1=1
+		AND ou.`status` = 1
+		AND ou.id = #{userid}
+	</select>
+	
+	<select id="getCarTypes" parameterType="GetCarTypesParam" resultType="LeVehiclemodels">
+		<if test="usetype == 1">
+		SELECT 
+			la.startprice,
+			la.rangeprice,
+			la.timeprice,
+			lv.* 
+		FROM 
+			le_accountrules la,
+			le_vehiclemodels lv
+		WHERE 1=1
+		AND lv.`Status` = 1
+		AND la.`Status` = 1
+		AND la.leasescompanyid = lv.leasescompanyid
+		AND la.cartype = lv.Id
+		AND la.type = 0
+		AND la.rulesstate = 0
+		AND la.rulestype = #{ordertype}
+		AND la.leasescompanyid = #{companyid}
+		AND la.city = #{city}
+		and lv.modelstatus = "0"
+		ORDER BY lv.`level`
+		</if>
+		<if test="usetype == 0">
+		SELECT
+			la.startprice,
+			la.rangeprice,
+			la.timeprice,
+			lv.*
+		FROM
+			le_vehiclemodels lv,
+			le_accountrules la,
+			le_company_rules_ref lcrr
+		WHERE 1=1
+		AND lcrr.`Status` = 1
+		AND lv.`Status` = 1
+		and lv.modelstatus = "0"
+		AND la.`Status` = 1
+		AND lcrr.rulestate = 1
+		AND la.type = 1
+		AND la.rulesstate = 0
+		AND la.cartype = lv.Id
+		AND la.rulesrefid = lcrr.id
+		AND lcrr.organid IN (
+			SELECT
+				org.id
+			FROM
+				org_organ org,
+				org_user ou
+			WHERE
+				org.creditcode = (
+					SELECT
+						org2.creditcode
+					FROM
+						org_organ org2
+					WHERE
+						org2. STATUS = 1
+					AND org2.id = ou.organid
+					AND ou.id = #{userid}
+				)
+		)
+		AND lcrr.leasescompanyid = #{companyid}
+		AND la.city = #{city}
+		AND la.rulestype = #{ordertype}
+		AND lv.Id IN (
+			SELECT
+				oucr.vehiclemodels
+			FROM
+				org_user ou,
+				org_usecarrules oucr,
+				org_user_rules_ref ourr
+			WHERE 1=1
+			AND ou.`Status` = 1
+			AND oucr.`status` = 1
+			AND ourr.`status` = 1
+			AND ourr.userid = ou.id
+			AND ourr.userulesid = oucr.id
+			AND oucr.usetype = #{ordertype}
+			AND ou.id = #{userid}
+		)
+		ORDER BY lv.`level`
+		</if>
+	</select>
+	
+	<!-- All Update -->
+	<update id="updatePushNum" parameterType="PubDriverInBoundParam">
+		UPDATE org_order oo SET oo.pushnumber = #{pushcount} WHERE oo.`status` = 1 AND oo.orderno = #{orderno}
+	</update>
+	<!-- All Insert -->
+	
+	<!-- 查询机构用户因公业务城市 -->
+	<select id="getOrgUserPubBusCity" resultType="PubCityAddr" parameterType="map">
+		select * from pub_cityaddr
+		where
+			id in (
+				select le_accountrules.city from le_accountrules 
+				left join le_company_rules_ref on le_accountrules.rulesrefid = le_company_rules_ref.id
+				left join org_organ on le_company_rules_ref.organid = org_organ.id
+				left join org_organ_company_ref on org_organ.id = org_organ_company_ref.organid
+				where le_company_rules_ref.leasescompanyid = #{companyid} and org_organ_company_ref.companyid = #{companyid}
+				and org_organ.creditcode = (select org_organ.creditcode from org_user left join org_organ on org_user.organid = org_organ.id where org_user.id = #{userid})
+				and le_company_rules_ref.rulestate = '1' and le_accountrules.leasescompanyid = #{companyid}
+				and le_accountrules.rulestype = #{ordertype} and le_accountrules.type = '1'
+				and le_accountrules.cartype in (
+					select org_usecarrules.vehiclemodels from org_usecarrules left join org_user_rules_ref on org_usecarrules.id = org_user_rules_ref.userulesid and org_user_rules_ref.userid = #{userid}
+					and org_usecarrules.usetype = #{ordertype} and org_usecarrules.leasescompanyid = #{companyid} and org_usecarrules.status = 1 and org_user_rules_ref.status = 1
+				)
+				and le_accountrules.status = 1 and le_accountrules.status = 1 and le_company_rules_ref.status = 1 and org_organ.status = 1 and org_organ_company_ref.status = 1
+			)
+			and id in (
+				select city from pub_sendrules where leasescompanyid = #{companyid} and status = 1 and platformtype="1" and vehicletype=0
+			)
+			and status = 1
+			<if test='null != city and "" != city'>
+				and id = #{city}
+			</if>
+		order by fullnameinitials
+	</select>
+	
+	<!-- 查询机构用户因私业务城市 -->
+	<select id="getOrgUserPriBusCity" resultType="PubCityAddr" parameterType="map">
+		select * from pub_cityaddr
+		where
+			id in (
+				select city from le_accountrules where leasescompanyid = #{companyid} and rulestype = #{ordertype} and type = "0" and rulesstate = "0"
+				and status = 1
+			)
+			and id in (
+				select city from pub_sendrules where leasescompanyid = #{companyid} and status = 1 and platformtype="1" and vehicletype=0
+        )
+			and status = 1
+			<if test='null != city and "" != city'>
+				and id = #{city}
+			</if>
+		order by fullnameinitials
+	</select>
+
+    <!-- 查询空闲司机  -->
+    <select id="getManualSelectDriver" resultType="com.szyciov.lease.dto.response.GetFreeDriverResponse" parameterType="com.szyciov.lease.dto.request.GetFreeDriverRequest">
+        select * from (
+		select
+            concat(d.id, '_', v.id) id,
+            concat(d.phone, ' ', d.`name`) text,
+			d.jobnum jobNum,
+			d.`name`,
+			d.phone,
+			d.workstatus workStatus,
+			concat(dicp.`text`, dicc.`text`, v.plateno)  plateNo,
+			vm.name vehicleModelName
+		from pub_driver d
+		inner join pub_driver_vehicle_ref vr on d.id=vr.driverid
+		inner join pub_vehicle v on v.id=vr.vehicleid
+		inner join le_vehcline_models_ref vmr on vmr.vehclineid=v.vehclineid
+		inner join le_vehiclemodels vm on vm.id=vmr.vehiclemodelsid
+		inner join pub_dictionary dicp on v.platenoprovince=dicp.value
+		inner join pub_dictionary dicc on v.platenocity=dicc.value
+		where 1=1
+			and d.Status=1
+			and vr.status=1
+			and v.Status=1
+			and vmr.Status=1
+			and vm.Status=1
+			and dicp.status=1
+			and dicc.status=1
+            and d.workstatus=0
+            and d.jobstatus=0
+			and d.leasescompanyid=#{leasesCompanyId}
+        <if test='null != phone and "" != phone'>
+            and instr(d.phone, #{phone}) > 0
+        </if>
+        <if test='null != jobNum and "" != jobNum'>
+            and instr(d.jobnum, #{jobNum}) > 0
+        </if>
+        <if test='null != name and "" != name'>
+            and instr(d.`name`, #{name}) > 0
+        </if>
+        <if test='null != keyword and "" != keyword'>
+            and (instr(d.`name`, #{keyword}) > 0 or instr(d.phone, #{keyword}) > 0)
+        </if>
+        ) t
+        where 1=1
+        <if test='null != plateNo and "" != plateNo'>
+            and instr(t.plateNo, #{plateNo}) > 0
+        </if>
+    </select>
+</mapper>

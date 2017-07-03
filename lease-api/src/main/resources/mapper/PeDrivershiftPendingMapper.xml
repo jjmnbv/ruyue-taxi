@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.lease.mapper.PeDrivershiftPendingMapper" >
+
+  
+  <insert id="save" parameterType="PeDrivershiftPending" useGeneratedKeys="true" >
+    insert into pe_drivershift_pending
+    (`id` ,`vehicleid` ,`driverid` ,`driverinfo` ,`onlinetime` ,`applytime` ,`shifttype` ,`relievedtype` ,`createtime` ,
+    `updatetime` ,`creater` ,`updater` ,`status` ,`platformtype` ,`leasescompanyid`,overtimetime )
+    values (#{id},#{vehicleid},#{driverid},#{driverinfo},#{onlinetime},#{applytime},#{shifttype},#{relievedtype},
+    #{createtime},#{updatetime},#{creater},#{updater},'1',#{platformtype},#{leasescompanyid},#{overtimetime})
+  </insert>
+
+  <update id="updateRelievedtype" parameterType="PeDrivershiftPending">
+    update pe_drivershift_pending set relievedtype = #{relievedtype},
+    updater = #{updater},updatetime = #{updatetime}
+    where id = #{id}
+  </update>
+
+  <select id="getPendingInfo" parameterType="PeDrivershiftPending" resultType="PeDrivershiftPending">
+    select * from pe_drivershift_pending
+    where  status ='1'
+    <if test="id!=null and id!=''">
+      and id = #{id}
+    </if>
+    /*根据司机Id查询*/
+    <if test="driverid!=null and driverid!=''">
+      and driverid = #{driverid}
+    </if>
+    limit 0,1
+  </select>
+
+
+  <select id="listPending" resultType="PendingDto" parameterType="PeDrivershiftPendingParam">
+    select t.id,t.driverinfo,t.onlinetime,t.applytime,t.vehicleid,t.driverid,
+    getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) as platenoStr,
+    getCityStr(t1.city) as cityStr
+    from pe_drivershift_pending t
+    left join pub_vehicle t1 on t.vehicleid = t1.id and t1.status='1'
+    <include refid="queryParam"></include>
+    limit #{iDisplayStart}, #{iDisplayLength}
+  </select>
+
+
+  <select id="getlistPendingCount" resultType="Integer" parameterType="PeDrivershiftPendingParam">
+    select count(t.id)
+    from pe_drivershift_pending t
+    left join pub_vehicle t1 on t.vehicleid = t1.id and t1.status='1'
+    <include refid="queryParam"></include>
+  </select>
+
+
+  <sql id="queryParam">
+    where  t.relievedtype = #{relievedtype}
+     and  t.leasescompanyid = #{leasescompanyid}
+    and  t.platformtype = #{platformtype}
+    and t.status ='1'
+    <if test="vehicleid != '' and vehicleid != null">
+      and t.vehicleid = #{vehicleid}
+    </if>
+
+    <if test="driverid != '' and driverid != null">
+      and t.driverid = #{driverid}
+    </if>
+
+    <if test="plateNo != '' and plateNo != null">
+      and getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) like "%"#{plateNo}"%"
+    </if>
+
+    <if test="applytimeStart != '' and applytimeStart != null">
+      <![CDATA[
+             and t.applytime >= date_format(#{applytimeStart}, '%Y-%m-%d')
+        ]]>
+    </if>
+
+    <if test="applytimeEnd != '' and applytimeEnd != null">
+      <![CDATA[
+              and t.applytime < STR_TO_DATE(ADDDATE(#{applytimeEnd},1),'%Y-%m-%d %H:%i:%s')
+        ]]>
+
+    </if>
+
+  </sql>
+
+  <delete id="removeById" parameterType="String">
+    delete from pe_drivershift_pending where id = #{id}
+
+  </delete>
+  
+  <select id="getUnfinishedOrderCount" resultType="Integer" parameterType="String">
+    select count(t.orderno) from op_taxiorder t where t.orderstatus not in('7','8')
+    and t.status = '1' and t.vehicleid = #{vehicleid}
+
+  </select>
+
+
+</mapper>

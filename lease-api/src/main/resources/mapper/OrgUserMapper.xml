@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.OrgUserMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<insert id="createOrgUser" parameterType="OrgUser">
+		insert into org_user(id,organid,dpetid,usertype,account,email,nickname,userpassword,sex,specialstate,headportraitmin,headportraitmax,registertime,disablestate,disablehis,usetimes,gpsspeed,gpsdirection,lng,lat,createtime,UpdateTime,Status,customertype)
+			values (#{id},#{organId},#{dpetId},#{userType},#{account},#{email},#{nickName},#{userPassword},#{sex},#{specialState},#{headPortraitMin},#{headPortraitMax},#{registerTime},#{disableState},#{disableHis},#{useTimes},#{gpsSpeed},#{gpsDirection},#{lng},#{lat},now(),now(),1,#{customertype})
+	</insert>
+	<update id="resetPassword" parameterType="OrgUser">
+		UPDATE org_user
+		SET userpassword = #{userPassword},updatetime=now()
+		WHERE
+		id = #{id}
+	</update>
+	<!-- 修改 账号 密码 -->
+	<update id="updateOrgUser" parameterType="OrgUser">
+		update org_user set account = #{account},userpassword = #{userPassword},UpdateTime = now() where id=#{id}
+	</update>
+	<select id="getOrgUserId" resultType="OrgUser" parameterType="string">
+		SELECT
+			org_user.id
+		FROM
+			org_organ,
+			org_user,
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref.organid = org_organ.id
+		AND org_organ_company_ref.userid = org_user.id
+		AND org_organ_company_ref.organid = #{id}
+	</select>
+</mapper>

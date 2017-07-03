@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.LeLeasescompanyMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<update id="updateLeLeasescompany" parameterType="LeLeasescompany">
+		UPDATE le_leasescompany SET contacts=#{contacts},phone=#{phone},mail=#{mail},servicesphone=#{servicesPhone},
+		busnumsensitive=#{busNumSensitive},driversensitive=#{driverSensitive},
+		Updater=#{updater},UpdateTime=now()
+		where id = #{id} 
+	</update>
+	<!--  传一个userid -->
+	<select id="getLeLeasescompany" parameterType="string" resultType="LeLeasescompany">
+		SELECT
+			le_leasescompany.*,le_user.account,le_user.id AS userId
+		FROM
+			le_leasescompany,
+			le_user
+		WHERE
+			le_leasescompany.id = le_user.leasescompanyid
+		AND le_user.specialstate = '1'
+		AND le_user.`status`=1
+		AND le_leasescompany.`Status`=1
+		AND le_user.id=#{id}
+	</select>
+	<update id="updatePassword" parameterType="User">
+		UPDATE le_user SET userpassword=#{userpassword},updatetime=now() WHERE id=#{id}
+	</update>
+	<update id="updateToC" parameterType="LeLeasescompany">
+		UPDATE le_leasescompany SET tocstate=#{tocState},Updater=#{updater},remarks=#{remarks},updatetime=now() WHERE id=#{id}
+	</update>
+	<!-- 退出 toc -->
+	<update id="outToC" parameterType="LeLeasescompany">
+		UPDATE le_leasescompany SET tocstate = #{tocState},Updater=#{updater},updatetime=now() WHERE id=#{id}
+	</update>
+	<!-- 查询协议  加入toc的-->
+	<select id="getLeCompanyAgreement" parameterType="string" resultType="LeCompanyAgreement">
+		SELECT * from le_company_agreement WHERE le_company_agreement.`status`=1 AND le_company_agreement.leasescompanyid = #{id}
+	</select>
+	<!-- 修改 le_user  fristtime  1 代表登陆过 -->
+	<select id="updataLeUserFristtime" parameterType="string">
+		update le_user set firsttime='1',updatetime=now() where id=#{id}
+	</select>
+	<!-- 查询运管端的超管  需要推送消息 -->
+	<select id="getOpUser" resultType="OpUser">
+		select * from op_user where op_user.usertype = '1' and op_user.status = 1
+	</select>
+
+	<!--   -->
+	<select id="getLeLeasescompanyById" parameterType="string" resultType="LeLeasescompany">
+		SELECT
+		le_leasescompany.*
+		FROM
+		le_leasescompany
+		WHERE
+		le_leasescompany.id = #{leaseid}
+ 	</select>
+</mapper>

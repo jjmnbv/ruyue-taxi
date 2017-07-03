@@ -1,0 +1,856 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.LeCashManageMapper">
+
+	<!-- 查询用户对应的机构权限 -->
+	<select id="getAccounts" parameterType="map" resultType="map">
+		<!-- 查询id和text -->
+		 select DISTINCT* from (
+			  SELECT
+				CASE pub_withdraw.usertype
+				WHEN '2' THEN
+					pub_driver.id
+				ELSE
+					org_user.id
+				END AS id,
+				CASE pub_withdraw.usertype
+				WHEN '2' THEN
+					pub_driver.phone
+				ELSE
+					org_user.account
+				END as text
+			FROM
+				pub_withdraw
+			LEFT JOIN 
+				org_user
+			ON 
+			(
+				org_user.id=pub_withdraw.userid
+			)
+			LEFT JOIN
+				pub_driver
+			ON
+			(
+				pub_driver.id=pub_withdraw.userid
+			)
+			WHERE
+				pub_withdraw.STATUS = 1
+			AND pub_withdraw.processstatus = #{processstatus}
+			AND pub_withdraw.platformtype = #{platformtype}
+			AND pub_withdraw.leasescompanyid = #{leasescompanyid}
+			ORDER BY
+				pub_withdraw.createtime desc
+		) t
+		where t.text LIKE "%"#{account}"%"
+		limit 0,10
+	</select>
+	
+	<!-- 查询用户对应的机构权限 -->
+	<!-- <select id="getNames" parameterType="map" resultType="map">
+		查询id和text
+		select * from (
+			SELECT
+				CASE pub_withdraw.usertype
+				WHEN '2' THEN
+					pub_driver.id
+				ELSE
+					org_user.id
+				END AS id,
+				CASE pub_withdraw.usertype
+				WHEN '2' THEN
+					pub_driver.NAME
+				ELSE
+					org_user.nickname
+				END as text
+			FROM
+				pub_withdraw
+			LEFT JOIN 
+				org_user
+			ON 
+			(
+				org_user.id=pub_withdraw.userid
+			)
+			LEFT JOIN
+				pub_driver
+			ON
+			(
+				pub_driver.id=pub_withdraw.userid
+			)
+			WHERE
+				pub_withdraw.STATUS = 1
+			AND pub_withdraw.processstatus = #{processstatus}
+			AND pub_withdraw.platformtype = #{platformtype}
+			AND pub_withdraw.leasescompanyid = #{leasescompanyid}
+			ORDER BY
+				pub_withdraw.createtime desc
+		) t 
+		where t.text LIKE "%"#{creditcardname}"%"
+		limit 0,10
+	</select> -->
+	<select id="getNames" parameterType="map" resultType="map">
+		<!-- 查询id和text -->
+		select DISTINCT* from (
+			SELECT
+				pub_withdraw.creditcardname AS id,
+				pub_withdraw.creditcardname AS text
+			FROM
+				pub_withdraw
+			WHERE
+				pub_withdraw.STATUS = 1
+			AND pub_withdraw.processstatus = #{processstatus}
+			AND pub_withdraw.platformtype = #{platformtype}
+			AND pub_withdraw.leasescompanyid = #{leasescompanyid}
+			ORDER BY
+				pub_withdraw.createtime desc
+		) t 
+		where t.text LIKE "%"#{creditcardname}"%"
+		limit 0,10
+	</select>
+	
+	<select id="getCashListCountByQuery" parameterType="CashManageQueryParam" resultType="int">
+    	SELECT
+			count(*)
+		FROM
+			(
+			SELECT
+					a.*
+				FROM
+					(
+						SELECT
+							CASE pub_withdraw.usertype
+						WHEN '2' THEN
+							pub_driver.phone
+						ELSE
+							org_user.account
+						END AS account,
+						CASE pub_withdraw.usertype
+					WHEN '2' THEN
+						pub_driver. NAME
+					ELSE
+						org_user.nickname
+					END AS nickname,
+					pub_withdraw.*, (
+						SELECT
+							le_user.nickname
+						FROM
+							le_user
+						WHERE
+							le_user.id = pub_withdraw.processuser
+					) processusername
+				FROM
+					pub_withdraw
+				LEFT JOIN org_user ON (
+					org_user.id = pub_withdraw.userid
+				)
+				LEFT JOIN pub_driver ON (
+					pub_driver.id = pub_withdraw.userid
+				)
+				WHERE
+					pub_withdraw. STATUS = 1
+				AND pub_withdraw.platformtype = '1'
+				AND pub_withdraw.processstatus=#{processstatus}
+				
+				<if test="leasescompanyid!=null and leasescompanyid!=''">
+					AND pub_withdraw.leasescompanyid=#{leasescompanyid}
+				</if>
+				<if test="minUseTime!=null and minUseTime!='' and maxUseTime!=null and maxUseTime!=''">
+					<if test="processstatus=='0' or processstatus==0">
+						<![CDATA[
+							AND pub_withdraw.applytime>#{minUseTime}
+							AND pub_withdraw.applytime<#{maxUseTime}
+						]]>
+					</if>
+					<if test="processstatus=='1' or processstatus==1">
+						<![CDATA[
+							AND pub_withdraw.processtime>#{minUseTime}
+							AND pub_withdraw.processtime<#{maxUseTime}
+						]]>
+					</if>
+				</if>
+				<if test="usertype!=null and usertype!=''">
+					AND pub_withdraw.usertype=#{usertype}
+				</if>
+					) a
+				where 1=1
+				<if test="account!=null and account!=''">
+					AND a.account like "%"#{account}"%"
+				</if>
+				<if test="creditcardname!=null and creditcardname!=''">
+					AND a.creditcardname like "%"#{creditcardname}"%"
+				</if>
+				ORDER BY
+					a.updatetime DESC
+			) t
+	</select>
+	
+	<select id="getCashListByQuery" parameterType="CashManageQueryParam" resultType="LeCashManage">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS rownum,
+					a.*
+				FROM
+					(
+						SELECT
+							CASE pub_withdraw.usertype
+						WHEN '2' THEN
+							pub_driver.phone
+						ELSE
+							org_user.account
+						END AS account,
+						CASE pub_withdraw.usertype
+					WHEN '2' THEN
+						pub_driver. NAME
+					ELSE
+						org_user.nickname
+					END AS nickname,
+					pub_withdraw.*, (
+						SELECT
+							le_user.nickname
+						FROM
+							le_user
+						WHERE
+							le_user.id = pub_withdraw.processuser
+					) processusername
+				FROM
+					pub_withdraw
+				LEFT JOIN org_user ON (
+					org_user.id = pub_withdraw.userid
+				)
+				LEFT JOIN pub_driver ON (
+					pub_driver.id = pub_withdraw.userid
+				)
+				WHERE
+					pub_withdraw. STATUS = 1
+				AND pub_withdraw.platformtype = '1'
+				AND pub_withdraw.processstatus=#{processstatus}
+				
+				<if test="leasescompanyid!=null and leasescompanyid!=''">
+					AND pub_withdraw.leasescompanyid=#{leasescompanyid}
+				</if>
+				<if test="minUseTime!=null and minUseTime!='' and maxUseTime!=null and maxUseTime!=''">
+					<if test="processstatus=='0' or processstatus==0">
+						<![CDATA[
+							AND pub_withdraw.applytime>#{minUseTime}
+							AND pub_withdraw.applytime<#{maxUseTime}
+						]]>
+					</if>
+					<if test="processstatus=='1' or processstatus==1">
+						<![CDATA[
+							AND pub_withdraw.processtime>#{minUseTime}
+							AND pub_withdraw.processtime<#{maxUseTime}
+						]]>
+					</if>
+				</if>
+				<if test="usertype!=null and usertype!=''">
+					AND pub_withdraw.usertype=#{usertype}
+				</if>
+					) a,
+					(SELECT @rownum := 0) r
+				where 1=1
+				<if test="account!=null and account!=''">
+					AND a.account like "%"#{account}"%"
+				</if>
+				<if test="creditcardname!=null and creditcardname!=''">
+					AND a.creditcardname like "%"#{creditcardname}"%"
+				</if>
+				<if test="processstatus=='0' or processstatus==0">
+					ORDER BY a.applytime
+				</if>
+				<if test="processstatus=='1' or processstatus==1">
+					ORDER BY a.updatetime DESC
+				</if>
+			) t
+		<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 拒绝打款了 -->
+	<update id="cashReject" parameterType="Map">
+		UPDATE pub_withdraw
+		SET pub_withdraw.processstatus = '1',
+		 pub_withdraw.processtime = now(),
+		 pub_withdraw.updatetime = now(),
+		 pub_withdraw.processresult = '1',
+		 pub_withdraw.processreason=#{reson},
+		 pub_withdraw.processuser=#{processuserid}
+		where pub_withdraw.id=#{id}
+	</update>
+	
+	<!-- 确认打款了 -->
+	<update id="cashOk" parameterType="Map">
+		UPDATE pub_withdraw
+		SET pub_withdraw.processstatus = '1',
+		 pub_withdraw.processtime = now(),
+		 pub_withdraw.updatetime = now(),
+		 pub_withdraw.processresult = '0',
+		 pub_withdraw.processuser=#{processuserid}
+		where pub_withdraw.id=#{id}
+	</update>
+	
+	<!-- 导出 -->
+	<select id="getAllUnderCashData" parameterType="Map" resultType="LeCashManage">
+		SELECT
+			(@rownum := @rownum + 1) AS rownum,
+			a.*
+		FROM
+			(
+				SELECT
+					CASE pub_withdraw.usertype
+				WHEN '2' THEN
+					pub_driver.phone
+				ELSE
+					org_user.account
+				END AS account,
+				CASE pub_withdraw.usertype
+			WHEN '2' THEN
+				pub_driver. NAME
+			ELSE
+				org_user.nickname
+			END AS nickname,
+			pub_withdraw.*, (
+				SELECT
+					le_user.nickname
+				FROM
+					le_user
+				WHERE
+					le_user.id = pub_withdraw.processuser
+			) processusername
+		FROM
+			pub_withdraw
+		LEFT JOIN org_user ON (
+			org_user.id = pub_withdraw.userid
+		)
+		LEFT JOIN pub_driver ON (
+			pub_driver.id = pub_withdraw.userid
+		)
+		WHERE
+			pub_withdraw. STATUS = 1
+		AND pub_withdraw.platformtype = '1'
+		AND pub_withdraw.processstatus=#{processstatus}
+		
+		<if test="leasescompanyid!=null and leasescompanyid!=''">
+			AND pub_withdraw.leasescompanyid=#{leasescompanyid}
+		</if>
+		<if test="minUseTime!=null and minUseTime!='' and maxUseTime!=null and maxUseTime!=''">
+			<if test="processstatus=='0' or processstatus==0">
+				<![CDATA[
+					AND pub_withdraw.applytime>#{minUseTime}
+					AND pub_withdraw.applytime<#{maxUseTime}
+				]]>
+			</if>
+			<if test="processstatus=='1' or processstatus==1">
+				<![CDATA[
+					AND pub_withdraw.processtime>#{minUseTime}
+					AND pub_withdraw.processtime<#{maxUseTime}
+				]]>
+			</if>
+		</if>
+		<if test="usertype!=null and usertype!=''">
+			AND pub_withdraw.usertype=#{usertype}
+		</if>
+			) a,
+			(SELECT @rownum := 0) r
+		where 1=1
+		<if test="account!=null and account!=''">
+			AND a.account like "%"#{account}"%"
+		</if>
+		<if test="creditcardname!=null and creditcardname!=''">
+			AND a.nickname like "%"#{creditcardname}"%"
+		</if>
+		ORDER BY
+			a.updatetime DESC
+	</select>
+	
+	<!-- 导出数据多少的判断 -->
+	<select id="getExportDataCount" resultType="int" parameterType="Map">
+		SELECT
+			count(*)
+		FROM
+			(
+				SELECT
+					CASE pub_withdraw.usertype
+				WHEN '2' THEN
+					pub_driver.phone
+				ELSE
+					org_user.account
+				END AS account,
+				CASE pub_withdraw.usertype
+			WHEN '2' THEN
+				pub_driver. NAME
+			ELSE
+				org_user.nickname
+			END AS nickname,
+			pub_withdraw.*, (
+				SELECT
+					le_user.nickname
+				FROM
+					le_user
+				WHERE
+					le_user.id = pub_withdraw.processuser
+			) processusername
+		FROM
+			pub_withdraw
+		LEFT JOIN org_user ON (
+			org_user.id = pub_withdraw.userid
+		)
+		LEFT JOIN pub_driver ON (
+			pub_driver.id = pub_withdraw.userid
+		)
+		WHERE
+			pub_withdraw. STATUS = 1
+		AND pub_withdraw.platformtype = '1'
+		AND pub_withdraw.processstatus=#{processstatus}
+		
+		<if test="leasescompanyid!=null and leasescompanyid!=''">
+			AND pub_withdraw.leasescompanyid=#{leasescompanyid}
+		</if>
+		<if test="minUseTime!=null and minUseTime!='' and maxUseTime!=null and maxUseTime!=''">
+			<if test="processstatus=='0' or processstatus==0">
+				<![CDATA[
+					AND pub_withdraw.applytime>#{minUseTime}
+					AND pub_withdraw.applytime<#{maxUseTime}
+				]]>
+			</if>
+			<if test="processstatus=='1' or processstatus==1">
+				<![CDATA[
+					AND pub_withdraw.processtime>#{minUseTime}
+					AND pub_withdraw.processtime<#{maxUseTime}
+				]]>
+			</if>
+		</if>
+		<if test="usertype!=null and usertype!=''">
+			AND pub_withdraw.usertype=#{usertype}
+		</if>
+			) a
+		where 1=1
+		<if test="account!=null and account!=''">
+			AND a.account like "%"#{account}"%"
+		</if>
+		<if test="creditcardname!=null and creditcardname!=''">
+			AND a.nickname like "%"#{creditcardname}"%"
+		</if>
+		ORDER BY
+			a.updatetime DESC
+	</select>
+	
+	<!-- 根据操作的id查询需要通知的人员信息的集合 -->
+	<select id="getUsersBySuperId" parameterType="String" resultType="String">
+		SELECT
+			org_user.account
+		FROM
+			org_user,
+			org_roleuser,
+			org_rolemanagement
+		WHERE
+			org_user. STATUS = 1
+		AND org_roleuser. STATUS = 1
+		AND org_rolemanagement. STATUS = 1
+		AND org_user.id = org_roleuser.userid
+		AND org_roleuser.roleid = org_rolemanagement.id
+		AND org_rolemanagement.id = '003'
+		AND org_user.organid IN (
+			SELECT
+				org_organ.id
+			FROM
+				org_organ
+			WHERE
+				org_organ.STATUS = 1
+			AND org_organ.creditcode IN (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id IN (
+					SELECT
+						org_user.organid
+					FROM
+						org_user
+					WHERE
+						org_user.id = #{superid}
+				)
+			)
+		)
+		UNION
+		SELECT org_organ.phone from org_organ where org_organ.id in(
+			SELECT
+				org_user.organid
+			FROM
+				org_user
+			WHERE
+				org_user.id = #{superid}
+		)
+	</select>
+	
+	<!-- 根据操作的id查询需要通知的人员信息的集合 -->
+	<select id="getUserInfoByProcessId" parameterType="String" resultType="Map">
+		SELECT
+			pub_withdraw.usertype,
+			pub_withdraw.amount,
+			pub_withdraw.applytime,
+			pub_withdraw.bankname,
+			pub_withdraw.creditcardnum,
+			pub_withdraw.processstatus,
+			CASE pub_withdraw.usertype
+			WHEN '2' THEN
+				pub_driver.phone
+			ELSE
+				org_user.account
+			END AS account,
+			pub_withdraw.leasescompanyid,
+			org_user.usertype as superflag,
+			org_user.organid,
+			pub_withdraw.userid
+		FROM
+			pub_withdraw
+		LEFT JOIN 
+			org_user
+		ON 
+		(
+			org_user.id=pub_withdraw.userid
+		)
+		LEFT JOIN
+			pub_driver
+		ON
+		(
+			pub_driver.id=pub_withdraw.userid
+		)
+		WHERE
+			 pub_withdraw.id=#{processid}
+		
+	</select>
+	
+	 <select id="getUserBlance4OrgUser" resultType="Map" parameterType="Map">
+	 	SELECT
+			*
+		FROM
+			org_userexpenses
+		WHERE
+			org_userexpenses. STATUS = 1
+		AND org_userexpenses.userid = #{userid}
+		AND org_userexpenses.leasescompanyid = #{leasescompanyid}
+	 </select>
+	 
+	  <select id="getUserBlance4Driver" resultType="Map" parameterType="Map">
+	 	SELECT
+			*
+		FROM
+			org_driveraccount
+		WHERE
+			org_driveraccount. STATUS = 1
+		AND org_driveraccount.userid = #{userid}
+		AND org_driveraccount.leasescompanyid = #{leasescompanyid}
+	 </select>
+	 
+	 <select id="getUserBlance4Org" resultType="Map" parameterType="Map">
+	 	SELECT
+			*
+		FROM
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.organid = #{organid}
+		AND org_organ_company_ref.companyid =  #{leasescompanyid}
+	 </select>
+	 
+	<insert id="recoverMoney4OrgUser" parameterType="Map">
+		UPDATE org_useraccount
+		SET org_useraccount.balance = org_useraccount.balance+NULLIF(#{amount},0),org_useraccount.updatetime=now()
+		WHERE
+			org_useraccount.userid=#{userid}
+		and org_useraccount.leasescompanyid=#{leasescompanyid}
+		and org_useraccount.status=1
+	</insert>
+	
+	<insert id="addRecord4OrgUser" parameterType="Map">
+		INSERT INTO org_userexpenses(
+			id,
+			userid,
+			leasescompanyid,
+			expensetype,
+			expensetime,
+			amount,
+			balance,
+			remark,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status,
+			tradetype,
+			detailtype,
+			operateresult
+		)
+		select #{recodeid},#{userid},#{leasescompanyid},#{expensetype},now(),#{amount},org_useraccount.balance,#{remark},now(),now(),#{oper},#{oper},1,#{tradetype},#{detailtype},#{operateresult}
+		from org_useraccount 
+		where 
+			org_useraccount.userid=#{userid}
+		and org_useraccount.leasescompanyid=#{leasescompanyid}
+		and org_useraccount.status=1
+		limit 0,1
+	</insert>
+	
+	<insert id="recoverMoney4Driver" parameterType="Map">
+		UPDATE pub_driveraccount
+		SET pub_driveraccount.balance = pub_driveraccount.balance+NULLIF(#{amount},0),pub_driveraccount.updatetime=now()
+		WHERE
+			pub_driveraccount.driverid=#{userid}
+		and pub_driveraccount.status=1
+	</insert>
+	
+	<insert id="addRecord4Driver" parameterType="Map">
+		INSERT INTO pub_driverexpenses(
+				id,
+				driverid,
+				tradetype,
+				expensetype,
+				expensetime,
+				amount,
+				balance,
+				detailtype,
+				remark,
+				createtime,
+				updatetime,
+				creater,
+				updater,
+				status,
+				operateresult,
+				platformtype
+			)
+			select 
+				#{recodeid},
+				#{userid},
+				#{tradetype},
+				#{expensetype},
+				now(),
+				#{amount},
+				pub_driveraccount.balance,
+				#{detailtype},
+				#{remark},
+				now(),
+				now(),
+				#{oper},
+				#{oper},
+				1,
+				#{operateresult},
+				#{platformtype}
+			from pub_driveraccount 
+			WHERE
+				pub_driveraccount.driverid=#{userid}
+			and pub_driveraccount.status=1
+			limit 0,1
+	</insert>
+	
+	<insert id="recoverMoney4Org" parameterType="Map">
+		update org_organ_company_ref set org_organ_company_ref.balance=org_organ_company_ref.balance+NULLIF(#{amount},0),org_organ_company_ref.actualbalance=org_organ_company_ref.actualbalance+NULLIF(#{amount},0),org_organ_company_ref.UpdateTime=now()
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.organid = #{organid}
+		AND org_organ_company_ref.companyid =  #{leasescompanyid}
+	</insert>
+	
+	<insert id="addRecord4Org" parameterType="Map">
+		INSERT INTO org_organexpenses(
+			id,
+			organid,
+			leasescompanyid,
+			type,
+			expensetime,
+			amount,
+			balance,
+			remark,
+			CreateTime,
+			UpdateTime,
+			Creater,
+			Updater,
+			Status,
+			operatortype,
+			operateresult
+		)
+		select 
+			#{recodeid},
+			#{organid},
+			#{leasescompanyid},
+			'1',
+			now(),
+			#{amount},
+			org_organ_company_ref.actualbalance,
+			'提现受理失败，返还提现申请金额',
+			now(),
+			now(),
+			#{oper},
+			#{oper},
+			1,
+			'1',
+			#{operateresult}
+		from org_organ_company_ref
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.organid = #{organid}
+		AND org_organ_company_ref.companyid =  #{leasescompanyid}
+		limit 0,1
+	</insert>
+	
+	<select id="getCompanyById" parameterType="String" resultType="Map">
+		select * from le_leasescompany where le_leasescompany.status=1 and le_leasescompany.id=#{companyid}
+	</select>
+	
+	<!-- 为机构用户添加系统消息记录 -->
+	<insert id="addNews4OrgUser" parameterType="Map">
+		INSERT INTO org_usernews(
+			id,
+			userid,
+			type,
+			content,
+			newsstate,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{type},
+				#{content},
+				#{newsstate},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 为司机端添加系统消息记录 -->
+	<insert id="addNews4Driver" parameterType="Map">
+		INSERT INTO pub_drivernews(
+			id,
+			userid,
+			type,
+			content,
+			newsstate,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{type},
+				#{content},
+				#{newsstate},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 根据租赁公司id和机构的一个id查找正确的机构和租赁公司id -->
+	<select id="getOrgan4Company" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND org_organ_company_ref.companyid = #{leasescompanyid}
+		AND org_organ_company_ref.organid IN (
+			SELECT
+				org_organ.id
+			FROM
+				org_organ
+			WHERE
+				org_organ. STATUS = 1
+			AND org_organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ. STATUS = 1
+				AND org_organ.id = #{organid}
+			)
+		)
+		limit 0,1
+	</select>
+	
+	<!-- 获取机构用户的超管和财务人员 -->
+	<select id="getSAC" parameterType="String" resultType="OrgUser">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					*
+				FROM
+					org_user
+				WHERE
+					org_user.status = 1
+				AND org_user.usertype = '1'
+				UNION
+					SELECT
+						org_user.*
+					FROM
+						org_user,
+						org_roleuser,
+						org_rolemanagement
+					WHERE
+						org_user.status = 1
+					AND org_roleuser.status = 1
+					AND org_rolemanagement.status = 1
+					AND org_rolemanagement.id = org_roleuser.roleid
+					AND org_roleuser.userid = org_user.id
+					AND org_rolemanagement.id IN ('003', '004')
+			) orguserinfo
+		WHERE
+			orguserinfo.organid IN (
+				SELECT
+					org_organ.id
+				FROM
+					org_organ
+				WHERE
+					org_organ.status = 1
+				AND org_organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ.id = #{organid}
+				)
+			)
+	</select>
+	
+	<!-- 为机构用户超管和财务添加信息 -->
+	<insert id="addNews2Org" parameterType="Map">
+		INSERT INTO org_usernews(
+			id,
+			userid,
+			type,
+			content,
+			newsstate,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{type},
+				#{content},
+				#{newsstate},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+</mapper>

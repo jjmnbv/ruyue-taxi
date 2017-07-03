@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.szyciov.lease.mapper.PubDriverVehicleRefMapper" >
+
+  <select id="getById" resultType="PubDriverVehicleRef" >
+    select `id` ,`vehicleid` ,`driverid` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,`status`
+    from pub_driver_vehicle_ref where  `id` = #{id} and status ='1'
+  </select>
+
+  <select id="listVehicleBindInfo" resultType="VehicleBindInfoDto" parameterType="String">
+    SELECT
+    t.id,t1.id as driverID,t1.`name`,t1.phone,t1.sex,t1.passworkstatus,getCityStr(t1.city) as cityStr
+    FROM
+    pub_driver_vehicle_ref t
+    LEFT JOIN pub_driver t1 ON t.driverid = t1.id and t1.status ='1'
+    where t.vehicleid = #{vehicleid}
+    and t.status = '1'
+    <if test="driverid!=null and driverid !=''">
+      and t.driverid != #{driverid}
+    </if>
+  </select>
+
+
+    <select id="listVehicleBindInfoOfOnline" resultType="VehicleBindInfoDto" parameterType="String">
+        SELECT
+        t.id,t1.id as driverID,t1.`name`,t1.phone,t1.sex,t1.passworkstatus,getCityStr(t1.city) as cityStr
+        FROM
+        pub_driver_vehicle_ref t
+        LEFT JOIN pub_driver t1 ON t.driverid = t1.id and t1.status ='1'
+        where t.vehicleid = #{vehicleid}
+        and t.status = '1'
+        and t1.workstatus in ('0','1')
+  </select>
+
+    <select id="listPubDriverVehicleRef" resultType="PubDriverVehicleRef" parameterType="String">
+        select `id` ,`vehicleid` ,`driverid` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,`status`
+        from pub_driver_vehicle_ref where  status ='1'
+        <if test="driverid!=null and driverid !=''">
+            and driverid = #{driverid}
+        </if>
+        <if test="vehicleid!=null and vehicleid !=''">
+            and vehicleid =#{vehicleid}
+        </if>
+    </select>
+
+    <select id="isExistsBind" resultType="int" parameterType="String">
+        select count(id)
+        from pub_driver_vehicle_ref
+        where  status ='1' and (driverid = #{driverid} or  vehicleid = #{vehicleid})
+
+    </select>
+
+
+
+
+    <select id="countValidOpCarOrder" parameterType="string" resultType="int">
+        SELECT
+            count(t.orderno)
+        FROM
+            op_order t
+        WHERE
+            t.driverid = #{driverId}
+          and t.orderstatus in ('2','3','4','6')
+          and t.`status`='1'
+    </select>
+
+     <select id="countValidOrgCarOrder" parameterType="string" resultType="int">
+        SELECT
+        count(t.orderno)
+        FROM
+         org_order t
+        WHERE
+        t.driverid = #{driverId}
+        and t.orderstatus in ('2','3','4','6')
+        and t.`status`='1'
+    </select>
+
+
+    <select id="countValidTaxiOrder" parameterType="string" resultType="int">
+        select count(t.orderno) from op_taxiorder t where
+        t.driverid = #{driverId}
+        and  t.orderstatus in ('2','3','4','6','9')
+        and t.`status`='1'
+    </select>
+
+
+    <select id="listCarBindModelAndCity" resultType="CarBindInfoDto" parameterType="CarBindInfoQueryParam">
+        SELECT
+        getCityStr(t.city) as cityStr,
+        t.city,
+	    t3.`name` as vehiclemodelName,
+        t3.`id` as modelId
+        FROM
+        pub_driver t
+        LEFT JOIN pub_vehicle t1 on t1.driverid = t.id and t1.status ='1'
+        left join pub_vehcline t2 on t1.vehclineid = t2.id and t2.status ='1'
+        left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id and a.status ='1')
+        LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.status ='1'
+        where t.`Status`='1' and t.platformtype =#{platformtype}
+        and t.leasescompanyid = #{leaseId}
+    </select>
+
+
+    <select id="listCarBindinfo" resultType="CarBindInfoDto" parameterType="CarBindInfoQueryParam">
+    SELECT
+    t.id,
+    t1.id as vehicleId,
+	t.jobnum,
+	t.`name` as driverName,
+	t.phone,
+	getCityStr(t.city) as cityStr,
+	t.boundstate,
+	t.workstatus,
+	getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) as platenoStr,
+    CONCAT(t4.`Name`,' ',t2.`name`)   as vehclineName,
+	t3.`name` as vehiclemodelName,
+	t.belongleasecompany,t5.text as belongLeasecompanyName
+ FROM
+	pub_driver t
+    LEFT JOIN pub_vehicle t1 on t1.driverid = t.id and t1.status ='1'
+    left join pub_vehcline t2 on t1.vehclineid = t2.id and t2.status ='1'
+    left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id and a.status ='1')
+    LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.status ='1'
+    left join pub_dictionary t5 on t.belongleasecompany = t5.id and t5.status = '1'
+    where t.`Status`='1' and t.platformtype =#{platformtype}
+	and t.leasescompanyid = #{leaseId}
+    <include refid="listCarBindinfoParam"></include>
+    order by
+    CONVERT ((cityStr) USING gbk) COLLATE gbk_chinese_ci asc ,
+    t.boundstate asc
+    limit #{iDisplayStart}, #{iDisplayLength}
+  </select>
+
+    <select id="countListCarBindinfo" resultType="Integer" parameterType="CarBindInfoQueryParam">
+        SELECT
+        count(t.id)
+        FROM
+        pub_driver t
+        LEFT JOIN pub_vehicle t1 on t1.driverid = t.id and t1.status ='1'
+        left join pub_vehcline t2 on t1.vehclineid = t2.id and t2.status ='1'
+        left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id and a.status ='1')
+        LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.status ='1'
+        left join pub_dictionary t5 on t.belongleasecompany = t5.id and t5.status = '1'
+        where t.`Status`='1' and t.platformtype =#{platformtype}
+        and t.leasescompanyid = #{leaseId}
+        <include refid="listCarBindinfoParam"></include>
+    </select>
+
+    <sql id="listCarBindinfoParam">
+        and t.`jobstatus`='0'
+        <if test="driverId!=null and driverId!=''">
+            and t.id = #{driverId}
+        </if>
+        <if test="jobNum!=null and jobNum!=''">
+            and t.jobNum like "%"#{jobNum}"%"
+        </if>
+        <if test="boundState!=null and boundState!=''">
+            and t.boundState = #{boundState}
+        </if>
+        <if test="city!=null and city!=''">
+            and t.city = #{city}
+        </if>
+        <if test="modelId!=null and modelId!=''">
+            and t3.id = #{modelId}
+        </if>
+        <if test="workStatus!=null and workStatus!=''">
+            and t.workstatus = #{workStatus}
+        </if>
+        <if test="lineId!=null and lineId!=''">
+            and t2.id = #{lineId}
+        </if>
+        <if test="vehicletype!=null and vehicletype!=''">
+            and t.vehicletype = #{vehicletype}
+        </if>
+
+        <if test="platenoStr!=null and platenoStr!=''">
+            and getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) like "%"#{platenoStr}"%"
+        </if>
+        <if test="lineName!=null and lineName!=''">
+           and CONCAT(t4.`Name`,' ',t2.`name`) = #{lineName}
+        </if>
+        <if test="belongLeasecompany!=null and belongLeasecompany!=''">
+            and t.belongleasecompany = #{belongLeasecompany}
+        </if>
+    </sql>
+
+
+
+    <insert id="save" parameterType="PubDriverVehicleRef" useGeneratedKeys="true" >
+    insert into pub_driver_vehicle_ref (`id` ,`vehicleid` ,`driverid` ,
+    `createtime` ,`updatetime` ,`creater` ,`updater` ,`status`  )
+    values (#{id},#{vehicleid},#{driverid},
+    #{createtime},#{updatetime},#{creater},#{updater},'1')
+  </insert>
+  
+  <delete id="deleteByPrimaryKey">
+    UPDATE pub_driver_vehicle_ref set `Status`='2' where  `id` = #{id}
+  </delete>
+  
+  <update id="updateByPrimaryKey" parameterType="PubDriverVehicleRef" >
+    update pub_driver_vehicle_ref set `vehicleid` = #{vehicleid},
+    `driverid` = #{driverid},`createtime` = #{createtime},
+    `updatetime` = #{updatetime},`creater` = #{creater},
+    `updater` = #{updater},`status` = #{status}
+     where  `id` = #{id}
+  </update>
+
+
+    <select id="getRefCount" parameterType="String" resultType="Integer">
+        select count(id) from pub_driver_vehicle_ref
+        where vehicleid = #{vehicleid}
+        and driverid = #{driverid}
+        and status = '1'
+    </select>
+
+
+    <select id="listUnVehicleRefByQuery" parameterType="CarBindInfoQueryParam" resultType="UnBindVehicleInfoDto">
+        SELECT
+        t1.id,
+        getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) as platenoStr,
+        CONCAT(t4.`Name`,' ',t2.`name`)   as vehclineName,
+        t3.`name` as vehiclemodelName,
+        getCityStr(t1.city) as cityStr,
+        t1.color,(@rownum := @rownum + 1) AS rownum
+        FROM
+        pub_vehicle t1
+        left join pub_vehcline t2 on t1.vehclineid = t2.id and t2.`Status` ='1'
+        left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id  and a.status ='1')
+        LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.`Status`='1',
+        (SELECT @rownum := 0) r
+        <include refid="listUnVehicleRefByQueryParam"/>
+        limit #{iDisplayStart}, #{iDisplayLength}
+    </select>
+
+    <select id="countListUnVehicleRefByQuery" parameterType="CarBindInfoQueryParam" resultType="int">
+         SELECT
+            count(t1.id)
+         FROM
+            pub_vehicle t1
+            left join pub_vehcline t2 on t1.vehclineid = t2.id and t2.`Status` ='1'
+            left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id  and a.status ='1')
+            LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.`Status`='1'
+            <include refid="listUnVehicleRefByQueryParam"/>
+    </select>
+
+    <sql id="listUnVehicleRefByQueryParam">
+        where
+        t1.vehicletype = #{vehicletype}
+        and t1.leasescompanyid = #{leaseId}
+        and t1.platformtype = #{platformtype}
+        and t3.name is not null
+        and t1.status ='1'
+        <if test="vehiclestatus!=null and vehiclestatus!=''">
+            and t1.vehiclestatus = #{vehiclestatus}
+        </if>
+        <if test="boundState!=null and boundState!=''">
+            and t1.boundstate = #{boundState}
+        </if>
+        <if test="city!=null and city!=''">
+            and t1.city = #{city}
+        </if>
+        <if test="lineId!=null and lineId!=''">
+            and t2.id = #{lineId}
+        </if>
+        <if test="platenoStr!=null and platenoStr!=''">
+            and getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) like "%"#{platenoStr}"%"
+        </if>
+        <if test="lineName!=null and lineName!=''">
+            and  CONCAT(t4.`Name`,' ',t2.`name`) like "%"#{lineName}"%"
+        </if>
+        <if test="belongLeasecompany!=null and belongLeasecompany!=''">
+            and t1.belongleasecompany = #{belongLeasecompany}
+        </if>
+    </sql>
+
+
+    <select id="listVehicleRefCity" resultType="City" parameterType="TaxiBindInfoQueryParam">
+        SELECT
+        DISTINCT t.city as id,getCityStr(t.city) as city
+        FROM
+        pub_vehicle t
+        LEFT JOIN  pub_driver t1 on t.driverid = t1.id and t1.status ='1'
+        left join pub_vehcline t2 on t.vehclineid = t2.id and t2.status ='1'
+        left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id and a.status ='1')
+        LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.status ='1'
+        left join pub_dictionary t5 on t5.id = t.belongleasecompany and t5.status = '1'
+        where t.`Status`='1'
+        <include refid="listVehicleRefParam"/>
+    </select>
+
+
+    <select id="listVehicleRef" resultType="TaxiBindInfoDto" parameterType="TaxiBindInfoQueryParam">
+        SELECT
+            getPlatenoStr(t.platenoprovince,t.platenocity,t.plateno) as platenoStr,
+            CONCAT(t4.`Name`,' ',t2.`name`)   as vehclineName,
+            t.color,
+            getCityStr(t.city) as cityStr,
+            t.boundstate,
+            t.vehiclestatus,
+          t.driverid,
+            t1.workstatus,
+          CONCAT(t1.`Name`,' ',t1.`phone`) driverInfo,
+            t.bindpersonnum,
+            t.id,
+            t.city,
+            t1.passworkstatus,
+            t.belongleasecompany,
+            t5.text as belongLeasecompanyName
+         FROM
+            pub_vehicle t
+         LEFT JOIN  pub_driver t1 on t.driverid = t1.id and t1.status ='1'
+         left join pub_vehcline t2 on t.vehclineid = t2.id and t2.status ='1'
+         left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id and a.status ='1')
+         LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.status ='1'
+         left join pub_dictionary t5 on t5.id = t.belongleasecompany and t5.status = '1'
+         where t.`Status`='1'
+        <include refid="listVehicleRefParam"/>
+        order by
+        CONVERT ((cityStr) USING gbk) COLLATE gbk_chinese_ci asc ,
+        t1.boundstate asc
+        limit #{iDisplayStart}, #{iDisplayLength}
+    </select>
+    
+    <select id="countlistVehicleRef" resultType="int" parameterType="TaxiBindInfoQueryParam">
+
+        SELECT
+           count(t.id)
+         FROM
+            pub_vehicle t
+         LEFT JOIN  pub_driver t1 on t.driverid = t1.id and t1.status ='1'
+         left join pub_vehcline t2 on t.vehclineid = t2.id and t2.status ='1'
+         left join le_vehiclemodels t3 on t3.Id in (SELECT a.vehiclemodelsid from le_vehcline_models_ref a where a.vehclineid = t2.id and a.status ='1')
+         LEFT JOIN pub_vehcbrand t4 on t4.id = t2.vehcBrandID and t4.status ='1'
+         left join pub_dictionary t5 on t5.id = t.belongleasecompany and t5.status = '1'
+         where t.`Status`='1'
+         <include refid="listVehicleRefParam"/>
+    </select>
+    
+    <sql id="listVehicleRefParam">
+        and t.vehicletype = #{vehicletype}
+        and t.leasescompanyid = #{leaseId}
+        and t.platformtype = #{platformtype}
+        <if test="lineName!=null and lineName!=''">
+            and  CONCAT(t4.`Name`,' ',t2.`name`) like "%"#{lineName}"%"
+        </if>
+        <if test="platenoStr!=null and platenoStr!=''">
+            and getPlatenoStr(t.platenoprovince,t.platenocity,t.plateno) like "%"#{platenoStr}"%"
+        </if>
+        <if test="boundState!=null and boundState!=''">
+           and t.boundstate = #{boundState}
+        </if>
+        <if test="workStatus!=null and workStatus!=''">
+            and t1.workstatus = #{workStatus}
+        </if>
+        <if test="city!=null and city!=''">
+            and t.city = #{city}
+        </if>
+        <if test="bindCount!=null and bindCount!=-1">
+            and t.bindpersonnum = #{bindCount}
+        </if>
+        <if test="driverId!=null and driverId!=''">
+            and t1.id = #{driverId}
+        </if>
+        <if test="online!=null and online !='' ">
+            <choose>
+                <when test='online=="1"'>
+                    and  t1.passworkstatus in ('3','1')
+                </when>
+                <when test='online=="0"'>
+                    and  t1.passworkstatus in ('2','4','5')
+                </when>
+                <otherwise>
+                    and  1=1
+                </otherwise>
+            </choose>
+        </if>
+
+        <if test="vehiclestatus!=null and vehiclestatus!=''">
+            and t.vehiclestatus = #{vehiclestatus}
+        </if>
+        <if test="belongLeasecompany!=null and belongLeasecompany!=''">
+            and t.belongleasecompany = #{belongLeasecompany}
+        </if>
+
+    </sql>
+    
+    <select id="getBelongLeasecompany" resultType="hashmap">
+        SELECT
+           distinct pub_dictionary.id as id,pub_dictionary.text as text
+        FROM
+            pub_dictionary
+        where pub_dictionary.status=1
+          and type='租赁公司'
+    </select>
+
+</mapper>

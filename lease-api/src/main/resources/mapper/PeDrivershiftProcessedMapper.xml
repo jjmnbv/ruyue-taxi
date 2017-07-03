@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.lease.mapper.PeDrivershiftProcessedMapper" >
+
+
+  <insert id="save" parameterType="PeDrivershiftProcessed" useGeneratedKeys="true" >
+    insert into pe_drivershift_processed
+    (`id` ,`vehicleid` ,`ondutydriverid` ,`ondutydriverinfo` ,`relieveddriverid` ,
+    `relieveddriverinfo` ,`onlinetime` ,`applytime` ,`shifttype` ,`relievedtype` ,
+    `processperson` ,`processtime` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,
+    `status` ,`platformtype` ,`leasescompanyid`,processpersonname,overtimetime )
+    values
+    (#{id},#{vehicleid},#{ondutydriverid},#{ondutydriverinfo},#{relieveddriverid},
+    #{relieveddriverinfo},#{onlinetime},#{applytime},#{shifttype},#{relievedtype},
+    #{processperson},#{processtime},#{createtime},#{updatetime},#{creater},
+    #{updater},'1',#{platformtype},#{leasescompanyid},#{processpersonname},#{overtimetime})
+  </insert>
+  
+  <delete id="deleteByPrimaryKey">
+    delete from pe_drivershift_processed where  `id` = #{id}
+  </delete>
+
+
+  <select id="listProcessed" resultType="ProcessedQueryDto" parameterType="PeDrivershiftPendingParam">
+    select t.id,t.ondutydriverinfo,t.relieveddriverinfo,t.onlinetime,
+    t.shifttype,t.applytime,processpersonname,processtime,t.relievedtype,
+    getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) as platenoStr,
+    getCityStr(t1.city) as cityStr,(@rownum := @rownum + 1) AS rownum
+    from pe_drivershift_processed t
+    left join pub_vehicle t1 on t.vehicleid = t1.id and t1.status='1',
+    (SELECT @rownum := 0) r
+    <include refid="queryParam"></include>
+    order by t.updatetime desc
+    limit #{iDisplayStart}, #{iDisplayLength}
+  </select>
+  
+  
+  <select id="getLastProcessedTime" parameterType="String" resultType="java.util.Date">
+    select max(t.processtime) from pe_drivershift_processed t
+    where t.relieveddriverid = #{relieveddriverid}
+    and   t.leasescompanyid = #{leasescompanyid}
+    and  t.platformtype = #{platformtype}
+    and t.status ='1'
+
+  </select>
+
+  <select id="getlistProcessedCount" resultType="Integer" parameterType="PeDrivershiftPendingParam">
+    select count(t.id)
+    from pe_drivershift_processed t
+    left join pub_vehicle t1 on t.vehicleid = t1.id and t1.status='1'
+    <include refid="queryParam"></include>
+  </select>
+
+
+  <select id="getProcessed" resultType="PeDrivershiftProcessed" parameterType="String">
+    select t.*
+    from pe_drivershift_processed t
+    where t.id=#{id} and t.status='1'
+  </select>
+
+
+  <sql id="queryParam">
+    where  t.leasescompanyid = #{leasescompanyid}
+    and  t.platformtype = #{platformtype}
+    and t.status ='1'
+    <if test="queryType == '1'.toString()">
+      and t.shifttype in('0','1')
+    </if>
+
+    <if test="queryType == '2'.toString()">
+      and t.shifttype in('0','1','3')
+    </if>
+
+    <if test="vehicleid != '' and vehicleid != null">
+      and t.vehicleid = #{vehicleid}
+    </if>
+
+    <if test="plateNo != '' and plateNo != null">
+      and getPlatenoStr(t1.platenoprovince,t1.platenocity,t1.plateno) like "%"#{plateNo}"%"
+    </if>
+
+    <if test="ondutydriverid != '' and ondutydriverid != null">
+      and t.ondutydriverid = #{ondutydriverid}
+    </if>
+
+    <if test="relieveddriverid != '' and relieveddriverid != null">
+      and t.relieveddriverid = #{relieveddriverid}
+    </if>
+
+
+    <if test="relievedtype != '' and relievedtype != null">
+      and t.relievedtype = #{relievedtype}
+    </if>
+
+
+    <if test="shifttype != '' and shifttype != null">
+      and t.shifttype = #{shifttype}
+    </if>
+
+    <if test="processtimeStart != '' and processtimeStart != null">
+      <![CDATA[
+             and t.processtime >= date_format(#{processtimeStart}, '%Y-%m-%d')
+        ]]>
+    </if>
+
+    <if test="processtimeEnd != '' and processtimeEnd != null">
+      <![CDATA[
+              and t.processtime < STR_TO_DATE(ADDDATE(#{processtimeEnd},1),'%Y-%m-%d %H:%i:%s')
+        ]]>
+
+    </if>
+
+  </sql>
+
+
+
+  <update id="updateOrderDriverId"  parameterType="String">
+    update op_taxiorder t set t.driverid = #{newDriverId}
+    where  t.status = '1' and t.orderstatus ='2'
+    and t.orderno = #{orderno}
+  </update>
+
+
+  <select id="listTaxiOrderno"  resultType="String"  parameterType="String">
+    select t.orderno from  op_taxiorder t
+    where  t.status = '1' and t.orderstatus ='2'
+    and t.driverid = #{oldDriverId}
+    and t.companyid= #{leasesCompanyId}
+  </select>
+
+
+  <!-- 添加更换司机记录 -->
+  <select id="insertOpTaxidriverchanges" parameterType="OpTaxidriverchanges">
+    insert into op_taxidriverchanges(id, orderno, beforedriverid, afterdriverid, reason, sendtime, operator, createtime, updatetime, status)
+    values(#{id}, #{orderno}, #{beforedriverid}, #{afterdriverid}, #{reason}, now(), #{operator}, now(), now(), 1)
+  </select>
+
+  <!-- 交接班司机信息 -->
+  <select id="listShiftRecordDriver" resultType="PubDriverSelectDto"  parameterType="String">
+      select
+      t.id, t.name, t.phone
+      from
+      pub_driver t
+      where 1=1
+        and t.status = 1
+        and t.platformtype = #{platformtype}
+        <if test="null != queryText and queryText !=''">
+          and (t.name like concat('%', #{queryText}, '%') or t.phone like concat('%', #{queryText}, '%'))
+        </if>
+        and EXISTS (
+        <choose>
+          <!-- 交班司机 -->
+          <when test='shifitType == "1"'>
+            select r.ondutydriverid from pe_drivershift_processed r where r.status=1
+            and r.vehicleid = #{vehicleid}
+            and r.ondutydriverid = t.id
+          </when>
+          <otherwise>
+            <!-- 接班司机 -->
+            select r.relieveddriverid from pe_drivershift_processed r where r.status=1
+            and r.vehicleid = #{vehicleid}
+            and r.relieveddriverid = t.id
+          </otherwise>
+        </choose>
+
+            )
+  </select>
+
+
+
+
+
+
+
+
+</mapper>

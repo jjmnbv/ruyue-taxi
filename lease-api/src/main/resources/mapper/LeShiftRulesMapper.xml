@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.LeShiftRulesMapper">
+	<!-- All Select -->
+	<select id="searchById" parameterType="LeShiftRule" resultType="LeShiftRule">
+		SELECT *,CONCAT(pca.city,'(',pca.fullnameinitials,')') cityname 
+		FROM le_shiftrules lsr 
+		LEFT JOIN pub_cityaddr pca ON lsr.city = pca.id
+		WHERE lsr.`status` = 1 
+		AND lsr.leasescompanyid = #{leasescompanyid} AND lsr.id = #{id}
+		ORDER BY lsr.updatetime DESC
+	</select>
+	
+	<select id="searchByCity" parameterType="LeShiftRule" resultType="LeShiftRule">
+		SELECT *,CONCAT(pca.city,'(',pca.fullnameinitials,')') cityname 
+		FROM le_shiftrules lsr 
+		LEFT JOIN pub_cityaddr pca ON lsr.city = pca.id
+		WHERE lsr.`status` = 1 
+		AND lsr.leasescompanyid = #{leasescompanyid} 
+		AND lsr.city = #{city}
+		ORDER BY lsr.updatetime DESC
+	</select>
+	
+	<select id="search" parameterType="LeShiftRule" resultType="LeShiftRule">
+		SELECT * ,CONCAT(pca.city,'(',pca.fullnameinitials,')') cityname 
+		FROM le_shiftrules lsr 
+		LEFT JOIN pub_cityaddr pca ON lsr.city = pca.id
+		WHERE lsr.`status` = 1 AND lsr.leasescompanyid = #{leasescompanyid}
+		<if test="city != null and city != ''">
+		AND lsr.city = #{city}
+		</if>
+		ORDER BY lsr.updatetime DESC
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getTotalCount" parameterType="LeShiftRule" resultType="int">
+		SELECT COUNT(lsr.id) FROM le_shiftrules lsr WHERE lsr.`status` = 1 AND lsr.leasescompanyid = #{leasescompanyid}
+		<if test="city != null and city != ''">
+		AND lsr.city = #{city}
+		</if>
+	</select>
+	
+	<select id="citySelect" parameterType="Select2Param" resultType="Select2Entity">
+		SELECT
+			pca.id id,
+			pca.city text
+		FROM
+			le_shiftrules lsr
+		LEFT JOIN pub_cityaddr pca ON lsr.city = pca.id
+		WHERE
+			lsr.`status` = 1
+		AND lsr.leasescompanyid = #{companyid}
+		<if test="sSearch != null and sSearch != ''">
+		AND pca.city LIKE '%${sSearch}%'
+		</if>
+	</select>
+	
+	<!-- All Update -->
+	<update id="updateLeShiftRule" parameterType="LeShiftRule">
+		UPDATE le_shiftrules SET 
+			id=#{id},
+			leasescompanyid=#{leasescompanyid},
+			autoshifttime=#{autoshifttime},
+			manualshifttime=#{manualshifttime},
+			city=#{city},
+			createtime=#{createtime},
+			updatetime=NOW(),
+			creater=#{creater},
+			updater=#{updater},
+			status=#{status}
+		WHERE id=#{id}
+	</update>
+	
+	<!-- All Insert -->
+	<insert  id="saveOrUpdate" parameterType="LeShiftRule" >
+		INSERT INTO le_shiftrules(
+			id,
+			leasescompanyid,
+			autoshifttime,
+			manualshifttime,
+			city,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status
+		) VALUES(
+			#{id},
+			#{leasescompanyid},
+			#{autoshifttime},
+			#{manualshifttime},
+			#{city},
+			#{createtime},
+			#{updatetime},
+			#{creater},
+			#{updater},
+			#{status}
+		) ON DUPLICATE KEY UPDATE autoshifttime=#{autoshifttime},manualshifttime=#{manualshifttime},updater=#{updater},updatetime=#{updatetime}
+	</insert>
+
+
+
+
+
+	<select id="getRules" parameterType="String" resultType="LeShiftRule">
+		SELECT * FROM le_shiftrules lsr WHERE lsr.`status` = 1
+		AND lsr.leasescompanyid = #{leasescompanyid}
+		AND lsr.city = #{city}
+	</select>
+
+</mapper>

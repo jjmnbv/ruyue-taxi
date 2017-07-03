@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.PubDriverAccountMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 增加   添加司机账户 -->
+	<insert id="createOrgDriverAccount" parameterType="PubDriverAccount">
+		insert into pub_driveraccount
+		(id,driverid,leasescompanyid,balance,createtime,updatetime,status,platformtype)
+		values
+		(#{id},#{driverid},#{leasescompanyid},#{balance},now(),now(),1,1)
+	</insert>
+	<!-- 分页 查询 -->
+	<select id="getOrgDriverAccountListByQuery" parameterType="QueryParam" resultType="PubDriverAccount">
+		SELECT
+			t.*
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+				pub_driveraccount.*,pub_driver.`name` AS driverName,pub_driver.phone AS driverAccount,pub_driver.vehicletype AS driverType
+			FROM
+				pub_driveraccount,
+				pub_driver,
+				(SELECT @rownum := 0) r
+			WHERE
+				pub_driveraccount.`status` = 1
+			AND pub_driveraccount.platformtype = 1
+			AND pub_driveraccount.leasescompanyid=#{leasescompanyid}
+			AND pub_driver.platformtype = 1
+			AND pub_driver.id = pub_driveraccount.driverid
+			AND pub_driver.`status` = 1
+			<if test="queryDriver != null and queryDriver != '' ">
+				and pub_driveraccount.driverid = #{queryDriver}
+			</if>
+			<if test="queryType != null and queryType != '' ">
+				and pub_driver.vehicletype = #{queryType}
+			</if>
+			ORDER BY pub_driveraccount.balance DESC
+			) m
+		) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	<!-- 分页 查询 -->
+	<select id="getOrgDriverAccountListCountByQuery" parameterType="QueryParam" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+				pub_driveraccount.*, pub_driver.`name` AS driverName,pub_driver.phone AS driverAccount,pub_driver.vehicletype AS driverType
+			FROM
+				pub_driveraccount,
+				pub_driver,
+				(SELECT @rownum := 0) r
+			WHERE
+				pub_driveraccount.`status` = 1
+			AND pub_driveraccount.platformtype = 1
+			AND pub_driveraccount.leasescompanyid=#{leasescompanyid}
+			AND pub_driver.platformtype = 1
+			AND pub_driver.id = pub_driveraccount.driverid
+			AND pub_driver.`status` = 1
+			<if test="queryDriver != null and queryDriver != '' ">
+				and pub_driveraccount.driverid = #{queryDriver}
+			</if>
+			<if test="queryType != null and queryType != '' ">
+				and pub_driver.vehicletype = #{queryType}
+			</if>
+			ORDER BY pub_driveraccount.balance DESC
+			) m
+		) t
+	</select>
+	<!-- 首页加载 司机的查询 -->
+	<select id="getQueryDriver" resultType="map" parameterType="QueryParam">
+		SELECT
+			pub_driver.id AS id,
+			CONCAT(
+				pub_driver.`name`,
+				" ",
+				pub_driver.phone
+			) AS text
+		FROM
+			pub_driver
+		WHERE
+			pub_driver.`Status` = 1
+		AND pub_driver.platformtype = 1
+		AND pub_driver.leasescompanyid = #{leasescompanyid}
+		<if test="queryDriver != null and queryDriver != '' ">
+		and	CONCAT(
+				pub_driver.`name`,
+				" ",
+				pub_driver.phone
+			) like "%"#{queryDriver}"%"
+		</if>
+	</select>
+	<!-- 查询交易明细   余额明细 -->
+	<select id="getDetailedByList" resultType="PubDriverExpenses" parameterType="QueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					*
+				FROM
+					pub_driverexpenses,
+					(SELECT @rownum := 0) r
+				WHERE
+					pub_driverexpenses.platformtype = 1
+				AND pub_driverexpenses.`status` = 1
+				and pub_driverexpenses.driverid=#{driverid}
+				<!-- <if test="detailtype == 'transaction' ">
+				and	pub_driverexpenses.detailtype = 1
+				</if> -->
+				<if test="detailtype == 'balance' ">
+				and	pub_driverexpenses.detailtype = 0
+				</if>
+				<choose>
+					<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+						and pub_driverexpenses.expensetime &gt;= #{startTime} and pub_driverexpenses.expensetime &lt; #{endTime}
+					</when>
+					<otherwise>
+						<if test="startTime != null and startTime != ''">
+							and pub_driverexpenses.expensetime &gt;= #{startTime}
+						</if>
+						<if test="endTime != null and endTime != ''">
+							and pub_driverexpenses.expensetime &lt; #{endTime}
+						</if>
+					</otherwise>
+				</choose>
+				<if test="queryTradetype != null and queryTradetype != '' ">
+					<choose>
+						<when test="queryTradetype == '2'.toString()">
+							and pub_driverexpenses.tradetype in('2','3')
+						</when>
+						<otherwise>
+							and pub_driverexpenses.tradetype = #{queryTradetype}
+						</otherwise>
+					</choose>
+				</if>
+				ORDER BY pub_driverexpenses.expensetime DESC
+			) m
+		) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	<!-- 查询分页 -->
+	<select id="getDetailedByListCount" resultType="int" parameterType="QueryParam">
+		SELECT
+			count(*)
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					*
+				FROM
+					pub_driverexpenses,
+					(SELECT @rownum := 0) r
+				WHERE
+					pub_driverexpenses.platformtype = 1
+				AND pub_driverexpenses.`status` = 1
+				and pub_driverexpenses.driverid=#{driverid}
+				<!-- <if test="detailtype == 'transaction' ">
+				and	pub_driverexpenses.detailtype = 1
+				</if> -->
+				<if test="detailtype == 'balance' ">
+				and	pub_driverexpenses.detailtype = 0
+				</if>
+				<choose>
+					<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+						and pub_driverexpenses.expensetime &gt;= #{startTime} and pub_driverexpenses.expensetime &lt; #{endTime}
+					</when>
+					<otherwise>
+						<if test="startTime != null and startTime != ''">
+							and pub_driverexpenses.expensetime &gt;= #{startTime}
+						</if>
+						<if test="endTime != null and endTime != ''">
+							and pub_driverexpenses.expensetime &lt; #{endTime}
+						</if>
+					</otherwise>
+				</choose>
+				<if test="queryTradetype != null and queryTradetype != '' ">
+					<choose>
+						<when test="queryTradetype == '2'.toString()">
+							and pub_driverexpenses.tradetype in('2','3')
+						</when>
+						<otherwise>
+							and pub_driverexpenses.tradetype = #{queryTradetype}
+						</otherwise>
+					</choose>
+				</if>
+				ORDER BY pub_driverexpenses.expensetime DESC
+			) m
+		) t
+	</select>
+	<!-- 导出 -->
+	<select id="exportData" resultType="PubDriverExpenses" parameterType="QueryParam">
+		SELECT
+			t.*
+		FROM
+			(
+		SELECT
+			(@rownum := @rownum + 1) AS indexnum,
+			m.*
+		FROM
+			(
+				SELECT
+					*
+				FROM
+					pub_driverexpenses,
+					(SELECT @rownum := 0) r
+				WHERE
+					pub_driverexpenses.platformtype = 1
+				AND pub_driverexpenses.`status` = 1
+				and pub_driverexpenses.driverid=#{driverid}
+				<!-- <if test="detailtype == 'transaction' ">
+				and	pub_driverexpenses.detailtype = 1
+				</if> -->
+				<if test="detailtype == 'balance' ">
+				and	pub_driverexpenses.detailtype = 0
+				</if>
+				<choose>
+					<when test="(startTime != null and startTime != '') and (endTime != null and endTime != '')">
+						and pub_driverexpenses.expensetime &gt;= #{startTime} and pub_driverexpenses.expensetime &lt; #{endTime}
+					</when>
+					<otherwise>
+						<if test="startTime != null and startTime != ''">
+							and pub_driverexpenses.expensetime &gt;= #{startTime}
+						</if>
+						<if test="endTime != null and endTime != ''">
+							and pub_driverexpenses.expensetime &lt; #{endTime}
+						</if>
+					</otherwise>
+				</choose>
+				<if test="queryTradetype != null and queryTradetype != '' ">
+					<choose>
+						<when test="queryTradetype == '2'.toString()">
+							and pub_driverexpenses.tradetype in('2','3')
+						</when>
+						<otherwise>
+							and pub_driverexpenses.tradetype = #{queryTradetype}
+						</otherwise>
+					</choose>
+				</if>
+				ORDER BY pub_driverexpenses.expensetime DESC
+			) m
+		) t
+	</select>
+	<select id="getIsNull" resultType="int" parameterType="string">
+		SELECT
+			count(*)
+		FROM
+			pub_driverexpenses
+		WHERE
+			pub_driverexpenses.platformtype = 1
+		AND pub_driverexpenses.`status` = 1
+		and pub_driverexpenses.driverid=#{id}
+	</select>
+</mapper>

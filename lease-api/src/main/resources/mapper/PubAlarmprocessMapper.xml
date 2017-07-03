@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.PubAlarmprocessMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+   <select id="getPubAlarmprocessByQueryList" resultType="PubAlarmprocessParam" parameterType="PubAlarmprocessParam">
+    select t.*,(@i:=@i+1) as code from(
+                  select a.id,a.leasecompanyid,a.userid,IF(a.alarmsource='0','乘客','司机') as alarmsource,IF(a.alarmtype='0','侯客报警','行程报警') as alarmtype ,
+                         IF(a.processresult='0','假警','涉嫌遇险') as processresult,
+                   DATE_FORMAT(a.alarmtime,'%Y-%m-%d %H:%i:%s') alarmtime,if(a.orderno = '','/',ifnull(a.orderno,'/')) as  orderno,
+                    CONCAT(d.name, ' ', d.phone) AS driverid,
+          ifnull((select CONCAT(o.nickname, ' ', o.account)  from org_user o where a.userid = o.id ),'/') as passenger,
+          (select CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+			       pub_vehicle.plateno
+		        )  from pub_vehicle,pub_driver_vehicle_ref f where  pub_vehicle.id = f.vehicleid and f.status = 1 and a.driverid=f.driverid) as plateno,
+                    a.processrecord, DATE_FORMAT(a.processtime,'%Y-%m-%d %H:%i:%s') processtime,(select nickname from le_user where id = a.processor) as processor <!-- a.processor   -->             
+          from  pub_alarmprocess a LEFT JOIN pub_driver d on a.driverid = d.id
+          where a.processstatus = #{processstatus}
+           and a.platformtype = #{platformtype}
+            and a.leasecompanyid = #{leasecompanyid}
+        <if test="processstatus == '0'.toString()">
+           <if test ="startTime != null and startTime != ''">
+           and STR_TO_DATE(a.alarmtime,'%Y-%m-%d %H:%i') <![CDATA[ >= ]]> #{startTime}
+           </if>
+           <if test ="endTime != null and endTime != ''">
+            and STR_TO_DATE(a.alarmtime,'%Y-%m-%d %H:%i') <![CDATA[ <= ]]> #{endTime}
+           </if>
+        </if>
+        <if test="processstatus == '1'.toString()">
+           <if test ="startTime != null and startTime != ''">
+           and STR_TO_DATE(a.processtime,'%Y-%m-%d %H:%i') <![CDATA[ >= ]]> #{startTime}
+           </if>
+           <if test ="endTime != null and endTime != ''">
+            and STR_TO_DATE(a.processtime,'%Y-%m-%d %H:%i') <![CDATA[ <= ]]> #{endTime}
+           </if>
+        </if>
+           <if test ="alarmsource != null and alarmsource != ''">
+           and a.alarmsource = #{alarmsource}
+           </if>
+            <if test ="alarmtype != null and alarmtype != ''">
+            and a.alarmtype = #{alarmtype}
+           </if>
+           <if test ="passenger != null and passenger != ''">
+           and a.userid = #{passenger}
+           </if>
+           <if test ="driverid != null and driverid != ''">
+           and a.driverid = #{driverid}
+           </if>
+           <if test ="processresult != null and processresult != ''">
+           and a.processresult = #{processresult}
+           </if>
+           <if test ="plateno != null and plateno != ''">
+           and (select CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+			       pub_vehicle.plateno
+		        )  from pub_vehicle,pub_driver_vehicle_ref f where  pub_vehicle.id = f.vehicleid and f.status = 1 and a.driverid=f.driverid) like "%"#{plateno}"%"
+           </if>
+           <if test="processstatus == '0'.toString()">
+            order by a.alarmtime
+            </if>
+            <if test="processstatus == '1'.toString()">
+            order by a.processtime desc
+            </if>
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getPubAlarmprocessByQueryCount" resultType="int" parameterType="PubAlarmprocessParam">
+    select count(*) from(
+                   select a.id,a.leasecompanyid,a.userid,IF(a.alarmsource='0','乘客','司机') as alarmsource,IF(a.alarmtype='0','侯客报警','行程报警') as alarmtype ,
+                    a.alarmtime,a.orderno,
+                    CONCAT(d.name, ' ', d.phone) AS driverid,
+          (select CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+			       pub_vehicle.plateno
+		        ) from  pub_vehicle,pub_driver_vehicle_ref f where  pub_vehicle.id = f.vehicleid and f.status = 1 and a.driverid=f.driverid) as plateno,
+                    a.processresult,a.processrecord,a.processtime,a.processor                  
+          from  pub_alarmprocess a LEFT JOIN pub_driver d on a.driverid = d.id
+          where a.processstatus = #{processstatus}
+           and a.platformtype = #{platformtype}
+            and a.leasecompanyid = #{leasecompanyid}
+           <if test="processstatus == '0'.toString()">
+           <if test ="startTime != null and startTime != ''">
+           and STR_TO_DATE(a.alarmtime,'%Y-%m-%d %H:%i') <![CDATA[ >= ]]> #{startTime}
+           </if>
+           <if test ="endTime != null and endTime != ''">
+            and STR_TO_DATE(a.alarmtime,'%Y-%m-%d %H:%i') <![CDATA[ <= ]]> #{endTime}
+           </if>
+        </if>
+        <if test="processstatus == '1'.toString()">
+           <if test ="startTime != null and startTime != ''">
+           and STR_TO_DATE(a.processtime,'%Y-%m-%d %H:%i') <![CDATA[ >= ]]> #{startTime}
+           </if>
+           <if test ="endTime != null and endTime != ''">
+            and STR_TO_DATE(a.processtime,'%Y-%m-%d %H:%i') <![CDATA[ <= ]]> #{endTime}
+           </if>
+        </if>
+           <if test ="alarmsource != null and alarmsource != ''">
+           and a.alarmsource = #{alarmsource}
+           </if>
+            <if test ="alarmtype != null and alarmtype != ''">
+            and a.alarmtype = #{alarmtype}
+           </if>
+           <if test ="passenger != null and passenger != ''">
+           and a.userid = #{passenger}
+           </if>
+           <if test ="driverid != null and driverid != ''">
+           and a.driverid = #{driverid}
+           </if>
+           <if test ="plateno != null and plateno != ''">
+           and (select CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+			       pub_vehicle.plateno
+		        )  from pub_vehicle,pub_driver_vehicle_ref f where  pub_vehicle.id = f.vehicleid and f.status = 1 and a.driverid=f.driverid) like "%"#{plateno}"%"
+           </if>
+            order by a.alarmtime desc
+           )t
+    </select>
+     <select id="getPubAlarmprocessDetail" resultType="PubAlarmprocessParam" parameterType="String">
+      select IF(processresult='0','假警','涉嫌遇险') as processresult,processrecord from pub_alarmprocess 
+      where id = #{id}
+     </select>
+     <update id="updataDetail" parameterType="PubAlarmprocessParam">
+		UPDATE pub_alarmprocess
+		SET processstatus = #{processstatus},processresult = #{processresult},processrecord=#{processrecord},processtime=now(),processor=#{updater},updatetime=now(),updater=#{updater}
+		WHERE
+		id = #{id}
+	</update>
+	<select id="getPubAlarmprocessDriver" resultType="Map" parameterType="PubAlarmprocessParam">
+			SELECT
+				id,
+				CONCAT(NAME, ' ', phone) text
+			FROM
+				pub_driver
+			where 1=1
+				<if test="driver != null and driver != '' ">
+					and 
+					CONCAT(NAME, ' ', phone)
+				like "%"#{driver}"%"
+		</if> 
+	</select>
+	<select id="getPubAlarmprocessPassenger" resultType="Map" parameterType="PubAlarmprocessParam">
+			SELECT
+				id,
+				CONCAT(nickname, ' ', account) text
+			FROM
+				org_user
+			where 1=1
+			and  CONCAT(nickname, ' ',account) is not NULL
+		<if test="passenger != null and passenger != '' ">
+					and 
+					CONCAT(nickname, ' ', account)
+				like "%"#{passenger}"%"
+		</if> 
+	</select>
+	<select id="getPubAlarmprocessPlateno" resultType="Map" parameterType="PubAlarmprocessParam">
+			select id,CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+             pub_vehicle.plateno) as text
+			  from pub_vehicle
+			  where 1=1
+			  and status = 1
+			  <if test="plateno != null and plateno != '' ">
+			  and
+				CONCAT(
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1),
+			     (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1),
+             pub_vehicle.plateno)
+				like "%"#{plateno}"%"
+		</if> 
+	</select>
+	<select id="ordernoOK" resultType="int" parameterType="pubRoleId">
+     SELECT
+			IFNULL(count(*),0)
+		FROM
+			le_roledataauthority
+		WHERE
+			le_roledataauthority.roleid =  #{roleId}
+		AND dynamicid = (select organid from org_order where orderno = #{orderno})
+	</select>
+	<select id="handleOK" resultType="int" parameterType="PubAlarmprocessParam">
+	select count(*) from pub_alarmprocess a where a.id = #{id}  and a.platformtype = #{platformtype} and a.processstatus = #{processstatus}
+	</select>
+	<insert id="save" parameterType="PubAlarmprocessSaveDto">
+	 INSERT INTO `pub_alarmprocess`
+	 (id,platformtype,leasecompanyid,usertype,ordertype,userid,alarmsource,alarmtype,alarmtime,orderno,driverid,processstatus,
+	 processresult,processrecord,processtime,processor,createtime,updatetime,status,creater,updater,lng,lat)
+   VALUES
+	(
+		#{id},
+		#{platformtype},
+		#{leasecompanyid},
+		#{usertype},
+		#{ordertype},
+		#{userid},
+		#{alarmsource},
+		#{alarmtype},
+		#{alarmtime},
+		#{orderno},
+		#{driverid},
+		#{processstatus},
+		#{processresult},
+		#{processrecord},
+		#{processtime},
+		#{processor},
+		#{createtime},
+		#{updatetime},
+		#{status},
+		#{creater},
+		#{updater},
+		#{lng},
+		#{lat}
+	);
+	</insert>
+</mapper>

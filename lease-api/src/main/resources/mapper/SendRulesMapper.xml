@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.SendRulesMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getSendRulesListByQuery" resultType="PubSendRules" parameterType="LeSendRulesQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pub_sendrules.*,pub_cityaddr.city as cityName 
+	    from pub_sendrules LEFT OUTER JOIN pub_cityaddr ON pub_cityaddr.id = pub_sendrules.city
+	    where pub_sendrules.leasescompanyid = #{leasesCompanyId}
+	        and pub_sendrules.platformtype='1'
+	        and pub_sendrules.status = 1
+	    <if test="city != null and city != ''">
+	        and pub_sendrules.city = #{city}
+	    </if>  
+	    <if test="useType != null and useType != ''">
+	        and pub_sendrules.usetype = #{useType}
+	    </if> 
+	    <if test="sendType != null and sendType != ''">
+	        and pub_sendrules.sendtype = #{sendType}
+	    </if> 
+	    <if test="sendModel != null and sendModel != ''">
+	        and pub_sendrules.sendmodel = #{sendModel}
+	    </if> 
+	    order by pub_sendrules.shortname,pub_sendrules.usetype desc) t1, (select @rownum := 0) r) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getSendRulesListCountByQuery" resultType="int" parameterType="LeSendRulesQueryParam">
+	    select count(*) from pub_sendrules
+	    where pub_sendrules.leasescompanyid = #{leasesCompanyId}
+	      and pub_sendrules.platformtype='1'
+	      and pub_sendrules.status = 1
+	    <if test="city != null and city != ''">
+	        and pub_sendrules.city = #{city}
+	    </if>  
+	    <if test="useType != null and useType != ''">
+	        and pub_sendrules.usetype = #{useType}
+	    </if> 
+	    <if test="sendType != null and sendType != ''">
+	        and pub_sendrules.sendtype = #{sendType}
+	    </if> 
+	    <if test="sendModel != null and sendModel != ''">
+	        and pub_sendrules.sendmodel = #{sendModel}
+	    </if> 
+	</select>
+	
+	<insert id="createSendRules" parameterType="PubSendRules">
+	   insert into pub_sendrules(id,leasescompanyid,city,vehicleupgrade,usetype,sendtype,sendmodel,systemsendinterval,driversendinterval,specialinterval,personsendinterval,initsendradius,maxsendradius,increratio,pushnumlimit,pushnum,pushlimit,shortname,carsinterval,platformtype,vehicletype,createtime,updatetime,creater,updater,status,rulesstate)
+        values(#{id},#{leasesCompanyId},#{city},#{vehicleUpgrade},#{useType},#{sendType},#{sendModel},#{systemSendInterval},#{driverSendInterval},#{specialInterval},#{personSendInterval},#{initSendRadius},#{maxSendRadius},#{increRatio},#{pushNumLimit},#{pushNum},#{pushLimit},#{shortName},#{carsInterval},#{platformType},#{vehicleType},now(),now(),#{creater},#{updater},#{status},#{rulesState})
+	</insert>
+	
+	<update id = "updateSendRules" parameterType="PubSendRules">
+		update pub_sendrules
+		set
+		<if test="rulesState!=null and rulesState!=''">
+		    rulesstate=#{rulesState},
+		    updater=#{updater},
+		    updatetime=now()
+		</if>
+		<if test="rulesState == null">
+			vehicleUpgrade=#{vehicleUpgrade},
+			sendType=#{sendType},
+			sendModel=#{sendModel},
+			systemSendInterval=#{systemSendInterval},
+			driverSendInterval=#{driverSendInterval},
+			specialInterval=#{specialInterval},
+			personSendInterval=#{personSendInterval},
+			initSendRadius=#{initSendRadius},
+			maxSendRadius=#{maxSendRadius},
+			increRatio=#{increRatio},
+			pushNumLimit=#{pushNumLimit},
+			pushNum=#{pushNum},
+			pushLimit=#{pushLimit},
+			carsInterval=#{carsInterval},
+			updatetime=now(),
+			updater=#{updater}
+		</if>
+		where id = #{id}
+		   and leasescompanyid=#{leasesCompanyId}
+		   and pub_sendrules.platformtype='1'
+		   and status = 1
+	</update>
+	
+	<select id="getSendRulesListCountByEqualQuery" resultType="int" parameterType="hashmap">
+	    select count(*)
+	    from pub_sendrules
+	    where pub_sendrules.leasescompanyid = #{leasesCompanyId}
+	      and pub_sendrules.city = #{city}
+	      and pub_sendrules.usetype=#{useType}
+	      and pub_sendrules.platformtype='1'
+	      and pub_sendrules.status = 1
+	    <if test="id != null and id != ''">
+	        and pub_sendrules.id != #{id}
+	    </if>  
+	</select>
+	
+	<select id="getCityListById" resultType="hashmap" parameterType="hashmap">
+	    select distinct pub_cityaddr.id as id,pub_cityaddr.city as text
+	    from pub_cityaddr,pub_sendrules
+	    where pub_cityaddr.id = pub_sendrules.city
+	      and pub_sendrules.leasescompanyid = #{leasesCompanyId}
+	      and pub_sendrules.platformtype='1'
+	      and pub_sendrules.status=1
+	      and pub_cityaddr.status = 1
+	    <if test="cityName != null and cityName != ''">
+	        and pub_cityaddr.city like "%"#{cityName}"%"
+	    </if>
+	</select>
+	
+	<select id="getSendRulesById" resultType="PubSendRules" parameterType="hashmap">
+	    select pub_sendrules.*,pub_cityaddr.city as cityName 
+	    from pub_sendrules LEFT OUTER JOIN pub_cityaddr ON pub_cityaddr.id = pub_sendrules.city
+	    where pub_sendrules.leasescompanyid = #{leasesCompanyId}
+	      and pub_sendrules.id = #{id}
+	      and pub_sendrules.platformtype='1'
+	      and pub_sendrules.status = 1
+	</select>
+	
+	<insert id="insertSendRulesHistory" parameterType="PubSendRulesHistory">
+	    insert into pub_sendrules_history(id,leasescompanyid,city,vehicleupgrade,usetype,sendtype,sendmodel,systemsendinterval,driversendinterval,specialinterval,personsendinterval,initsendradius,maxsendradius,increratio,pushnumlimit,pushnum,pushlimit,shortname,carsinterval,platformtype,vehicletype,createtime,updatetime,creater,updater,status,rulesstate,operatetype,sendrulesid,operator)
+        values(#{id},#{leasesCompanyId},#{city},#{vehicleUpgrade},#{useType},#{sendType},#{sendModel},#{systemSendInterval},#{driverSendInterval},#{specialInterval},#{personSendInterval},#{initSendRadius},#{maxSendRadius},#{increRatio},#{pushNumLimit},#{pushNum},#{pushLimit},#{shortName},#{carsInterval},#{platformType},#{vehicleType},now(),now(),#{creater},#{updater},#{status},#{rulesState},#{operateType},#{sendRulesId},#{operator})
+	</insert>
+	
+	<select id="getSednRulesHistoryList" resultType="PubSendRulesHistory" parameterType="PubSendRulesHistoryQueryParam">
+        select *,
+        (select le_user.nickname from le_user where le_user.id = pub_sendrules_history.operator) operatename,
+        date_format(pub_sendrules_history.createtime, '%Y/%m/%d %H:%i:%s') operatetime
+         from pub_sendrules_history 
+        where sendrulesid=#{sendRulesId}
+          and leasescompanyid=#{leasesCompanyId}	
+          and platformtype='1'
+          and status='1'
+	      order by updatetime desc
+	      limit #{iDisplayStart}, #{iDisplayLength}
+	</select>
+	
+	<select id="getSendRulesHistoryCount" resultType="int" parameterType="PubSendRulesHistoryQueryParam">
+        select count(*)
+         from pub_sendrules_history 
+        where sendrulesid=#{sendRulesId}
+          and leasescompanyid=#{leasesCompanyId}	
+          and platformtype='1'
+          and status='1'
+	</select>
+	
+	<select id="getCityById" resultType="PubCityAddr" parameterType="string">
+	    select *
+	    from pub_cityaddr
+	    where id = #{id}
+	      and status = 1
+	</select>
+	
+	<!-- 条件查询派单规则 -->
+	<select id="getSendRulesList" parameterType="PubSendRules" resultType="PubSendRules">
+        select * from pub_sendrules
+        where status = 1 and platformtype="1" and vehicletype=0
+		<if test='null != leasesCompanyId and "" != leasesCompanyId'>
+			and leasescompanyid = #{leasesCompanyId}
+		</if>
+		<if test='null != city and "" != city'>
+			and city = #{city}
+		</if>
+	</select>
+	
+</mapper>

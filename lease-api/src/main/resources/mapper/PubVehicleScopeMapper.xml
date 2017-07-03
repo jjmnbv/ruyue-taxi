@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.PubVehicleScopeMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<insert id="createPubVehicleScope" parameterType="PubVehicleScope">
+		insert into pub_vehicle_scope(id,vehicleid,cityid,CreateTime,UpdateTime,Creater,Updater,Status)
+			values (#{id},#{vehicleId},#{cityId},now(),now(),#{creater},#{updater},1)
+	</insert>
+	<update id="updatePubVehicleScope" parameterType="PubVehicleScope">
+		UPDATE pub_vehicle_scope set vehicleid=#{vehicleId},cityid=#{cityId},UpdateTime=now(),Updater=#{updater} WHERE id=#{id}
+	</update>
+	<!--  value   存入的是租赁端，登录人员id -->
+	<insert id="setAsDefault" parameterType="Dictionary">
+		insert into pub_dictionary(id,type,value,sort,text,createtime,updatetime,status)
+			values (#{id},#{type},#{value},#{sort},#{text},now(),now(),1)
+	</insert>
+	<delete id="deletePubVehicleScope" parameterType="string">
+		DELETE FROM pub_vehicle_scope WHERE vehicleid=#{id}
+	</delete>
+	<delete id="deleteSetAsDefault" parameterType="Dictionary">
+		DELETE FROM pub_dictionary WHERE type=#{type} and value=#{value}
+	</delete>
+	<select id="checkLoadAsDefault" parameterType="Dictionary" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			pub_dictionary
+		WHERE
+		pub_dictionary.`status` = 1
+		AND type=#{type} and value=#{value}
+	</select>
+	<select id="loadAsDefault" parameterType="Dictionary" resultType="City">
+		SELECT
+		pub_cityaddr.id as id,
+		pub_cityaddr.city as city
+		FROM
+		pub_dictionary,
+		pub_cityaddr
+		WHERE
+		pub_dictionary.`status` = 1
+		AND pub_cityaddr.`status` = 1
+		AND pub_dictionary.text=pub_cityaddr.id 
+		AND type=#{type} and value=#{value}
+	</select>
+	<select id="getByVelId" parameterType="string" resultType="City">
+		SELECT
+		pub_cityaddr.id AS id,pub_cityaddr.city AS city
+		FROM
+		pub_vehicle_scope,
+		pub_cityaddr
+		WHERE
+		pub_vehicle_scope.`Status`=1
+		AND pub_cityaddr.`status`=1
+		AND pub_vehicle_scope.cityid=pub_cityaddr.id
+		AND	pub_vehicle_scope.vehicleid = #{id}
+	</select>
+</mapper>

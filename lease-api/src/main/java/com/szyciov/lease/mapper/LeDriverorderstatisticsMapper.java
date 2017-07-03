@@ -1,0 +1,20 @@
+package com.szyciov.lease.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+
+import com.szyciov.lease.param.LeDriverorderstatisticsParam;
+
+public interface LeDriverorderstatisticsMapper {
+	List<LeDriverorderstatisticsParam> getDriverCountListByQuery(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	int getDriverCountListCountByQuery(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	List<LeDriverorderstatisticsParam> getDriverCountListByQueryToC(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	int getDriverCountListCountByQueryToC(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	List<LeDriverorderstatisticsParam> getcartypeId(String leasesCompanyId);
+	List<Map<String, Object>> getVehcBrand(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	List<LeDriverorderstatisticsParam> getVehcBrandAll(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	List<LeDriverorderstatisticsParam> getVehcBrandAll1(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	List<LeDriverorderstatisticsParam> getVehcBrandAll2(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+	List<LeDriverorderstatisticsParam> getVehcBrandAllToC(LeDriverorderstatisticsParam leDriverorderstatisticsParam);
+}

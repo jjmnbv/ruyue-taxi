@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.HomePageMapper">
+ 	
+	<!-- 获取全部已支付订单数和已支付订单金额 -->
+	<select id="getTotalPayedInfo" parameterType="String" resultType="HashMap">
+		SELECT
+			(case when ISNULL(sum(paidorders)) then 0 else sum(paidorders) end) AS payedcount,
+			(case when ISNULL(sum(paidmoney)) then 0 else sum(paidmoney) end) AS payedmoney
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		AND leasescompanyid = #{companyid}
+	</select>
+	
+	<!-- 获取全部未支付的订单数和未支付的订单金额 -->
+	<select id="getTotalUnPayedInfo" parameterType="String" resultType="HashMap">
+		SELECT
+			(case when ISNULL(sum(bepaidorders)) then 0 else sum(bepaidorders) end) AS unpayedcount,
+			(case when ISNULL(sum(bepaidmoney)) then 0 else sum(bepaidmoney) end) AS unpayedmoney
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		AND leasescompanyid = #{companyid}
+	</select>
+	 
+	<!-- 获取订单总金额 -->
+	<select id="getTotalMoney" parameterType="String" resultType="Object">
+		SELECT
+			ifnull(sum(ordermoney),0) as money
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		AND leasescompanyid = #{companyid}
+	</select>
+	
+	<!-- 获取差异金额 -->
+	<select id="getCYTotalMoney" parameterType="String" resultType="Object">
+		SELECT
+			ifnull(sum(diffmoney),0)as diffmoney
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		AND leasescompanyid = #{companyid}
+	</select>
+	
+	<!-- 获取时间分类订单信息 -->
+	<select id="getInfoByTime" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			 IfNULL(sum(ordermoney-diffmoney),0 ) as money,
+			IfNULL((sum(le_indexorderstatistics.paidorders+le_indexorderstatistics.bepaidorders)),0) as count
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		  AND leasescompanyid = #{companyid}
+		  <![CDATA[  AND starttime >= DATE(#{starttime}) AND endtime <= DATE(#{endtime}) ]]>
+	</select>
+	
+	<!-- 获取不同类型的订单信息 -->
+	<select id="getTotalInfoByUseType" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			  IfNULL(sum(ordermoney),0) as money,
+			ifnull(sum(paidorders+bepaidorders),0) as count
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		AND leasescompanyid = #{companyid}
+		AND ordertype=#{usetype}
+	</select>
+	
+	
+</mapper>

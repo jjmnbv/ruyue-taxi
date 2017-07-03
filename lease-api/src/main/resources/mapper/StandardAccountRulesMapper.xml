@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.StandardAccountRulesMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="getStandardAccountRulesListByQuery" resultType="LeAccountRules" parameterType="LeAccountRulesQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum +1) as rownum,t1.* from
+	    (select le_accountrules.*,pub_cityaddr.city as cityName,le_vehiclemodels.name as carTypeName,	       
+	       (select pub_dictionary.text from pub_dictionary where pub_dictionary.type = '订单类型' and pub_dictionary.value = le_accountrules.rulestype) as rulesTypeName,
+	       (case le_accountrules.rulesstate when '0' then '启用' when '1' then '禁用' end) as rulesStateName,
+	       (case le_accountrules.timetype when '0' then '总用时' when '1' then '低速用时' end) as timeTypeName,
+	       CONCAT(le_accountrules.`nightstarttime`,'-',le_accountrules.`nightendtime`) as nighttimes,
+	       IFNULL(le_accountrules.perhour,'---') as perhourVisual
+	    from le_accountrules left join pub_cityaddr on (le_accountrules.city = pub_cityaddr.id and pub_cityaddr.status = 1)
+	                         left join le_vehiclemodels on (le_accountrules.cartype = le_vehiclemodels.Id and le_accountrules.leasescompanyid = le_vehiclemodels.leasescompanyid and le_vehiclemodels.status = 1)
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	    <if test="rulesType != null and rulesType != ''">
+	        and le_accountrules.rulestype = #{rulesType}
+	    </if>
+	    <if test="city != null and city != ''">
+	        and le_accountrules.city = #{city}
+	    </if>
+	    <if test="carType != null and carType != ''">
+	        and le_accountrules.cartype = #{carType}
+	    </if>
+	    <if test="rulesState != null and rulesState != ''">
+	        and le_accountrules.rulesstate = #{rulesState}
+	    </if>
+	    order by CONVERT(pub_cityaddr.city USING gbk ) COLLATE gbk_chinese_ci,le_accountrules.rulestype,le_vehiclemodels.level,le_accountrules.rulesstate ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getStandardAccountRulesListCountByQuery" resultType="int" parameterType="LeAccountRulesQueryParam">
+	    select count(*)
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	    <if test="rulesType != null and rulesType != ''">
+	        and le_accountrules.rulestype = #{rulesType}
+	    </if>
+	    <if test="city != null and city != ''">
+	        and le_accountrules.city = #{city}
+	    </if>
+	    <if test="carType != null and carType != ''">
+	        and le_accountrules.cartype = #{carType}
+	    </if>
+	    <if test="rulesState != null and rulesState != ''">
+	        and le_accountrules.rulesstate = #{rulesState}
+	    </if>
+	</select>
+	
+	<select id="getStandardAccountRulesListCountByEqualQuery" resultType="int" parameterType="LeAccountRules">
+	    select count(*)
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	      and le_accountrules.rulestype = #{rulesType}
+	      and le_accountrules.city = #{city}
+	      and le_accountrules.cartype = #{carType}
+	</select>
+	
+	<select id="getStandardAccountRulesListCountByEqualQuery2" resultType="int" parameterType="LeAccountRules">
+	    select count(*)
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	      and le_accountrules.city = #{city}
+	      and le_accountrules.timetype = #{timeType}
+	</select>
+	
+	<select id="getMessageInfoByEqualQuery" resultType="LeAccountRules" parameterType="LeAccountRules">
+	    select 
+           (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = le_accountrules.city) as cityName,
+	       (select le_vehiclemodels.name from le_vehiclemodels where le_vehiclemodels.Id = le_accountrules.cartype and le_vehiclemodels.leasescompanyid = le_accountrules.leasescompanyid and le_vehiclemodels.status = 1) as carTypeName,
+	       (select pub_dictionary.text from pub_dictionary where pub_dictionary.type = '订单类型' and pub_dictionary.value = le_accountrules.rulestype) as rulesTypeName
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	      and le_accountrules.rulestype = #{rulesType}
+	      and le_accountrules.city = #{city}
+	      and le_accountrules.cartype = #{carType}
+	      limit 1
+	</select>
+	
+	<insert id="createStandardAccountRules" parameterType="LeAccountRules">
+	    insert into le_accountrules(id,rulesrefid,leasescompanyid,city,rulestype,cartype,startprice,rangeprice,timeprice,timetype,perhour,type,rulesstate,reason,deadheadmileage,deadheadprice,nightstarttime,nightendtime,nighteprice,createtime,updatetime,creater,updater,status)
+	    values(#{id},#{rulesRefId},#{leasesCompanyId},#{city},#{rulesType},#{carType},#{startPrice},#{rangePrice},#{timePrice},#{timeType},#{perhour},0,#{rulesState},#{reason},#{deadheadmileage},#{deadheadprice},#{nightstarttime},#{nightendtime},#{nighteprice},now(),now(),#{creater},#{updater},1)
+	</insert>
+
+	<update id = "updateStandardAccountRules" parameterType="LeAccountRules">
+		update le_accountrules
+		set startprice=#{startPrice},rangeprice=#{rangePrice},timeprice=#{timePrice},timetype=#{timeType},perhour=#{perhour},updater=#{updater},updatetime=now(),deadheadmileage=#{deadheadmileage},deadheadprice=#{deadheadprice},nightstarttime=#{nightstarttime},nightendtime=#{nightendtime},nighteprice=#{nighteprice}
+		where le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	      and le_accountrules.id = #{id}  
+	</update>
+
+	<insert id="createStandardAccountRulesModiLog" parameterType="LeAccountRulesModiLog">
+	    insert into le_accountrules_modilog(id,accountrulesid,city,rulestype,cartype,startprice,rangeprice,timeprice,timetype,perhour,type,rulesstate,moditype,reason,deadheadmileage,deadheadprice,nightstarttime,nightendtime,nighteprice,createtime,updatetime,creater,updater,status)
+	    values(#{id},#{accountRulesId},#{city},#{rulesType},#{carType},#{startPrice},#{rangePrice},#{timePrice},#{timeType},#{perhour},0,#{rulesState},#{modiType},#{reason},#{deadheadmileage},#{deadheadprice},#{nightstarttime},#{nightendtime},#{nighteprice},now(),now(),#{creater},#{updater},1)
+	</insert>
+
+	<update id = "updateStandardAccountRulesState" parameterType="LeAccountRules">
+		update le_accountrules
+		set rulesstate=#{rulesState},reason=#{reason},updater=#{updater},updatetime=now()
+		where id = #{id}
+		  and type = 0
+		  and status = 1
+	</update>
+
+	<update id = "updateStandardAccountRulesOneKey" parameterType="LeAccountRules">
+		update le_accountrules
+		set timetype = #{timeType},perhour = #{perhour},updater = #{updater},updatetime = now()
+		where leasescompanyid = #{leasesCompanyId}
+		  and city = #{city}
+		  and type = 0
+		  and status = 1
+	</update>
+
+	<select id="getStandardAccountRulesById" resultType="LeAccountRules" parameterType="string">
+	    select le_accountrules.*, pub_cityaddr.city cityName
+	    from le_accountrules left join pub_cityaddr on (le_accountrules.city = pub_cityaddr.id and pub_cityaddr.status = 1)
+	    where le_accountrules.status = 1
+	        and le_accountrules.type = 0
+	        and le_accountrules.id = #{id}
+	</select>
+
+	<select id="getStandardAccountRulesByCity" resultType="LeAccountRules" parameterType="hashmap">
+	    select le_accountrules.*
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	      and le_accountrules.city = #{city}
+	</select>
+
+	<select id="getOneStandardAccountRulesByCity" resultType="LeAccountRules" parameterType="hashmap">
+	    select le_accountrules.*
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	      and le_accountrules.city = #{city}
+	      limit 1
+	</select>
+
+	<select id="getStandardAccountRulesModiLogListByQuery" resultType="LeAccountRulesModiLog" parameterType="LeAccountRulesModiLogQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum +1) as rownum,t1.* from
+	    (select le_accountrules_modilog.*,
+	       (case le_accountrules_modilog.moditype when '0' then '修改操作' when '1' then '启用操作' when '2' then '禁用操作' when '3' then '一键更换' end) as modiTypeName,
+	       (case le_accountrules_modilog.rulesstate when '0' then '启用' when '1' then '禁用' end) as rulesStateName,
+	       (case le_accountrules_modilog.timetype when '0' then '总用时' when '1' then '低速用时' end) as timeTypeName,
+	        CONCAT(le_accountrules_modilog.`nightstarttime`,'-',le_accountrules_modilog.`nightendtime`) as nighttimes,
+	       IFNULL(le_accountrules_modilog.perhour,'---') as perhourVisual,
+	       (select le_user.nickname from le_user where le_user.id = le_accountrules_modilog.updater) as createrVisual
+	    from le_accountrules_modilog
+	    where le_accountrules_modilog.status = 1
+	      and le_accountrules_modilog.type = 0
+	      and le_accountrules_modilog.accountrulesid = #{accountRulesId}
+	    order by le_accountrules_modilog.updatetime desc ) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getStandardAccountRulesModiLogListCountByQuery" resultType="int" parameterType="LeAccountRulesModiLogQueryParam">
+	    select count(*)
+	    from le_accountrules_modilog
+	    where le_accountrules_modilog.status = 1
+	      and le_accountrules_modilog.type = 0
+	      and le_accountrules_modilog.accountrulesid = #{accountRulesId}
+	</select>
+
+	<select id="getStandardAccountRulesExistCityList" resultType="hashmap" parameterType="hashmap">
+	    select pub_cityaddr.id as id,pub_cityaddr.city as text
+	    from pub_cityaddr,
+	    (select distinct le_accountrules.city
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0 ) t1
+	    where pub_cityaddr.id = t1.city
+	      and pub_cityaddr.status = 1
+	    <if test="cityName != null and cityName != ''">
+	        and pub_cityaddr.city like "%"#{cityName}"%"
+	    </if>
+	</select>
+	
+	<select id="getPubDictionaryByType" resultType="PubDictionary" parameterType="string">
+	    select *
+	    from pub_dictionary
+	    where type = #{type}
+	      and status = 1
+	</select>
+	
+	<select id="getStandardAccountRulesExistCarTypeList" resultType="LeVehiclemodels" parameterType="string">
+	    select distinct le_accountrules.cartype as id,le_vehiclemodels.name as name
+	    from le_accountrules left join le_vehiclemodels
+	         on (le_vehiclemodels.Id = le_accountrules.cartype 
+	             and le_vehiclemodels.leasescompanyid = le_accountrules.leasescompanyid 
+	             and le_vehiclemodels.status = 1)
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.status = 1
+	      and le_accountrules.type = 0
+	      order by le_vehiclemodels.level
+	</select>
+	
+	<select id="getCarTypeList" resultType="LeVehiclemodels" parameterType="string">
+	    select le_vehiclemodels.Id as id,le_vehiclemodels.name as name
+	    from le_vehiclemodels
+	    where le_vehiclemodels.leasescompanyid = #{leasesCompanyId}
+	      and le_vehiclemodels.status = 1
+	      and le_vehiclemodels.modelstatus = "0"
+	      order by le_vehiclemodels.level
+	</select>
+	
+	<select id="getLeAccountRulesCountById" resultType="int" parameterType="hashmap">
+	    select count(*)
+	    from le_accountrules
+	    where le_accountrules.leasescompanyid = #{leasesCompanyId}
+	      and le_accountrules.id = #{id}
+	      and le_accountrules.status = 1
+	</select>
+	
+	<select id="getPubCityAddrList" resultType="PubCityAddr">
+		select * from pub_cityaddr where status = 1
+		ORDER BY convert(pub_cityaddr.city using gbk) ASC
+	</select>
+	
+	<select id="getAccountStatusByLeasesCompanyId" resultType="hashmap" parameterType="string">
+	    select wechatstatus,alipaystatus,driverwechatstatus,driveralipaystatus
+	    from le_leasescompany
+	    where id = #{leasesCompanyId}
+	      and status = 1
+	      and platformtype = 1
+	</select>
+	
+</mapper>

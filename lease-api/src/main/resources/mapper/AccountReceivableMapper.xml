@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.AccountReceivableMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 修改 微信支付信息 -->
+	<update id="updateWechat" parameterType="LeLeasescompany">
+		UPDATE le_leasescompany SET 
+		Updater=#{updater},UpdateTime=now(),
+		wechataccount=#{wechatAccount},
+		wechatappid=#{wechatappid},wechatmerchantno=#{wechatmerchantno},wechatsecretkey=#{wechatsecretkey}
+		where id = #{id} 
+	</update>
+	<!-- 修改 司机微信支付信息 -->
+	<update id="updateDriverWechat" parameterType="LeLeasescompany">
+		UPDATE le_leasescompany SET
+		Updater=#{updater},
+		UpdateTime=now(),
+		driverwechatpayaccount=#{driverwechatpayaccount},
+		driverwechatappid=#{driverwechatappid},
+		driverwechatmerchantno=#{driverwechatmerchantno},
+		driverwechatsecretkey=#{driverwechatsecretkey}
+		where id = #{id}
+	</update>
+	<!-- 修改 支付宝支付信息 -->
+	<update id="updateAlipay" parameterType="LeLeasescompany">
+		UPDATE le_leasescompany SET 
+		Updater=#{updater},UpdateTime=now(),
+		alipayaccount=#{alipayAccount},
+		alipayappid=#{alipayappid},alipayprivatekey=#{alipayprivatekey},alipaypublickey=#{alipaypublickey},
+		alipaypartnerid=#{alipaypartnerid},alipaypartnerpublickey=#{alipaypartnerpublickey},alipaypartnerprivatekey=#{alipaypartnerprivatekey}
+		where id = #{id} 
+	</update>
+	<!-- 修改 司机支付宝支付信息 -->
+	<update id="updateDriverAlipay" parameterType="LeLeasescompany">
+		UPDATE le_leasescompany SET
+		Updater=#{updater},UpdateTime=now(),
+		driveralipayaccount=#{driveralipayaccount},
+		driveralipayappid=#{driveralipayappid},
+		driveralipayprivatekey=#{driveralipayprivatekey},
+		driveralipaypublickey=#{driveralipaypublickey},
+		driveralipaypartnerid=#{driveralipaypartnerid},
+		driveralipaypartnerpublickey=#{driveralipaypartnerpublickey},
+		driveralipaypartnerprivatekey=#{driveralipaypartnerprivatekey}
+		where id = #{id}
+	</update>
+	<!-- 添加一条微信的记录 -->
+	<insert id="addWechat" parameterType="PubWechataccountHistory">
+		INSERT INTO `pub_wechataccount_history` (`id`, `companyid`, `wechataccount`, `wechatappid`, `wechatmerchantno`, `wechatsecretkey`, `createtime`, `updatetime`, `creater`, `updater`, `status`, `platformtype`,`usertype`) VALUES
+												(#{id}, #{companyid}, #{wechataccount}, #{wechatappid}, #{wechatmerchantno}, #{wechatsecretkey}, now(), now(), #{creater}, #{updater}, 1, 1,#{usertype});
+	</insert>
+	<!-- 添加一条支付宝的记录 -->
+	<insert id="addAlipay" parameterType="PubAlipayaccountHistory">
+			INSERT INTO `pub_alipayaccount_history` (`id`, `companyid`, `alipayaccount`, `alipayappid`, `alipayprivatekey`, `alipaypublickey`, `alipaypartnerid`, `alipaypartnerpublickey`, `alipaypartnerprivatekey`, `createtime`, `updatetime`, `creater`, `updater`, `status`, `platformtype`, `usertype`) VALUES
+													(#{id}, #{companyid}, #{alipayaccount}, #{alipayappid}, #{alipayprivatekey}, #{alipaypublickey}, #{alipaypartnerid}, #{alipaypartnerpublickey}, #{alipaypartnerprivatekey}, now(), now(), #{creater}, #{updater}, 1, 1, #{usertype});
+	</insert>
+	<!-- 启用 禁用  支付宝 -->
+	<update id="openOrCloseAlipay" parameterType="LeLeasescompany">
+		update le_leasescompany set Updater=#{updater},UpdateTime=now(),alipaystatus=#{alipaystatus}
+		where id = #{id}
+	</update>
+	<!-- 启用 禁用  微信 -->
+	<update id="openOrCloseWechat" parameterType="LeLeasescompany">
+		update le_leasescompany set Updater=#{updater},UpdateTime=now(),wechatstatus=#{wechatstatus}
+		where id = #{id} 
+	</update>
+	<!-- 司机 启用 禁用  支付宝 -->
+	<update id="openOrCloseDriverAlipay" parameterType="LeLeasescompany">
+		update le_leasescompany set Updater=#{updater},UpdateTime=now(),driveralipaystatus=#{driveralipaystatus}
+		where id = #{id}
+	</update>
+	<!-- 启用 禁用  微信 -->
+	<update id="openOrCloseDriverWechat" parameterType="LeLeasescompany">
+		update le_leasescompany set Updater=#{updater},UpdateTime=now(),driverwechatstatus=#{driverwechatstatus}
+		where id = #{id}
+	</update>
+</mapper>
