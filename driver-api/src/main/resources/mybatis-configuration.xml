@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!--整合Spring的时候 只有 settings typeAliases mapper 三个属性有用, 其余的要在spring总配置文件中会覆盖 -->
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="defaultExecutorType" value="REUSE" /> <!-- 使用预处理执行器 -->
+		<setting name="defaultStatementTimeout" value="25" />
+		<setting name="localCacheScope" value="SESSION" />
+	</settings>
+	<typeAliases>
+		<!-- All Param -->
+		<typeAlias type="com.szyciov.param.QueryParam" alias="QueryParam"/>
+		<typeAlias type="com.szyciov.param.OrderApiParam" alias="OrderApiParam"/>
+		<typeAlias type="com.szyciov.driver.param.LoginParam" alias="LoginParam"/>
+		<typeAlias type="com.szyciov.driver.param.ChangeOrderStateParam" alias="ChangeOrderStateParam"/>
+		<typeAlias type="com.szyciov.driver.param.OrderListParam" alias="OrderListParam"/>
+		<typeAlias type="com.szyciov.driver.param.ChangePasswordParam" alias="ChangePasswordParam"/>
+		<typeAlias type="com.szyciov.driver.param.UploadOrdinatesParam" alias="UploadOrdinatesParam"/>
+		<typeAlias type="com.szyciov.driver.param.OrderStatisticsParam" alias="OrderStatisticsParam"/>
+		<typeAlias type="com.szyciov.driver.param.AtworkParam" alias="AtworkParam"/>
+		<typeAlias type="com.szyciov.driver.param.NewsParam" alias="NewsParam"/>
+		<typeAlias type="com.szyciov.lease.param.GetSendInfoParam" alias="GetSendInfoParam"/>
+		<typeAlias type="com.szyciov.driver.param.OrderCostParam" alias="OrderCostParam"/>
+		<typeAlias type="com.szyciov.driver.param.SendSMSParam" alias="SendSMSParam"/>
+		<typeAlias type="com.szyciov.driver.param.PurseParam" alias="PurseParam"/>
+		<typeAlias type="com.szyciov.driver.param.DriverMessageParam" alias="DriverMessageParam"/>
+		<typeAlias type="com.szyciov.param.PubPushLogParam" alias="PubPushLogParam"/>
+		
+		<!-- All Entity -->
+		<typeAlias type="com.szyciov.driver.entity.PubDriverNews" alias="PubDriverNews"/>
+		<typeAlias type="com.szyciov.driver.entity.OrderInfoDetail" alias="OrderInfoDetail"/>
+		<typeAlias type="com.szyciov.driver.entity.DriverInfo" alias="DriverInfo"/>
+		<typeAlias type="com.szyciov.driver.entity.OrderStatistics" alias="OrderStatistics"/>
+		<typeAlias type="com.szyciov.driver.entity.PubDriverLoginLog" alias="PubDriverLoginLog"/>
+		<typeAlias type="com.szyciov.entity.PubDriver" alias="PubDriver"/>
+		<typeAlias type="com.szyciov.entity.PubSmsToken" alias="PubSmsToken"/>
+		<typeAlias type="com.szyciov.entity.PubUserToken" alias="PubUserToken"/>
+		<typeAlias type="com.szyciov.lease.entity.LeLeasescompany" alias="LeLeasescompany"/>
+		<typeAlias type="com.szyciov.lease.entity.PubDictionary" alias="PubDictionary"/>
+		<typeAlias type="com.szyciov.org.entity.OrgOrder" alias="OrgOrder"/>
+		<typeAlias type="com.szyciov.op.entity.OpOrder" alias="OpOrder"/>
+		<typeAlias type="com.szyciov.entity.PubSendrules" alias="PubSendrules"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrganCompanyRef" alias="OrgOrganCompanyRef"/>
+		<typeAlias type="com.szyciov.lease.entity.PubCityAddr" alias="PubCityAddr"/>
+		<typeAlias type="com.szyciov.entity.PeDrivershiftPending" alias="PeDrivershiftPending"/>
+		<typeAlias type="com.szyciov.op.entity.PubDriverExpenses" alias="PubDriverExpenses"/>
+		<typeAlias type="com.szyciov.org.entity.PubWithdraw" alias="PubWithDraw"/>
+		<typeAlias type="com.szyciov.lease.entity.PubDriverAccount" alias="PubDriverAccount"/>
+		<typeAlias type="com.szyciov.op.entity.OpTaxiOrder" alias="OpTaxiOrder"/>
+		<typeAlias type="com.szyciov.entity.PubDrivertrack" alias="PubDriverTrack"/>
+		<typeAlias type="com.szyciov.op.entity.OpPlatformInfo" alias="OpPlatformInfo"/>
+		<typeAlias type="com.szyciov.entity.PubDriverTradingrecord" alias="PubDriverTradingRecord"/>
+		<typeAlias type="com.szyciov.op.entity.PeUser" alias="PeUser"/>
+		<typeAlias type="com.szyciov.op.entity.PeUserExpenses" alias="PeUserExpenses"/>
+		<typeAlias type="com.szyciov.org.entity.OrgUser" alias="OrgUser"/>
+		<typeAlias type="com.szyciov.op.entity.OpShiftRules" alias="OpShiftRule"/>
+		<typeAlias type="com.szyciov.lease.entity.LeShiftRule" alias="LeShiftRule"/>
+		<typeAlias type="com.szyciov.entity.PubJpushRegidlog" alias="PubJpushRegidlog"/>
+		<typeAlias type="com.szyciov.entity.PubJpushlog" alias="PubJpushlog"/>
+	</typeAliases>
+</configuration>

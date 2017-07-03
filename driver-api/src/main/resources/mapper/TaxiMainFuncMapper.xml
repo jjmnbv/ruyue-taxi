@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.driver.mapper.TaxiMainFuncMapper">
+	<select id="getPurse" parameterType="PubDriver" resultType="PubDriverAccount">
+	SELECT
+		pdc.*
+	FROM
+		`pub_driveraccount` pdc
+	WHERE 1=1
+	AND pdc.`status` = 1
+	AND pdc.platformtype = #{platformtype}
+	AND pdc.leasescompanyid = #{leasescompanyid}
+	AND pdc.driverid = #{id}
+	</select>
+	
+	<select id="getPurseExpenses" parameterType="PurseParam" resultType="PubDriverExpenses">
+	SELECT
+		pde.*
+	FROM
+		`pub_driverexpenses` pde
+	WHERE 1=1
+	AND pde.`status` = 1
+	AND pde.driverid = #{driverid}
+	<if test="detailtype != null and detailtype == 0">
+	AND pde.detailtype = #{detailtype}
+	</if>
+	ORDER BY pde.expensetime DESC
+	LIMIT #{iDisplayStart},#{iDisplayLength}
+	</select>
+	
+	<select id="getTaxiOrderStatistics" parameterType="PurseParam" resultType="OrderStatistics">
+	SELECT
+		COUNT(oo.orderno) count,
+		IFNULL(SUM(IFNULL(oo.shouldpayamount,oo.orderamount)),0) cost,
+		DATE_FORMAT(IFNULL(oo.endtime,oo.canceltime), "%Y") YEAR,
+		DATE_FORMAT(IFNULL(oo.endtime,oo.canceltime), "%m") MONTH
+	FROM
+		`op_taxiorder` oo
+	WHERE oo.`status` = 1
+	AND oo.orderstatus in (${orderstatuslist})
+	AND oo.paymentstatus in (${paystatuslist})
+	AND oo.driverid = #{driverid}
+	<if test="statis == 0">
+	GROUP BY YEAR,MONTH
+	ORDER BY YEAR DESC,MONTH DESC
+	</if>
+	<if test="statis == 1">
+	GROUP BY YEAR
+	ORDER BY YEAR DESC
+	</if>
+	LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getLastBankCard" parameterType="PubWithdraw" resultType="PubWithdraw">
+	SELECT
+		pwd.*
+	FROM
+		`pub_withdraw` pwd
+	WHERE 1=1
+	AND pwd.`status` = 1
+	AND pwd.usertype = #{usertype}
+	AND pwd.userid = #{userid}
+	ORDER BY pwd.createtime DESC
+	LIMIT 1
+	</select>
+	
+	<select id="getTodayWithDrawLimit" parameterType="PubWithdraw" resultType="double">
+	SELECT
+		IFNULL(SUM(pwd.amount),0.0)
+	FROM
+		`pub_withdraw` pwd
+	WHERE 1 = 1
+	AND pwd.`status` = 1
+	AND (
+		pwd.processstatus = 0
+		OR pwd.processresult = 0
+	)
+	AND DATEDIFF(NOW(),pwd.applytime) = 0
+	AND pwd.usertype = #{usertype}
+	AND pwd.userid = #{userid}
+	</select>
+	
+	<select id="getDriverTradeRecord" parameterType="PubDriverTradingRecord" resultType="PubDriverTradingRecord">
+	SELECT
+		pdtr.*
+	FROM
+		`pub_driver_tradingrecord` pdtr
+	WHERE 1=1
+	AND pdtr.`status` = 1
+	AND pdtr.outtradeno = #{outtradeno}
+	</select>
+	
+	<select id="getDriverMessageByType" parameterType="DriverMessageParam" resultType="PubDriverNews">
+	SELECT
+		pdn.*
+	FROM
+		`pub_drivernews` pdn
+	WHERE pdn.`Status` = 1
+	AND pdn.userid = #{driverid}
+	<if test="aboveread == false">
+	AND pdn.newsstate = #{state}
+	</if>
+	ORDER BY pdn.createtime DESC
+	LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getDriverMessageById" parameterType="DriverMessageParam" resultType="PubDriverNews">
+	SELECT
+		pdn.*
+	FROM
+		`pub_drivernews` pdn
+	WHERE pdn.`Status` = 1
+	AND pdn.id = #{newsid}
+	AND pdn.userid = #{driverid}
+	</select>
+	
+	<insert id="saveOrUpdatePubDriverAccount" parameterType="PubDriverAccount">
+	INSERT INTO pub_driveraccount (id, driverid, leasescompanyid, balance, platformtype, createtime, updatetime, status ) 
+	SELECT #{id}, pd.id, pd.leasescompanyid, #{balance}, IFNULL(pd.platformtype,'1'), NOW(), NOW(), 1
+	FROM
+		`pub_driver` pd
+	WHERE 1=1
+	AND pd.`Status` = 1
+	AND pd.id = #{driverid}
+	ON DUPLICATE KEY UPDATE
+		balance = #{balance},
+		updatetime = NOW()
+	</insert>
+	
+	<insert id="saveDriverTradeRecord" parameterType="PubDriverTradingRecord">
+	INSERT INTO pub_driver_tradingrecord( outtradeno, leasescompanyid, driverid, type, paymenttype, tradeno, 
+		validatekey, tradingstatus, createtime, updatetime, status, orderno, amount
+	) VALUES( #{outtradeno}, #{leasescompanyid}, #{driverid}, #{type}, #{paymenttype}, #{tradeno},
+		#{validatekey}, #{tradingstatus}, NOW(), NOW(), #{status}, #{orderno}, #{amount}
+	) ON DUPLICATE KEY UPDATE
+		tradeno = #{tradeno},
+		tradingstatus = #{tradingstatus},
+		updatetime = NOW()
+	</insert>
+	
+	<insert id="savePubDriverExpenses" parameterType="PubDriverExpenses">
+	INSERT INTO pub_driverexpenses( id, driverid, tradetype, expensetype, expensetime, amount,
+		balance, detailtype, remark, createtime, updatetime, creater,
+		updater, status, operateresult, platformtype
+	) VALUES( #{id}, #{driverid}, #{tradetype}, #{expensetype}, #{expensetime},
+		#{amount}, #{balance}, #{detailtype}, #{remark}, #{createtime}, #{updatetime},
+		#{creater}, #{updater}, #{status}, #{operateresult}, #{platformtype}
+	)
+	</insert>
+	
+	<insert id="savePubWithDraw" parameterType="PubWithDraw">
+	INSERT INTO pub_withdraw( id, platformtype, leasescompanyid, usertype, userid,
+		amount, uuid, creditcardnum, creditcardname, bankname, applytime,
+		processstatus, processresult, processreason, processtime, createtime,
+		updatetime, processuser, status, creater, updater
+	) VALUES( #{id}, #{platformtype}, #{leasescompanyid}, #{usertype}, #{userid}, #{amount},
+		#{uuid}, #{creditcardnum}, #{creditcardname}, #{bankname}, #{applytime}, #{processstatus},
+		#{processresult}, #{processreason}, #{processtime}, NOW(), #{updatetime}, #{processuser},
+		#{status}, #{creater}, #{updater}
+	)
+	</insert>
+    <insert id="savePeUserExpenses" parameterType="PeUserExpenses">
+        INSERT INTO pe_userexpenses(id,userid,tradetype,expensetype,expensetime,amount,
+        balance,detailtype,remark,createtime,updatetime,creater,updater,status,operateresult)
+        values (#{id},#{userid},#{tradetype},#{expensetype},#{expensetime},#{amount},
+        #{balance},#{detailtype},#{remark},#{createtime},#{updatetime},#{creater},#{updater},#{status},#{operateresult})
+    </insert>
+    <select id="getOpTaxiOrderByOrderNo" parameterType="java.lang.String" resultType="com.szyciov.driver.model.PassengersPayDetail">
+        select o.userid userId, a.balance
+        from op_taxiorder o
+        left join pe_useraccount a on o.userid=a.userid
+        where o.orderno=#{orderNo}
+    </select>
+    <insert id="saveLeUserNews" parameterType="com.szyciov.lease.entity.LeUserNews">
+        insert into le_usernews
+        (id,userid,`type`,content,newsstate,createtime,updatetime,status)
+        values
+        (#{id},#{userId},#{type},#{content},#{newsState},#{createTime},#{updateTime},#{status})
+    </insert>
+    <select id="getLeUserIds" resultType="java.lang.String">
+        select distinct userid from (
+            select userid from le_user u
+                inner join le_roleuser r1 on r1.userid = u.id
+                inner join le_rolemanagement r2 on r2.id = r1.roleid
+            where specialstate = '0' and r2.roletype='321' and u.leasescompanyid=#{companyId} and u.`status` = 1
+            union
+            select id from le_user u where specialstate = '1'and u.leasescompanyid=#{companyId} and u.`status` = 1
+        ) t
+    </select>
+    <insert id="saveOpUsersNews" parameterType="com.szyciov.op.entity.OpUserNews">
+        insert into op_usernews
+        (id,userid,`type`,content,newsstate,createtime,updatetime,status)
+        values
+        (#{id},#{userId},#{type},#{content},#{newsState},#{createTime},#{updateTime},#{status})
+    </insert>
+    <select id="getOpUserIds" resultType="java.lang.String">
+        select distinct userid from (
+            select userid from op_user u
+                inner join op_roleuser r1 on r1.userid = u.id
+                inner join op_rolemanagement r2 on r2.id = r1.roleid
+            where usertype = '0' and r2.roletype='1' and u.`status` = 1
+            union
+            select id from op_user u where usertype = '1' and u.`status` = 1
+        ) t
+    </select>
+
+</mapper>

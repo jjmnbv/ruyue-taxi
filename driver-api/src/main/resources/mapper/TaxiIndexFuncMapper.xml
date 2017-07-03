@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.driver.mapper.TaxiIndexFuncMapper">
+	<select id="getWorkmates" parameterType="PubDriver" resultType="PubDriver">
+	SELECT
+		pd.*
+	FROM
+		pub_driver pd,
+		`pub_driver_vehicle_ref` pdvr
+	WHERE 1=1
+	AND pdvr.`status` = 1
+	AND pd.id = pdvr.driverid
+	AND pdvr.vehicleid = #{vehicleid}
+	AND pd.id != #{id}
+	</select>
+	
+	<select id="getOpShiftRule" parameterType="PubDriver" resultType="OpShiftRule">
+	SELECT
+		osr.*
+	FROM
+		op_shiftrules osr
+	WHERE 1 = 1
+	AND osr.`status` = 1
+	AND osr.city = #{city}
+	</select>
+	
+	<select id="getLeShiftRule" parameterType="PubDriver" resultType="LeShiftRule">
+	SELECT
+		lsr.*
+	FROM
+		le_shiftrules lsr
+	WHERE 1 = 1
+	AND lsr.`status` = 1
+	AND lsr.leasescompanyid = #{leasescompanyid}
+	AND lsr.city = #{city}
+	</select>
+	
+	<select id="getShiftWorkApply" parameterType="PeDrivershiftPending" resultType="PeDrivershiftPending">
+	SELECT
+		*
+	FROM
+		`pe_drivershift_pending`
+	WHERE 1=1
+	AND `status` = 1
+	AND platformtype = #{platformtype}
+	AND shifttype = #{shifttype}
+	<if test="relievedtype != null and relievedtype != ''">
+	AND relievedtype = #{relievedtype}
+	</if>
+	AND leasescompanyid = #{leasescompanyid}
+	AND driverid = #{driverid}
+	ORDER BY applytime DESC LIMIT 1
+	</select>
+</mapper>

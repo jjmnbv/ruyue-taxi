@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.driver.mapper.TaxiOrderFuncMapper">
+	<select id="getTaxiOrderList" parameterType="OrderListParam" resultType="OpTaxiOrder">
+	SELECT
+		oo.*,
+		opi.servcietel contact,
+		pu.headportraitmax passengericonmax,
+		pu.headportraitmin passengericonmin
+	FROM
+		`op_taxiorder` oo
+	LEFT JOIN op_platforminfo opi ON opi.`status` = 1
+	LEFT JOIN pe_user pu ON pu.`status` = 1 AND pu.id = oo.userid
+	WHERE 1=1
+	AND oo.`status` = 1
+	AND oo.driverid = #{driverid}
+	AND oo.orderstatus IN (${taxistatuslist})
+	<if test="type != 1">
+		AND oo.paymentstatus IN (${taxipaystatuslist})
+	</if>
+	<if test="starttime != null and endtime != null">
+		<if test="type == 1">
+			AND oo.usetime &gt;= #{starttime}
+			AND oo.usetime &lt; #{endtime}
+		</if>
+		<if test="type != 1">
+			AND oo.endtime &gt;= #{starttime}
+			AND oo.endtime &lt; #{endtime}
+		</if>
+	</if>
+	<if test="type == 1">
+	ORDER BY oo.usetime ASC
+	</if>
+	<if test="type != 1">
+	ORDER BY oo.usetime DESC
+	</if>
+	LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getTaxiOrderListTotalCount" parameterType="OrderListParam" resultType="int">
+	SELECT
+		COUNT(oo.orderno)
+	FROM
+		`op_taxiorder` oo
+	WHERE 1=1
+	AND oo.`status` = 1
+	AND oo.driverid = #{driverid}
+	AND oo.orderstatus IN (${taxistatuslist})
+	AND oo.paymentstatus IN (${taxipaystatuslist})
+	<if test="starttime != null and endtime != null">
+		<if test="type == 1">
+			AND oo.usetime &gt;= #{starttime}
+			AND oo.usetime &lt; #{endtime}
+		</if>
+		<if test="type != 1">
+			AND oo.endtime &gt;= #{starttime}
+			AND oo.endtime &lt; #{endtime}
+		</if>
+	</if>
+	</select>
+	
+	<select id="getOpTaxiOrder" parameterType="OrderApiParam" resultType="OpTaxiOrder">
+	SELECT
+		oo.*,
+		opi.servcietel contact,
+		pu.headportraitmax passengericonmax,
+		pu.headportraitmin passengericonmin
+	FROM
+		`op_taxiorder` oo
+	LEFT JOIN op_platforminfo opi ON opi.`status` = 1
+	LEFT JOIN pe_user pu ON pu.`status` = 1 AND pu.id = oo.userid
+	WHERE 1=1
+	AND oo.`status` = 1
+	<if test="driverid != null and driverid != ''">
+	AND oo.driverid = #{driverid}
+	</if>
+	AND oo.orderno = #{orderno}
+	</select>
+    <select id="taxiTodayYuyueOrder" parameterType="java.lang.String" resultType="OpTaxiOrder">
+        SELECT
+        *
+        FROM
+        `op_taxiorder` oo
+        WHERE 1=1
+            AND oo.`status` = 1
+            AND isusenow=0
+            AND orderstatus != '7'
+            AND orderstatus != '8'
+            AND to_days(usetime) = to_days(now())
+            AND driverid = #{driverId}
+    </select>
+    <select id="getPeUserInfoById" parameterType="java.lang.String" resultType="PeUser">
+        select * from pe_user where id=#{userId}
+    </select>
+	<update id="taxiTakingOrder" parameterType="OpTaxiOrder">
+	BEGIN;
+	SELECT oo.* FROM `op_taxiorder` oo WHERE oo.orderno = #{orderno} FOR UPDATE;
+	UPDATE `op_taxiorder` oo SET 
+		oo.driverid = #{driverid}, 
+		oo.companyid = #{companyid},
+		oo.vehicleid = #{vehicleid}, 
+		oo.orderstatus =#{orderstatus},
+		oo.ordertime = #{ordertime}, 
+		oo.plateno = #{plateno}, 
+		oo.vehcbrandname = #{vehcbrandname}, 
+		oo.vehclinename = #{vehclinename}, 
+		oo.ordersortcolumn = #{ordersortcolumn},
+		oo.belongleasecompany = #{belongleasecompany},
+		oo.updatetime = NOW()
+	WHERE oo.orderno = #{orderno}
+	AND oo.orderstatus IN(0,1);
+	COMMIT WORK;
+	</update>
+	
+	<update id="taxiPayOrder" parameterType="OpTaxiOrder">
+	BEGIN;
+	SELECT oo.* FROM `op_taxiorder` oo WHERE oo.orderno = #{orderno} FOR UPDATE;
+	UPDATE `op_taxiorder` oo SET 
+		oo.paymentstatus = #{paymentstatus},
+		oo.completetime=#{completetime},
+		settlementtime=#{settlementtime},
+		oo.ordersortcolumn = #{ordersortcolumn},
+		oo.updatetime = NOW()
+	WHERE oo.orderno = #{orderno}
+	AND oo.paymentstatus IN(4,5,7);
+	COMMIT WORK;
+	</update>
+	
+	<insert id="updateTaxiOrder" parameterType="OpTaxiOrder">
+	INSERT INTO op_taxiorder(orderno) VALUES(#{orderno})
+	ON DUPLICATE KEY UPDATE
+	departurecity=#{departurecity},
+	departureaddress=#{departureaddress},
+	departurelng=#{departurelng},
+	departurelat=#{departurelat},
+	departuretime=#{departuretime},
+	arrivalcity=#{arrivalcity},
+	arrivaladdress=#{arrivaladdress},
+	arrivallng=#{arrivallng},
+	arrivallat=#{arrivallat},
+	arrivaltime=#{arrivaltime},
+	orderstatus=#{orderstatus},
+	orderamount=#{orderamount},
+	actualpayamount=#{actualpayamount},
+	shouldpayamount=#{shouldpayamount},
+	originalorderamount=#{originalorderamount},
+	starttime=#{starttime},
+	endtime=#{endtime},
+	updatetime=NOW(),
+	userhidden=#{userhidden},
+	paymentmethod=#{paymentmethod},
+	paymentstatus = #{paymentstatus},
+	paymenttime=#{paymenttime},
+	settlementtime=#{settlementtime},
+	ordersortcolumn = #{ordersortcolumn},
+	reviewstatus = #{reviewstatus},
+	reviewperson = #{reviewperson},
+	orderreason = #{orderreason},
+	<!-- 新增  添加的字段 -->
+	startcity = #{startcity},
+	startaddress = #{startaddress},
+	startlng = #{startlng},
+	startllat = #{startllat},
+	endcity = #{endcity},
+	endaddress = #{endaddress},
+	endlng = #{endlng},
+	endllat = #{endllat}
+	
+	</insert>
+</mapper>

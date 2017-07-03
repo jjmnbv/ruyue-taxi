@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.driver.mapper.AccountMapper">
+	<!-- All Select -->
+	<select id="getCommonInfo" resultType="PubDictionary">
+		SELECT
+			pd.*
+		FROM
+			pub_dictionary pd,
+			(
+				SELECT
+					pd1.id
+				FROM
+					pub_dictionary pd1
+				WHERE 1=1
+					AND pd1.`status` = 1
+					AND pd1.type = '司机端公共信息'
+			) parent
+		WHERE 1=1
+		AND pd.`status` = 1
+		AND pd.parentid = parent.id
+	</select>
+	
+	<select id="getCompanyById" parameterType="String" resultType="LeLeasescompany">
+		SELECT llc.* FROM `le_leasescompany` llc WHERE llc.`Status` = 1 AND llc.id = #{companyid}
+	</select>
+	
+	<select id="getOpPlatform" resultType="OpPlatformInfo">
+		SELECT opi.* FROM `op_platforminfo` opi WHERE opi.`Status` = 1
+	</select>
+	
+	<select id="getPubDriverInDel" parameterType="String" resultType="PubDriver">
+		SELECT pd.* FROM pub_driver pd WHERE pd.`Status` = 2 AND pd.phone = #{phone} LIMIT 1
+	</select>
+	
+	<select id="getPeUserById" parameterType="String" resultType="PeUser">
+		SELECT pu.* FROM pe_user pu WHERE pu.`status` = 1 AND pu.id = #{userid}
+	</select>
+	
+	<select id="getOrgUserById" parameterType="String" resultType="OrgUser">
+		SELECT ou.* FROM org_user ou WHERE ou.`status` = 1 AND ou.id = #{userid}
+	</select>
+	
+	<select id="getPubDriverByPass" parameterType="LoginParam" resultType="PubDriver">
+		SELECT
+			CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pv.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pv.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pv.plateno
+			) plateno,
+			pv.id vehicleid,
+			pvc.`name` vehclinename,
+			pvb.`Name` vehcbrandname,
+			lv.Id orgcartypeid,
+			ov.id opcartypeid,
+			put.usertoken,
+			(
+			CASE pd.platformtype 
+			WHEN 0
+			THEN (SELECT opi.servcietel FROM op_platforminfo opi WHERE opi.status = 1)
+			WHEN 1
+			THEN (SELECT llc.servicesphone FROM le_leasescompany llc WHERE llc.status = 1 AND pd.leasescompanyid = llc.id)
+			END
+			) servicephone,
+			pd.*
+		FROM
+			pub_driver pd
+			LEFT JOIN pub_usertoken put ON put.`status` = 1 
+			AND put.usertype = 2 
+			AND put.userid = pd.id
+			LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
+			AND pdvr.driverId = pd.id
+			LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
+			AND pv.id = pdvr.vehicleId
+			LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
+			AND pvc.Id = pv.vehclineid
+			LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
+			AND pvb.Id = pvc.vehcBrandID
+			LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
+			AND ovvr.vehicleid = pdvr.vehicleId
+			LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
+			AND ov.Id = ovvr.vehiclemodelsid
+			LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
+			AND lvmr.vehclineid = pv.vehclineid
+			LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+			AND lv.Id = lvmr.vehiclemodelsid
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pd.phone = #{mobile}
+		AND pd.userpassword = #{password}
+	</select>
+	
+	<select id="getPubDriverById" parameterType="String" resultType="PubDriver">
+		SELECT
+			CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pv.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pv.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pv.plateno
+			) plateno,
+			pv.id vehicleid,
+			pvc.`name` vehclinename,
+			pvb.`Name` vehcbrandname,
+			lv.Id orgcartypeid,
+			ov.id opcartypeid,
+			put.usertoken,
+			(
+			CASE pd.platformtype 
+			WHEN 0
+			THEN (SELECT opi.servcietel FROM op_platforminfo opi WHERE opi.status = 1)
+			WHEN 1
+			THEN (SELECT llc.servicesphone FROM le_leasescompany llc WHERE llc.status = 1 AND pd.leasescompanyid = llc.id)
+			END
+			) servicephone,
+			pd.*
+		FROM
+			pub_driver pd
+			LEFT JOIN pub_usertoken put ON put.`status` = 1 
+			AND put.usertype = 2 
+			AND put.userid = pd.id
+			LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
+			AND pdvr.driverId = pd.id
+			LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
+			AND pv.id = pdvr.vehicleId
+			LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
+			AND pvc.Id = pv.vehclineid
+			LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
+			AND pvb.Id = pvc.vehcBrandID
+			LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
+			AND ovvr.vehicleid = pdvr.vehicleId
+			LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
+			AND ov.Id = ovvr.vehiclemodelsid
+			LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
+			AND lvmr.vehclineid = pv.vehclineid
+			LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+			AND lv.Id = lvmr.vehiclemodelsid
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pd.id = #{id}
+	</select>
+	
+	<select id="getPubDriverByToken" parameterType="String" resultType="PubDriver">
+		SELECT
+			CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pv.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pv.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pv.plateno
+			) plateno,
+			pv.id vehicleid,
+			pvc.`name` vehclinename,
+			pvb.`Name` vehcbrandname,
+			lv.Id orgcartypeid,
+			ov.id opcartypeid,
+			put.usertoken,
+			(
+			CASE pd.platformtype 
+			WHEN 0
+			THEN (SELECT opi.servcietel FROM op_platforminfo opi WHERE opi.status = 1)
+			WHEN 1
+			THEN (SELECT llc.servicesphone FROM le_leasescompany llc WHERE llc.status = 1 AND pd.leasescompanyid = llc.id)
+			END
+			) servicephone,
+			pd.*
+		FROM
+			pub_usertoken put,
+			pub_driver pd
+			LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
+			AND pdvr.driverId = pd.id
+			LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
+			AND pv.id = pdvr.vehicleId
+			LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
+			AND pvc.Id = pv.vehclineid
+			LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
+			AND pvb.Id = pvc.vehcBrandID
+			LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
+			AND ovvr.vehicleid = pdvr.vehicleId
+			LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
+			AND ov.Id = ovvr.vehiclemodelsid
+			LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
+			AND lvmr.vehclineid = pv.vehclineid
+			LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+			AND lv.Id = lvmr.vehiclemodelsid
+		WHERE 1=1
+		AND put.`status` = 1
+		AND pd.`Status` = 1
+		AND put.usertype = 2
+		AND pd.id = put.userid
+		AND put.usertoken = #{usertoken}
+	</select>
+	
+	<select id="getPubDriverByPhone" parameterType="String" resultType="PubDriver">
+		SELECT
+			CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pv.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pv.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pv.plateno
+			) plateno,
+			pv.id vehicleid,
+			pvc.`name` vehclinename,
+			pvb.`Name` vehcbrandname,
+			lv.Id orgcartypeid,
+			ov.id opcartypeid,
+			put.usertoken,
+			(
+			CASE pd.platformtype 
+			WHEN 0
+			THEN (SELECT opi.servcietel FROM op_platforminfo opi WHERE opi.status = 1)
+			WHEN 1
+			THEN (SELECT llc.servicesphone FROM le_leasescompany llc WHERE llc.status = 1 AND pd.leasescompanyid = llc.id)
+			END
+			) servicephone,
+			pd.*
+		FROM
+			pub_driver pd
+			LEFT JOIN pub_usertoken put ON put.`status` = 1 
+			AND put.usertype = 2 
+			AND put.userid = pd.id
+			LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
+			AND pdvr.driverId = pd.id
+			LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
+			AND pv.id = pdvr.vehicleId
+			LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
+			AND pvc.Id = pv.vehclineid
+			LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
+			AND pvb.Id = pvc.vehcBrandID
+			LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
+			AND ovvr.vehicleid = pdvr.vehicleId
+			LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
+			AND ov.Id = ovvr.vehiclemodelsid
+			LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
+			AND lvmr.vehclineid = pv.vehclineid
+			LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+			AND lv.Id = lvmr.vehiclemodelsid
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pd.phone = #{phone}
+	</select>
+	
+	<select id="getPubSmsTokenByUserPhone" parameterType="SendSMSParam" resultType="PubSmsToken">
+		SELECT * FROM pub_smstoken pst 
+		WHERE  1=1
+		AND  pst.`Status` = 1
+		AND  pst.username = #{mobile}
+		AND  pst.usertype = #{usertype}
+		AND  pst.smstype = #{type}
+	</select>
+	
+	<select id="getPubDriverLoginLog" parameterType="String" resultType="PubDriverLoginLog">
+		SELECT pdll.* FROM pub_driverloginlog pdll
+		WHERE 1=1
+		AND pdll.`status` = 1
+		AND pdll.loginstatus = 0
+		AND pdll.driverid = #{userid}
+		ORDER BY pdll.logintime DESC
+		LIMIT 1
+	</select>
+	
+	<select id="getDriverAccount" parameterType="PubDriver" resultType="PubDriverAccount">
+		SELECT
+			pdc.*
+		FROM
+			`pub_driveraccount` pdc
+		WHERE 1=1
+		AND pdc.`status` = 1
+		AND pdc.platformtype = #{platformtype}
+		AND pdc.leasescompanyid = #{leasescompanyid}
+		AND pdc.driverid = #{id}
+	</select>
+	
+	<select id="getDriverInfoById" parameterType="String" resultType="DriverInfo">
+		SELECT
+			CONCAT(
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌省'
+					AND pub_dictionary.`value` = pv.platenoprovince
+					AND pub_dictionary.`status` = 1
+				),
+				(
+					SELECT
+						pub_dictionary.text
+					FROM
+						pub_dictionary
+					WHERE
+						pub_dictionary.type = '车牌市'
+					AND pub_dictionary.`value` = pv.platenocity
+					AND pub_dictionary.`status` = 1
+				),
+				pv.plateno
+			) plateno,
+			pd.id,
+			pd.`name` drivername,
+			pd.phone driverphone,
+			pd.headportraitmax headportraitmax,
+			pd.headportraitmin headportraitmin,
+			IFNULL(pd.avgrate,4.5) driverrate,
+			pd.ordercount supportorder,
+			pd.jobnum,
+			pd.workstatus,
+			IFNULL(pd.passworkstatus,'0') passworkstatus,
+			pd.vehicletype drivertype,
+			IFNULL((pd.wdpwdchangestate != 0),FALSE) wdpchanged,
+			IFNULL((pd.passworkstatus != 0),FALSE) hasworkmate,
+			lv.`name` cartype,
+			ov.`name` opcartype,
+			pvb.`Name` carbrand,
+			pvc.`name` carvehcline,
+			(
+			CASE pd.platformtype 
+			WHEN 0
+			THEN (SELECT opi.servcietel FROM op_platforminfo opi WHERE opi.status = 1)
+			WHEN 1
+			THEN (SELECT llc.servicesphone FROM le_leasescompany llc WHERE llc.status = 1 AND pd.leasescompanyid = llc.id)
+			END
+			) contact,
+			pv.color
+		FROM
+			pub_driver pd
+			LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
+			AND pdvr.driverId = pd.id
+			LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
+			AND pv.id = pdvr.vehicleId
+			LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
+			AND pvc.Id = pv.vehclineid
+			LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
+			AND pvb.Id = pvc.vehcBrandID
+			LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
+			AND ovvr.vehicleid = pdvr.vehicleId
+			LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
+			AND ov.Id = ovvr.vehiclemodelsid
+			LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
+			AND lvmr.vehclineid = pv.vehclineid
+			LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+			AND lv.Id = lvmr.vehiclemodelsid
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pd.id = #{userid}
+	</select>
+	
+	<select id="getUserTokenByToken" parameterType="String" resultType="PubUserToken">
+		SELECT * FROM pub_usertoken pu 
+		WHERE  1=1
+		AND pu.`Status` = 1
+		AND pu.usertoken = #{usertoken}
+	</select>
+	
+	<select id="getUserTokenByUser" parameterType="PubDriver" resultType="PubUserToken">
+		SELECT * FROM pub_usertoken pu 
+		WHERE   1=1
+		AND pu.`Status` = 1
+		AND pu.userid = #{id}
+		AND pu.usertype= 2
+	</select>
+		
+	<select id="authOldPass" parameterType="ChangePasswordParam" resultType="boolean">
+		SELECT
+			COUNT(pd.id) > 0
+		FROM
+			pub_driver pd
+		WHERE  1=1
+		AND pd.`Status` = 1
+		AND pd.id = #{id}
+		AND  (
+			pd.userpassword = #{password}
+		OR 
+			pd.userpassword = #{oldPass}
+		)
+	</select>
+	
+	<!-- All Update -->
+	<update id="updatePubDriver" parameterType="PubDriver">
+		INSERT INTO `pub_driver`(`id`) 
+		VALUES(#{id})
+		ON DUPLICATE KEY UPDATE 
+			leasescompanyid=#{leasescompanyid},
+			jobnum=#{jobnum},
+			name=#{name},
+			phone=#{phone},
+			sex=#{sex},
+			userpassword=#{userpassword},
+			withdrawpwd=#{withdrawpwd},
+			driverstype=#{driverstype},
+			cardtime=#{cardtime},
+			city=#{city},
+			jobstatus=#{jobstatus},
+			identitytype=#{identitytype},
+			driversnum=#{driversnum},
+			driverphoto=#{driverphoto},
+			idcardnum=#{idcardnum},
+			idcardfront=#{idcardfront},
+			idcardback=#{idcardback},
+			<if test="workstatus!=null and workstatus!='' ">
+				workstatus=#{workstatus},
+			</if>
+			gpsspeed=#{gpsspeed},
+			gpsdirection=#{gpsdirection},
+			lng=#{lng},
+			lat=#{lat},
+			avgrate=#{avgrate},
+			ordercount=#{ordercount},
+			CreateTime=#{CreateTime},
+			UpdateTime=#{UpdateTime},
+			Creater=#{Creater},
+			Updater=#{Updater},
+			Status=#{Status},
+			headportraitmin=#{headportraitmin},
+			headportraitmax=#{headportraitmax},
+			driveryears=#{driveryears},
+			boundstate=#{boundstate},
+			lockstatus=#{lockstatus},
+			platformtype=#{platformtype},
+			passworkstatus=#{passworkstatus},
+			wdpwdchangestate=#{wdpwdchangestate},
+			heartbeattime=#{heartbeattime},
+			registrationid=#{registrationid}
+	</update>
+	
+	<update id="updateLocation" parameterType="PubDriver">
+		INSERT INTO `pub_driver`(`id`) 
+		VALUES(#{id})
+		ON DUPLICATE KEY UPDATE 
+			gpsspeed=#{gpsspeed},
+			gpsdirection=#{gpsdirection},
+			lng=#{lng},
+			lat=#{lat},
+			UpdateTime=NOW()
+	</update>
+	
+	<!-- All Insert -->
+	<insert  id="saveOrUpdateUserToken" parameterType="PubUserToken" >
+		INSERT INTO pub_usertoken(
+			id,
+			userid,
+			usertype,
+			uuid,
+			usertoken,
+			createtime,
+			updatetime,
+			status
+		) VALUES(
+			#{id},
+			#{userid},
+			#{usertype},
+			#{uuid},
+			#{usertoken},
+			#{createtime},
+			#{updatetime},
+			#{status}
+		) ON DUPLICATE KEY UPDATE 
+			usertoken=#{usertoken},
+			uuid=#{uuid},
+			updatetime=#{updatetime},
+			status=#{status}
+	</insert>
+	
+	<insert  id="saveOrUpdateSmsToken" parameterType="PubSmsToken" >
+		INSERT INTO pub_smstoken(
+			id,
+			smstype,
+			usertype,
+			username,
+			smscode,
+			createtime,
+			updatetime,
+			status
+		) VALUES(
+			#{id},
+			#{smstype},
+			#{usertype},
+			#{username},
+			#{smscode},
+			#{createtime},
+			#{updatetime},
+			#{status}
+		) ON DUPLICATE KEY UPDATE 
+			smscode=#{smscode},
+			updatetime=#{updatetime},
+			status=#{status}
+	</insert>
+	
+	<insert  id="saveLoginLog" parameterType="PubDriverLoginLog" >
+		INSERT INTO pub_driverloginlog(
+			id,
+			driverid,
+			ipaddr,
+			device,
+			version,
+			appversion,
+			phonebrand,
+			phonemodel,
+			loginstatus,
+			logintime,
+			createtime,
+			updatetime,
+			status
+		) VALUES(
+			#{id},
+			#{driverid},
+			#{ipaddr},
+			#{device},
+			#{version},
+			#{appversion},
+			#{phonebrand},
+			#{phonemodel},
+			#{loginstatus},
+			#{logintime},
+			#{createtime},
+			#{updatetime},
+			#{status}
+		)
+	</insert>
+	
+	<insert  id="saveDriverTrack" parameterType="PubDriverTrack" >
+		INSERT INTO pub_drivertrack(
+			id,
+			driverid,
+			gpsspeed,
+			gpsdirection,
+			lng,
+			lat,
+			createtime,
+			updatetime,
+			status
+		) VALUES(
+			#{id},
+			#{driverid},
+			#{gpsspeed},
+			#{gpsdirection},
+			#{lng},
+			#{lat},
+			#{createtime},
+			#{updatetime},
+			#{status}
+		)
+	</insert>
+	<insert  id="saveRegID" parameterType="PubJpushRegidlog" >
+		INSERT INTO pub_jpush_regidlog(
+			id,registrationid,userid,usertype,recordtime,createtime,
+			updatetime,status
+		) VALUES(
+			#{id},#{registrationid},#{userid},#{usertype},NOW(),NOW(),
+			NOW(),#{status}
+		)
+	</insert>
+	<!-- 更新上线时间，以及在线时长 -->
+	<update id="updateUptimeOrOnlinetime" parameterType="PubDriver">
+		update pub_driver set  UpdateTime = now()
+		<if test="type == '0'.toString()">
+			,uptime = #{uptime}  
+		</if>
+		<if test="type == '1'.toString()">
+			,onlinetime = #{onlinetime}
+		</if>
+		where id = #{id}
+	</update>
+</mapper>
