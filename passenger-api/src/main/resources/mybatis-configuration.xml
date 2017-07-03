@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!--整合Spring的时候 只有 settings typeAliases mapper 三个属性有用, 其余的要在spring总配置文件中会覆盖 -->
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="defaultExecutorType" value="REUSE" /> <!-- 使用预处理执行器 -->
+		<setting name="defaultStatementTimeout" value="25" />
+		<setting name="localCacheScope" value="SESSION" />
+		<setting name="callSettersOnNulls" value="true"/>
+	</settings>
+	<typeAliases>
+		<typeAlias type="com.szyciov.param.QueryParam" alias="QueryParam"/>
+		<typeAlias type="com.szyciov.entity.Dictionary" alias="Dictionary"/>
+		<typeAlias type="com.szyciov.org.entity.OrgUser" alias="OrgUser"/>
+		<typeAlias type="com.szyciov.op.entity.PeUser" alias="PeUser"/>
+		<typeAlias type="com.szyciov.passenger.entity.PassengerOrder" alias="PassengerOrder"/>
+		<typeAlias type="com.szyciov.passenger.entity.AccountRules" alias="AccountRules"/>
+		<typeAlias type="com.szyciov.passenger.entity.LeasesCompany" alias="LeasesCompany"/>
+		<typeAlias type="com.szyciov.passenger.entity.Order4List" alias="Order4List"/>
+		<typeAlias type="com.szyciov.passenger.entity.DriverInfo" alias="DriverInfo"/>
+		<typeAlias type="com.szyciov.passenger.entity.MostAddress" alias="MostAddress"/>
+		<typeAlias type="com.szyciov.passenger.entity.SysVersion" alias="SysVersion"/>
+		<typeAlias type="com.szyciov.passenger.entity.VehicleModels" alias="VehicleModels"/>
+		<typeAlias type="com.szyciov.passenger.entity.AirportAddr" alias="AirportAddr"/>
+		<typeAlias type="com.szyciov.passenger.entity.MostContact" alias="MostContact"/>
+		<typeAlias type="com.szyciov.lease.entity.OrgOrgan" alias="OrgOrgan"/>
+        <typeAlias type="com.szyciov.entity.PubMostcontact" alias="PubMostcontact"/>
+        <typeAlias type="com.szyciov.entity.PubMostaddress" alias="PubMostaddress"/>
+        <typeAlias type="com.szyciov.entity.PubDriver" alias="PubDriver"/>
+        <typeAlias type="com.szyciov.lease.param.PubDriverInBoundParam" alias="PubDriverInBoundParam"/>
+	</typeAliases>
+</configuration>

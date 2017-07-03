@@ -1,0 +1,2118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.OrderMapper">
+
+	<!-- 获取机构端订单信息每次就获取一条最新的,正在服务中、未支付的 -->
+	<select id="getOrder4Org" parameterType="HashMap" resultType="PassengerOrder">
+		SELECT
+			org_order.*,
+			(SELECT le_vehiclemodels.name from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.id=org_order.pricemodel) as selectedmodelcaption,
+			(select le_vehiclemodels.logo from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.leasescompanyid = org_order.companyid and le_vehiclemodels.id=org_order.pricemodel) as selectedmodellogo
+		FROM
+			org_order,
+			org_user
+		WHERE
+			org_user.id = org_order.userid
+		AND org_order.status = 1
+		<if test="paymentstatus == '0'.toString() or paymentstatus == '0' or paymentstatus == 0 ">
+			AND org_order.paymethod != '2'
+		</if>
+		<if test=" orderstatus !=null and orderstatus != '' ">
+			AND org_order.orderstatus = #{orderstatus}
+		</if>
+		<if test=" paymentstatus !=null and paymentstatus != '' ">
+			AND org_order.paymentstatus=#{paymentstatus}
+		</if>
+		AND org_user.account = #{account}
+		AND org_user.customertype!=1
+		<if test=" companyid !=null and companyid != '' ">
+			AND org_order.companyid = #{companyid}
+		</if>
+		ORDER BY
+			org_order.updatetime
+		LIMIT 1
+	</select>
+	
+	<!-- 获取机构用户正在服务中的订单 -->
+	<select id="getServiceOrder4Org" parameterType="HashMap" resultType="PassengerOrder">
+		SELECT
+			org_order.*,
+			(SELECT le_vehiclemodels.name from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.id=org_order.pricemodel) as selectedmodelcaption,
+			(select le_vehiclemodels.logo from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.leasescompanyid = org_order.companyid and le_vehiclemodels.id=org_order.pricemodel) as selectedmodellogo
+		FROM
+			org_order,
+			org_user
+		WHERE
+			org_user.id = org_order.userid
+		AND org_order.status = 1
+		AND org_order.orderstatus in ('3','4','5','6')
+		AND org_user.account = #{account}
+		AND org_user.customertype!=1
+		ORDER BY
+			org_order.updatetime
+		LIMIT 1
+	</select>
+	
+	<!-- 获取运营端的订单信息，每次获取一条，正在服务中、未支付的 -->
+	<select id="getOrder4Op" parameterType="HashMap" resultType="PassengerOrder">
+		SELECT
+			op_order.*,
+			(SELECT op_vehiclemodels.name from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.id=op_order.pricemodel) as selectedmodelcaption,
+			(SELECT op_vehiclemodels.logo from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.id=op_order.pricemodel) as selectedmodellogo
+		FROM
+			op_order,
+			pe_user
+		WHERE
+			pe_user.id = op_order.userid
+		AND pe_user.status = 1
+		AND op_order.status = 1
+		<if test=" orderstatus !=null and orderstatus != '' ">
+			AND op_order.orderstatus = #{orderstatus}
+		</if>
+		<if test=" paymentstatus !=null and paymentstatus != '' ">
+			AND op_order.paymentstatus=#{paymentstatus}
+		</if>
+		AND pe_user.account = #{account}
+		ORDER BY
+			op_order.updatetime
+		LIMIT 1
+	</select>
+	
+	<!-- 获取机构app用户的订单列表 -->
+	<select id="getOrders4Org" parameterType="HashMap" resultType="Order4List">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					(select pub_driver.headportraitmax from pub_driver where pub_driver.status=1 and pub_driver.id = orders.driverid) as driverimg,
+					(SELECT le_vehiclemodels.name from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.id=orders.selectedmodel) as selectedmodelcaption,
+					orders.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							org_order.*,
+							(
+								CASE org_order.orderstatus
+								WHEN '6' THEN 1
+								WHEN '5' THEN 1
+								WHEN '4' THEN 1
+								WHEN '3' THEN 1
+								WHEN '0' THEN 2
+								WHEN '1' THEN 2
+								WHEN '7' THEN (CASE org_order.paymentstatus WHEN '0' then 3 else 5 END)
+								WHEN '2' THEN 4
+								WHEN '8' THEN 6
+								ELSE 5
+							END
+						)as ordernum,
+						(
+							CASE org_order.orderstatus
+								WHEN '6' THEN org_order.usetime
+								WHEN '5' THEN org_order.usetime
+								WHEN '4' THEN org_order.usetime
+								WHEN '3' THEN org_order.usetime
+								
+								WHEN '0' THEN null
+								WHEN '1' THEN null
+								WHEN '7' THEN org_order.usetime
+								WHEN '2' THEN null
+								WHEN '8' THEN org_order.usetime
+								ELSE org_order.usetime
+							END
+						)as sorttime_f,
+						(
+							CASE org_order.orderstatus
+								WHEN '6' THEN null
+								WHEN '5' THEN null
+								WHEN '4' THEN null
+								WHEN '3' THEN null
+								
+								WHEN '0' THEN org_order.undertime
+								WHEN '1' THEN org_order.undertime
+								WHEN '7' THEN null
+								WHEN '2' THEN org_order.usetime
+								WHEN '8' THEN null
+								ELSE null
+							END
+						)as sorttime_s
+						FROM
+							org_order,
+							org_user
+						WHERE
+							org_order.status = 1
+						AND org_order.userid = org_user.id
+						AND org_order.paymethod != '2'
+						AND org_order.userhidden = '1'
+						<!-- AND org_order.orderstatus not in ('0','1') -->
+						<!-- 下单失败的也展示 -->
+						<!-- AND (org_order.cancelparty != '3' or ISNULL(org_order.cancelparty)) -->
+						AND org_user.account = #{account}
+						AND org_user.customertype!=1
+						UNION
+							SELECT
+								org_order.*,
+								(
+										CASE org_order.orderstatus
+										WHEN '6' THEN 1
+										WHEN '5' THEN 1
+										WHEN '4' THEN 1
+										WHEN '3' THEN 1
+										WHEN '0' THEN 2
+										WHEN '1' THEN 2
+										WHEN '7' THEN (CASE org_order.paymentstatus WHEN '0' then 3 else 5 END)
+										WHEN '2' THEN 4
+										WHEN '8' THEN 6
+										ELSE 5
+									END
+								)as ordernum,
+								(
+									CASE org_order.orderstatus
+										WHEN '6' THEN org_order.usetime
+										WHEN '5' THEN org_order.usetime
+										WHEN '4' THEN org_order.usetime
+										WHEN '3' THEN org_order.usetime
+										
+										WHEN '0' THEN null
+										WHEN '1' THEN null
+										WHEN '7' THEN org_order.usetime
+										WHEN '2' THEN null
+										WHEN '8' THEN org_order.usetime
+										ELSE org_order.usetime
+									END
+								)as sorttime_f,
+								(
+									CASE org_order.orderstatus
+										WHEN '6' THEN null
+										WHEN '5' THEN null
+										WHEN '4' THEN null
+										WHEN '3' THEN null
+										
+										WHEN '0' THEN org_order.undertime
+										WHEN '1' THEN org_order.undertime
+										WHEN '7' THEN null
+										WHEN '2' THEN org_order.usetime
+										WHEN '8' THEN null
+										ELSE null
+									END
+								)as sorttime_s
+							FROM
+								org_order,
+								org_user
+							WHERE
+								org_order.status = 1
+							AND org_user.status = 1
+							AND org_order.userid = org_user.id
+							AND org_order.paymethod = '2'
+							AND org_order.userhidden = '1'
+							<!-- AND org_order.orderstatus not in ('0','1') -->
+							<!-- 下单失败的也展示 -->
+							<!-- AND (org_order.cancelparty != '3' or ISNULL(org_order.cancelparty)) -->
+							AND org_user.account = #{account}
+							AND org_user.customertype!=1
+					) orders,
+					(SELECT @rownum := 0) r
+				ORDER BY orders.ordernum,orders.sorttime_f desc,orders.sorttime_s
+			) t
+		<![CDATA[
+			where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 获取个人app端订单列表 -->
+	<select id="getOrders4Op" parameterType="HashMap" resultType="Order4List" >
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					(select pub_driver.headportraitmax from pub_driver where pub_driver.status=1 and pub_driver.id=orders.driverid) as driverimg,
+					(SELECT op_vehiclemodels.name from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.id=orders.selectedmodel) as selectedmodelcaption,
+					orders.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							op_order.*,
+							(
+								CASE op_order.orderstatus
+									WHEN '8' THEN 4
+									WHEN '7' THEN (CASE op_order.paymentstatus WHEN '0' then 2 else 4 END)
+									WHEN '6' THEN 1
+									WHEN '5' THEN 1
+									WHEN '4' THEN 1
+									WHEN '3' THEN 1
+									WHEN '2' THEN 3
+									ELSE 0
+								END
+							)as ordernum,
+							(
+								CASE op_order.orderstatus
+									WHEN '8' THEN usetime
+									WHEN '7' THEN (CASE op_order.paymentstatus WHEN '0' then null else usetime END)
+									WHEN '6' THEN null
+									WHEN '5' THEN null
+									WHEN '4' THEN null
+									WHEN '3' THEN null
+									WHEN '2' THEN null
+									ELSE null
+								END
+							)as finishusetime
+						FROM
+							op_order,
+							pe_user
+						WHERE
+							op_order.status = 1
+						AND pe_user.status = 1
+						AND op_order.userid = pe_user.id
+						AND op_order.userhidden = '1'
+						AND op_order.orderstatus not in ('0','1')
+						<!-- 下单失败的也展示 -->
+						<!-- AND (op_order.cancelparty != '3' or ISNULL(op_order.cancelparty)) -->
+						AND pe_user.account = #{account}
+					) orders,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					orders.ordernum ,CASE when orders.ordernum = 4 THEN finishusetime ELSE '' END desc,CASE when orders.ordernum = 4 THEN '' ELSE usetime END
+			) t
+		<![CDATA[
+			where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	
+	
+	<!-- 更新机构端的订单状态 -->
+	<update id="updateOrderState4Org" parameterType="HashMap">
+		UPDATE org_order
+		SET 
+		 <if test="orderstate!=null and orderstate!=''">
+			org_order.orderstatus = #{orderstate},
+		 </if>
+		 <if test="userhidden!=null and userhidden!=''">
+			 org_order.userhidden = #{userhidden},
+		 </if>
+		 <if test="paymentstatus!=null and paymentstatus!=''">
+			 org_order.paymentstatus = #{paymentstatus},
+		 </if>
+		 <if test="cancelparty!=null and cancelparty!=''">
+		 	org_order.cancelparty = #{cancelparty},
+		 	org_order.canceltime = now(),
+		 </if>
+		 	org_order.updatetime = now()
+		WHERE
+			org_order.orderno = #{orderno}
+	</update>
+	
+	<!-- 更新运管端的订单状态 -->
+	<select id="updateOrderState4Op" parameterType="HashMap">
+		UPDATE op_order
+		SET 
+		 <if test="orderstate!=null and orderstate!=''">
+			op_order.orderstatus = #{orderstate},
+		 </if>
+		 <if test="userhidden!=null and userhidden!=''">
+			 op_order.userhidden = #{userhidden},
+		 </if>
+		 <if test="paymentstatus!=null and paymentstatus!=''">
+			 op_order.paymentstatus = #{paymentstatus},
+		 </if>
+		 <if test="cancelparty!=null and cancelparty!=''">
+		 	op_order.cancelparty = #{cancelparty},
+		 	op_order.canceltime = now(),
+		 </if>
+		 	op_order.updatetime = now()
+		WHERE
+			op_order.orderno = #{orderno}
+	</select>
+	
+	<!-- 更改运管端出租车订单状态 -->
+	<select id="updateOrderState4OpTaxi" parameterType="HashMap">
+		UPDATE op_taxiorder
+		SET 
+		 <if test="orderstate!=null and orderstate!=''">
+			op_taxiorder.orderstatus = #{orderstate},
+		 </if>
+		 <if test="userhidden!=null and userhidden!=''">
+			 op_taxiorder.userhidden = #{userhidden},
+		 </if>
+		 <if test="paymentstatus!=null and paymentstatus!=''">
+			 op_taxiorder.paymentstatus = #{paymentstatus},
+		 </if>
+		 <if test="cancelparty!=null and cancelparty!=''">
+		 	op_taxiorder.cancelparty = #{cancelparty},
+		 	op_taxiorder.canceltime = now(),
+		 </if>
+		 	op_taxiorder.updatetime = now()
+		WHERE
+			op_taxiorder.orderno = #{orderno}
+	</select>
+	
+	<!-- 获取司机信息 -->
+	<select id="getDriverInfo" parameterType="String" resultType="DriverInfo">
+		SELECT
+			pub_driver.*, (
+				SELECT
+					le_leasescompany.name
+				FROM
+					le_leasescompany
+				WHERE
+					le_leasescompany. STATUS = 1
+				AND le_leasescompany.id = pub_driver.leasescompanyid
+			) AS leasescompany,
+			(
+				SELECT
+					CONCAT(
+						(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.value=pub_vehicle.platenoprovince and pub_dictionary.type='车牌省'),
+						(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.value=pub_vehicle.platenocity and pub_dictionary.type='车牌市'),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand
+		FROM
+			pub_driver
+		LEFT JOIN
+			pub_driver_vehicle_ref
+		ON (
+				pub_driver_vehicle_ref.driverId = pub_driver.id
+			and
+				pub_driver_vehicle_ref. STATUS = 1
+		)
+		WHERE
+			pub_driver.id = #{driverid}
+	</select>
+	
+	<!-- 获取机构端订单详细信息 -->
+	<select id="getOrderByOrderno4Org" parameterType="String" resultType="PassengerOrder">
+		SELECT
+			(SELECT le_vehiclemodels.name from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.id=org_order.pricemodel) as selectedmodelcaption,
+			(SELECT le_vehiclemodels.logo from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.id=org_order.pricemodel) as selectedmodellogo,
+			org_order.*
+		FROM
+			org_order
+		WHERE
+			org_order.orderno = #{orderno}
+	</select>
+	
+	<!-- 获取运管端的订单详情 -->
+	<select id="getOrderByOrderno4Op" parameterType="String" resultType="PassengerOrder">
+		SELECT
+			(SELECT op_vehiclemodels.name from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.id=op_order.pricemodel) as selectedmodelcaption,
+			(SELECT op_vehiclemodels.logo from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.id=op_order.pricemodel) as selectedmodellogo,
+			op_order.*
+		FROM
+			op_order
+		WHERE
+			op_order.orderno = #{orderno}
+	</select>
+	
+	<!-- 评价机构订单司机 -->
+	<update id="doComment4Org" parameterType="HashMap">
+		UPDATE org_order
+		SET org_order.userrate = #{userrate},
+		 org_order.usercomment = #{usercomment},
+		 org_order.updatetime = now()
+		WHERE
+			org_order.orderno = #{orderno}
+	</update>
+	
+	<!-- 评价运管端订单司机 -->
+	<update id="doComment4Op" parameterType="HashMap">
+		UPDATE op_order
+		SET op_order.userrate = #{userrate},
+		 op_order.usercomment = #{usercomment},
+		 op_order.updatetime = now()
+		WHERE
+			op_order.orderno = #{orderno}
+	</update>
+	
+	<!-- 为机构订单添加交易信息 -->
+	<insert id="addTradeNo4OrgOrder" parameterType="HashMap">
+		INSERT INTO org_orderpaymentrecord (
+			outtradeno,
+			orderno,
+			paymenttype,
+			privatekey,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+			#{out_trade_no},
+			#{orderno},
+			#{paymenttype},
+			#{validatekey},
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<!-- 为个人订单添加交易信息 -->
+	<insert id="addTradeNo4OpOrder" parameterType="HashMap">
+		INSERT INTO op_orderpaymentrecord (
+			outtradeno,
+			orderno,
+			paymenttype,
+			privatekey,
+			operateresult,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+			#{out_trade_no},
+			#{orderno},
+			#{paymenttype},
+			#{validatekey},
+			1,
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<!-- 更新机构订单的支付状态 -->
+	<update id="payed4OrgOrder" parameterType="HashMap">
+		UPDATE org_order
+		SET paymentstatus = #{paymentstatus},
+		 paytype=#{paytype},
+		 completetime = now(),
+		 updatetime = now()
+		WHERE
+			org_order.status = 1
+		<if test="outtradeno!=null and outtradeno!='' ">
+			AND org_order.orderno = (
+				SELECT
+					orderno
+				FROM
+					org_orderpaymentrecord
+				WHERE
+					org_orderpaymentrecord.status = 1
+				AND	org_orderpaymentrecord.outtradeno = #{outtradeno}
+			)
+		</if>
+		<if test="outtradeno==null or outtradeno=='' ">
+			AND org_order.orderno = #{orderno}
+		</if>
+	</update>
+	
+	<!-- 更新机构订单的交易信息 -->
+	<update id="updateTradeInfo4OrgOrder" parameterType="HashMap">
+		UPDATE org_orderpaymentrecord
+		SET tradeno = #{tradeno},
+		 paymenttype = #{paymenttype},
+		 updatetime = now()
+		WHERE
+			status = 1
+		AND outtradeno = #{outtradeno}
+	</update>
+	
+	<!-- 更新个人订单的支付状态 -->
+	<update id="payed4OpOrder" parameterType="HashMap">
+		UPDATE op_order
+		SET paymentstatus = #{paymentstatus},
+		 paytype=#{paytype},
+		 completetime = now(),
+		 updatetime = now()
+		WHERE
+			op_order.status = 1
+		<if test="outtradeno!=null and outtradeno!='' ">
+			AND op_order.orderno = (
+				SELECT
+					orderno
+				FROM
+					op_orderpaymentrecord
+				WHERE
+					op_orderpaymentrecord.status = 1
+				AND	op_orderpaymentrecord.outtradeno = #{outtradeno}
+			)
+		</if>
+		<if test="outtradeno==null or outtradeno=='' ">
+			AND op_order.orderno = #{orderno}
+		</if>
+	</update>
+	
+	<!-- 更新个人订单的交易信息 -->
+	<update id="updateTradeInfo4OpOrder" parameterType="HashMap">
+		UPDATE op_orderpaymentrecord
+		SET tradeno = #{tradeno},
+		 paymenttype = #{paymenttype},
+		 operateresult = 0,
+		 updatetime = now()
+		WHERE
+			status = 1
+		AND outtradeno = #{outtradeno}
+	</update>
+	
+	<!-- 获取租赁公司信息 -->
+	<select id="getLeCompanyInfo" parameterType="String" resultType="HashMap">
+		SELECT * from le_leasescompany where le_leasescompany.status=1 and le_leasescompany.id=#{companyid}
+	</select>
+	
+	<!-- 获取运管端的信息 -->
+	<select id="getOpInfo" resultType="HashMap">
+		select * from op_platforminfo where op_platforminfo.status=1
+	</select>
+	
+	<!-- 获取正在派单的订单 -->
+	<select id="getUnderTakeOrder4Org" parameterType="String" resultType="PassengerOrder">
+		SELECT
+			org_order.*
+		FROM
+			org_order,
+			org_user
+		WHERE
+			org_user.id = org_order.userid
+		AND org_order.status = 1
+   		AND org_order.orderstatus in ('0','1')
+		AND org_user.account = #{account}
+		AND org_user.customertype!=1
+		ORDER BY
+			org_order.updatetime desc
+		LIMIT 1
+	</select>
+	
+		<!-- 获取正在派单的订单 -->
+	<select id="getUnderTakeOrder4Op" parameterType="String" resultType="PassengerOrder">
+		SELECT
+			op_order.*
+		FROM
+			op_order,
+			pe_user
+		WHERE
+			pe_user.id = op_order.userid
+		AND pe_user.status=1
+		AND op_order.status = 1
+   		AND op_order.orderstatus in ('0','1')
+		AND pe_user.account = #{account}
+		ORDER BY
+			op_order.updatetime
+		LIMIT 1
+	</select>
+	
+	<!-- 根据交易号，获取机构订单信息 -->
+	<select id="getOrderByOutno4Org" parameterType="String" resultType="PassengerOrder">
+		SELECT
+			*
+		FROM
+			org_order
+		WHERE
+			org_order.status = 1
+		AND org_order.orderno = (
+			SELECT
+				orderno
+			FROM
+				org_orderpaymentrecord
+			WHERE
+				STATUS = 1
+			AND outtradeno = #{out_trade_no}
+		)
+	</select>
+	
+	<!-- 根据交易号，获取个人订单信息 -->
+	<select id="getOrderByOutno4Op" parameterType="String" resultType="PassengerOrder">
+		SELECT
+			*
+		FROM
+			op_order
+		WHERE
+			op_order.status = 1
+		AND op_order.orderno = (
+			SELECT
+				orderno
+			FROM
+				op_orderpaymentrecord
+			WHERE
+				STATUS = 1
+			AND outtradeno = #{out_trade_no}
+		)
+	</select>
+	
+	
+	<!-- ################################二期的接口########################################## -->
+	<!-- 个人端网约车订单的查询字段属性 -->
+	<sql id="opnetcarselect">
+		op_order.orderno,
+		op_order.companyid,
+		op_order.userid,
+		op_order.passengers,
+		op_order.passengerphone,
+		op_order.onaddress,
+		op_order.offaddress,
+		op_order.onaddrlng,
+		op_order.onaddrlat,
+		op_order.offaddrlng,
+		op_order.offaddrlat,
+		op_order.usetime,
+		op_order.tripremark,
+		op_order.orderstatus,
+		op_order.paymentstatus,
+		op_order.estimatedcost,
+		op_order.reviewstatus,
+		op_order.paytype,
+		op_order.undertime,
+		op_order.ordertime,
+		op_order.starttime,
+		op_order.endtime,
+		op_order.pricecopy,
+		'这个因为有倒计时自己弄吧' AS orderstatuscaption,
+		op_order.ordersource,
+		op_order.orderamount,
+		op_order.driverid,
+		op_order.canceltime,
+		op_order.cancelparty,
+		'' AS cancelname,
+		op_order.isusenow,
+		'0' AS orderstyle,
+		op_order.ordertype,
+		op_order.estimatedtime,
+		op_order.estimatedmileage,
+		op_order.mileage,
+		op_order.fltno,
+		op_order.falltime,
+		op_order.orderreason,
+		op_order.pricemodel,
+		0 as schedulefee,
+		op_order.autocanceltime,
+		op_order.systemsendovertime,
+		op_order.userrate,
+		op_order.oncity,
+		op_order.offcity,
+		'' as paymentmethod,
+		op_order.usetype,
+		op_order.usercomment
+	</sql>
+	
+	<!-- 个人端出租车订单查询字段属性 -->
+	<sql id="optaxiselect">
+		op_taxiorder.orderno,
+		op_taxiorder.companyid,
+		op_taxiorder.userid,
+		op_taxiorder.passengers,
+		op_taxiorder.passengerphone,
+		op_taxiorder.onaddress,
+		op_taxiorder.offaddress,
+		op_taxiorder.onaddrlng,
+		op_taxiorder.onaddrlat,
+		op_taxiorder.offaddrlng,
+		op_taxiorder.offaddrlat,
+		op_taxiorder.usetime,
+		op_taxiorder.tripremark,
+		op_taxiorder.orderstatus,
+		op_taxiorder.paymentstatus,
+		op_taxiorder.estimatedcost,
+		op_taxiorder.reviewstatus,
+		op_taxiorder.paytype,
+		op_taxiorder.undertime,
+		op_taxiorder.ordertime,
+		op_taxiorder.starttime,
+		op_taxiorder.endtime,
+		op_taxiorder.pricecopy,
+		'这个因为有倒计时自己弄吧' AS orderstatuscaption,
+		op_taxiorder.ordersource,
+		op_taxiorder.orderamount,
+		op_taxiorder.driverid,
+		op_taxiorder.canceltime,
+		op_taxiorder.cancelparty,
+		'' AS cancelname,
+		op_taxiorder.isusenow,
+		'1' AS orderstyle,
+		op_taxiorder.ordertype,
+		op_taxiorder.estimatedtime,
+		op_taxiorder.estimatedmileage,
+		op_taxiorder.mileage,
+		op_taxiorder.fltno,
+		op_taxiorder.falltime,
+		op_taxiorder.orderreason,
+		'' AS pricemodel,
+		op_taxiorder.schedulefee,
+		op_taxiorder.autocanceltime,
+		op_taxiorder.systemsendovertime,
+		op_taxiorder.userrate,
+		op_taxiorder.oncity,
+		op_taxiorder.offcity,
+		op_taxiorder.paymentmethod,
+		op_taxiorder.usetype,
+		op_taxiorder.usercomment
+	</sql>
+	
+	<!-- org的字段查询 -->
+	<sql id="orgnetcarselect">
+		org_order.orderno,
+		org_order.companyid,
+		org_order.userid,
+		org_order.passengers,
+		org_order.passengerphone,
+		org_order.onaddress,
+		org_order.offaddress,
+		org_order.onaddrlng,
+		org_order.onaddrlat,
+		org_order.offaddrlng,
+		org_order.offaddrlat,
+		org_order.usetime,
+		org_order.tripremark,
+		org_order.orderstatus,
+		org_order.paymentstatus,
+		org_order.estimatedcost,
+		org_order.reviewstatus,
+		org_order.paytype,
+		org_order.undertime,
+		org_order.ordertime,
+		org_order.starttime,
+		org_order.endtime,
+		org_order.pricecopy,
+		'这个因为有倒计时自己弄吧' AS orderstatuscaption,
+		org_order.ordersource,
+		org_order.orderamount,
+		org_order.driverid,
+		org_order.canceltime,
+		org_order.cancelparty,
+		'' AS cancelname,
+		org_order.isusenow,
+		'0' AS orderstyle,
+		org_order.ordertype,
+		org_order.estimatedtime,
+		org_order.estimatedmileage,
+		org_order.mileage,
+		org_order.fltno,
+		org_order.falltime,
+		org_order.orderreason,
+		org_order.pricemodel,
+		0 as schedulefee,
+		org_order.autocanceltime,
+		org_order.systemsendovertime,
+		org_order.userrate,
+		org_order.oncity,
+		org_order.offcity,
+		'' as paymentmethod,
+		org_order.usetype,
+		org_order.usercomment
+	</sql>
+	<!-- 结果map，调整int和boolan -->
+	<resultMap type="HashMap" id="orderdetail">
+		<result column="orderno" property="orderno" javaType="String"></result>
+		<result column="companyid" property="companyid" javaType="String"></result>
+		<result column="userid" property="userid" javaType="String"></result>
+		<result column="passengers" property="passengers" javaType="String"></result>
+		<result column="passengerphone" property="passengerphone" javaType="String"></result>
+		<result column="onaddress" property="onaddress" javaType="String"></result>
+		<result column="offaddress" property="offaddress" javaType="String"></result>
+		<result column="onaddrlng" property="onaddrlng" javaType="double"></result>
+		<result column="onaddrlat" property="onaddrlat" javaType="double"></result>
+		<result column="offaddrlng" property="offaddrlng" javaType="double"></result>
+		<result column="offaddrlat" property="offaddrlat" javaType="double"></result>
+		<result column="usetime" property="usetime" javaType="Date"></result>
+		<result column="tripremark" property="tripremark" javaType="String"></result>
+		<result column="orderstatus" property="orderstatus" javaType="String"></result>
+		<result column="paymentstatus" property="paymentstatus" javaType="String"></result>
+		<result column="estimatedcost" property="estimatedcost" javaType="double"></result>
+		<result column="reviewstatus" property="reviewstatus" javaType="String"></result>
+		<result column="paytype" property="paytype" javaType="String"></result>
+		<result column="undertime" property="undertime" javaType="String"></result>
+		<result column="ordertime" property="ordertime" javaType="String"></result>
+		<result column="starttime" property="starttime" javaType="String"></result>
+		<result column="endtime" property="endtime" javaType="String"></result>
+		<result column="pricecopy" property="pricecopy" javaType="String"></result>
+		<result column="orderstatuscaption" property="orderstatuscaption" javaType="String"></result>
+		<result column="ordersource" property="ordersource" javaType="String"></result>
+		<result column="orderamount" property="orderamount" javaType="double"></result>
+		<result column="driverid" property="driverid" javaType="String"></result>
+		<result column="canceltime" property="canceltime" javaType="String"></result>
+		<result column="cancelparty" property="cancelparty" javaType="String"></result>
+		<result column="cancelname" property="cancelname" javaType="String"></result>
+		<result column="isusenow" property="isusenow" javaType="boolean"></result>
+		<result column="orderstyle" property="orderstyle" javaType="String"></result>
+		<result column="ordertype" property="ordertype" javaType="String"></result>
+		<result column="estimatedtime" property="estimatedtime" javaType="double"></result>
+		<result column="estimatedmileage" property="estimatedmileage" javaType="double"></result>
+		<result column="mileage" property="mileage" javaType="double"></result>
+		<result column="fltno" property="fltno" javaType="String"></result>
+		<result column="falltime" property="falltime" javaType="String"></result>
+		<result column="orderreason" property="orderreason" javaType="String"></result>
+		<result column="pricemodel" property="pricemodel" javaType="String"></result>
+		<result column="schedulefee" property="schedulefee" javaType="double"></result>
+		<result column="autocanceltime" property="autocanceltime" javaType="Date"></result>
+		<result column="systemsendovertime" property="systemsendovertime" javaType="Date"></result>
+		<result column="userrate" property="userrate" javaType="String"></result>
+		<result column="oncity" property="oncity" javaType="String"></result>
+		<result column="offcity" property="offcity" javaType="String"></result>
+		<result column="paymentmethod" property="paymentmethod" javaType="String"></result>
+		<result column="usetype" property="usetype" javaType="String"></result>
+		<result column="usercomment" property="usercomment" javaType="String"></result>
+		
+		<result column="name" property="name" javaType="String"></result>
+		<result column="phone" property="phone" javaType="String"></result>
+		<result column="sex" property="sex" javaType="String"></result>
+		<result column="driverimg" property="driverimg" javaType="String"></result>
+		<result column="avgrate" property="avgrate" javaType="double"></result>
+		<result column="ordercount" property="ordercount" javaType="double"></result>
+		<result column="selectedmodelcaption" property="selectedmodelcaption" javaType="String"></result>
+		<result column="selectedmodelpath" property="selectedmodelpath" javaType="String"></result>
+		<result column="carnum" property="carnum" javaType="String"></result>
+		<result column="color" property="color" javaType="String"></result>
+		<result column="vehcline" property="vehcline" javaType="String"></result>
+		<result column="vehcbrand" property="vehcbrand" javaType="String"></result>
+	</resultMap>
+	
+	<select id="getOrders4OpSec" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					orders.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							pub_driver.name,
+							pub_driver.phone,
+							pub_driver.sex,
+							pub_driver.headportraitmin AS driverimg,
+							pub_driver.avgrate,
+							pub_driver.ordercount,
+							(
+								SELECT
+									op_vehiclemodels.name
+								FROM
+									op_vehiclemodels
+								WHERE
+									op_vehiclemodels. STATUS = 1
+								AND op_vehiclemodels.id = allorders.pricemodel
+							) AS selectedmodelcaption,
+							(
+								SELECT
+									op_vehiclemodels.logo
+								FROM
+									op_vehiclemodels
+								WHERE
+									op_vehiclemodels. STATUS = 1
+								AND op_vehiclemodels.id = allorders.pricemodel
+							) AS selectedmodelpath,
+							(
+								SELECT
+									CONCAT(
+										(
+											SELECT
+												pub_dictionary.text
+											FROM
+												pub_dictionary
+											WHERE
+												pub_dictionary. STATUS = 1
+											AND pub_dictionary.
+											VALUE
+												= pub_vehicle.platenoprovince
+											AND pub_dictionary.type = '车牌省'
+										),
+										(
+											SELECT
+												pub_dictionary.text
+											FROM
+												pub_dictionary
+											WHERE
+												pub_dictionary. STATUS = 1
+											AND pub_dictionary.
+											VALUE
+												= pub_vehicle.platenocity
+											AND pub_dictionary.type = '车牌市'
+										),
+										pub_vehicle.plateno
+									)
+								FROM
+									pub_vehicle
+								WHERE
+									pub_vehicle. STATUS = 1
+								AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+							) AS carnum,
+							(
+								SELECT
+									pub_vehicle.color
+								FROM
+									pub_vehicle
+								WHERE
+									pub_vehicle. STATUS = 1
+								AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+							) AS color,
+							(
+								SELECT
+									pub_vehcline.name
+								FROM
+									pub_vehcline,
+									pub_vehicle
+								WHERE
+									pub_vehicle. STATUS = 1
+								AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+								AND pub_vehcline. STATUS = 1
+								AND pub_vehcline.id = pub_vehicle.vehclineid
+							) AS vehcline,
+							(
+								SELECT
+									pub_vehcbrand.name
+								FROM
+									pub_vehcbrand,
+									pub_vehcline,
+									pub_vehicle
+								WHERE
+									pub_vehicle. STATUS = 1
+								AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+								AND pub_vehcline. STATUS = 1
+								AND pub_vehcline.id = pub_vehicle.vehclineid
+								AND pub_vehcbrand. STATUS = 1
+								AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+							) AS vehcbrand,
+							allorders.*
+						FROM
+							(
+								(
+									SELECT
+										(
+											CASE op_order.orderstatus
+												WHEN '6' THEN 1
+												WHEN '5' THEN 1
+												WHEN '4' THEN 1
+												WHEN '3' THEN 1
+												WHEN '0' THEN 2
+												WHEN '1' THEN 2
+												WHEN '7' THEN (CASE op_order.paymentstatus WHEN '0' then 3 else 5 END)
+												WHEN '2' THEN 4
+												WHEN '8' THEN 6
+												ELSE 5
+											END
+										)as ordernum,
+										(
+											CASE op_order.orderstatus
+												WHEN '6' THEN op_order.usetime
+												WHEN '5' THEN op_order.usetime
+												WHEN '4' THEN op_order.usetime
+												WHEN '3' THEN op_order.usetime
+												
+												WHEN '0' THEN null
+												WHEN '1' THEN null
+												WHEN '7' THEN op_order.usetime
+												WHEN '2' THEN null
+												WHEN '8' THEN op_order.usetime
+												ELSE op_order.usetime
+											END
+										)as sorttime_f,
+										(
+											CASE op_order.orderstatus
+												WHEN '6' THEN null
+												WHEN '5' THEN null
+												WHEN '4' THEN null
+												WHEN '3' THEN null
+												
+												WHEN '0' THEN op_order.undertime
+												WHEN '1' THEN op_order.undertime
+												WHEN '7' THEN null
+												WHEN '2' THEN op_order.usetime
+												WHEN '8' THEN null
+												ELSE null
+											END
+										)as sorttime_s,
+										<include refid="opnetcarselect"></include>
+									FROM
+										op_order,
+										pe_user
+									WHERE
+										op_order. STATUS = 1
+									AND pe_user. STATUS = 1
+									AND op_order.userid = pe_user.id
+									AND op_order.userhidden = '1'
+									AND pe_user.account = #{account}
+								)
+								UNION
+									(
+										SELECT
+											(
+												CASE op_taxiorder.orderstatus
+													WHEN '9' THEN 1
+													WHEN '6' THEN 1
+													WHEN '5' THEN 1
+													WHEN '4' THEN 1
+													WHEN '3' THEN 1
+													WHEN '0' THEN 2
+													WHEN '1' THEN 2
+													WHEN '7' THEN (
+																	CASE op_taxiorder.paymentstatus 
+																		WHEN '0' then 3 
+																		WHEN '5' then 3 
+																		WHEN '6' then 3
+																		else 5 
+																    END
+																   )
+													WHEN '2' THEN 4
+													WHEN '8' THEN 6
+													ELSE 5
+												END
+											)as ordernum,
+											(
+												CASE op_taxiorder.orderstatus
+													WHEN '9' THEN op_taxiorder.usetime
+													WHEN '6' THEN op_taxiorder.usetime
+													WHEN '5' THEN op_taxiorder.usetime
+													WHEN '4' THEN op_taxiorder.usetime
+													WHEN '3' THEN op_taxiorder.usetime
+													WHEN '0' THEN null
+													WHEN '1' THEN null
+													WHEN '7' THEN op_taxiorder.usetime
+													WHEN '2' THEN null
+													WHEN '8' THEN op_taxiorder.usetime
+													ELSE op_taxiorder.usetime
+												END
+											)as sortime_f,
+											(
+												CASE op_taxiorder.orderstatus
+													WHEN '9' THEN null
+													WHEN '6' THEN null
+													WHEN '5' THEN null
+													WHEN '4' THEN null
+													WHEN '3' THEN null
+													WHEN '0' THEN op_taxiorder.undertime
+													WHEN '1' THEN op_taxiorder.undertime
+													WHEN '7' THEN null
+													WHEN '2' THEN op_taxiorder.usetime
+													WHEN '8' THEN null
+													ELSE null
+												END
+											)as sortime_s,
+											<include refid="optaxiselect"></include>
+										FROM
+											op_taxiorder,
+											pe_user
+										WHERE
+											op_taxiorder. STATUS = 1
+										AND pe_user. STATUS = 1
+										AND op_taxiorder.userid = pe_user.id
+										AND op_taxiorder.userhidden = '1'
+										AND pe_user.account = #{account}
+									)
+							) allorders
+						LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+ 						LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+					) orders,
+					(SELECT @rownum := 0) r
+					order by orders.ordernum,orders.sorttime_f desc,orders.sorttime_s
+			) t
+		 <![CDATA[ WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength}) ]]>
+	</select>
+	
+	<!-- 获取订单详细信息 -->
+	<!-- getOrder4OpNetCar getOrder4OpTaxi -->
+	<select id="getOrder4OpNetCar" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					<include refid="opnetcarselect"></include>
+				FROM
+					op_order
+				WHERE
+					op_order. STATUS = 1
+				AND op_order.userhidden = '1'
+				AND op_order.orderno=#{orderno}
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		
+	</select>
+	
+	<select id="getOrder4OpTaxi" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					<include refid="optaxiselect"></include>
+				FROM
+					op_taxiorder
+				WHERE
+					op_taxiorder. STATUS = 1
+				AND op_taxiorder.userhidden = '1'
+				AND op_taxiorder.orderno=#{orderno}
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+	</select>
+	
+	<!-- 获取未支付的订单 -->
+	<select id="getUnpayOrders4OpNetCar" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					<include refid="opnetcarselect"></include>
+				FROM
+					op_order
+					,pe_user
+				WHERE
+					op_order. STATUS = 1
+				AND op_order.userhidden = '1'
+				AND op_order.paymentstatus in ('0','5','6')
+				AND op_order.orderstatus = '7'
+				AND pe_user.account = #{account}
+				AND pe_user.id = op_order.userid
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		limit 1
+	</select>
+	
+	<select id="getUnpayOrders4OpTaxi" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					<include refid="optaxiselect"></include>
+				FROM
+					op_taxiorder
+					,pe_user
+				WHERE
+					op_taxiorder. STATUS = 1
+				AND op_taxiorder.userhidden = '1'
+				AND op_taxiorder.paymentstatus in ('0','5','6')
+				AND op_taxiorder.orderstatus = '7'
+				AND pe_user.account = #{account}
+				AND pe_user.id = op_taxiorder.userid
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		limit 1
+	</select>
+	
+	<!-- 一键报警 -->
+	<insert id="registerAlarm" parameterType="Map">
+		INSERT INTO pub_alarmprocess(
+			id,
+			platformtype,
+			leasecompanyid,
+			usertype,
+			ordertype,
+			userid,
+			alarmsource,
+			alarmtype,
+			alarmtime,
+			orderno,
+			driverid,
+			processstatus,
+			processresult,
+			processrecord,
+			processtime,
+			processor,
+			createtime,
+			updatetime,
+			status,
+			creater,
+			updater,
+			lng,
+			lat
+		)
+		VALUES
+			(
+				#{id},
+				#{platformtype},
+				#{leasecompanyid},
+				#{usertype},
+				#{ordertype},
+				#{userid},
+				#{alarmsource},
+				#{alarmtype},
+				now(),
+				#{orderno},
+				#{driverid},
+				#{processstatus},
+				null,
+				null,
+				null,
+				null,
+				now(),
+				now(),
+				1,
+				#{userid},
+				#{userid},
+				#{lng},
+				#{lat}
+			)
+	</insert>
+	
+	<!-- 查询机构端网约车订单信息 -->
+	<select id="getOrder4OrgNetCar" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					le_vehiclemodels.name
+				FROM
+					le_vehiclemodels
+				WHERE
+					le_vehiclemodels. STATUS = 1
+				AND le_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					le_vehiclemodels.logo
+				FROM
+					le_vehiclemodels
+				WHERE
+					le_vehiclemodels. STATUS = 1
+				AND le_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					<include refid="orgnetcarselect"></include>
+				FROM
+					org_order
+				WHERE
+					org_order. STATUS = 1
+				AND org_order.userhidden = '1'
+				AND org_order.orderno=#{orderno}
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+	</select>
+	
+	<!-- 个人用户获取某个城市出租车预约信息 -->
+	<select id="getReserveInfo4OpTaxi" parameterType="Map" resultType="Map">
+		SELECT
+			op_taxisendrules.*
+		FROM
+			op_taxisendrules,
+			pub_cityaddr
+		WHERE
+			op_taxisendrules.STATUS = 1
+		AND pub_cityaddr.STATUS = 1
+		AND pub_cityaddr.id = op_taxisendrules.city
+		
+		AND op_taxisendrules.usetype='0'
+		AND op_taxisendrules.rulesstate='0'
+		
+		AND pub_cityaddr.city=#{city}
+	</select>
+	
+	<!-- 获取正在服务中的订单 -->
+	<select id="getServiceOder4OpNetCar" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					<include refid="opnetcarselect"></include>
+				FROM
+					op_order
+					,pe_user
+				WHERE
+					op_order. STATUS = 1
+				AND op_order.userhidden = '1'
+				AND op_order.orderstatus in ('6')
+				AND pe_user.account = #{account}
+				AND pe_user.id = op_order.userid
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		limit 1
+	</select>
+	
+	<select id="getServiceOder4OpTaxi" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					<include refid="optaxiselect"></include>
+				FROM
+					op_taxiorder
+					,pe_user
+				WHERE
+					op_taxiorder. STATUS = 1
+				AND op_taxiorder.userhidden = '1'
+				AND op_taxiorder.orderstatus in ('6','9')
+				AND pe_user.account = #{account}
+				AND pe_user.id = op_taxiorder.userid
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		limit 1
+	</select>
+
+	<!-- 更新出租车订单的支付状态为已付 -->
+	<update id="payed4OpTaxiOrder" parameterType="Map">
+		UPDATE op_taxiorder
+		SET 
+			op_taxiorder.paymentstatus = (CASE op_taxiorder.paymentmethod WHEN '0' THEN '1' WHEN '1' THEN(case op_taxiorder.paymentstatus when '5' THEN '7' WHEN '6' THEN '8' ELSE op_taxiorder.paymentstatus END) END),
+			op_taxiorder.completetime = now(),
+			paytype=#{paytype},
+			op_taxiorder.ordersortcolumn = (CASE op_taxiorder.paymentstatus when '6' THEN '13' ELSE '12' END),
+			op_taxiorder.updatetime = now()
+		where op_taxiorder.orderno = #{orderno}
+	</update>
+	
+	<!-- 个人出租车订单支付交易流水 -->
+	<insert id="addTradeNo4OpTaxiOrder" parameterType="Map">
+		INSERT INTO op_taxiorderpaymentrecord (
+			outtradeno,
+			orderno,
+			paymenttype,
+			privatekey,
+			operateresult,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+			#{out_trade_no},
+			#{orderno},
+			#{paymenttype},
+			#{validatekey},
+			1,
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<!-- 获取机构订单交易流水 -->
+	<select id="getPayTradeRecord4Org" parameterType="String" resultType="Map">
+		select * from org_orderpaymentrecord where org_orderpaymentrecord.status=1 and org_orderpaymentrecord.outtradeno=#{out_trade_no}
+	</select>
+	
+	<!-- 获取个人用户网约车交易流水 -->
+	<select id="getPayTradeRecord4OpNetCar" parameterType="String" resultType="Map">
+		select * from op_orderpaymentrecord where op_orderpaymentrecord.status=1 and op_orderpaymentrecord.outtradeno=#{out_trade_no}
+	</select>
+	
+	<!-- 获取个人用户出租车交易流水 -->
+	<select id="getPayTradeRecord4OpTaxi" parameterType="String" resultType="Map">
+		select * from op_taxiorderpaymentrecord where op_taxiorderpaymentrecord.status=1 and op_taxiorderpaymentrecord.outtradeno=#{out_trade_no}
+	</select>
+	
+	<!-- 更改个人用户出租车流水 -->
+	<update id="updateTradeInfo4OpTaxiOrder" parameterType="HashMap">
+		UPDATE op_taxiorderpaymentrecord
+		SET tradeno = #{tradeno},
+		 paymenttype = #{paymenttype},
+		 operateresult = 0,
+		 updatetime = now()
+		WHERE
+			status = 1
+		AND outtradeno = #{outtradeno}
+	</update>
+	
+	<!-- 评价出租车订单 -->
+	<update id="doComment4OpTaxi" parameterType="HashMap">
+		UPDATE op_taxiorder
+		SET 
+		 op_taxiorder.userrate = #{userrate},
+		 op_taxiorder.usercomment = #{usercomment},
+		 op_taxiorder.updatetime = now()
+		WHERE
+			op_taxiorder.orderno = #{orderno}
+	</update>
+	
+	<!-- 乘客倒计时到0，使订单状态改成取消 -->
+	<update id="setOrderFail4Org" parameterType="HashMap">
+		update org_order set org_order.orderstatus=#{orderstatus},org_order.cancelparty=#{cancelparty},org_order.updatetime=now() where org_order.orderno=#{orderno} and org_order.orderstatus in ('0','1')
+	</update>
+	
+	<update id="setOrderdao4OpTaxi" parameterType="HashMap">
+		update op_taxiorder set op_taxiorder.orderstatus=#{orderstatus},op_taxiorder.cancelparty=#{cancelparty},op_taxiorder.updatetime=now() where op_taxiorder.orderno=#{orderno} and op_taxiorder.orderstatus in ('0','1')
+	</update>
+	
+	<update id="setOrderdao4OpNetCar" parameterType="HashMap">
+		update op_order set op_order.orderstatus=#{orderstatus},op_order.cancelparty=#{cancelparty},op_order.updatetime=now() where op_order.orderno=#{orderno} and op_order.orderstatus in ('0','1')
+	</update>
+	
+</mapper>

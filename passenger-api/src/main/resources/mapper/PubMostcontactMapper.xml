@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.PubMostcontactMapper">
+
+    <!-- 查询常用联系人是否已存在 -->
+    <select id="getPubMostcontactExist" parameterType="PubMostcontact" resultType="PubMostcontact">
+        select * from pub_mostcontact where userphone = #{userphone} and name = #{name} and phone = #{phone} and status = 1 limit 1
+    </select>
+    
+    <!-- 添加常用联系人 -->
+    <insert id="insertPubMostcontact" parameterType="PubMostcontact">
+        insert into pub_mostcontact(id, userphone, name, phone, createtime, updatetime, status)
+          values(#{id}, #{userphone}, #{name}, #{phone}, now(), now(), 1)
+    </insert>
+
+    <!-- 删除常用联系人 -->
+    <update id="deletePubMostcontactById" parameterType="string">
+        update pub_mostcontact set updatetime = now(), status = 2 where id = #{contactid}
+    </update>
+
+    <!-- 根据用户手机号查询常用联系人 -->
+    <select id="getPubMostcontactByUserphone" parameterType="string" resultType="map">
+        select id, name, phone from pub_mostcontact where userphone = #{userphone} and status = 1
+    </select>
+
+</mapper>

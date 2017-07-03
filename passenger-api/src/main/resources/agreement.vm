@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	<h2>${shortname}</h2>
+	<div>
+		${content}
+	</div>
+</body>
+</html>

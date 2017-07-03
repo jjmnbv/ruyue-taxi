@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.PubMostaddressMapper">
+
+    <!-- 验证地址类型是否存在 -->
+    <select id="getPubMostaddressByUserphone" parameterType="PubMostaddress" resultType="PubMostaddress">
+        select * from pub_mostaddress where userphone = #{userphone} and addresstype = #{addresstype} and status = 1 limit 1
+    </select>
+
+    <!-- 添加常用地址 -->
+    <insert id="insertPubMostaddress" parameterType="PubMostaddress">
+        insert into pub_mostaddress(id, userphone, addresstype, city, title, address, lng, lat, createtime, updatetime, status)
+          values(#{id}, #{userphone}, #{addresstype}, #{city}, #{title}, #{address}, #{lng}, #{lat}, now(), now(), 1)
+    </insert>
+
+    <!-- 修改常用地址 -->
+    <update id="updatePubMostaddressById" parameterType="PubMostaddress">
+      update pub_mostaddress set updatetime = now(), userphone = #{userphone}, addresstype = #{addresstype}, city = #{city},
+        title = #{title}, address = #{address}, lng = #{lng}, lat = #{lat} where id = #{id}
+    </update>
+
+    <!-- 删除常用地址 -->
+    <update id="deletePubMostaddressById" parameterType="string">
+        update pub_mostaddress set updatetime = now(), status = 2 where id = #{addressid}
+    </update>
+
+    <!-- 查询常用地址 -->
+    <select id="getPubMostaddressListByUserphone" parameterType="string" resultType="map">
+        select
+         pub_mostaddress.id addressid, pub_mostaddress.addresstype, pub_mostaddress.title, pub_mostaddress.address,
+         pub_cityaddr.city, pub_mostaddress.lng, pub_mostaddress.lat,
+         case pub_mostaddress.addresstype
+          when '0' then '家'
+          when '1' then '公司'
+          else '其他' end addresstypename
+        from
+         pub_mostaddress left join pub_cityaddr on pub_mostaddress.city = pub_cityaddr.id
+        where
+         pub_mostaddress.userphone = #{userphone} and pub_mostaddress.status = 1
+    </select>
+
+</mapper>

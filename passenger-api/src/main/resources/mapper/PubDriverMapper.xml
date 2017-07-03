@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.PubDriverMapper">
+
+    <!-- 获取指定位置附近司机 -->
+    <select id="getNearDrivers" parameterType="PubDriverInBoundParam" resultType="PubDriver">
+        select
+         *
+        from
+         pub_driver
+        where
+         workstatus = '0' and status = 1
+         <![CDATA[
+            AND lng >= #{minLng}
+            AND lng <= #{maxLng}
+            AND lat >= #{minLat}
+            AND lat <= #{maxLat}
+         ]]>
+    </select>
+
+</mapper>

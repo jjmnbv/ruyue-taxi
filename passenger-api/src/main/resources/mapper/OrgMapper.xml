@@ -1,0 +1,941 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.OrgMapper">
+
+	<!-- 查询租赁公司在某个城市提供的服务 -->
+	<select id="getCompanyCityBusiness" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			DISTINCT(rulestype) as type,
+			(
+				CASE rulestype
+				WHEN '1' THEN
+					'约车'
+				WHEN '2' THEN
+					'接机'
+				WHEN '3' THEN
+					'送机'
+				END
+			) AS name
+		FROM
+			le_accountrules,
+			<if test="type=='1'.toString() or type==1 or type=='1'">
+				le_company_rules_ref,
+			</if>
+			pub_cityaddr
+		WHERE
+				le_accountrules.status=1
+			<if test="type=='1'.toString() or type==1 or type=='1'">
+				and le_company_rules_ref.status=1
+				AND le_company_rules_ref.id = le_accountrules.rulesrefid
+				and le_company_rules_ref.leasescompanyid=#{companyid}
+				and le_company_rules_ref.rulestate='1'
+				and le_company_rules_ref.starttime&lt;now()
+				and le_company_rules_ref.endtime&gt;now()
+				AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = (
+							SELECT
+								org_user.organid
+							FROM
+								org_user
+							WHERE
+								org_user. STATUS = 1
+							AND org_user.account = #{account}
+							AND org_user.customertype!=1
+						)
+					)
+					and organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+				)
+			</if>
+		and pub_cityaddr.status=1
+		and le_accountrules.rulesstate='0'
+		and pub_cityaddr.id=le_accountrules.city
+		
+		and le_accountrules.leasescompanyid=#{companyid}
+		and le_accountrules.type=#{type}
+		and pub_cityaddr.city=#{city}
+		order by le_accountrules.rulestype
+	</select>
+	
+	<!-- 查看租赁公司在某个城市为某个机构用户提供的服务 -->
+	<select id="getCCBusiness4UserRules" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			DISTINCT(org_usecarrules.usetype) as type,
+			(
+				CASE org_usecarrules.usetype
+				WHEN '1' THEN
+					'约车'
+				WHEN '2' THEN
+					'接机'
+				WHEN '3' THEN
+					'送机'
+				END
+			) AS name
+		FROM
+			org_usecarrules,
+			org_user_rules_ref,
+			org_user
+		WHERE
+				org_usecarrules.status=1
+		and org_user_rules_ref.status=1
+		and org_user.status=1
+		and org_user_rules_ref.userulesid=org_usecarrules.id
+		and org_user_rules_ref.userid=org_user.id
+		
+		and org_user.account=#{account}
+		and org_user.customertype!=1
+		and org_usecarrules.leasescompanyid=#{companyid}
+		
+		and org_usecarrules.leasescompanyid in(
+			SELECT
+				le_company_rules_ref.leasescompanyid
+			FROM
+				le_company_rules_ref,
+				le_accountrules
+			WHERE
+				le_company_rules_ref. STATUS = 1
+			AND le_accountrules.Status=1
+			AND le_accountrules.rulesrefid = le_company_rules_ref.id
+			AND le_company_rules_ref.rulestate=1
+ 			<![CDATA[
+			AND le_company_rules_ref.starttime<now()
+			AND le_company_rules_ref.endtime>now()
+ 			]]>
+			AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+ 					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+ 						AND org_organ.id =#{organid}
+					)
+					and organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+			)
+		)
+		
+		ORDER BY org_usecarrules.usetype
+	</select>
+	
+	<!-- 查看租赁公司在某个城市的计价规则 -->
+	<select id="getAccountRules" parameterType="HashMap" resultType="AccountRules">
+		select * from (
+			SELECT
+				le_accountrules.*,
+				(SELECT le_vehiclemodels.logo from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.Id = le_accountrules.cartype) as logo,
+				(SELECT le_vehiclemodels.name from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.Id = le_accountrules.cartype) as name,
+				(SELECT le_vehiclemodels.level from le_vehiclemodels where le_vehiclemodels.status=1 and le_vehiclemodels.Id = le_accountrules.cartype) as level
+			FROM
+				le_accountrules,
+				<if test="organid!=null and organid!=''">
+					le_company_rules_ref,
+				</if>
+				pub_cityaddr
+			WHERE
+				le_accountrules.status = 1
+				<if test="organid!=null and organid!=''">
+					and le_company_rules_ref.status=1
+					and le_company_rules_ref.rulestate='1'
+					AND le_company_rules_ref.id = le_accountrules.rulesrefid
+					and le_company_rules_ref.leasescompanyid=#{companyid}
+					and le_accountrules.type='1'
+					and le_company_rules_ref.starttime&lt;now()
+					and le_company_rules_ref.endtime&gt;now()
+					and le_company_rules_ref.organid in (
+	 					SELECT
+	 						organ.id
+	 					FROM
+	 						org_organ organ
+	 					WHERE
+	 						organ. STATUS = 1
+	 					AND organ.creditcode = (
+	 						SELECT
+	 							org_organ.creditcode
+	 						FROM
+	 							org_organ
+	 						WHERE
+	 							org_organ. STATUS = 1
+	 						AND org_organ.id = #{organid}
+	 					)
+						and organ.customertype!=1
+	 					AND organ.id IN (
+							SELECT
+								org_organ_company_ref.organid
+							FROM
+								org_organ_company_ref
+							WHERE
+								org_organ_company_ref. STATUS = 1
+							AND (
+								org_organ_company_ref.mainaccount = '0'
+								OR org_organ_company_ref.bindstate = '1'
+							)
+						)
+				 )
+				</if>
+			and pub_cityaddr.status=1
+			and pub_cityaddr.id=le_accountrules.city
+			
+			and pub_cityaddr.city=#{city}
+			and le_accountrules.rulestype=#{rulestype}
+			and le_accountrules.leasescompanyid=#{companyid}
+			<if test="organid==null or organid=='' ">
+				and le_accountrules.type='0'
+			</if>
+		) rule ORDER BY rule.level
+	</select>
+	
+	<!-- 根据租赁公司id获取租赁公司信息 -->
+	<select id="getLeasesCompanyById" parameterType="String" resultType="LeasesCompany">
+		SELECT
+			*
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.id = #{companyid}
+		AND le_leasescompany.status = 1
+	</select>
+	
+	<!-- 获取租赁公司提供服务的城市列表 -->
+	<select id="getValidCity" parameterType="String" resultType="String">
+		SELECT
+			DISTINCT(pub_cityaddr.city)
+		FROM
+			le_accountrules,
+			pub_cityaddr
+		WHERE
+			le_accountrules.status = 1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=le_accountrules.city
+		and le_accountrules.rulesstate='0'
+		
+		and le_accountrules.leasescompanyid=#{companyid}
+	</select>
+	
+	<!-- 获取租赁公司提供服务的城市列表 -->
+	<select id="getCity" parameterType="HashMap" resultType="HashMap">
+		select * from (
+			SELECT
+				DISTINCT(pub_cityaddr.city),pub_cityaddr.cityInitials as cityinitials
+			FROM
+				le_accountrules,
+				pub_cityaddr
+			WHERE
+				le_accountrules.status = 1
+			and pub_cityaddr.status=1
+			and pub_cityaddr.id=le_accountrules.city
+			and le_accountrules.rulesstate='0'
+			and le_accountrules.type='0'
+			<if test=" companys!=null and companys!='' ">
+				and le_accountrules.leasescompanyid in
+				<foreach item="item" index="index" collection="companys" open="(" separator="," close=")">  
+				  #{item.id}  
+				</foreach> 
+			</if>
+			<if test=" cityword!=null and cityword!='' ">
+				and (
+	 				pub_cityaddr.city LIKE '%${cityword}%' or
+	 				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+	 				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+	 			)
+			</if>
+		UNION 
+			SELECT DISTINCT
+				(pub_cityaddr.city),
+				pub_cityaddr.cityInitials AS cityinitials
+			FROM
+				le_accountrules,
+				le_company_rules_ref,
+				pub_cityaddr
+			WHERE
+				le_accountrules.STATUS = 1
+			AND pub_cityaddr.STATUS = 1
+			AND pub_cityaddr.id = le_accountrules.city
+			AND le_accountrules.rulesstate = '0'
+			AND le_accountrules.type = '1'
+			AND le_accountrules.rulesrefid = le_company_rules_ref.id
+			AND le_company_rules_ref.STATUS = 1
+			AND le_company_rules_ref.rulestate = '1'
+			<![CDATA[
+				AND le_company_rules_ref.starttime <= now()
+				AND le_company_rules_ref.endtime >= now()
+			]]>
+			AND le_company_rules_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = (
+						SELECT
+							org_user.organid
+						FROM
+							org_user
+						WHERE
+							org_user. STATUS = 1
+						AND org_user.account = #{account}
+						AND org_user.customertype!=1
+					)
+				)
+				and organ.customertype!=1
+				AND organ.id IN (
+					SELECT
+						org_organ_company_ref.organid
+					FROM
+						org_organ_company_ref
+					WHERE
+						org_organ_company_ref. STATUS = 1
+					AND (
+						org_organ_company_ref.mainaccount = '0'
+						OR org_organ_company_ref.bindstate = '1'
+					)
+				)
+			)
+			<if test=" companys!=null and companys!='' ">
+				and le_accountrules.leasescompanyid in
+				<foreach item="item" index="index" collection="companys" open="(" separator="," close=")">  
+				  #{item.id}  
+				</foreach> 
+			</if>
+			<if test=" cityword!=null and cityword!='' ">
+				and (
+	 				pub_cityaddr.city LIKE '%${cityword}%' or
+	 				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+	 				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+	 			)
+			</if>
+		) t
+		order by t.cityInitials
+	</select>
+	
+	<!-- 获取有钱租赁公司提供服务的城市。只有因私的 -->
+	<select id="getSelfCompanyCity" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			DISTINCT(pub_cityaddr.city),pub_cityaddr.cityInitials as cityinitials
+		FROM
+			le_accountrules,
+			pub_cityaddr
+		WHERE
+			le_accountrules.status = 1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=le_accountrules.city
+		and le_accountrules.rulesstate='0'
+		and le_accountrules.type='0'
+		<if test=" companys!=null and companys!='' ">
+			and le_accountrules.leasescompanyid in
+			<foreach item="item" index="index" collection="companys" open="(" separator="," close=")">  
+			  #{item.id}  
+			</foreach> 
+		</if>
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+ 				pub_cityaddr.city LIKE '%${cityword}%' or
+ 				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+ 				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+ 			)
+		</if>
+		order by pub_cityaddr.cityInitials
+	</select>
+	
+	<!-- 获取上车城市可选的城市列表 -->
+	<select id="getGetOnCitys" parameterType="HashMap" resultType="HashMap">
+		SELECT DISTINCT
+			(pub_cityaddr.city),
+			pub_cityaddr.cityInitials AS cityinitials
+		FROM
+			le_accountrules,
+			pub_cityaddr
+		WHERE
+			le_accountrules. STATUS = 1
+		AND pub_cityaddr. STATUS = 1
+		AND pub_cityaddr.id = le_accountrules.city
+		AND le_accountrules.rulesstate = '0'
+		AND le_accountrules.leasescompanyid = #{companyid}
+		<if test="ruletype=='1' or ruletype==1 or ruletype=='1'.toString()">
+			AND le_accountrules.type = #{ruletype}
+			AND le_accountrules.rulesrefid IN (
+				SELECT
+					id
+				FROM
+					le_company_rules_ref
+				WHERE
+					le_company_rules_ref. STATUS = 1
+				AND le_company_rules_ref.rulestate = '1'
+				AND le_company_rules_ref.leasescompanyid = #{companyid}
+				AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = (
+							SELECT
+								org_user.organid
+							FROM
+								org_user
+							WHERE
+								org_user. STATUS = 1
+							AND org_user.account = #{account}
+							AND org_user.customertype!=1
+						)
+					)
+					and organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+				)
+			)
+		</if>
+ 		<if test=" cityword!=null and cityword!='' ">
+ 			and (
+ 				pub_cityaddr.city LIKE '%${cityword}%' or
+ 				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+ 				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+ 			)
+ 		</if>
+		ORDER BY
+			pub_cityaddr.cityInitials
+	</select>
+	
+	<!-- 获取用户的用车规则 -->
+	<select id="getUseCarRules" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			le_leasescompany.id as companyid,
+			le_leasescompany.name as companyname,
+			le_vehiclemodels.name as vehiclemodelname
+		FROM
+			org_usecarrules,
+			org_user,
+			org_user_rules_ref,
+			le_leasescompany,
+			le_vehiclemodels
+		WHERE
+			org_usecarrules.status = 1
+		and org_user.status=1
+		and org_user_rules_ref.status=1
+		and le_leasescompany.status=1
+		and le_vehiclemodels.status=1
+		and le_vehiclemodels.leasescompanyid=org_usecarrules.leasescompanyid
+		and org_usecarrules.vehiclemodels = le_vehiclemodels.Id
+		and le_leasescompany.id=org_usecarrules.leasescompanyid
+		and org_user.id=org_user_rules_ref.userid
+		and org_usecarrules.id=org_user_rules_ref.userulesid
+		
+		and org_usecarrules.usetype=#{type}
+		and org_user.account=#{account}
+		and org_user.customertype!=1
+		
+		and le_leasescompany.id in (
+			SELECT
+				le_company_rules_ref.leasescompanyid
+			FROM
+				le_company_rules_ref,
+				le_accountrules
+			WHERE
+				le_company_rules_ref. STATUS = 1
+			AND le_accountrules.Status=1
+			AND le_accountrules.rulesrefid = le_company_rules_ref.id
+			AND le_company_rules_ref.rulestate=1
+			<![CDATA[
+			AND le_company_rules_ref.starttime<now()
+			AND le_company_rules_ref.endtime>now()
+			]]>
+			and le_accountrules.rulestype = #{type}
+			AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id IN (
+							SELECT
+								org_user.organid
+							FROM
+								org_user
+							WHERE
+								org_user. STATUS = 1
+							AND org_user.account = #{account}
+							AND org_user.customertype!=1
+							ORDER BY
+								org_user.createtime DESC
+						)
+					)
+					and organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+			)
+		)
+	</select>
+	
+	<!-- 获取服务车型 -->
+	<select id="getCarMoudels" parameterType="HashMap" resultType="VehicleModels">
+		SELECT
+			le_vehiclemodels.level,
+			le_vehiclemodels.name,
+			le_vehiclemodels.logo,
+			le_vehiclemodels.Id
+		FROM
+		<if test="organid!=null and organid!=''">
+		 	le_company_rules_ref,
+		</if>
+			le_accountrules,
+			pub_cityaddr,
+			le_vehiclemodels
+		WHERE
+			le_accountrules.status=1
+		AND pub_cityaddr.status=1
+		AND le_vehiclemodels.status=1
+		AND le_vehiclemodels.Id=le_accountrules.cartype
+		AND le_vehiclemodels.leasescompanyid=le_accountrules.leasescompanyid
+		AND pub_cityaddr.id=le_accountrules.city
+		AND le_accountrules.type=#{type}
+		AND le_accountrules.rulesstate='0'
+		<if test="organid!=null and organid!=''">
+		 AND le_company_rules_ref.status = 1
+		 AND le_company_rules_ref.id = le_accountrules.rulesrefid
+		 AND le_company_rules_ref.rulestate=1
+		 AND le_company_rules_ref.starttime&lt;now()
+		 AND le_company_rules_ref.endtime&gt;now()
+		 AND le_company_rules_ref.organid in (
+ 					SELECT
+ 						organ.id
+ 					FROM
+ 						org_organ organ
+ 					WHERE
+ 						organ. STATUS = 1
+ 					AND organ.creditcode = (
+ 						SELECT
+ 							org_organ.creditcode
+ 						FROM
+ 							org_organ
+ 						WHERE
+ 							org_organ. STATUS = 1
+ 						AND org_organ.id = #{organid}
+ 					)
+					and organ.customertype!=1
+ 					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+			)
+		 AND le_company_rules_ref.leasescompanyid=#{companyid}
+		</if>
+		AND pub_cityaddr.city=#{city}
+		AND le_accountrules.rulestype=#{ordertype}
+		AND le_accountrules.leasescompanyid=#{companyid}
+		ORDER BY le_vehiclemodels.level
+	</select>
+	
+	<!-- 获取机构人员能够使用的车型id集合 -->
+	<select id="getOrgUsercar4Rules" parameterType="HashMap" resultType="String">
+		SELECT
+			org_usecarrules.vehiclemodels
+		FROM
+			org_usecarrules,
+			org_user,
+			org_user_rules_ref
+		WHERE
+			org_usecarrules.status = 1
+		AND org_user.status=1
+		AND org_user_rules_ref.status=1
+		AND org_user_rules_ref.userid=org_user.id
+		AND org_user_rules_ref.userulesid=org_usecarrules.id
+		
+		AND org_usecarrules.leasescompanyid=#{companyid}
+		AND org_usecarrules.usetype=#{ordertype}
+		AND org_user.account=#{account}
+		AND org_user.customertype!=1
+		
+		and org_usecarrules.leasescompanyid in(
+			SELECT
+				le_company_rules_ref.leasescompanyid
+			FROM
+				le_company_rules_ref,
+				le_accountrules
+			WHERE
+				le_company_rules_ref. STATUS = 1
+			AND le_accountrules.Status=1
+			AND le_accountrules.rulesrefid = le_company_rules_ref.id
+			AND le_company_rules_ref.rulestate=1
+ 			<![CDATA[
+			AND le_company_rules_ref.starttime<now()
+			AND le_company_rules_ref.endtime>now()
+ 			]]>
+			AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+ 					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+ 						AND org_organ.id =#{organid}
+					)
+					and organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+			)
+		)
+	</select>
+	
+	<!-- 获取机构订单的消费信息 -->
+	<select id="getCostInfo4Org" parameterType="String" resultType="HashMap">
+		SELECT
+			orderamount,
+			sum(estimatedmileage)-SUM(mileage) as remainmileage
+		FROM
+			org_order
+		where 
+			status=1
+		and orderstatus='6'
+		and orderno=#{orderid}
+	</select>
+	
+	<!-- 通过机构用户id获取机构信息 -->
+	<select id="getOrgInfo" parameterType="String" resultType="OrgOrgan">
+		SELECT
+			*
+		FROM
+			org_organ
+		WHERE
+			org_organ.status = 1
+		AND org_organ.id = (
+			SELECT
+				org_user.organid
+			FROM
+				org_user
+			WHERE
+				org_user.status = 1
+			AND org_user.account = #{account}
+			AND org_user.customertype!=1
+			ORDER BY createtime desc
+			LIMIT 0,1
+		)
+	</select>
+	
+	<!-- 是否含有次交易号 -->
+	<select id="hasThisTradeNo" parameterType="HashMap" resultType="boolean">
+		SELECT
+			CASE
+		WHEN count(*) > 0 THEN
+			1
+		ELSE
+			0
+		END AS flag
+		FROM
+			org_orderpaymentrecord
+		WHERE
+			org_orderpaymentrecord. STATUS = 1
+		AND org_orderpaymentrecord.paymenttype=#{paymenttype}
+		AND org_orderpaymentrecord.outtradeno = #{outtradeno}
+	</select>
+	
+	
+	
+	<!-- ##############################二期接口############################################# -->
+	<select id="getSuperTelPhone" parameterType="String" resultType="Map">
+		SELECT
+			org_organ.phone
+		FROM
+			org_organ,
+	    org_organ_company_ref
+			WHERE
+				org_organ.creditcode IN (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ.id = #{organid}
+				)
+				and org_organ.customertype!=1
+	    and org_organ_company_ref.status=1
+		and org_organ_company_ref.organid=org_organ.id
+		and org_organ_company_ref.mainaccount=0
+		limit 0,1
+	</select>
+	
+	<!-- 获取租赁公司下的超管和财务 -->
+	<select id="getSuperAndCaiWu" parameterType="String" resultType="Map">
+		SELECT DISTINCT
+			*
+		FROM
+			(
+					SELECT
+						le_user.*
+					FROM
+						le_rolemanagement,
+						le_roleuser,
+						le_user,
+						pub_dictionary
+					WHERE
+						le_rolemanagement.status = 1
+					AND le_roleuser.status = 1
+					AND le_user.status = 1
+					AND le_rolemanagement.id = le_roleuser.roleid
+					AND le_roleuser.userid = le_user.id
+					AND pub_dictionary.type = '角色类型'
+					AND pub_dictionary.text = '财务人员'
+					AND le_rolemanagement.roletype = pub_dictionary.value
+				UNION
+					SELECT
+						le_user.*
+					FROM
+						le_user
+					WHERE
+						le_user.status = 1
+					AND le_user.specialstate = '1'
+			) userinfo
+	</select>
+	
+	<insert id="addNews4LeaseUser" parameterType="Map">
+		INSERT INTO le_usernews (
+			id,
+			userid,
+			type,
+			content,
+			newsstate,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{type},
+				#{content},
+				#{newsstate},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 获取租赁端有派单规则的城市的集合 -->
+	<select id="getSendRuleCitys" parameterType="Map" resultType="String">
+		SELECT DISTINCT
+			pub_cityaddr.city
+		FROM
+			pub_sendrules,
+			pub_cityaddr
+		WHERE
+			pub_sendrules.status=1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=pub_sendrules.city
+		and pub_sendrules.vehicletype=0
+		and pub_sendrules.rulesstate='0'
+		and pub_sendrules.platformtype='1'
+		and pub_sendrules.leasescompanyid=#{companyid}
+	</select>
+
+	<!-- 获取最老的一个租赁公司默认为如约 -->
+	<select id="getOldestServiceCompanys" resultType="Map">
+		select le_leasescompany.id as id,le_leasescompany.name as name from le_leasescompany where le_leasescompany.status=1 ORDER BY le_leasescompany.CreateTime LIMIT 0,1
+	</select>
+
+	<!-- 获取有计费规则的城市列表 -->
+	<select id="getAccountRuleCitys" parameterType="Map" resultType="String">
+		SELECT
+			DISTINCT (pub_cityaddr.city)
+		FROM
+			le_accountrules,
+			pub_cityaddr
+		WHERE
+			le_accountrules. STATUS = 1
+		AND pub_cityaddr. STATUS = 1
+		AND pub_cityaddr.id = le_accountrules.city
+		AND le_accountrules.rulesstate = '0'
+		AND le_accountrules.rulestype=#{ordertype}
+		AND le_accountrules.leasescompanyid = #{companyid}
+		<if test="ruletype=='1' or ruletype==1 or ruletype=='1'.toString()">
+			AND le_accountrules.type = #{ruletype}
+			AND le_accountrules.rulesrefid IN (
+				SELECT
+					id
+				FROM
+					le_company_rules_ref
+				WHERE
+					le_company_rules_ref. STATUS = 1
+				AND le_company_rules_ref.rulestate = '1'
+				AND le_company_rules_ref.leasescompanyid = #{companyid}
+				AND le_company_rules_ref.organid IN (
+					SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id = (
+							SELECT
+								org_user.organid
+							FROM
+								org_user
+							WHERE
+								org_user. STATUS = 1
+							AND org_user.account = #{account}
+							AND org_user.customertype!=1
+						)
+					)
+					and organ.customertype!=1
+					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR
+							org_organ_company_ref.bindstate = '1'
+						)
+					)
+				)
+			)
+		</if>
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+				pub_cityaddr.city LIKE '%${cityword}%' or
+				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+			)
+		</if>
+		ORDER BY
+		pub_cityaddr.cityInitials
+	</select>
+
+	<!-- 获取约车时限getSendRuleByCity4ReverceNetCar-->
+	<select id="getSendRuleByCity4ReverceNetCar" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+			pub_sendrules
+		WHERE
+			pub_sendrules.status = 1
+		AND pub_sendrules.vehicletype = 0
+		AND pub_sendrules.usetype = 0
+		AND pub_sendrules.platformtype = '1'
+    	AND pub_sendrules.rulesstate='0'
+   		AND pub_sendrules.leasescompanyid=#{companyid}
+		AND pub_sendrules.city = #{city}
+	</select>
+</mapper>

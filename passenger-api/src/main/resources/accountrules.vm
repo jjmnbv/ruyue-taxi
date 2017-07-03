@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<style type="text/css">
+		* { margin:0; padding:0;}
+		table { 
+			 border-collapse: collapse;
+			 border-spacing:10px; 
+			 width:100%; 
+			 line-height:22px; 
+			 font-size:12px;
+		}
+		tr,td { 
+			border: 1px solid gainsboro;
+			background: white;
+		}
+		td { 
+		/*	padding:1px 2px;*/
+		}
+		.con{
+			border: 0px;
+			border-collapse:separate;
+			
+		}
+		.noborder{
+			border:0px;
+			width: 100px;
+		}
+		img{
+			width: 100px;
+	    	height: 100px;
+	   		vertical-align: middle;
+	   		margin-right: 5px;
+		}
+		.midtd{
+			width:50%;
+			text-align:center;
+		}
+		span{
+			margin-left: 11px;
+		}
+		</style>
+	</head>
+	<body style="background:#f0f0f0;padding:15px 0;">
+		#if($company)
+		<span>租赁公司：${company}</span>
+		#end
+		<table class="con">
+		#foreach($accountrule in ${rules})
+			<tr class="con">
+				<td class="con">
+					<table>
+						<tr class="noborder">
+							<td rowspan="3" class="noborder" style="text-align:center;padding-bottom:20px;border:1px solid gainsboro;">
+								<img src="${accountrule.logo}" style="height: 50px;margin: 27px;margin-bottom: 0px;">
+								<lable>${accountrule.name}</lable>
+							</td>
+							<td class="midtd">起步价</td>
+							<td class="midtd">${accountrule.startprice}元</td>
+						</tr>
+						<tr>
+							<td class="midtd">里程费</td>
+							<td class="midtd">${accountrule.rangeprice}元/公里</td>
+						</tr>
+						<tr>
+						  #if(${accountrule.timetype}=="0")
+						   <td class="midtd">总时长费</td>
+						  #else
+						   <td class="midtd">
+						   		低速时长费
+						   		<br/>
+						   		(低于${accountrule.perhour}公里/小时收费)
+						   	</td>
+						  #end
+						   <td class="midtd">${accountrule.timeprice}元/分钟</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		#end 
+		</table>
+		<span>
+		注：司机服务过程中产生的高速费、路桥费、停车费等其他费用由乘客自己支付
+		</span>
+	</body>
+</html>

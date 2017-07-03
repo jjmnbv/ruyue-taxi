@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.DictionaryMapper">
+
+	<select id="getDictionaryByTypeValue" resultType="Dictionary" parameterType="hashmap">
+		select * from pub_dictionary where pub_dictionary.type = #{type} and pub_dictionary.value=#{value} and pub_dictionary.status=1
+	</select>
+	
+	<!-- 根据城市获取机场地址和经纬度 -->
+	<select id="getAirportAddrt" parameterType="String" resultType="AirportAddr">
+		SELECT
+			pub_airportaddr.name,
+			pub_airportaddr.lat,
+			pub_airportaddr.lng
+		FROM
+			pub_airportaddr,
+			pub_cityaddr
+		WHERE
+			pub_airportaddr.status=1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=pub_airportaddr.city
+		
+		and pub_cityaddr.city=#{city}
+	</select>
+	
+	<!-- 获取用车事由列表 -->
+	<select id="getUseReson" resultType="String">
+		SELECT
+			pub_dictionary.text
+		FROM
+			pub_dictionary
+		where 
+			pub_dictionary.status=1
+		and pub_dictionary.type='用车事由'
+		order by pub_dictionary.value
+	</select>
+	
+	<!-- 获取用车事由备注列表 -->
+	<select id="getRemark" resultType="String">
+		SELECT
+			pub_dictionary.text
+		FROM
+			pub_dictionary
+		where 
+			pub_dictionary.status=1
+		and pub_dictionary.type='用车备注'
+		order by pub_dictionary.value
+	</select>
+	
+	<!-- 获取司机的评价列表 -->
+	<select id="getComments" resultType="String">
+		SELECT
+			pub_dictionary.text
+		FROM
+			pub_dictionary
+		WHERE
+			pub_dictionary.status = 1
+		and pub_dictionary.type='评价司机'
+		order by pub_dictionary.value
+	</select>
+	
+	<!-- 获取系统最新版本信息 -->
+	<select id="getNewVersion" parameterType="HashMap" resultType="SysVersion">
+		SELECT
+			pub_sysversion.curversion,
+			pub_sysversion.versionno,
+			pub_sysversion.maxversionno,
+			pub_sysversion.changelog,
+			pub_sysversion.releasedate as publishtime,
+			pub_sysversion.downloadhref
+		FROM
+			pub_sysversion
+		WHERE
+			pub_sysversion.status = 1
+		
+		AND pub_sysversion.platformtype='0'
+		AND pub_sysversion.systemtype=#{systemtype}
+		<if test="curversion!=null and curversion!='' ">
+			AND pub_sysversion.curversion=#{curversion}
+		</if>
+		ORDER BY pub_sysversion.releasedate desc LIMIT 1
+	</select>
+	
+	<!-- 获取司机的位置信息 -->
+	<select id="getDriverPosition" parameterType="String" resultType="HashMap">
+		SELECT
+			gpsdirection,
+			gpsspeed,
+			lng,
+			lat
+		FROM
+			pub_driver
+		where 
+			status=1
+		and id=#{driverid}
+	</select>
+	
+	<select id="getCityNo" parameterType="String" resultType="String">
+		SELECT
+			pub_cityaddr.id
+		FROM
+			pub_cityaddr
+		WHERE
+			pub_cityaddr.status=1
+		and	pub_cityaddr.city = #{citycaption}
+		LIMIT 0,1
+	</select>
+	
+	<select id="getCityCaption" parameterType="String" resultType="String">
+		select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.status=1 and pub_cityaddr.id=#{city}		
+	</select>
+	
+	<!-- 查询司机的评分信息 -->
+	<select id="getDriverRateInfo" parameterType="String" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			pub_driver
+		WHERE
+			id = #{driverid}
+	</select>
+	
+	<!-- 更新司机评分 -->
+	<select id="updateDriverRate" parameterType="HashMap">
+		UPDATE pub_driver
+		SET avgrate = #{avgrate},
+			updatetime = now()
+		WHERE
+			id = #{driverid}
+	</select>
+	
+	<!-- 获取所有的城市列表信息 -->
+	<select id="getAllCitys" resultType="HashMap">
+		SELECT DISTINCT
+			(pub_cityaddr.city),
+			pub_cityaddr.cityInitials AS cityinitials
+		FROM
+			pub_cityaddr
+		where 
+			pub_cityaddr.status=1
+		and pub_cityaddr.cityInitials IS NOT null
+		<if test=" cityword!=null and cityword!='' ">
+ 			and (
+ 				pub_cityaddr.city LIKE '%${cityword}%' or
+ 				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+ 				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+ 			)
+ 		</if>
+		ORDER BY
+			pub_cityaddr.fullpinyin
+	</select>
+	
+	<!-- 获取常用问答 -->
+	<select id="getCommonQA" resultType="String" parameterType="String">
+		select content from pub_personagreement where id = #{qaid} LIMIT 0,1
+	</select>
+	
+	<!-- 获取个人用户的用户协议 -->
+	<select id="getAgreement" resultType="String">
+		select content from pub_personagreement where status=1 ORDER BY updatetime desc limit 0,1
+	</select>
+	
+	<!-- 获取租赁公司的账户信息 -->
+	<select id="getPayInfo4LeByCompanyid" parameterType="String" resultType="HashMap">
+		SELECT * from le_leasescompany where le_leasescompany.status=1 and le_leasescompany.id=#{companyid}
+	</select>
+	
+	<!-- 获取运管端的账户信息 -->
+	<select id="getPayInfo4Op" resultType="HashMap">
+		select * from op_platforminfo where op_platforminfo.status=1 LIMIT 0,1
+	</select>
+
+	<!-- 获取归属车企 -->
+	<select id="getBelongCompanys" resultType="Map">
+		select pub_dictionary.value as id,pub_dictionary.text as name from pub_dictionary where pub_dictionary.type='租赁公司' and pub_dictionary.status=1 ORDER BY pub_dictionary.createtime
+	</select>
+
+	<!-- 获取热门城市 -->
+	<select id="getHotCitys" resultType="Map" parameterType="Map">
+		SELECT DISTINCT
+			(pub_cityaddr.city),
+			pub_cityaddr.cityInitials AS cityinitials
+		FROM
+			pub_cityaddr
+		where
+			pub_cityaddr.status=1
+		and pub_cityaddr.hotcity=1
+		and pub_cityaddr.cityInitials IS NOT null
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+				pub_cityaddr.city LIKE '%${cityword}%' or
+				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+			)
+		</if>
+		ORDER BY
+		pub_cityaddr.fullpinyin
+	</select>
+
+	<!--获取所有城市名称集合-->
+	<select id="getAllCityNames" resultType="String" parameterType="Map">
+		SELECT
+			DISTINCT (pub_cityaddr.city)
+		FROM
+			pub_cityaddr
+		where
+			pub_cityaddr.status=1
+		and pub_cityaddr.cityInitials IS NOT null
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+				pub_cityaddr.city LIKE '%${cityword}%' or
+				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+			)
+		</if>
+		ORDER BY
+		pub_cityaddr.fullpinyin
+	</select>
+	
+	<!-- 获取附近司机参数 -->
+	<select id="getNearDriverParam" resultType="map">
+		select * from pub_dictionary where type = "附近司机" and status = 1 limit 1
+	</select>
+
+	<!--获取返还积分的开关-->
+	<select id="getAwardOnOff" resultType="Map">
+		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='订单返还开关'
+	</select>
+
+	<!--折扣是否开关打开-->
+	<select id="getZKOnOff" resultType="Map">
+		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='订单折扣开关'
+	</select>
+
+	<!--获取积分返还的比例信息-->
+	<select id="getAwardPoint" parameterType="Map" resultType="Map">
+		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type=#{type}
+	</select>
+
+	<!--获取折扣比例-->
+	<select id="getZKInfo" parameterType="Map" resultType="Map">
+		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type=#{type}
+	</select>
+
+	<!--积分返回是否达到上限-->
+	<select id="getAwardStopInfo" resultType="Map">
+		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='订单返还金额活动是否终止'
+	</select>
+</mapper>

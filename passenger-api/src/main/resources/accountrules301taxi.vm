@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style type="text/css">
+            * { margin:0; padding:0;}
+            table {
+                border-collapse: collapse;
+                border-spacing:10px;
+                width:100%;
+                line-height:22px;
+                font-size:12px;
+            }
+            tr,td {
+                border: 1px solid gainsboro;
+                background: white;
+            }
+            td {
+                /*	padding:1px 2px;*/
+            }
+            .con{
+                border: 0px;
+                border-collapse:separate;
+
+            }
+            .noborder{
+                border:0px;
+                width: 100px;
+            }
+            img{
+                width: 100px;
+                height: 50px;
+                vertical-align: middle;
+                margin-right: 5px;
+            }
+            .midtd{
+                width:50%;
+                text-align:center;
+                height:35px;
+            }
+            span{
+                margin-left: 11px;
+            }
+        </style>
+    </head>
+    <body style="background:#f0f0f0;height:100%;">
+        <div style="position:absolute;height:100px;left:0px;right:0px;top:10px;">
+            <div style="text-align:center;">
+                <img src="../img/taxicar.png" />
+            </div>
+            <div style="text-align:center;"><span>出租车</span></div>
+            <div style="margin:1rem;"><hr /></div>
+        </div>
+        <div style="position:absolute;top:115px;bottom:55px;left:10px;right:10px;">
+            <table>
+                <tr>
+                    <td class="midtd">起租价</td>
+                    <td class="midtd">${rule.startprice}元</td>
+                </tr>
+                <tr>
+                    <td class="midtd">起租里程</td>
+                    <td class="midtd">${rule.startrange}公里</td>
+                </tr>
+                <tr>
+                    <td class="midtd">续租价</td>
+                    <td class="midtd">${rule.renewalprice}元/公里</td>
+                </tr>
+                <tr>
+                    <td class="midtd">附加费</td>
+                    <td class="midtd">${rule.surcharge}元</td>
+                </tr>
+                <tr>
+                    <td class="midtd">标准里程</td>
+                    <td class="midtd">${rule.standardrange}公里</td>
+                </tr>
+                <tr>
+                    <td class="midtd">空驶费率</td>
+                    <td class="midtd">${rule.emptytravelrate}%</td>
+                </tr>
+            </table>
+        </div>
+        <div style="position:absolute;bottom:5px;height:50px;left:5px;right:5px;">
+            <span>
+                 注：司机服务过程中产生的高速费、路桥费、停车费等其他费用由乘客自己支付
+            </span>
+        </div>
+    </body>
+</html>
