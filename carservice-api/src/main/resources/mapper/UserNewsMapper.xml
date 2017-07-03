@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.UserNewsApiMapper">
+
+	<resultMap id="userNewsObj" type="com.szyciov.entity.UserNews"/>
+
+	<insert id="saveUserNews" parameterType="com.szyciov.param.UserNewsParam">
+		INSERT INTO ${userNewsTbName}
+		(id, userid, type, content, newsstate,createtime, updatetime,status)
+		VALUES (#{userNews.id}, #{userNews.userid}, #{userNews.type}, #{userNews.content}
+		,#{userNews.newsstate}, now(), now(), 1)
+	</insert>
+
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.VehicleMapper">
+
+	<!-- 根据车架号 查询车辆信息 联想下拉框使用 -->
+	<select id="listVehicleBySelect" resultType="PubVehicleSelectDto" parameterType="PubVehicleSelectParam">
+		select
+			id, vin as text
+		from
+			pub_vehicle
+		where 1=1
+			<if test="leasescompanyid!=null and leasescompanyid!=''">
+				and leasescompanyid = #{leasescompanyid}
+			</if>
+			and platformtype = #{platformtype}
+			and (vin like concat('%', #{queryText}, '%'))
+	</select>
+
+
+	<!-- 根据车架号 查询车辆信息 联想下拉框使用 -->
+	<select id="listVehicleByPlateno" resultType="PubVehicleSelectDto" parameterType="PubVehicleSelectParam">
+		select
+		id, getPlatenoStr(t.platenoprovince,t.platenocity,t.plateno) as text
+		from
+		pub_vehicle t
+		where 1=1
+		<if test="leasescompanyid!=null and leasescompanyid!=''">
+			and t.leasescompanyid = #{leasescompanyid}
+		</if>
+		<if test="vehicletype!=null and vehicletype!=''">
+			and vehicletype = #{vehicletype}
+		</if>
+		and platformtype = #{platformtype}
+		and (getPlatenoStr(t.platenoprovince,t.platenocity,t.plateno) like concat('%', #{queryText}, '%'))
+	</select>
+
+
+</mapper>

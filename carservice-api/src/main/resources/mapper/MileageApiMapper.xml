@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.MileageApiMapper">
+
+    <!-- 根据订单号查询订单GPS数据 -->
+	<select id="getOrdergpsdataByOrderno" parameterType="PubOrdergpsdata" resultType="PubOrdergpsdata">
+      select
+        *
+      from
+        pub_ordergpsdata
+      where
+        orderno = #{orderno} and gpssource = #{gpssource} and status = 1
+        <if test='null != gpsstatus'>
+            and gpsstatus = #{gpsstatus}
+        </if>
+      order by gpstime asc
+    </select>
+
+    <!-- 根据订单号查询订单GPS历史数据作为订单GPS数据 -->
+    <select id="getOrdergpsdataHistoryByOrderno" parameterType="PubOrdergpsdata" resultType="PubOrdergpsdata">
+      select
+        *
+      from
+        pub_ordergpsdata_history
+      where
+        orderno = #{orderno} and gpssource = #{gpssource} and status = 1
+        <if test='null != gpsstatus'>
+            and gpsstatus = #{gpsstatus}
+        </if>
+      order by gpstime asc
+    </select>
+
+    <!-- 添加订单里程计算日志 -->
+    <insert id="insertPubOrdermileagecalcLog" parameterType="PubOrdermileagecalcLog">
+      insert into pub_ordermileagecalc_log(id, orderno, obdmileage, obdgpsmileage, appmileage, lbsyunmileage, estimatedmileage,
+        calctype, createtime, updatetime, status, optimizeobdmileage, optimizeobdgpsmileage, optimizeappgpsmileage)
+      values(#{id}, #{orderno}, #{obdmileage}, #{obdgpsmileage}, #{appmileage}, #{lbsyunmileage}, #{estimatedmileage}, #{calctype},
+        now(), now(), 1, #{optimizeobdmileage}, #{optimizeobdgpsmileage}, #{optimizeappgpsmileage})
+    </insert>
+
+    <!-- 查询车辆信息 -->
+    <select id="getVehicleById" parameterType="string" resultType="PubVehicle">
+      select
+        pub_vehicle.id, pub_vehicle.driverid, getPlatenoStr(pub_vehicle.platenoprovince, pub_vehicle.platenocity, pub_vehicle.plateno) plateno
+      from
+        pub_vehicle
+      where
+        pub_vehicle.id = #{vehicleId} and status = 1
+    </select>
+
+    <!-- 更新司机gps信息 -->
+    <update id="updateDriverGps" parameterType="PubDriver">
+      update pub_driver set gpstime = #{gpstime}, gpsspeed = #{gpsspeed}, gpsdirection = #{gpsdirection}, lng = #{lng}, lat = #{lat},
+        gpssource = #{gpssource}, updatetime = now() where id = #{id}
+    </update>
+
+    <!-- 添加司机gps信息 -->
+    <insert id="insertPubDrivertrack" parameterType="PubDrivertrack">
+      insert into pub_drivertrack(id, driverid, gpsspeed, gpsdirection, lng, lat, createtime, updatetime, status)
+        values(#{id}, #{driverid}, #{gpsspeed}, #{gpsdirection}, #{lng}, #{lat}, now(), now(), 1)
+    </insert>
+
+    <!-- 根据查询司机信息 -->
+    <select id="getPubDriverById" parameterType="string" resultType="PubDriver">
+      select * from pub_driver where id = #{driverid} and status = 1
+    </select>
+
+    <!-- 查询司机当前正在服务的订单 -->
+    <select id="getOrderByDriver" parameterType="PubDriver" resultType="string">
+      <if test="vehicletype == 0">
+              select
+                orderno
+              from
+                org_order
+              where
+                driverid = #{id} and status = 1 and orderstatus in ("6", "7")
+                <![CDATA[
+                  and starttime <= date_format(#{gpstime}, '%Y-%m-%d %H:%i:%s')
+                ]]>
+                <![CDATA[
+                  and ifnull(endtime, date_format(now(), '%Y-%m-%d %H:%i:%s')) >= date_format(#{gpstime}, '%Y-%m-%d %H:%i:%s')
+                ]]>
+              limit 1
+          union
+              select
+                orderno
+              from
+                op_order
+              where
+                driverid = #{id} and status = 1 and orderstatus in ("6", "7")
+                <![CDATA[
+                  and starttime <= date_format(#{gpstime}, '%Y-%m-%d %H:%i:%s')
+                ]]>
+                <![CDATA[
+                  and ifnull(endtime, date_format(now(), '%Y-%m-%d %H:%i:%s')) >= date_format(#{gpstime}, '%Y-%m-%d %H:%i:%s')
+                ]]>
+              limit 1
+      </if>
+      <if test="vehicletype == 1">
+          select
+            orderno
+          from
+            op_taxiorder
+          where
+            driverid = #{id} and status = 1 and orderstatus in ("6", "7", "9") and paymentstatus in ("0", "4", "5")
+            <![CDATA[
+              and starttime <= date_format(#{gpstime}, '%Y-%m-%d %H:%i:%s')
+            ]]>
+            <![CDATA[
+              and ifnull(endtime, date_format(now(), '%Y-%m-%d %H:%i:%s')) >= date_format(#{gpstime}, '%Y-%m-%d %H:%i:%s')
+            ]]>
+          limit 1
+      </if>
+    </select>
+
+    <!-- 添加订单gps数据 -->
+    <insert id="insertPubOrdergpsdata" parameterType="PubOrdergpsdata">
+      insert into pub_ordergpsdata(id, orderno, deviceid, vehicleid, lng, lat, gpsdirection, gpsspeed, obdspeed, gpstime, gpssource, mileage, fuel,
+          basestationcode, createtime, updatetime, status, gpsstatus)
+        values(#{id}, #{orderno}, #{deviceid}, #{vehicleid}, #{lng}, #{lat}, #{gpsdirection}, #{gpsspeed}, #{obdspeed}, #{gpstime}, #{gpssource},
+          #{mileage}, #{fuel}, #{basestationcode}, now(), now(), 1, #{gpsstatus})
+    </insert>
+
+    <!-- 订单GPS数据迁移 -->
+    <select id="getPubOrdergpsdataByMigration" resultType="PubOrdergpsdata">
+      select * from pub_ordergpsdata where timestampadd(day, 10, gpstime) &lt; now()
+    </select>
+    
+    <insert id="insertPubOrdergpsdataHistory" parameterType="PubOrdergpsdata">
+      insert into pub_ordergpsdata_history(id, orderno, deviceid, vehicleid, lng, lat, gpsdirection, gpsspeed, obdspeed, gpstime, gpssource, mileage, fuel,
+          basestationcode, createtime, updatetime, status, gpsstatus)
+        values(#{id}, #{orderno}, #{deviceid}, #{vehicleid}, #{lng}, #{lat}, #{gpsdirection}, #{gpsspeed}, #{obdspeed}, #{gpstime}, #{gpssource},
+          #{mileage}, #{fuel}, #{basestationcode}, now(), now(), 1, #{gpsstatus})
+    </insert>
+    
+    <delete id="deletePubOrdergpsdataById" parameterType="string">
+      delete from pub_ordergpsdata where id = #{id}
+    </delete>
+
+    <!-- 查询GPS纠偏后坐标 -->
+    <select id="getBaiduOffset" parameterType="PubOrdergpsdata" resultType="PubOrdergpsdata">
+      select latitudeoffset lat, longitudeOffSet lng from eqp_baiduoffset where latitude=floor(#{lat}*100)*10000 and longitude=floor(#{lng}*100)*10000 limit 1
+    </select>
+    
+</mapper>

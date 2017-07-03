@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.PubInfoMapper">
+	<!-- All Select -->
+	<select id="getAirPorts" resultType="PubAirPortAddr">
+		SELECT
+			paa.*
+		FROM
+			pub_airportaddr paa
+		WHERE paa.`status` = 1
+	</select>
+	
+	<select id="getCities" resultType="PubCityAddr">
+		SELECT
+			pca.*
+		FROM
+			pub_cityaddr pca
+		WHERE pca.`status` = 1
+	</select>
+
+	<select id="getUseCarReason" resultType="Dictionary">
+		SELECT * FROM `pub_dictionary` WHERE `pub_dictionary`.`status` = 1 AND type = '用车事由' AND type != value
+	</select>
+
+	<select id="getPubSysVersion" resultType="PubSysVersion" parameterType="PubSysVersion">
+		SELECT
+			psv.*
+		FROM
+			pub_sysversion psv
+		WHERE 1=1
+		AND psv.status = 1
+		AND psv.platformtype = #{platformtype}
+		AND psv.systemtype = #{systemtype}
+		<if test="versionno > 0">
+		AND psv.versionno = #{versionno}
+		</if>
+		<if test="versionno == 0">
+		ORDER BY psv.releasedate DESC
+		LIMIT 0,1
+		</if>
+	</select>
+	
+	<select id="getPubAdImage" resultType="PubAdImage" parameterType="PubAdImage">
+		SELECT
+			pai.*
+		FROM
+			pub_adimage pai
+		WHERE 1=1
+		AND pai.status = 1
+		AND pai.apptype = #{apptype}
+		AND pai.imgtype = #{imgtype}
+		<if test="version != null and version != ''">
+		AND pai.version = #{version}
+		</if>
+		<if test="imgtype == 0"><!-- 广告页取时间段内启用的 -->
+		AND IFNULL(pai.usestate,1) = 0
+		AND DATEDIFF(NOW(),pai.starttime) >= 0
+		AND DATEDIFF(pai.endtime,NOW()) >= 0
+		</if>
+		<if test="imgtype == 1"><!-- 引导页取最细一条 -->
+		ORDER BY pai.updatetime DESC
+		LIMIT 1
+		</if>
+	</select>
+	<!-- All Update -->
+
+	<!-- All Insert -->
+	<insert id="createPubSysVersion" parameterType="PubSysVersion">
+		INSERT INTO pub_sysversion(
+			id,
+			platformtype,
+			systemtype,
+			curversion,
+			versionno,
+			maxversionno,
+			changelog,
+			createtime,
+			updatetime,
+			status
+		) VALUES(
+			#{id},
+			#{platformtype},
+			#{systemtype},
+			#{curversion},
+			#{versionno},
+			#{maxversionno},
+			#{changelog},
+			#{createtime},
+			#{updatetime},
+			#{status}
+		)
+	</insert>
+	
+	<select id="checkTokenValid" parameterType="HashMap" resultType="boolean">
+		SELECT
+			CASE
+		WHEN count(*) > 0 THEN
+			1
+		ELSE
+			0
+		END AS flag
+		FROM
+			pub_usertoken
+		WHERE
+			pub_usertoken.STATUS = 1
+		AND pub_usertoken.usertype = #{usertype}
+		AND pub_usertoken.usertoken = #{usertoken}
+	</select>
+	
+	<!-- 城市控件1 -->
+	<select id="getCitySelect1" resultType="map">
+		select
+			pub_provinceaddr.id provinceid, pub_provinceaddr.city provincecity, pub_provinceaddr.markid provincemarkid,
+			pub_cityaddr.id cityid, pub_cityaddr.city city, pub_cityaddr.markid citymarkid
+		from
+			pub_cityaddr left join pub_provinceaddr on pub_cityaddr.provinceid = pub_provinceaddr.id
+		where
+			pub_cityaddr.status = 1
+		order by
+			pub_provinceaddr.sortno desc, pub_provinceaddr.cityinitials, pub_cityaddr.sortno desc, pub_cityaddr.cityinitials
+	</select>
+	
+	<!-- 根据ID获取城市 -->
+	<select id="getCityById" parameterType="string" resultType="PubCityAddr">
+		select * from pub_cityaddr where id = #{id} and status = 1
+	</select>
+	
+</mapper>

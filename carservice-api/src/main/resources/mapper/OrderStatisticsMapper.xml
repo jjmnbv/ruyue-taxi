@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.OrderStatisticsMapper">
+<!-- 机构订单统计  t.usetype = '0' and t.paymethod = '2' 因公，机构支付-->
+	<insert id="leIndexOrderStatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `le_indexorderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`,`ordermoney`,`diffmoney`, `paidmoney`, `bepaidmoney`,
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, ordertype,
+		sum(case when t.paymentstatus = '3' then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('2','4') then 1 else 0 end) bepaidorders,
+	  sum(ifnull(shouldpayamount,0))ordermoney, 
+    (sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+		sum(case when t.paymentstatus in ('3') then ifnull(actualpayamount,0) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('2','4') then ifnull(actualpayamount,0) else 0 end) bepaidmoney,
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7' and  t.usetype = '0' and t.paymethod = '2' and t.status = 1
+		and t.paymentstatus in ('2','3','4')
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		
+		group by t.companyid, t.ordertype
+	</insert>
+	<!-- 个人订单统计  t.usetype = '0' and t.paymethod = '1' 因公，个人垫付。t.usetype = '1' and t.paymethod = '0' 因私，个人支付支付-->
+	<insert id="leIndexOrderStatisticsok" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `le_indexorderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`,`ordermoney`,`diffmoney`, `paidmoney`, `bepaidmoney`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, ordertype,
+		sum(case when t.paymentstatus in ('1') then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('0') then 1 else 0 end) bepaidorders,
+		sum(ifnull(shouldpayamount,0))ordermoney, 
+		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney, 
+		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,0) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,0) else 0 end) bepaidmoney,
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7' and ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
+		and t.paymentstatus in ('0','1') and t.status = 1
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		
+		group by t.companyid, t.ordertype
+	</insert>
+	
+	<insert id="leOrgOrderStatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+	<!-- 机构订单统计  t.usetype = '0' and t.paymethod = '2' 因公，机构支付-->
+		INSERT INTO `le_orgorderstatistics` 
+		(`id`, `leasescompanyid`, `organid`, `cityid`, `ordermoney`, `carorders`, `pickuporders`, `dropofforders`, 
+		`confirmedorders`, `processedorders`, `starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		
+		select uuid(), companyid leasescompanyid, organid, oncity,
+	    ifnull(sum(shouldpayamount), 0) ordermoney,
+		sum(case when t.ordertype in ('1') then 1 else 0 end) carorders,
+		sum(case when t.ordertype in ('2') then 1 else 0 end) pickuporders,
+		sum(case when t.ordertype in ('3') then 1 else 0 end) dropofforders,
+		sum(case when t.reviewstatus in ('2') then 1 else 0 end) confirmedorders,
+		sum(case when t.reviewstatus in ('1') then 1 else 0 end) processedorders,
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7' and t.usetype = '0' and t.paymethod = '2'
+		and t.paymentstatus in ('2','3','4') and t.status = 1
+		
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		group by t.companyid, t.organid, t.oncity
+	</insert>
+	
+	<!-- 个人订单统计  t.usetype = '0' and t.paymethod = '1' 因公，个人垫付。t.usetype = '1' and t.paymethod = '0' 因私，个人支付支付-->
+	<insert id="lePersonalOrderStatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `le_personalorderstatistics` (`id`, `leasescompanyid`, `cityid`, `type`,`ordertype`, `paymethod`, 
+		`ordernum`,`difforders`, `confirmedorders`, `processedorders`, `ordermoney`, `diffmoney`, `starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		
+		select uuid(), companyid leasescompanyid, oncity,'0' type,ordertype, paymethod,
+		count(1) ordernum,
+		sum((select count(*) from org_order o where o.orderno = t.orderno and (t.shouldpayamount - t.actualpayamount !=0))) AS difforders, 
+		sum(case when t.reviewstatus in ('2') then 1 else 0 end) confirmedorders,
+		sum(case when t.reviewstatus in ('1') then 1 else 0 end) processedorders,
+			sum(ifnull(shouldpayamount,0))ordermoney,
+     (sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+     #{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7'  and ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
+		and t.paymentstatus in ('0','1') and t.status = 1
+			<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		group by t.companyid, t.oncity, t.ordertype, t.paymethod
+	</insert>
+	
+	<!-- 个人订单统计TO_C-->
+	<insert id="lePersonalOrderStatisticsToC" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `le_personalorderstatistics` (`id`, `leasescompanyid`, `cityid`, `type`,`ordertype`, `paymentstatus`,
+		`ordernum`,`difforders`,`confirmedorders`, `processedorders`, `ordermoney`, `diffmoney`, `starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		
+	select uuid(), companyid leasescompanyid, oncity,'1' type,ordertype,paymentstatus,
+		count(1) ordernum,
+		sum((select count(*) from op_order o where o.orderno = t.orderno and (t.shouldpayamount - t.actualpayamount !=0))) AS difforders, 
+		sum(case when t.reviewstatus in ('2') then 1 else 0 end) confirmedorders,
+		sum(case when t.reviewstatus in ('1') then 1 else 0 end) processedorders,
+	 sum(ifnull(shouldpayamount,0))ordermoney,
+     (sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+     #{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from op_order t
+		where t.orderstatus = '7' 
+		and t.paymentstatus in ('0','1') and t.status = 1
+			<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		group by t.companyid, t.oncity, t.ordertype,t.paymentstatus
+	</insert>
+	<!-- 出租车订单统计 -->
+	<insert id="lePersonalOrderStatisticsTaxi" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+	     INSERT INTO `le_personalorderstatistics` (`id`, `leasescompanyid`, `cityid`, `type`,
+		`ordernum`,`ordermoney`, `schedulefee`,`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+	select uuid(), companyid leasescompanyid, oncity,'2' type,
+		count(1) ordernum,
+	  if(t.reviewstatus in (0,1),sum(t.actualpayamount),sum(t.shouldpayamount)) ordermoney,
+    ifnull(sum(schedulefee),0) schedulefee,
+    #{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from op_taxiorder t
+		where t.orderstatus = '7' 
+		and t.status = 1
+			<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		group by t.companyid, t.oncity
+	</insert>
+	<!-- 运管端首页 toB-->
+	<!-- 租赁公司数据统计所有机构用户订单 -->
+	<insert id="opIndexorderstatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `op_indexorderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, ordertype, 
+		sum(case when t.paymentstatus = '3' then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('2','4') then 1 else 0 end) bepaidorders,
+		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+		sum(case when t.paymentstatus in ('3') then ifnull(actualpayamount,orderamount) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('2','4') then ifnull(actualpayamount,orderamount) else 0 end) bepaidmoney,
+		'0' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7' and  t.usetype = '0' and t.paymethod = '2'
+		and t.paymentstatus in ('2','3','4') and t.status = 1
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		
+		group by t.companyid, t.ordertype
+	</insert>
+	<!-- 个人订单统计  t.usetype = '0' and t.paymethod = '1' 因公，个人垫付。t.usetype = '1' and t.paymethod = '0' 因私，个人支付支付-->
+	<insert id="opIndexorderstatisticsPB" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `op_indexorderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, ordertype, 
+		sum(case when t.paymentstatus in('1')then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('0') then 1 else 0 end) bepaidorders,
+		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,orderamount) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,orderamount) else 0 end) bepaidmoney,
+		'0' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7' and  ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
+		and t.paymentstatus in ('0','1') and t.status = 1
+		
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		
+		group by t.companyid, t.ordertype
+	</insert>
+	<!-- 个人用户数据统计  所有toC订单-->
+	<insert id="opIndexorderstatisticsP" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `op_indexorderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, ordertype, 
+		sum(case when t.paymentstatus in ('1') then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('0') then 1 else 0 end) bepaidorders,
+		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,orderamount) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,orderamount) else 0 end) bepaidmoney,
+		'1' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from op_order t
+		where t.orderstatus = '7' and t.status = 1
+		
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		
+		group by t.companyid, t.ordertype
+	</insert>
+	<!-- 出租车订单统计-->
+	<insert id="opIndexorderstatisticsTaxi" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `op_indexorderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, '4', 
+			sum(case when t.paymentstatus in ('1', '3','8') then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('0', '2','4','5','6','7') then 1 else 0 end) bepaidorders,
+		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+		(sum(case when t.paymentstatus in ('1','3','8') then ifnull(actualpayamount,0)+ifnull(t.schedulefee,0) else 0 end)
+	    +sum(case when t.paymentstatus in ('6') then ifnull(t.actualpayamount,0) else 0 end)
+	    +sum(case when t.paymentstatus in ('7') then  ifnull(t.schedulefee,0) else 0 end)) paidmoney,
+		(sum(case when t.paymentstatus in ('0','4','5') then ifnull(actualpayamount,0)+ifnull(t.schedulefee,0) else 0 end) 
+	    +sum(case when t.paymentstatus in ('6') then ifnull(t.schedulefee,0) else 0 end)
+	    +sum(case when t.paymentstatus in ('7') then  ifnull(actualpayamount,0)else 0 end)) bepaidmoney,
+	    '1' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from op_taxiorder t
+		where t.orderstatus = '7' and t.status = 1
+		and t.paymentstatus in ('0','1','3','4','5','6','7','8') 
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		group by t.companyid
+	</insert>
+	<!-- 运管端销售统计 toB订单-->
+	<!-- 机构订单统计  t.usetype = '0' and t.paymethod = '2' 因公，机构支付 -->
+	<insert id="opOrderstatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `op_orderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`,`ordermoney`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, ordertype, 
+		sum(case when t.paymentstatus = '3' then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('2','4') then 1 else 0 end) bepaidorders,
+		sum(ifnull(shouldpayamount,orderamount)) ordermoney,
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7' and t.usetype = '0' and t.paymethod = '2' and t.status = 1
+		and t.paymentstatus in ('2','3','4')
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		
+		group by t.companyid, t.ordertype
+	</insert>
+	<!-- 运管端销售统计 toB订单-->
+	<!-- 个人订单统计  t.usetype = '0' and t.paymethod = '1' 因公，个人垫付。t.usetype = '1' and t.paymethod = '0' 因私，个人支付支付-->
+	<insert id="opOrderstatisticsP" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `op_orderstatistics` 
+		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`,`ordermoney`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), companyid leasescompanyid, ordertype, 
+		sum(case when t.paymentstatus in ('1') then 1 else 0 end) paidorders,
+		sum(case when t.paymentstatus in ('0') then 1 else 0 end) bepaidorders,
+		 sum(ifnull(shouldpayamount,orderamount)) ordermoney,
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t 
+		where t.orderstatus = '7' and ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
+		and t.status = 1 and t.paymentstatus in ('0','1')
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		
+		group by t.companyid, t.ordertype
+	</insert>
+	
+	<!-- 机构端报表管理公司 -->
+	<insert id="orgCompanystatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `org_companystatistics` 
+		(`id`, `organid`,`leasescompanyid`, `ordertype`, `ordernum`,`ordermoney`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		select uuid(), organid,companyid leasescompanyid, ordertype, 
+		count(1) ordernum,
+		sum(ifnull(shouldpayamount,orderamount))ordermoney, 
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		from org_order t
+		where t.orderstatus = '7' and t.status = 1
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		and t.usetype in('0','1')
+        and t.paymethod in ('0','1','2')
+        and t.paymentstatus in ('0','1','2','3','4')
+		group by t.organid,t.companyid,t.ordertype
+	</insert>
+	<!-- 机构端报表管理部门 -->
+	<insert id="orgDeptstatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
+		INSERT INTO `org_deptstatistics` 
+		(`id`, `organid`,`deptid`, `ordertype`, `ordernum`,`ordermoney`, 
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+	select id,organid,deptid,ordertype,sum(ordernum) ordernum,sum(ordermoney) ordermoney,
+	    #{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+	   from(
+		select uuid() as id, organid,(select u.dpetid from org_user u where u.id = userid) as deptid ,ordertype,  
+		count(1) ordernum,
+		sum(ifnull(shouldpayamount,orderamount))ordermoney
+		from org_order t
+		where t.orderstatus = '7' 
+		and t.usetype in('0','1')
+        and t.paymethod in ('0','1','2')
+        and t.paymentstatus in ('0','1','2','3','4')
+        and t.status = 1
+		<![CDATA[
+		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
+		and DATE_FORMAT(usetime, '%Y-%m-%d') <= #{endDate}
+		]]>
+		group by t.organid,t.userid,t.ordertype)aa
+	 GROUP by organid,deptid,ordertype
+	</insert>
+	<select id="validateDataExists" parameterType="OrderStatisticsQueryParam" resultType="int">
+		select count(1) from ${tableName} where starttime = #{startDate} and endtime = #{endDate} limit 1
+	</select>
+	
+	<delete id="deleteRepeatData" parameterType="OrderStatisticsQueryParam">
+		delete from ${tableName} where starttime = #{startDate} and endtime = #{endDate}
+	</delete>
+	
+	<delete id="deleteData" parameterType="OrderStatisticsQueryParam">
+		delete from ${tableName}
+	</delete>
+</mapper>

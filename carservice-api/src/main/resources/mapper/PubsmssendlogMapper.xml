@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.PubsmssendlogMapper">
+	<insert id="insertPubsmssendlog" parameterType="Pubsmssendlog">
+	  insert into pub_smssendlog(id,phone,content,sendstate,sendtime,createtime,updatetime,status,receiptstate)
+	   values(uuid(),#{phone},#{content},#{sendstate},now(),now(),now(),1,#{receiptstate});
+	</insert>
+</mapper>

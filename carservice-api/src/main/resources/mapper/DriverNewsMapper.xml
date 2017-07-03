@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.DriverNewsApiMapper">
+
+
+	<insert id="saveDriverNews" parameterType="PubDriverNews">
+		INSERT INTO pub_drivernews
+		(id, userid, type, content, newsstate,createtime, updatetime,status)
+		VALUES (#{id}, #{userid}, #{type}, #{content}
+		,#{newsstate}, #{createtime},#{updatetime}, #{status})
+	</insert>
+
+</mapper>

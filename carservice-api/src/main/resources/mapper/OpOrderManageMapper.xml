@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.OpOrderManageMapper">
+    <!-- 人工派单修改订单数据 -->
+    <update id="manualSendOrder" parameterType="com.szyciov.op.entity.OpOrder">
+        update op_order set driverid=#{driverid}, companyid = #{companyid}, orderstatus='2', pricemodel = #{pricemodel}, factmodel = #{factmodel},
+        pricecopy = #{pricecopy}, vehicleid = #{vehicleid}, updatetime = now(), ordertime = now(), isusenow = #{isusenow}
+        where orderno=#{orderno}
+    </update>
+    <select id="getPubDriver" parameterType="String" resultType="com.szyciov.op.entity.PubDriver">
+        SELECT * FROM pub_driver where status = 1 AND id = #{id}
+    </select>
+    <!-- 根据车型查询计费规则 -->
+    <select id="findModelPriceByModels" parameterType="map" resultType="com.szyciov.op.entity.OpAccountrules">
+        select * from op_accountrules
+        where city = #{city}
+        and vehiclemodelsid = #{cartype}
+        and rulestype = #{rulestype}
+        and rulesstate = 0
+        and status = 1
+    </select>
+    <!-- 查询订单详情 -->
+    <select id="getOpOrder" parameterType="string" resultType="com.szyciov.op.entity.OpOrder">
+        select * from op_order where status = 1 and orderno = #{orderno}
+    </select>
+    <!-- 更新订单的车辆相关信息 -->
+    <update id="updateOpOrderVehicleByOrderno" parameterType="com.szyciov.op.entity.OpOrder">
+        update op_order set factmodelname = #{factmodelname}, pricemodelname = #{pricemodelname},
+        vehcbrandname = #{vehcbrandname}, vehclinename = #{vehclinename}, plateno = #{plateno} ,
+        belongleasecompany = #{belongleasecompany}
+        where orderno = #{orderno}
+    </update>
+    <!-- 根据订单号查询订单的车辆相关信息 -->
+    <select id="getOpOrderVehicleByOrder" resultType="map" parameterType="string">
+        select
+        (select op_vehiclemodels.name from op_vehiclemodels where op_order.factmodel = op_vehiclemodels.id) factmodelname,
+        (select op_vehiclemodels.name from op_vehiclemodels where op_order.pricemodel = op_vehiclemodels.id) pricemodelname,
+        pub_vehcbrand.name vehcbrandname, pub_vehcline.name vehclinename,
+        concat((select text from pub_dictionary where type = '车牌省' and value = pub_vehicle.platenoprovince),
+        (select text from pub_dictionary where type = '车牌市' and value = pub_vehicle.platenocity), pub_vehicle.plateno) plateno
+        from
+        op_order left join pub_vehicle on op_order.vehicleid = pub_vehicle.id
+        left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
+        left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.id
+        where
+        op_order.orderno = #{orderno}
+    </select>
+    <!-- 添加人工派单记录 -->
+    <insert id="insertOpSendrecord" parameterType="com.szyciov.op.entity.OpSendrecord">
+        insert into op_sendrecord(id, orderno, driverid, operator, chargemodel, reason, sendtime, createtime, updatetime, status)
+        values(#{id}, #{orderno}, #{driverid}, #{operator}, #{chargemodel}, #{reason}, now(), now(), now(), 1)
+    </insert>
+</mapper>

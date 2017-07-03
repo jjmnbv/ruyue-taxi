@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.GiveIntegrationMapper">
+	<select id="findKeyValue"  resultType="PubDictionary">
+       select value,text from pub_dictionary where type = '订单返还金额活动是否终止'
+    </select>
+    <update id="updateKeyText">
+       update pub_dictionary set text = '1' where type = '订单返还金额活动是否终止'
+    </update>
+    <select id="findAllUsers" resultType="String">
+     select account from pe_user where status = 1
+      UNION all
+     select account from org_user where status = 1
+    </select>
+</mapper>

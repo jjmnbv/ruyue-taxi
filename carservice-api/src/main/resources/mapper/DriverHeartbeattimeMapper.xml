@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.DriverHeartbeattimeMapper">
+	<update id="setDriverHeartbeattime">
+	 UPDATE pub_driver SET pub_driver.workstatus = '2',
+	   pub_driver.onlinetime = IF(pub_driver.uptime is null,null,(UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(pub_driver.uptime)+IFNULL(pub_driver.onlinetime,0 ))) 
+	  where pub_driver.id in (
+      SELECT aa.id from (select pub_driver.id from pub_driver where  pub_driver.workstatus in ('0')
+      <![CDATA[
+      and TIMESTAMPDIFF(MINUTE,pub_driver.heartbeattime,DATE_FORMAT(NOW(),'%Y-%m-%d %H:%i:%s'))>=30
+      ]]>)aa)
+	</update>
+</mapper>

@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.DriverMapper">
+	
+	<select id="getDriverByQuery" resultType="map" parameterType="OrderManageQueryParam">
+		select a.id driverid, a.`name` drivername, a.workstatus, a.lat, a.lng, a.phone, a.headportraitmin, c.plateno, concat(e.`Name`, '.', d.`name`) brandname, g.`name` modelname
+		from pub_driver a, pub_driver_vehicle_ref b, pub_vehicle c, pub_vehcline d, pub_vehcbrand e, le_vehcline_models_ref f, le_vehiclemodels g
+		
+		where b.driverid = a.id and b.vehicleid = c.id and c.vehclineid = d.id and d.vehcBrandID = e.Id and f.vehclineid = d.Id and f.vehiclemodelsid = g.Id
+		and a.`Status` = 1 and b.`Status` = 1 and c.`Status` = 1 and d.`Status` = 1 and f.`Status` = 1 and g.`Status` = 1 and a.workstatus = 0
+		
+		<if test="driverState != null and driverState != ''">
+			and a.workstatus = #{driverState}
+		</if>
+		<if test="selectedmodel != null and selectedmodel != ''">
+			and a.workstatus = #{selectedmodel}
+		</if>
+		<if test="minLat != null and minLat != '' and maxLat != null and maxLat != ''">
+		<![CDATA[
+			and a.lat >= ${minLat} and a.lat <= ${maxLat}
+		]]>
+		</if>
+		<if test="minLon != null and minLon != '' and maxLon != null and maxLon != ''">
+		<![CDATA[
+			and a.lng >= ${minLon} and a.lng <= ${maxLon}
+		]]>
+		</if>
+		
+		<if test="driverPaging != null and driverPaging != ''">
+			limit #{iDisplayStart}, #{iDisplayLength}
+		</if>
+	</select>
+	
+	<select id="getDriverCountByQuery" resultType="int" parameterType="OrderManageQueryParam">
+		select count(*) 
+		from pub_driver a, pub_driver_vehicle_ref b, pub_vehicle c, pub_vehcline d, pub_vehcbrand e, le_vehcline_models_ref f, le_vehiclemodels g
+		
+		where b.driverid = a.id and b.vehicleid = c.id and c.vehclineid = d.id and d.vehcBrandID = e.Id and f.vehclineid = d.Id and f.vehiclemodelsid = g.Id
+		and a.`Status` = 1 and b.`Status` = 1 and c.`Status` = 1 and d.`Status` = 1 and f.`Status` = 1 and g.`Status` = 1 and a.workstatus = 0
+		
+		<if test="driverState != null and driverState != ''">
+			and a.workstatus = #{driverState}
+		</if>
+		<if test="selectedmodel != null and selectedmodel != ''">
+			and a.workstatus = #{selectedmodel}
+		</if>
+		<if test="minLat != null and minLat != '' and maxLat != null and maxLat != ''">
+		<![CDATA[
+			and a.lat >= ${minLat} and a.lat <= ${maxLat}
+		]]>
+		</if>
+		<if test="minLon != null and minLon != '' and maxLon != null and maxLon != ''">
+		<![CDATA[
+			and a.lng >= ${minLon} and a.lng <= ${maxLon}
+		]]>
+		</if>
+	</select>
+	
+	<!-- 查询租赁公司对应的司机信息 -->
+	<select id="listPubDriverBySelect" resultType="PubDriverSelectDto" parameterType="PubDriverSelectParam">
+		select
+			id, name, phone
+		from
+			pub_driver
+		where 1=1
+		 and status = 1
+			<if test="jobstatus!=null and jobstatus!=''">
+				and jobstatus = #{jobstatus}
+			</if>
+
+			<if test="vehicletype!=null and vehicletype!=''">
+				and vehicletype = #{vehicletype}
+			</if>
+			<if test='null != toC and toC == "0"'>
+				and ((leasescompanyid in
+				(select id from le_leasescompany where tocstate = "2" and status = 1)
+				and platformtype = "1")
+				or platformtype = "0")
+			</if>
+			<if test='null != toC and toC == "1"'>
+				<if test="null != leasescompanyid and leasescompanyid !=''">
+					and leasescompanyid = #{leasescompanyid}
+				</if>
+				and platformtype = #{platformtype}
+			</if>
+			
+			<if test="null != queryText and queryText !=''">
+				and (name like concat('%', #{queryText}, '%') or phone like concat('%', #{queryText}, '%'))
+			</if>
+
+			<if test="boundstate!=null and boundstate!=''">
+				and boundstate = #{boundstate}
+			</if>
+			<if test="city !=null and city !=''">
+				and city = #{city}
+			</if>
+			<if test="belongLeasecompany !=null and belongLeasecompany !=''">
+				and belongleasecompany = #{belongLeasecompany}
+			</if>
+	</select>
+
+	<!-- 查询司机信息 -->
+	<select id="listPubDriverBySelectJobNum" resultType="PubDriverSelectDto" parameterType="PubDriverSelectParam">
+		select
+		id, jobnum
+		from
+		pub_driver
+		where
+		platformtype = #{platformtype} and status = 1
+		<if test="jobstatus!=null and jobstatus!=''">
+			and jobstatus = #{jobstatus}
+		</if>
+		<if test="leasescompanyid!=null and leasescompanyid!=''">
+			and leasescompanyid = #{leasescompanyid}
+		</if>
+		<if test="boundstate!=null and boundstate!=''">
+			and boundstate = #{boundstate}
+		</if>
+		<if test="vehicletype!=null and vehicletype!=''">
+			and vehicletype = #{vehicletype}
+		</if>
+		<if test="null != queryText and queryText !=''">
+			and (jobnum like concat('%', #{queryText}, '%'))
+		</if>
+		<if test="city !=null and city !=''">
+			and city = #{city}
+		</if>
+		<if test="belongLeasecompany !=null and belongLeasecompany !=''">
+			and belongleasecompany = #{belongLeasecompany}
+		</if>
+	</select>
+
+
+	<select id="getDriverInfoById" parameterType="String" resultType="DriverInfo">
+		SELECT
+		CONCAT(
+		(
+		SELECT
+		pub_dictionary.text
+		FROM
+		pub_dictionary
+		WHERE
+		pub_dictionary.type = '车牌省'
+		AND pub_dictionary.`value` = pv.platenoprovince
+		AND pub_dictionary.`status` = 1
+		),
+		(
+		SELECT
+		pub_dictionary.text
+		FROM
+		pub_dictionary
+		WHERE
+		pub_dictionary.type = '车牌市'
+		AND pub_dictionary.`value` = pv.platenocity
+		AND pub_dictionary.`status` = 1
+		),
+		pv.plateno
+		) plateno,
+		pd.id,
+		pd.`name` drivername,
+		pd.phone driverphone,
+		pd.headportraitmax headportraitmax,
+		pd.headportraitmin headportraitmin,
+		IFNULL(pd.avgrate,4.5) driverrate,
+		pd.ordercount supportorder,
+		pd.jobnum,
+		pd.workstatus,
+		IFNULL(pd.passworkstatus,'0') passworkstatus,
+		pd.vehicletype drivertype,
+		IFNULL((pd.wdpwdchangestate != 0),FALSE) wdpchanged,
+		IFNULL((pd.passworkstatus != 0),FALSE) hasworkmate,
+		lv.`name` cartype,
+		ov.`name` opcartype,
+		pvb.`Name` carbrand,
+		pvc.`name` carvehcline,
+		(
+		CASE pd.platformtype
+		WHEN 0
+		THEN (SELECT opi.servcietel FROM op_platforminfo opi WHERE opi.status = 1)
+		WHEN 1
+		THEN (SELECT llc.servicesphone FROM le_leasescompany llc WHERE llc.status = 1 AND pd.leasescompanyid = llc.id)
+		END
+		) contact,
+		pv.color
+		FROM
+		pub_driver pd
+		LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
+		AND pdvr.driverId = pd.id
+		LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
+		AND pv.id = pdvr.vehicleId
+		LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
+		AND pvc.Id = pv.vehclineid
+		LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
+		AND pvb.Id = pvc.vehcBrandID
+		LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
+		AND ovvr.vehicleid = pdvr.vehicleId
+		LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
+		AND ov.Id = ovvr.vehiclemodelsid
+		LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
+		AND lvmr.vehclineid = pv.vehclineid
+		LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+		AND lv.Id = lvmr.vehiclemodelsid
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pd.id = #{id}
+	</select>
+
+
+	<select id="getOpDriverInBoundWithSimple" parameterType="PubDriverInBoundParam" resultType="PubDriver">
+		SELECT
+			pd.*,
+			pv.id vehicleid
+		FROM pub_driver pd,pub_driver_vehicle_ref pdvr,pub_vehicle pv,pub_vehicle_scope pvs,
+		op_vehcline_models_ref ovmr,op_vehiclemodels ov
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`status` = 1
+		AND ovmr.`status` = 1
+		AND ov.`status` = 1
+		AND pvs.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pdvr.driverid = pd.id
+		AND pdvr.vehicleid = pv.id
+		AND ovmr.vehclineid = pv.vehclineid
+		AND ovmr.vehiclemodelsid = ov.Id
+		AND pvs.vehicleid = pv.id
+		AND pd.workstatus IN(#{workstatuslist})
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+		UNION ALL 
+		SELECT
+			pd.*,
+			pv.id vehicleid
+		FROM pub_driver pd,pub_driver_vehicle_ref pdvr,pub_vehicle pv,pub_vehicle_scope pvs,
+		op_vehiclemodels_vehicle_ref ovvr,op_vehiclemodels ov
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`status` = 1
+		AND ovvr.`status` = 1
+		AND ov.`status` = 1
+		AND pvs.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pdvr.driverid = pd.id
+		AND pdvr.vehicleid = pv.id
+		AND ovvr.vehicleid = pv.id
+		AND ovvr.vehiclemodelsid = ov.Id
+		AND pvs.vehicleid = pv.id
+		AND pd.workstatus IN(#{workstatuslist})
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+	</select>
+	
+	<select id="getLeDriverInBoundWithSimple" parameterType="PubDriverInBoundParam" resultType="PubDriver">
+		SELECT
+			pd.*,
+			pv.id vehicleid
+		FROM
+			pub_driver pd,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_vehcline pvc,
+			pub_vehcbrand pvb,
+			pub_vehicle_scope pvs,
+			le_vehcline_models_ref lvmr,
+			le_vehiclemodels lv
+		WHERE 1 = 1
+		AND pvs.`Status` = 1
+		AND pvc.`Status` = 1
+		AND pvb.`Status` = 1
+		AND lv.`Status` = 1
+		AND pv.`Status` = 1
+		AND lvmr.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		AND lvmr.vehclineid = pv.vehclineid
+		AND lvmr.vehiclemodelsid = lv.Id
+		AND pv.vehclineid = pvc.Id
+		AND pvc.vehcBrandID = pvb.Id
+		AND pd.workstatus IN(${workstatuslist})
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+	</select>
+	
+	<select id="getOpDriverInBound" parameterType="PubDriverInBoundParam" resultType="PubDriver">
+		SELECT
+			pd.*,
+			pv.id vehicleid,
+			ov.level vehiclelevel
+		FROM pub_driver pd,pub_driver_vehicle_ref pdvr,pub_vehicle pv,pub_vehicle_scope pvs,
+		op_vehcline_models_ref ovmr,op_vehiclemodels ov,op_order oo
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`status` = 1
+		AND ovmr.`status` = 1
+		AND ov.`status` = 1
+		AND oo.`status` = 1
+		AND pvs.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pdvr.driverid = pd.id
+		AND pdvr.vehicleid = pv.id
+		AND ovmr.vehclineid = pv.vehclineid
+		AND ovmr.vehiclemodelsid = ov.Id
+		AND pvs.vehicleid = pv.id
+		AND (oo.oncity = pvs.cityid OR oo.offcity = pvs.cityid)
+		AND oo.orderno = #{orderno}
+		AND pd.workstatus IN(${workstatuslist})
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		<if test="allowgrade == false">
+		AND ov.Id = #{cartype}
+		</if>
+		<if test="allowgrade == true">
+		AND ov.level IN (${levellist})
+		</if>
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+		<if test="alreadySendDrivers != null and alreadySendDrivers != ''">
+		AND pd.id NOT IN(${alreadySendDrivers})
+		</if>
+		UNION ALL 
+		SELECT
+			pd.*,
+			pv.id vehicleid
+		FROM pub_driver pd,pub_driver_vehicle_ref pdvr,pub_vehicle pv,pub_vehicle_scope pvs,
+		op_vehiclemodels_vehicle_ref ovvr,op_vehiclemodels ov,op_order oo
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`status` = 1
+		AND ovvr.`status` = 1
+		AND ov.`status` = 1
+		AND oo.`status` = 1
+		AND pvs.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pdvr.driverid = pd.id
+		AND pdvr.vehicleid = pv.id
+		AND ovvr.vehicleid = pv.id
+		AND ovvr.vehiclemodelsid = ov.Id
+		AND pvs.vehicleid = pv.id
+		AND (oo.oncity = pvs.cityid OR oo.offcity = pvs.cityid)
+		AND oo.orderno = #{orderno}
+		AND pd.workstatus IN(${workstatuslist})
+		<if test="companyid != null and companyid != ''">
+		AND pd.leasescompanyid = #{companyid}
+		</if>
+		<if test="allowgrade == false">
+		AND ov.Id = #{cartype}
+		</if>
+		<if test="allowgrade == true">
+		AND ov.level IN (${levellist})
+		</if>
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+		<if test="alreadySendDrivers != null and alreadySendDrivers != ''">
+		AND pd.id NOT IN(${alreadySendDrivers})
+		</if>
+		<!-- 暂时不过滤司机与下单人相同手机号 -->
+<!-- 		<if test="userid != null and userid != ''"> -->
+<!-- 		AND pd.phone != ( -->
+<!-- 			SELECT pe.account FROM pe_user pe WHERE pe.`status` = 1 AND pe.id=#{userid} -->
+<!-- 		) -->
+<!-- 		</if> -->
+	</select>
+	
+	<select id="getLeDriverInBound" parameterType="PubDriverInBoundParam" resultType="PubDriver">
+		SELECT
+			pd.*,
+			pv.id vehicleid,
+			lv.level vehiclelevel
+		FROM
+			pub_driver pd,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_vehcline pvc,
+			pub_vehcbrand pvb,
+			pub_vehicle_scope pvs,
+			le_vehcline_models_ref lvmr,
+			le_vehiclemodels lv,
+			org_order oo
+		WHERE 1 = 1
+		AND oo.`status` = 1
+		AND pvs.`Status` = 1
+		AND pvc.`Status` = 1
+		AND pvb.`Status` = 1
+		AND lv.`Status` = 1
+		AND pv.`Status` = 1
+		AND lvmr.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = #{vehicletype}
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		AND lvmr.vehclineid = pv.vehclineid
+		AND lvmr.vehiclemodelsid = lv.Id
+		AND pv.vehclineid = pvc.Id
+		AND pvc.vehcBrandID = pvb.Id
+		AND (oo.oncity = pvs.cityid OR oo.offcity = pvs.cityid)
+		AND oo.orderno = #{orderno}
+		AND pd.leasescompanyid = #{companyid}
+		AND pd.workstatus IN(${workstatuslist})
+		<if test="allowgrade == false">
+		AND lv.Id = #{cartype}
+		</if>
+		<if test="allowgrade == true">
+		AND lv.level IN (${levellist})
+		</if>
+		<![CDATA[
+		AND pd.lng >= #{minLng}
+		AND pd.lng <= #{maxLng}
+		AND pd.lat >= #{minLat}
+		AND pd.lat <= #{maxLat}
+		]]>
+		<if test="alreadySendDrivers != null and alreadySendDrivers != ''">
+		AND pd.id NOT IN(${alreadySendDrivers})
+		</if>
+		<!-- 暂时不过滤司机与下单人相同手机号 -->
+<!-- 		<if test="userid != null and userid != ''"> -->
+<!-- 		AND pd.phone != ( -->
+<!-- 			SELECT ou.account FROM org_user ou WHERE ou.`status` = 1 AND ou.id=#{userid} -->
+<!-- 		) -->
+<!-- 		</if> -->
+	</select>
+	
+	<select id="getLeDriverLevels" parameterType="PubDriverInBoundParam" resultType="LeVehiclemodels">
+		SELECT lvm.* FROM 
+		`le_vehiclemodels` lvm 
+		WHERE 1=1
+		AND lvm.`Status` = 1 
+		AND lvm.leasescompanyid = #{companyid} 
+		AND lvm.`level` >= (
+			SELECT `level` FROM 
+			`le_vehiclemodels` lvm 
+			WHERE 1=1
+			AND lvm.`Status` = 1
+			AND lvm.Id = #{cartype} 
+		)
+		ORDER BY lvm.`level` ASC;
+	</select>
+	
+	<select id="getSpecialDriver" parameterType="PubDriverInBoundParam" resultType="PubDriver">
+		SELECT
+			pd.*, pv.id vehicleid
+		FROM
+			pub_vehicle_scope pvs,
+			pub_driver_vehicle_ref pdvr,
+			pub_vehicle pv,
+			pub_driver pd
+		WHERE
+			1 = 1
+		AND pvs.`Status` = 1
+		AND pv.`Status` = 1
+		AND pdvr.`Status` = 1
+		AND pd.`Status` = 1
+		AND pd.jobstatus = 0
+		<!-- 指定只推送网约车司机 -->
+		AND pd.vehicletype = 0
+		AND pvs.vehicleid = pv.id
+		AND pdvr.driverId = pd.id
+		AND pdvr.vehicleId = pv.id
+		<!-- 除了机构跟司机有关联关系,司机本身也必须是特殊司机,如果租赁公司取消了司机的特殊身份,那么就不算是特殊司机 -->
+		AND pd.identitytype = 1
+		AND pd.workstatus IN(${workstatuslist})
+		AND pvs.cityid = #{city}
+		AND pd.id IN (
+			SELECT
+				oudr.driverid
+			FROM
+				org_user_driver_ref oudr
+			WHERE 1=1
+			AND oudr.`status` = 1
+			AND oudr.userid = #{userid}
+		)
+	</select>
+	
+	<update id="updateOpPushNum" parameterType="PubDriverInBoundParam">
+		UPDATE op_order oo SET oo.pushnumber = #{pushcount} WHERE oo.`status` = 1 AND oo.orderno = #{orderno}
+	</update>
+	
+	<update id="updateLePushNum" parameterType="PubDriverInBoundParam">
+		UPDATE org_order oo SET oo.pushnumber = #{pushcount} WHERE oo.`status` = 1 AND oo.orderno = #{orderno}
+	</update>
+
+
+    <select id="getRightNowUnExceptDriver" resultType="java.lang.String">
+        select distinct p.phone
+            from org_order o
+            inner join pub_driver p on o.driverid = p.id
+            where 1=1
+            and (
+            p.workstatus='1'
+            or
+            (o.isusenow=1 and o.orderstatus !='7' and o.orderstatus != '8')
+            or
+            (o.isusenow=0
+            	and TIMESTAMPDIFF(MINUTE, str_to_date(#{usetime}, '%Y-%m-%d %H:%i:%s'), usetime) &lt; 120
+            	and TIMESTAMPDIFF(MINUTE, str_to_date(#{usetime}, '%Y-%m-%d %H:%i:%s'), usetime) &gt; 0
+            	and o.orderstatus !='7' and o.orderstatus != '8'
+            )
+            )
+            and p.Status = '1'
+            and o.status = '1'
+    </select>
+    <select id="getOrderUnExceptDriver" resultType="java.lang.String">
+        select distinct p.phone
+            from org_order o
+            inner join pub_driver p on o.driverid = p.id
+            where 1=1
+            and (
+            p.workstatus='1'
+            or
+            (o.isusenow=0 and o.orderstatus != '8' and o.orderstatus !='7')
+            or
+            (o.isusenow=1 and o.orderstatus != '8' and o.orderstatus !='7'
+              and o.usetime &gt; date_sub(str_to_date(#{usetime}, '%Y-%m-%d %H:%i:%s'), interval 3 hour)
+              and o.usetime &lt; str_to_date(#{usetime}, '%Y-%m-%d %H:%i:%s')
+            )
+            )
+            and p.Status = '1'
+            and o.status = '1'
+    </select>
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.OrderMessageMapper">
+
+	<select id="findOrgRoleId" resultType="String" parameterType="String">
+		select t2.roleid from le_roledataauthority t2 left join (
+			SELECT t.roleid FROM le_rolefunction t
+			LEFT JOIN le_functionmanagement a ON a.id = t.dynamicid
+			WHERE t.`status` = '1' AND
+			<choose>
+				<!-- 个人订单 -->
+				<when test="paymethod != 2">
+					a.functionname = '个人订单'
+				</when>
+				<otherwise>
+					<!-- 机构订单 -->
+					a.functionname = '机构订单'
+				</otherwise>
+			</choose>
+
+		)  t3
+		on t2.roleid = t3.roleid
+		where t2.dynamicid = #{dynamicid};
+	</select>
+
+
+	<select id="findOpRoleId" resultType="String" parameterType="String">
+		SELECT t.roleid FROM op_rolefunction t
+		LEFT JOIN op_functionmanagement a ON a.id = t.dynamicid
+		WHERE t.`status` = '1' AND a.functionname = '个人订单'
+		AND t.roleid IN (
+		SELECT op_roleuser.roleid FROM op_roleuser
+		LEFT JOIN op_roledataauthority ON op_roleuser.roleid = op_roledataauthority.roleid
+		LEFT JOIN le_leasescompany ON op_roledataauthority.rootdynamicid = le_leasescompany.id
+		LEFT JOIN le_accountrules ON le_leasescompany.id = le_accountrules.leasescompanyid
+		AND le_accountrules.type = '0' AND le_accountrules.rulesstate = '0'
+		WHERE op_roleuser. STATUS = 1 AND op_roledataauthority. STATUS = 1
+		AND le_leasescompany. STATUS = 1 AND le_accountrules. STATUS = 1
+		AND le_leasescompany.companystate = 0 AND le_leasescompany.tocstate = 2
+		AND le_accountrules.city = #{cityCode})
+	</select>
+</mapper>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.OrderBillMapper">
+	<select id="getBillOrgan" resultType="OrgOrgan" parameterType="map">
+		select * from org_organ t where billdate = ${day} and status = 1
+		<if test="quarter == null">
+			and billtype = '0'
+		</if>
+	</select>
+	
+	<select id="getOrderAmountByQuery" resultType="decimal" parameterType="OrgOrganBill">	    
+	    select IFNULL(SUM(org_order.orderamount),0) as orderAmount
+	    from org_order
+	    where org_order.companyid = #{leasesCompanyId}
+	      and org_order.usetype = 0
+	      and org_order.paymethod = 2
+	      and org_order.status = 1
+	      and org_order.orderstatus = 7
+	      and org_order.paymentstatus = 4
+	    <if test="organId != null and organId != ''">
+	        and org_order.organid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				  )
+	        )
+	    </if> 
+	    <if test="startTime != null and startTime != ''">
+	        and org_order.endtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_order.endtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="billState != null and billState != ''">
+	        and org_order.reviewstatus = #{billState}
+	    </if>
+	    <if test="billState == null or billState == ''">
+	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    and NOT EXISTS (
+	    select * from 
+	    (select org_organbilldetails.orderid
+	    from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid 
+	      inner join org_organbilldetails on org_organbill.id = org_organbilldetails.billsid
+	    where org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if> 
+	      and (t2.billstate = 1 or t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5 or t2.billstate = 6)
+	      and org_organbilldetails.status = 1) t3
+	    where org_order.orderno = t3.orderid
+	    )
+	</select>
+	
+	<select id="getOrderListByQuery" resultType="String" parameterType="OrgOrganBill">	    
+	    select org_order.orderno as orderNo
+	    from org_order
+	    where org_order.companyid = #{leasesCompanyId}
+	      and org_order.usetype = 0
+	      and org_order.paymethod = 2
+	      and org_order.status = 1
+	      and org_order.orderstatus = 7
+	      and org_order.paymentstatus = 4
+	    <if test="organId != null and organId != ''">
+	        and org_order.organid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				  )
+	        )
+	    </if> 
+	    <if test="startTime != null and startTime != ''">
+	        and org_order.endtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and org_order.endtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="billState != null and billState != ''">
+	        and org_order.reviewstatus = #{billState}
+	    </if>
+	    <if test="billState == null or billState == ''">
+	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    and NOT EXISTS (
+	    select * from 
+	    (select org_organbilldetails.orderid
+	    from org_organbill inner join
+	      (select t1.billsid,t1.operationtime,t1.billstate from (
+	      select org_organbillstate.billsid,org_organbillstate.operationtime,org_organbillstate.billstate
+	      from org_organbillstate
+	      where org_organbillstate.status = 1
+          order by org_organbillstate.operationtime desc  
+	      ) t1 group by t1.billsid 
+	      ) t2 on org_organbill.id = t2.billsid 
+	      inner join org_organbilldetails on org_organbill.id = org_organbilldetails.billsid
+	    where org_organbill.leasescompanyid = #{leasesCompanyId}
+	      and org_organbill.status = 1
+	    <if test="organId != null and organId != ''">
+	        and org_organbill.organid = #{organId}
+	    </if> 
+	      and (t2.billstate = 1 or t2.billstate = 2 or t2.billstate = 3 or t2.billstate = 4 or t2.billstate = 5 or t2.billstate = 6)
+	      and org_organbilldetails.status = 1) t3
+	    where org_order.orderno = t3.orderid
+	    )
+	</select>
+	
+	<insert id="createOrganbill" parameterType="OrgOrganBill">
+	    insert into org_organbill(id,leasescompanyid,organid,source,name,money,remark,createtime,updatetime,creater,updater,status)
+	    values(#{id},#{leasesCompanyId},#{organId},#{source},#{name},#{money},#{remark},#{createTime},#{updateTime},#{creater},#{updater},1)
+	</insert>
+	
+	<insert id="createOrganBillState" parameterType="hashmap">
+	    insert into org_organbillstate(id,billstate,operationtime,billsid,comment,createtime,updatetime,status)
+	    values(#{id},#{billState},#{operationTime},#{billsId},#{comment},#{createTime},#{updateTime},1)
+	</insert>
+	
+	<insert id="createOrganBillDetails" parameterType="hashmap">
+	    insert into org_organbilldetails(id,billsid,orderid,createtime,updatetime,status)
+	    values(#{id},#{billsId},#{orderId},now(),now(),1)
+	</insert>
+	
+	<update id = "changeOrderStatusToBalance" parameterType="string">
+		update org_order
+		set paymentstatus = 2,updatetime=now()
+		where orderno = #{orderId}
+		  and status = 1
+	</update>
+	
+	<select id="getLeasesCompanyByOrgan" resultType="string" parameterType="string">	    
+	    select org_organ_company_ref.companyid
+	       from org_organ_company_ref
+	       where org_organ_company_ref.organid = #{organId}
+	         and org_organ_company_ref.status = 1
+	</select>
+	
+	<select id="getMaxBillNo" resultType="string" parameterType="string">	    
+	    select id from org_organbill where createtime = (select max(createtime) from org_organbill)
+	</select>
+	
+	<select id="getLeaseCompanySeq" resultType="string" parameterType="string">	    
+	    select regorder from le_leasescompany where id = #{companyId}
+	</select>
+	
+</mapper>

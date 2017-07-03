@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.BaiduApiMapper">
+
+	<!-- 查询订单详情(0/1-机构网约车订单，2-运管网约车订单，3-运管出租车订单) -->
+	<select id="getOrderByOrderno" resultType="map" parameterType="String">
+		select orderno, orderstatus, usetype, onaddrlng, onaddrlat, starttime from org_order where status = '1' and orderno = #{orderno}
+		union
+		select orderno, orderstatus, '2' usetype, onaddrlng, onaddrlat, starttime from op_order where status = '1' and orderno = #{orderno}
+		union
+		select orderno, orderstatus, '3' usetype, onaddrlng, onaddrlat, starttime from op_taxiorder where status = '1' and orderno = #{orderno}
+	</select>
+	
+</mapper>

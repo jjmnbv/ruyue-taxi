@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.OpTaxiOrderManageMapper">
+    <!-- 查询订单详情 -->
+    <select id="getOpTaxiOrder" resultType="com.szyciov.op.entity.OpTaxiOrder" parameterType="string">
+        select * from op_taxiorder where status = 1 and orderno = #{orderno}
+    </select>
+    <!-- 添加人工派单记录 -->
+    <select id="insertOpTaxisendrecord" parameterType="com.szyciov.op.entity.OpTaxisendrecord">
+        insert into op_taxisendrecord(id, orderno, driverid, operator, reason, sendtime, createtime, updatetime, status)
+        values(#{id}, #{orderno}, #{driverid}, #{operator}, #{reason}, now(), now(), now(), 1)
+    </select>
+    <select id="getDriverCountByQuery" resultType="int" parameterType="com.szyciov.lease.param.OrderManageQueryParam">
+        select count(*) from (
+        select
+        pub_vehicle.id
+        from
+        pub_vehicle left join pub_driver on pub_vehicle.driverid = pub_driver.id
+        left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
+        left join le_leasescompany on pub_vehicle.leasescompanyid = le_leasescompany.id and le_leasescompany.tocstate = '2'
+        where
+        pub_driver.jobstatus = '0' and pub_driver.workstatus = '0' and pub_driver.vehicletype = '1' and pub_driver.boundstate = 1
+        and pub_vehicle.vehicletype = '1' and pub_vehicle.vehiclestatus = '0' and pub_vehicle.boundstate = '1'
+        and (pub_vehicle_scope.cityid = #{oncity} or pub_vehicle_scope.cityid = #{offcity})
+        and pub_driver.phone not in (select account from pe_user where pe_user.id = #{userId} and pe_user.status = 1)
+        and pub_driver.passworkstatus != "3" and pub_driver.passworkstatus != "4"
+        <if test='null != isusenow and isusenow == 1'>
+            and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 1 and op_taxiorder.orderstatus in ('2', '3', '4', '6'))
+            and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 0 and op_taxiorder.orderstatus in ('2', '3', '4', '6')
+            <![CDATA[
+						and op_taxiorder.usetime <= date_format(#{estimatedEndtime}, '%Y-%m-%d %H:%i')
+					]]>)
+        </if>
+        <if test='null != isusenow and isusenow == 0'>
+            and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 1 and op_taxiorder.orderstatus in ('2', '3', '4', '6')
+            <![CDATA[
+						and date_add(op_taxiorder.usetime, interval (1) hour) <= #{usetime}
+					]]>)
+            and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 0 and op_taxiorder.orderstatus in ('2', '3', '4', '6')
+            <![CDATA[
+						and date_format(op_taxiorder.usetime, '%Y-%m-%d') = date_format(#{usetime}, '%Y-%m-%d')
+					]]>)
+        </if>
+        <if test="driverState != null and driverState != ''">
+            and pub_driver.workstatus = #{driverState}
+        </if>
+        <if test="minLat != null and minLat != '' and maxLat != null and maxLat != ''">
+            <![CDATA[
+						and pub_driver.lat >= ${minLat} and pub_driver.lat <= ${maxLat}
+					]]>
+        </if>
+        <if test="minLon != null and minLon != '' and maxLon != null and maxLon != ''">
+            <![CDATA[
+						and pub_driver.lng >= ${minLon} and pub_driver.lng <= ${maxLon}
+					]]>
+        </if>
+        <if test='null != vehicleid and "" != vehicleid'>
+            and pub_vehicle.id = #{vehicleid}
+        </if>
+        <if test='null != driverid and "" != driverid'>
+            and pub_driver.id != #{driverid}
+        </if>
+        and pub_driver.lng &gt; 0 and pub_driver.lat &gt; 0
+        group by
+        pub_vehicle.id
+        ) temp
+    </select>
+    <!-- 更新订单数据 -->
+    <update id="updateOpTaxiOrderByOrderno" parameterType="com.szyciov.op.entity.OpTaxiOrder">
+        update
+        op_taxiorder
+        set
+        updatetime = now()
+        <if test='null != reviewstatus and "" != reviewstatus'>
+            , reviewstatus = #{reviewstatus}
+        </if>
+        <if test='null != orderreason and "" != orderreason'>
+            , orderreason = #{orderreason}
+        </if>
+        <if test='null != reviewperson and "" != reviewperson'>
+            , reviewperson = #{reviewperson}
+        </if>
+        <if test='null != shouldpayamount'>
+            , shouldpayamount = #{shouldpayamount}
+        </if>
+        <if test='null != actualpayamount'>
+            , actualpayamount = #{actualpayamount}
+        </if>
+        <if test='null != orderamount and "" != orderamount'>
+            , orderamount = #{orderamount}
+        </if>
+        <if test='null != paymentstatus and "" != paymentstatus'>
+            , paymentstatus = #{paymentstatus}
+        </if>
+        <if test='null != vehicleid and "" != vehicleid'>
+            , vehicleid = #{vehicleid}
+        </if>
+        <if test='null != orderstatus and "" != orderstatus'>
+            , orderstatus = #{orderstatus}
+        </if>
+        <if test='null != ordersortcolumn and "" != ordersortcolumn'>
+            , ordersortcolumn = #{ordersortcolumn}
+        </if>
+        <if test='null != companyid and "" != companyid'>
+            , companyid = #{companyid}
+        </if>
+        <if test='null != driverid and "" != driverid'>
+            , driverid = #{driverid}
+        </if>
+        <if test='null != plateno and "" != plateno'>
+            , plateno = #{plateno}
+        </if>
+        <if test='null != vehcbrandname and "" != vehcbrandname'>
+            , vehcbrandname = #{vehcbrandname}
+        </if>
+        <if test='null != vehclinename and "" != vehclinename'>
+            , vehclinename = #{vehclinename}
+        </if>
+        <if test='null != ordertime and "" != ordertime'>
+            , ordertime = #{ordertime}
+        </if>
+        <if test='null != cancelparty and "" != cancelparty'>
+            , cancelparty = #{cancelparty}
+        </if>
+        <if test='null != canceltime and "" != canceltime'>
+            , canceltime = #{canceltime}
+        </if>
+        where
+        orderno = #{orderno}
+    </update>
+    <!-- 查询司机正在服务的订单 -->
+    <select id="getInServiceOrderByDriver" resultType="map" parameterType="string">
+        select
+        op_taxiorder.orderno, op_taxiorder.offaddrlng, op_taxiorder.offaddrlat, pub_driver.lng driverLng, pub_driver.lat driverLat
+        from
+        op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id
+        where
+        op_taxiorder.driverid = #{driverid} and op_taxiorder.orderstatus in ("3", "4", "6", "9") and op_taxiorder.offaddrlng &gt; 0
+        and op_taxiorder.offaddrlat &gt; 0 and pub_driver.lng &gt; 0 and pub_driver.lat &gt; 0
+        limit 1
+    </select>
+    <!-- 获取运管端平台所属城市人工+系统派单规则数量 -->
+    <select id="getOpSendmodelCountByUser" resultType="int" parameterType="com.szyciov.op.entity.OpUser">
+        select
+        count(*)
+        from
+        op_taxisendrules
+        where
+        op_taxisendrules.status = 1 and op_taxisendrules.rulesstate = "0" and op_taxisendrules.sendmodel = "1"
+        <if test='usertype == "0"'>
+            and op_taxisendrules.city in (
+            select le_leasescompany.city
+            from op_roleuser left join op_roledataauthority on op_roleuser.roleid = op_roledataauthority.roleid
+            left join le_leasescompany on op_roledataauthority.rootdynamicid = le_leasescompany.id
+            where op_roleuser.status = 1 and op_roledataauthority.status = 1
+            and le_leasescompany.platformtype = 0 and op_roleuser.userid = #{id}
+            )
+        </if>
+    </select>
+    <!-- 根据id查询一条数据 -->
+    <select id="getById" parameterType="string" resultType="com.szyciov.op.entity.PubVehicle">
+        SELECT
+        pub_vehicle.*, CONCAT(
+        CONCAT(pub_vehcbrand.`Name`, ' '),
+        pub_vehcline.`name`
+        ) AS brandCars,
+        (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌省' AND pub_dictionary.`value`= pub_vehicle.platenoprovince AND pub_dictionary.`status`=1) AS plateNoProvinceName,
+        (SELECT pub_dictionary.text FROM pub_dictionary WHERE pub_dictionary.type='车牌市' AND pub_dictionary.`value`= pub_vehicle.platenocity AND pub_dictionary.`status`=1) AS plateNoCityName,
+        (SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city) AS cityName,
+        (SELECT pub_cityaddr.markid FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_vehicle.city) AS citymarkid
+        FROM
+        pub_vehicle,
+        pub_vehcline,
+        pub_vehcbrand
+        WHERE
+        pub_vehicle.id = #{id}
+        AND pub_vehicle.vehclineid = pub_vehcline.Id
+        AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
+    </select>
+</mapper>

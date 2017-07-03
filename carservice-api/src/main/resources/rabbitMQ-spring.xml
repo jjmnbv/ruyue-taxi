@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-3.0.xsd
+            http://www.springframework.org/schema/rabbit
+            http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
+
+    <!-- rabbitMQ配置 -->
+    <rabbit:connection-factory id="connectionFactory" host="${rabbit.host}" port="${rabbit.post}" username="${rabbit.username}"
+                               password="${rabbit.password}" virtual-host="${rabbit.virtualhost}" channel-cache-size="${rabbit.channelCacheSize}"/>
+    <rabbit:admin connection-factory="connectionFactory"/>
+    <!-- spring template声明 -->
+    <rabbit:template exchange="${rabbit.commonExchange}" id="amqpTemplate" connection-factory="connectionFactory" message-converter="jsonMessageConverter"/>
+    <!-- 数据转换json -->
+    <bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter"/>
+
+    <!-- OBD队列配置 -->
+    <bean id="OBDRabbitHandler" class="com.szyciov.carservice.util.rabbit.OBDRabbitHandler"/>
+    <rabbit:queue id="obdQueue" name="${rabbit.obdQueuename}" durable="true" auto-delete="false"/>
+    <rabbit:topic-exchange id="obdExchange" name="${rabbit.obdExchange}" durable="true">
+        <rabbit:bindings>
+            <rabbit:binding queue="obdQueue" pattern="${rabbit.obdPattern}"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual" prefetch="20">
+        <rabbit:listener ref="OBDRabbitHandler" method="onMessage" queues="obdQueue"></rabbit:listener>
+    </rabbit:listener-container>
+
+    <!-- APPGPS队列配置 -->
+    <bean id="APPGPSRabbitHandler" class="com.szyciov.carservice.util.rabbit.APPGPSRabbitHandler"/>
+    <rabbit:queue id="appQueue" name="${rabbit.appQueuename}" durable="true" auto-delete="false"/>
+    <rabbit:topic-exchange id="appExchange" name="${rabbit.appExchange}" durable="true">
+        <rabbit:bindings>
+            <rabbit:binding queue="appQueue" pattern="${rabbit.appPattern}"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual" prefetch="20">
+        <rabbit:listener ref="APPGPSRabbitHandler" method="onMessage" queues="appQueue"></rabbit:listener>
+    </rabbit:listener-container>
+
+    <!-- 公共队列配置 -->
+    <bean id="CommonRabbitHandler" class="com.szyciov.carservice.util.rabbit.CommonRabbitHandler"/>
+    <rabbit:queue id="commonQueue" name="${rabbit.commonReceiveQueuename}" durable="true" auto-delete="false"/>
+    <rabbit:queue id="commonDlxQueue" name="${rabbit.commonDlxQueuename}" durable="true" auto-delete="false">
+        <rabbit:queue-arguments>
+            <entry key="x-dead-letter-exchange" value="${rabbit.commonExchange}"/>
+            <entry key="x-dead-letter-routing-key" value="${rabbit.commonReceivePattern}"/>
+        </rabbit:queue-arguments>
+    </rabbit:queue>
+    <rabbit:topic-exchange id="commonExchange" name="${rabbit.commonExchange}" durable="true">
+        <rabbit:bindings>
+            <rabbit:binding queue="commonQueue" pattern="${rabbit.commonReceivePattern}"></rabbit:binding>
+            <rabbit:binding queue="commonDlxQueue" pattern="${rabbit.commonDlxPattern}"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual" prefetch="20">
+        <rabbit:listener ref="CommonRabbitHandler" method="onMessage" queues="commonQueue"></rabbit:listener>
+    </rabbit:listener-container>
+
+</beans>

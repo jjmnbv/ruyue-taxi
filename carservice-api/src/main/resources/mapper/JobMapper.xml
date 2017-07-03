@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.JobMapper">
+	
+	<update id="cancelOverTimeRules" parameterType="map">
+		update le_company_rules_ref set rulestate = '3' 
+		where rulestate IN ('0','1','2') and status = '1' 
+		<![CDATA[
+		and endtime <= DATE_SUB(now(), INTERVAL 1 DAY) and endtime >= DATE_SUB(now(), INTERVAL 2 DAY)
+		]]>
+	</update>
+	
+	<select id="getBeArtificialOrgOrder" parameterType="map"  resultType="OrgOrder" >
+		select * from org_order t where t.`status` = 1 and orderstatus = 1 
+		<![CDATA[
+		and createtime >= date_sub(now(), INTERVAL 10 SECOND)
+		]]>
+	</select>
+	
+	<select id="getBeArtificialOpOrder" parameterType="map"  resultType="OpOrder" >
+		select * from op_order t where t.`status` = 1 and orderstatus = 1 
+		<![CDATA[
+		and createtime >= date_sub(now(), INTERVAL 10 SECOND)
+		]]>
+	</select>
+</mapper>

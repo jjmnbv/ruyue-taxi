@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.MessagePubInfoMapper">
+
+	<!-- 根据司机id获取司机手机号 -->
+	<select id="getDriverPhoneById" parameterType="String" resultType="String">
+		SELECT
+			pub_driver.phone
+		FROM
+			pub_driver
+		WHERE
+			pub_driver.STATUS = 1
+		and pub_driver.id=#{driverid}
+	</select>
+	
+	<!-- 根据租赁公司id获取租赁公司信息 -->
+	<select id="getLeaseCompanyById" parameterType="String" resultType="LeasesCompany">
+		SELECT
+			*
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.status = 1
+		and le_leasescompany.id=#{companyid}
+	</select>
+	
+	<!-- 根据用户id获取机构用户的相关信息 -->
+	<select id="getOrgUserInfo" parameterType="String" resultType="HashMap">
+		SELECT
+			org_user.nickname AS nickname,
+			org_user.account AS account
+		FROM
+			org_user
+		WHERE
+			org_user.id = #{userid}
+		ORDER BY
+			createtime DESC
+		LIMIT 0,1
+	</select>
+	
+	<!-- 根据司机id获取司机信息 -->
+	<select id="getDriverInfo" parameterType="String" resultType="hashMap">
+		SELECT
+			pub_driver.name as name,
+			pub_driver.phone as phone,
+			pub_driver.workstatus,
+			pub_driver.passworkstatus
+		FROM
+			pub_driver
+		WHERE
+			pub_driver.status = 1
+		AND pub_driver.id = #{driverid}
+	</select>
+	
+	<!-- 根据车辆id获取车辆信息 -->
+	<select id="getCarInfo" parameterType="String" resultType="HashMap">
+		SELECT
+			pub_vehicle.color as color,
+			(SELECT pub_vehcline.name from pub_vehcline where  pub_vehcline.status=1 and pub_vehcline.Id=pub_vehicle.vehclineid) as vehclinename,
+			(SELECT pub_vehcbrand.Name from pub_vehcline,pub_vehcbrand where pub_vehcline.status=1 and pub_vehcbrand.status=1 and pub_vehcbrand.id=pub_vehcline.vehcBrandID and pub_vehcline.Id=pub_vehicle.vehclineid) as vehcbrandname,
+			CONCAT(
+				(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='车牌省' and pub_dictionary.value=pub_vehicle.platenoprovince LIMIT 0,1),
+				(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='车牌市' and pub_dictionary.value=pub_vehicle.platenocity LIMIT 0,1),
+				pub_vehicle.plateno
+			) as plateno
+		FROM
+			pub_vehicle
+		WHERE
+			pub_vehicle.status = 1
+		and pub_vehicle.id=#{vehicleid}
+	</select>
+	
+	<!-- 获取运管端的信息 -->
+	<select id="getOpInfo" resultType="HashMap">
+		SELECT * from op_platforminfo where op_platforminfo.status=1
+	</select>
+	
+	<!-- 获取运管端个人用户信息 -->
+	<select id="getOpUserInfo" resultType="HashMap" parameterType="String">
+		SELECT
+			pe_user.nickname AS nickname,
+			pe_user.account AS account
+		FROM
+			pe_user
+  		WHERE
+  			pe_user.id = #{userid}
+		ORDER BY
+			createtime DESC
+		LIMIT 0,1
+	</select>
+	
+	<insert id="savePushMessage" parameterType="PushMessageLog">
+	    insert into pub_phonepushlog(id,content,sendtime,createtime,updatetime,status,platform,receiptstate,sendstate)
+        values(#{id},#{content},NOW(),NOW(),NOW(),'1',#{platform},#{receiptState},#{sendState})
+	</insert>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>

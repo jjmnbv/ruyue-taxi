@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.AwardPassengerMapper">
+
+    <select id="getAwardOnOff" resultType="Map">
+      select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='订单返还开关'
+    </select>
+
+    <select id="getAwardPercent" parameterType="Map" resultType="Map">
+      select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type=#{type}
+    </select>
+
+    <select id="getAwardCurrentTotal" resultType="Map">
+      select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='订单返还总计金额'
+    </select>
+
+    <select id="getAwardTotal" resultType="Map">
+      select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='订单返还金额上限'
+    </select>
+
+    <insert id="addAwardPoint" parameterType="Map">
+      update pe_useraccount set pe_useraccount.balance = (pe_useraccount.balance+#{awardpoint}),pe_useraccount.updatetime=now() where pe_useraccount.status=1 and pe_useraccount.userid=#{userid}
+    </insert>
+
+    <update id="updateCurrentAward" parameterType="Map">
+      update pub_dictionary set pub_dictionary.value= (pub_dictionary.value+#{awardpoint}),pub_dictionary.updatetime=now() where pub_dictionary.type='订单返还总计金额' and pub_dictionary.status=1
+    </update>
+
+    <select id="getPeUserInfo" parameterType="String" resultType="Map">
+      select * from pe_user where pe_user.status=1 and pe_user.account=#{phone}
+    </select>
+
+    <select id="getPeUserAccount" parameterType="Map" resultType="Map">
+      select * from pe_useraccount where pe_useraccount.status=1 and pe_useraccount.userid=#{userid}
+    </select>
+
+    <insert id="addPeUser" parameterType="Map">
+      INSERT INTO pe_user(
+        id,
+        account,
+        userpassword,
+        registertime,
+        disablestate,
+        disablehis,
+        createtime,
+        updatetime,
+        withdrawpwd,
+        status,
+        wdpwdchangestate
+    )
+    VALUES
+        (
+            #{id},
+            #{account},
+            #{pwd},
+            now(),
+            0,
+            0,
+            now(),
+            now(),
+            null,
+            1,
+            0
+        )
+    </insert>
+
+    <insert id="createPeUserAccount" parameterType="Map">
+      INSERT INTO pe_useraccount(
+        id,
+        userid,
+        balance,
+        createtime,
+        updatetime,
+        status
+    )
+    VALUES
+        (
+            #{id},
+            #{userid},
+            0,
+            now(),
+            now(),
+            1
+        )
+    </insert>
+
+    <insert id="addExpenses4User" parameterType="map">
+        INSERT INTO pe_userexpenses (
+            id,
+            userid,
+            expensetype,
+            expensetime,
+            amount,
+            balance,
+            remark,
+            createtime,
+            updatetime,
+            creater,
+            updater,
+            status,
+            tradetype,
+            detailtype,
+            operateresult
+        )
+        VALUES
+            (
+              #{id},
+              #{userid},
+              #{expensetype},
+              now(),
+              #{awardpoint},
+              (select pe_useraccount.balance from pe_useraccount where pe_useraccount.status=1 and pe_useraccount.userid=#{userid}),
+              #{remark},
+              DATE_ADD(now(),INTERVAL 1 SECOND),
+              DATE_ADD(now(),INTERVAL 1 SECOND),
+              #{userid},
+              #{userid},
+              1,
+              #{tradetype},
+              #{detailtype},
+              1
+            )
+    </insert>
+
+    <update id="stopAward">
+      update pub_dictionary set pub_dictionary.value='0',pub_dictionary.updatetime=now() where pub_dictionary.status=1 and pub_dictionary.type='订单返还金额活动是否终止'
+    </update>
+</mapper>

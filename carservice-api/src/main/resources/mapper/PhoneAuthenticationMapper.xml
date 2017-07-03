@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.PhoneAuthenticationMapper" >
+
+  <select id="getAuthenticationCount" resultType="int" parameterType="PhoneAuthenticationParam">
+    select count(id)
+    from pub_phone_authentication
+    where status = 1
+
+    <if test="mobile!=null and mobile!=''">
+      and mobile = #{mobile}
+    </if>
+    <if test="cardNo!=null and cardNo!=''">
+      and cardno = #{cardNo}
+    </if>
+    <if test="realName!=null and realName!=''">
+      and realname = #{realName}
+    </if>
+
+  </select>
+
+
+
+  <insert id="save" parameterType="PubPhoneAuthentication" >
+    insert into pub_phone_authentication (`id` ,
+    `realname` ,`mobile` ,`cardno` ,`createtime` ,`creater` ,`ipaddr` ,
+    `status` )
+    values (#{id},
+    #{realname},#{mobile},#{cardno},#{createtime},#{creater},#{ipaddr},1)
+  </insert>
+  
+
+</mapper>

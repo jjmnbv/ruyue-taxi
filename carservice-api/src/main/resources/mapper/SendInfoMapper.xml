@@ -1,0 +1,988 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.carservice.mapper.SendInfoMapper">
+
+	<!-- 获取网约车用车规则 -->
+	<select id="getRuleInfo4Car" resultType="PubSendrules" parameterType="PubSendrules">
+		SELECT
+			psr.*,
+			pca.city as citycaption
+		FROM
+			pub_sendrules psr,
+			pub_cityaddr pca
+		WHERE 1=1
+		AND psr.STATUS = 1
+		AND pca.STATUS = 1
+		AND pca.id = psr.city
+ 		AND psr.rulesstate='0'
+		AND psr.leasescompanyid=#{leasescompanyid}
+		AND psr.vehicletype=#{vehicletype}
+ 		AND psr.usetype=#{usetype}
+ 		AND psr.city=#{city}
+ 		AND psr.platformtype = #{platformtype}
+	</select>
+	
+	<select id="getOrgOrderByNo" parameterType="String" resultType="OrgOrder">
+		SELECT
+			*
+		FROM
+			org_order
+		WHERE
+			org_order.STATUS = 1 
+		and org_order.orderno = #{orderno}
+	</select>
+	
+	<select id="getCurrentOrderByDriver" parameterType="OrderListParam" resultType="OrderInfoDetail">
+		SELECT
+			oo.orderprop,oo.isusenow,oo.username,oo.userphone,oo.ordersource,oo.paymethod,oo.contact,
+			oo.cartype,oo.cartypelogo,oo.organid,oo.pricecopy,
+			TIMESTAMPDIFF(
+				SECOND,
+				oo.starttime,
+				oo.endtime
+			) times,oo.undertime,oo.ordertime,oo.departuretime,oo.arrivaltime,oo.starttime,oo.endtime,
+			oo.completetime,oo.canceltime,oo.mileage,oo.orderno,oo.ordertype type,oo.onaddress,oo.offaddress,
+			oo.usetime usetime,oo.tripremark remark,oo.orderstatus `status`,oo.paymentstatus paystatus,
+			oo.reviewstatus,oo.onaddrlng onlng,oo.onaddrlat onlat,oo.offaddrlng offlng,oo.offaddrlat offlat,
+			oo.passengers passengers,oo.passengerphone passengerphone,oo.passengericonmin,
+			oo.passengericonmax,oo.city,oo.estimatedtime,oo.estimatedmileage,oo.estimatedcost,
+			oo.orderamount,oo.fltno,oo.falltime,oo.userrate,oo.usercomment,oo.driverid,
+			oo.vehicleid,oo.companyid,oo.oncity cityid,oo.usetype
+		FROM
+			(
+				(
+					SELECT
+						0 orderprop,lv.logo cartypelogo,lv.name cartype,llc.servicesphone contact,
+						pca.city,ou.headportraitmax passengericonmax,ou.headportraitmin passengericonmin,
+						ou.nickname username,ou.account userphone,oo2.ordersource,oo2.paymethod,oo2.organid,
+						oo2.isusenow,oo2.orderno,oo2.ordertype,oo2.usetime,oo2.pricemodel,oo2.companyid,
+						oo2.oncity,oo2.onaddress,oo2.offcity,oo2.offaddress,oo2.onaddrlng,oo2.onaddrlat,
+						oo2.offaddrlng,oo2.offaddrlat,oo2.pricecopy,oo2.undertime,oo2.ordertime,oo2.departuretime,
+						oo2.arrivaltime,oo2.starttime,oo2.endtime,oo2.completetime,oo2.canceltime,oo2.passengers,
+						oo2.passengerphone,oo2.userid,oo2.tripremark,oo2.orderstatus,oo2.paymentstatus,
+						oo2.reviewstatus,oo2.updatetime,oo2.driverid,oo2.vehicleid,oo2.estimatedtime,oo2.estimatedmileage,
+						oo2.estimatedcost,oo2.mileage,oo2.orderamount,oo2.fltno,oo2.falltime,oo2.userrate,oo2.usercomment,
+						oo2.`status`,oo2.usetype
+					FROM
+						org_order oo2
+					LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+					AND lv.Id = oo2.pricemodel
+					LEFT JOIN pub_cityaddr pca ON pca.`status` = 1
+					AND oo2.oncity = pca.id
+					LEFT JOIN org_user ou ON ou.`Status` = 1
+					AND ou.id = oo2.userid
+					LEFT JOIN le_leasescompany llc ON llc.`Status` = 1 
+					AND llc.id = oo2.companyid
+					WHERE oo2.`Status` = 1
+					AND oo2.driverid = #{driverid}
+					<if test="type == 3">
+						AND (
+								(oo2.orderstatus = #{statusServiceDone} AND oo2.paymentstatus IN (${paystatuslist}))
+								OR
+								oo2.orderstatus = #{statusServiceCancel}
+							)
+					</if>
+					<if test="type != 3">
+						AND oo2.orderstatus IN (${statuslist})
+						AND oo2.paymentstatus IN (${paystatuslist})
+					</if>
+					<if test="starttime != null and endtime != null">
+						<if test="type == 1">
+							AND oo2.usetime &gt;= #{starttime}
+							AND oo2.usetime &lt; #{endtime}
+						</if>
+						<if test="type != 1">
+							AND oo2.endtime &gt;= #{starttime}
+							AND oo2.endtime &lt; #{endtime}
+						</if>
+					</if>
+				)
+				UNION
+				(
+					SELECT
+						1 orderprop,ov.logo cartypelogo,ov.name cartype,opfi.servcietel contact,pca.city,
+						pu.headportraitmax passengericonmax,pu.headportraitmin passengericonmin,
+						pu.nickname username,pu.account userphone,oo2.ordersource,0 paymethod,
+						NULL organid,oo2.isusenow,oo2.orderno,oo2.ordertype,oo2.usetime,oo2.pricemodel,
+						oo2.companyid,oo2.oncity,oo2.onaddress,oo2.offcity,oo2.offaddress,oo2.onaddrlng,
+						oo2.onaddrlat,oo2.offaddrlng,oo2.offaddrlat,oo2.pricecopy,oo2.undertime,oo2.ordertime,
+						oo2.departuretime,oo2.arrivaltime,oo2.starttime,oo2.endtime,oo2.completetime,
+						oo2.canceltime,oo2.passengers,oo2.passengerphone,oo2.userid,oo2.tripremark,
+						oo2.orderstatus,oo2.paymentstatus,oo2.reviewstatus,oo2.updatetime,oo2.driverid,
+						oo2.vehicleid,oo2.estimatedtime,oo2.estimatedmileage,oo2.estimatedcost,
+						oo2.mileage,oo2.orderamount,oo2.fltno,oo2.falltime,oo2.userrate,oo2.usercomment,
+						oo2.`status`,oo2.usetype
+					FROM
+						op_order oo2
+					LEFT JOIN op_vehiclemodels ov ON ov.`Status` = 1
+					AND ov.Id = oo2.pricemodel
+					LEFT JOIN pub_cityaddr pca ON pca.`status` = 1
+					AND oo2.oncity = pca.id
+					LEFT JOIN pe_user pu ON pu.`Status` = 1
+					AND pu.id = oo2.userid
+					LEFT JOIN op_platforminfo opfi ON opfi.`status` = 1
+					WHERE oo2.`Status` = 1
+					AND oo2.driverid = #{driverid}
+                    <if test="type == 3">
+                        AND (
+                        (oo2.orderstatus = #{statusServiceDone} AND oo2.paymentstatus IN (${paystatuslist}))
+                        OR
+                        oo2.orderstatus = #{statusServiceCancel}
+                        )
+                    </if>
+					<if test="type != 3">
+						AND oo2.orderstatus IN (${statuslist})
+						AND oo2.paymentstatus IN (${paystatuslist})
+					</if>
+					<if test="starttime != null and endtime != null">
+						<if test="type == 1">
+							AND oo2.usetime &gt;= #{starttime}
+							AND oo2.usetime &lt; #{endtime}
+						</if>
+						<if test="type != 1">
+							AND oo2.endtime &gt;= #{starttime}
+							AND oo2.endtime &lt; #{endtime}
+						</if>
+					</if>
+				)
+			) oo
+			<if test="type == 1">
+			ORDER BY oo.usetime ASC
+			</if>
+			<if test="type != 1">
+			ORDER BY oo.usetime DESC
+			</if>
+		LIMIT ${iDisplayStart},${iDisplayLength}
+	</select>
+	
+	<select id="getReverceOrdersInDay" resultType="OrgOrder">
+	
+	</select>
+	
+	
+	<update id="opCarOrderCancel" parameterType="OpOrder">
+		UPDATE op_order
+		SET 
+		 orderstatus = #{orderstatus},
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 ordersortcolumn = #{ordersortcolumn}
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<update id="leCarOrderCancel" parameterType="OrgOrder">
+		UPDATE org_order
+		SET 
+		 orderstatus = #{orderstatus},
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 ordersortcolumn = #{ordersortcolumn}
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<update id="opCarOrderForce2Driver" parameterType="OpOrder">
+		UPDATE op_order
+		SET 
+		 driverid = #{driverid},
+		 vehicleid = #{vehicleid},
+		 companyid = #{companyid},
+		 orderstatus = #{orderstatus},
+		 paymentstatus = #{paymentstatus},
+		 ordertime = now(),
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 vehcbrandname = #{vehcbrandname},
+		 vehclinename = #{vehclinename},
+		 plateno=#{plateno},
+		 belongleasecompany=#{belongleasecompany},
+		 ordersortcolumn = '2'
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<update id="leCarOrderForce2Driver" parameterType="OrgOrder">
+		UPDATE org_order
+		SET 
+		 driverid = #{driverid},
+		 vehicleid = #{vehicleid},
+		 companyid = #{companyid},
+		 orderstatus = #{orderstatus},
+		 paymentstatus = #{paymentstatus},
+		 ordertime = now(),
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 vehcbrandname = #{vehcbrandname},
+		 vehclinename = #{vehclinename},
+		 plateno=#{plateno},
+		 belongleasecompany=#{belongleasecompany},
+		 ordersortcolumn = '2'
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<!-- 获取预约用车的规则 -->
+	<select id="getReserveRuleInfo4OpTaxi" resultType="Map" parameterType="Map">
+		SELECT
+			op_taxisendrules.*,
+			pub_cityaddr.city as citycaption
+		FROM
+			op_taxisendrules,
+			pub_cityaddr
+		WHERE
+			op_taxisendrules.STATUS = 1
+		AND pub_cityaddr.STATUS = 1
+		AND pub_cityaddr.id = op_taxisendrules.city
+
+		AND op_taxisendrules.rulesstate='0'
+		AND op_taxisendrules.usetype='0'
+
+		AND op_taxisendrules.city=#{city}
+	</select>
+
+	<!-- 获取即可用车的规则 -->
+	<select id="getUseNowRuleInfo4OpTaxi" resultType="Map" parameterType="Map">
+		SELECT
+			op_taxisendrules.*,
+			pub_cityaddr.city as citycaption
+		FROM
+			op_taxisendrules,
+			pub_cityaddr
+		WHERE
+			op_taxisendrules.STATUS = 1
+		AND pub_cityaddr.STATUS = 1
+		AND pub_cityaddr.id = op_taxisendrules.city
+		
+		AND op_taxisendrules.rulesstate='0'
+		AND op_taxisendrules.usetype='1'
+		
+		AND op_taxisendrules.city=#{city}
+	</select>
+
+
+	<!-- 根据id 查个人用户 -->
+	<select id="getPeUser" parameterType="string" resultType="PeUser">
+		select * from pe_user where id = #{userid}
+	</select>
+	
+	<!-- 根据id 查机构用户 -->
+	<select id="getOrgUser" parameterType="string" resultType="OrgUser">
+		select * from org_user where id = #{userid}
+	</select>
+
+
+	<!-- 获取范围内的出租车司机 -->
+	<select id="getDriversInBound4Taxi" resultType="PubDriver" parameterType="TaxiDriverInBoundParam">
+		SELECT
+			DISTINCT pub_driver.*,
+			pub_driver_vehicle_ref.vehicleid,
+			pub_vehcline.name as vehclinename,
+      		pub_vehcbrand.name as vehcbrandname,
+      		concat((
+					SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌省'
+						AND pub_dictionary.value = pub_vehicle.platenoprovince
+						AND pub_dictionary.status = 1
+						limit 0,1
+					),
+					(
+						SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌市'
+						AND pub_dictionary.value = pub_vehicle.platenocity
+						AND pub_dictionary.status = 1
+						limit 0,1
+					),
+					pub_vehicle.plateno
+			) as plateno
+		FROM
+			pub_driver
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id
+		LEFT JOIN pub_vehicle ON pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.id
+		LEFT JOIN pub_vehcbrand ON pub_vehcbrand.id = pub_vehcline.vehcBrandID
+		LEFT JOIN pub_vehicle_scope ON pub_vehicle.id = pub_vehicle_scope.vehicleid
+		WHERE
+			pub_driver.status = 1
+		AND pub_driver_vehicle_ref.status = 1
+		AND pub_vehicle.status=1
+		AND pub_vehcline.status=1
+		AND pub_vehcbrand.status=1
+		AND pub_vehicle_scope.status=1
+		<if test="userid != null and userid != ''">
+		AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
+		</if>
+		AND pub_driver.vehicletype=1
+		AND pub_driver.workstatus in ('0','1')
+		AND pub_driver.passworkstatus in ('0','1')
+		
+		AND
+		(
+		  pub_vehicle_scope.cityid=#{city}
+		 or
+		  pub_vehicle_scope.cityid=#{offcity}
+		)
+		
+		<!--<if test="companyid != null and companyid != ''">-->
+			<!--AND pub_driver.leasescompanyid = #{companyid}-->
+		<!--</if>-->
+        <if test="belongleasecompany != null and belongleasecompany != ''">
+            AND pub_driver.belongleasecompany = #{belongleasecompany}
+        </if>
+		<![CDATA[
+			AND pub_driver.lng >= #{minLng}
+			AND pub_driver.lng <= #{maxLng}
+			AND pub_driver.lat >= #{minLat}
+			AND pub_driver.lat <= #{maxLat}
+		]]>
+	</select>
+
+	<!-- 获取范围内的即刻单司机 -->
+	<select id="listOpOrderDriver" resultType="PubDriver" parameterType="SendOrderDriverQueryParam">
+		SELECT
+		DISTINCT pub_driver.*,
+		pub_driver_vehicle_ref.vehicleid,
+		pub_vehcline.name as vehclinename,
+		pub_vehcbrand.name as vehcbrandname,
+		getPlatenoStr(pub_vehicle.platenoprovince,pub_vehicle.platenocity,pub_vehicle.plateno) as plateno
+		,op_vehiclemodels.`level` vehiclelevel
+		FROM
+		pub_driver
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id AND pub_driver_vehicle_ref.status = 1
+		LEFT JOIN pub_vehicle ON pub_driver_vehicle_ref.vehicleid = pub_vehicle.id AND pub_vehicle.status=1
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.id AND pub_vehcline.status=1
+		LEFT JOIN pub_vehcbrand ON pub_vehcbrand.id = pub_vehcline.vehcBrandID AND pub_vehcbrand.status=1
+		LEFT JOIN pub_vehicle_scope ON pub_vehicle.id = pub_vehicle_scope.vehicleid AND pub_vehicle_scope.status=1
+		LEFT JOIN op_vehcline_models_ref  ON pub_vehicle.vehclineid = op_vehcline_models_ref.vehclineid and op_vehcline_models_ref.`Status` ='1'
+		LEFT JOIN op_vehiclemodels_vehicle_ref ref on	  ref.vehicleid = pub_vehicle.id and ref.status =1
+		LEFT JOIN op_vehiclemodels on op_vehiclemodels.`Status` = '1'
+		and (ref.vehiclemodelsid = op_vehiclemodels.id or op_vehiclemodels.id = op_vehcline_models_ref.vehiclemodelsid)
+		WHERE pub_driver.status = 1
+		and pub_driver.jobstatus =0
+		<if test="userid != null and userid != ''">
+			AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
+		</if>
+		AND pub_driver.vehicletype=#{vehicleType}
+		AND (pub_driver.passworkstatus in ('0','1','') or pub_driver.passworkstatus is null)
+
+        <if test="workstatus!=null">
+            AND pub_driver.workstatus in
+            <foreach collection="workstatus" index="index" item="status" open="(" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+
+
+		AND(pub_vehicle_scope.cityid=#{city} or pub_vehicle_scope.cityid=#{offcity})
+
+		<if test="queryModelIds!=null">
+			and (ref.vehiclemodelsid in
+
+			<foreach collection="queryModelIds" index="index" item="modelId" open="(" separator="," close=")">
+				#{modelId}
+			</foreach>
+			or op_vehcline_models_ref.vehiclemodelsid in
+
+			<foreach collection="queryModelIds" index="index" item="modelId" open="(" separator="," close=")">
+				#{modelId}
+			</foreach>
+			)
+		</if>
+
+		<!--<if test="companyid != null and companyid != ''">-->
+			<!--AND pub_driver.leasescompanyid = #{companyid}-->
+		<!--</if>-->
+        <if test="belongleasecompany != null and belongleasecompany != ''">
+            AND pub_driver.belongleasecompany = #{belongleasecompany}
+        </if>
+		<if test='platformType!=null and platformType="0"' >
+			and ((pub_driver.leasescompanyid in
+			(select le_leasescompany.id from le_leasescompany
+			where le_leasescompany.tocstate = "2" and le_leasescompany.status = 1)
+			and pub_driver.platformtype = "1")
+			or pub_driver.platformtype = "0")
+		</if>
+
+		<![CDATA[
+			AND pub_driver.lng >= #{minLng}
+			AND pub_driver.lng <= #{maxLng}
+			AND pub_driver.lat >= #{minLat}
+			AND pub_driver.lat <= #{maxLat}
+		]]>
+		order by vehiclelevel asc
+	</select>
+
+	<!-- 获取范围内的预约单司机 -->
+	<select id="listOpOrderDriver4Reverve" resultType="PubDriver" parameterType="SendOrderDriverQueryParam">
+		SELECT
+		DISTINCT pub_driver.*,
+		pub_driver_vehicle_ref.vehicleid,
+		pub_vehcline.name as vehclinename,
+		pub_vehcbrand.name as vehcbrandname,
+		getPlatenoStr(pub_vehicle.platenoprovince,pub_vehicle.platenocity,pub_vehicle.plateno) as plateno
+        ,op_vehiclemodels.`level` vehiclelevel
+		FROM
+		pub_driver
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id AND pub_driver_vehicle_ref.status = 1
+		LEFT JOIN pub_vehicle ON pub_driver_vehicle_ref.vehicleid = pub_vehicle.id AND pub_vehicle.status=1
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.id AND pub_vehcline.status=1
+		LEFT JOIN pub_vehcbrand ON pub_vehcbrand.id = pub_vehcline.vehcBrandID AND pub_vehcbrand.status=1
+		LEFT JOIN pub_vehicle_scope ON pub_vehicle.id = pub_vehicle_scope.vehicleid AND pub_vehicle_scope.status=1
+		LEFT JOIN op_vehcline_models_ref  ON pub_vehicle.vehclineid = op_vehcline_models_ref.vehclineid and op_vehcline_models_ref.`Status` ='1'
+		LEFT JOIN op_vehiclemodels_vehicle_ref ref on	  ref.vehicleid = pub_vehicle.id and ref.status =1
+		LEFT JOIN op_vehiclemodels on op_vehiclemodels.`Status` = '1'
+		and (ref.vehiclemodelsid = op_vehiclemodels.id or op_vehiclemodels.id = op_vehcline_models_ref.vehiclemodelsid)
+		<if test="nextCount!=null and nextCount!=''">
+			<choose>
+				<when test="nextCount==99">
+					and op_vehiclemodels.`level` >= (SELECT t1.`level`FROM op_vehiclemodels t1 WHERE t1.id = #{selectedModelId})
+				</when>
+				<otherwise>
+					and op_vehiclemodels.id = #{selectedModelId}
+				</otherwise>
+			</choose>
+		</if>
+		WHERE pub_driver.status = 1
+		and pub_driver.jobstatus =0
+		<if test="userid != null and userid != ''">
+			AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
+		</if>
+		AND pub_driver.vehicletype=#{vehicleType}
+		AND (pub_driver.passworkstatus in ('0','1','') or pub_driver.passworkstatus is null)
+
+		<if test="workstatus!=null">
+			AND pub_driver.workstatus in
+			<foreach collection="workstatus" index="index" item="status" open="(" separator="," close=")">
+				#{status}
+			</foreach>
+		</if>
+		AND(pub_vehicle_scope.cityid=#{city} or pub_vehicle_scope.cityid=#{offcity})
+		<!--<if test="companyid != null and companyid != ''">-->
+			<!-- AND pub_driver.leasescompanyid = #{companyid}-->
+		<!--</if>-->
+        <if test="belongleasecompany != null and belongleasecompany != ''">
+            AND pub_driver.belongleasecompany = #{belongleasecompany}
+        </if>
+		<if test='platformType!=null and platformType="0"' >
+			and ((pub_driver.leasescompanyid in
+			(select le_leasescompany.id from le_leasescompany
+			where le_leasescompany.tocstate = "2" and le_leasescompany.status = 1)
+			and pub_driver.platformtype = "1")
+			or pub_driver.platformtype = "0")
+		</if>
+
+
+		<![CDATA[
+			AND pub_driver.lng >= #{minLng}
+			AND pub_driver.lng <= #{maxLng}
+			AND pub_driver.lat >= #{minLat}
+			AND pub_driver.lat <= #{maxLat}
+		]]>
+		order by op_vehiclemodels.level asc
+	</select>
+
+
+	<select id="listOpvehiclemodelId" parameterType="String" resultType="String">
+		select id from op_vehiclemodels
+		where `Status` = '1'
+		and `level` >=
+		(SELECT t1.`level`FROM op_vehiclemodels t1 WHERE t1.id = #{selectedModelId})
+		order by `level` limit 0,#{nextCount}
+	</select>
+
+	<!-- 强派订单给司机 -->
+	<update id="forceOpOrder4Driver" parameterType="AbstractOrder">
+		UPDATE op_order
+		SET
+		driverid = #{driverid},
+		vehicleid = #{vehicleid},
+		companyid = #{companyid},
+		orderstatus = #{orderstatus},
+		paymentstatus = #{paymentstatus},
+		ordertime = now(),
+		updatetime = now(),
+		pushnumber = #{pushnumber},
+		vehcbrandname = #{vehcbrandname},
+		vehclinename = #{vehclinename},
+		plateno=#{plateno},
+		belongleasecompany=#{belongleasecompany},
+		ordersortcolumn = '2'
+		WHERE
+		orderno = #{orderno}
+	</update>
+
+	<!-- 强派订单失败 -->
+	<update id="forceOpOrderCancel" parameterType="AbstractOrder">
+		UPDATE op_order
+		SET
+		orderstatus = #{orderstatus},
+		updatetime = now(),
+		pushnumber = #{pushnumber},
+		ordersortcolumn = '14'
+		WHERE
+		orderno = #{orderno}
+	</update>
+
+	<!-- 强派订单进入人工派单 -->
+	<update id="opOrder2Mantic" parameterType="AbstractOrder">
+		UPDATE op_order
+		SET
+		orderstatus = #{orderstatus},
+		updatetime = now(),
+		pushnumber = #{pushnumber},
+		ordersortcolumn = '1'
+		WHERE
+		orderno = #{orderno}
+	</update>
+
+	<!-- 强派订单给司机 -->
+	<update id="forceOrder4Driver" parameterType="OpTaxiOrder">
+		UPDATE op_taxiorder
+		SET 
+		 driverid = #{driverid},
+		 vehicleid = #{vehicleid},
+		 companyid = #{companyid},
+		 orderstatus = #{orderstatus},
+		 paymentstatus = #{paymentstatus},
+		 ordertime = now(),
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 vehcbrandname = #{vehcbrandname},
+		 vehclinename = #{vehclinename},
+		 plateno=#{plateno},
+		 belongleasecompany=#{belongleasecompany},
+		 ordersortcolumn = '2'
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<!-- 强派订单失败 -->
+	<update id="forceOrderCancel" parameterType="OpTaxiOrder">
+		UPDATE op_taxiorder
+		SET 
+		 orderstatus = #{orderstatus},
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 ordersortcolumn = '14'
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<!-- 强派订单进入人工派单 -->
+	<update id="go2Mantic" parameterType="OpTaxiOrder">
+		UPDATE op_taxiorder
+		SET 
+		 orderstatus = #{orderstatus},
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 ordersortcolumn = '1'
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<!-- 强派订单进入人工派单 -->
+	<update id="opGo2Mantic" parameterType="OpOrder">
+		UPDATE op_order
+		SET 
+		 orderstatus = #{orderstatus},
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 ordersortcolumn = '1'
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<!-- 强派订单进入人工派单 -->
+	<update id="orgGo2Mantic" parameterType="OrgOrder">
+		UPDATE org_order
+		SET 
+		 orderstatus = #{orderstatus},
+		 updatetime = now(),
+		 pushnumber = #{pushnumber},
+		 ordersortcolumn = '1'
+		WHERE
+			orderno = #{orderno}
+	</update>
+	
+	<!-- 获取正在服务或者未出行的即可单的运管出租车订单 -->
+	<select id="getInServiceOrUseNowOrder4OpTaxiDriver" parameterType="String" resultType="OpTaxiOrder">
+		SELECT
+			*
+		FROM
+			op_taxiorder
+		WHERE
+			op_taxiorder.status = 1 
+	    and op_taxiorder.driverid=#{driverid}
+		and (
+			 (op_taxiorder.isusenow = 1 and op_taxiorder.orderstatus in ('2'))
+			or 
+		     op_taxiorder.orderstatus IN ('3','4','5','6','9')
+		)
+	</select>
+
+
+	<!-- 获取正在服务或者未出行的即刻单的网约车订单 -->
+	<select id="listInServiceOrUseNowCarDriver" parameterType="String" resultType="OpOrder">
+			SELECT
+				orderno,companyid,ordertype,userid,passengers,passengerphone,driverid,vehicleid,selectedmodel,oncity,
+				onaddress,offcity,cancelparty,offaddress,onaddrlng,offaddrlng,offaddrlat,onaddrlat,usetime,tripremark,orderstatus,
+				paymentstatus,reviewstatus,estimatedtime,estimatedmileage,estimatedcost,fltno
+			FROM
+				op_order
+			WHERE
+				op_order.status = 1
+			and op_order.driverid=#{driverid}
+			and (
+			(op_order.isusenow = 1 and op_order.orderstatus in ('2'))
+			or
+			op_order.orderstatus IN ('3','4','5','6','9')
+			)
+		union
+			SELECT
+				orderno,companyid,ordertype,userid,passengers,passengerphone,driverid,vehicleid,selectedmodel,oncity,
+				onaddress,offcity,cancelparty,offaddress,onaddrlng,offaddrlng,offaddrlat,onaddrlat,usetime,tripremark,orderstatus,
+				paymentstatus,reviewstatus,estimatedtime,estimatedmileage,estimatedcost,fltno
+			FROM
+				org_order
+			WHERE
+				org_order.status = 1
+			and org_order.driverid=#{driverid}
+			and (
+			(org_order.isusenow = 1 and org_order.orderstatus in ('2'))
+			or
+			org_order.orderstatus IN ('3','4','5','6','9')
+			)
+	</select>
+
+	<!-- 获取待出发的预约单 -->
+	<select id="listReverceOrders4CarDriver" parameterType="String" resultType="OpOrder">
+			SELECT
+			orderno,companyid,ordertype,userid,passengers,passengerphone,driverid,vehicleid,selectedmodel,oncity,
+			onaddress,offcity,cancelparty,offaddress,onaddrlng,offaddrlng,offaddrlat,onaddrlat,usetime,tripremark,orderstatus,
+			paymentstatus,reviewstatus,estimatedtime,estimatedmileage,estimatedcost,fltno
+			FROM
+			op_order
+			WHERE
+			op_order. STATUS = 1
+			and op_order.driverid=#{driverid}
+			and op_order.isusenow = 0
+			and op_order.orderstatus in ('2')
+		union
+			SELECT
+			orderno,companyid,ordertype,userid,passengers,passengerphone,driverid,vehicleid,selectedmodel,oncity,
+			onaddress,offcity,cancelparty,offaddress,onaddrlng,offaddrlng,offaddrlat,onaddrlat,usetime,tripremark,orderstatus,
+			paymentstatus,reviewstatus,estimatedtime,estimatedmileage,estimatedcost,fltno
+			FROM
+			org_order
+			WHERE
+			org_order.STATUS = 1
+			and org_order.driverid=#{driverid}
+			and org_order.isusenow = 0
+			and org_order.orderstatus in ('2')
+			ORDER BY usetime
+	</select>
+
+	<!-- 获取最近要出行的预约单运管端 -->
+	<select id="getLastReverceOrder4OpTaxiDriver" parameterType="String" resultType="OpTaxiOrder">
+		SELECT
+			*
+		FROM
+			op_taxiorder
+		WHERE
+			op_taxiorder. STATUS = 1 
+		and op_taxiorder.driverid=#{driverid}
+		and op_taxiorder.isusenow = 0 
+		and op_taxiorder.orderstatus in ('2')
+		ORDER BY op_taxiorder.usetime
+		LIMIT 0,1
+	</select>
+	
+	<!-- 获取所有的预约单 -->
+	<select id="getReverceOrders4OpTaxiDriver" parameterType="String" resultType="OpTaxiOrder">
+		SELECT
+			*
+		FROM
+			op_taxiorder
+		WHERE
+			op_taxiorder. STATUS = 1 
+		and op_taxiorder.driverid=#{driverid}
+		and op_taxiorder.isusenow = 0 
+		and op_taxiorder.orderstatus in ('2')
+		ORDER BY op_taxiorder.usetime
+	</select>
+	
+	<!-- 根据订单号获取订单信息 -->
+	<select id="getOpTaxiOrderByNo" parameterType="String" resultType="OpTaxiOrder">
+		SELECT
+			*
+		FROM
+			op_taxiorder
+		WHERE
+			op_taxiorder.STATUS = 1 
+		and op_taxiorder.orderno = #{orderno}
+	</select>
+
+	<!-- 根据订单号获取订单状态 -->
+	<select id="getOpTaxiOrderStatus" parameterType="String" resultType="String">
+		SELECT
+		orderstatus
+		FROM
+		op_taxiorder
+		WHERE
+		op_taxiorder.STATUS = 1
+		and op_taxiorder.orderno =  #{orderno}
+
+	</select>
+
+	<!-- 根据订单号获取订单状态 -->
+	<select id="getOpCarOrderStatus" parameterType="String" resultType="String">
+		SELECT
+		orderstatus
+		FROM
+		op_order
+		WHERE
+		op_order.STATUS = 1
+		and op_order.orderno = #{orderno}
+		union
+		SELECT
+		orderstatus
+		FROM
+		org_order
+		WHERE
+		org_order.STATUS = 1
+		and org_order.orderno = #{orderno}
+	</select>
+	
+	<!-- 强调度获取可用司机列表 -->
+	<select id="getDriversInBound4TaxiKF" resultType="PubDriver" parameterType="TaxiDriverInBoundParam">
+		SELECT
+			DISTINCT pub_driver.*,
+			pub_driver_vehicle_ref.vehicleid,
+			pub_vehcline.name as vehclinename,
+      		pub_vehcbrand.name as vehcbrandname,
+      		concat((
+					SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌省'
+						AND pub_dictionary.value = pub_vehicle.platenoprovince
+						AND pub_dictionary.status = 1
+						limit 0,1
+					),
+					(
+						SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌市'
+						AND pub_dictionary.value = pub_vehicle.platenocity
+						AND pub_dictionary.status = 1
+						limit 0,1
+					),
+					pub_vehicle.plateno
+			) as plateno
+		FROM
+			pub_driver
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id
+		LEFT JOIN pub_vehicle ON pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.id
+		LEFT JOIN pub_vehcbrand ON pub_vehcbrand.id = pub_vehcline.vehcBrandID
+		LEFT JOIN pub_vehicle_scope ON pub_vehicle.id = pub_vehicle_scope.vehicleid
+		WHERE
+			pub_driver.status = 1
+		AND pub_driver_vehicle_ref.status = 1
+		AND pub_vehicle.status=1
+		AND pub_vehcline.status=1
+		AND pub_vehcbrand.status=1
+		AND pub_vehicle_scope.status=1
+		<if test="userid != null and userid != ''">
+		AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
+		</if>
+		AND pub_driver.vehicletype=1
+		AND pub_driver.workstatus in ('0','1')
+		AND pub_driver.passworkstatus in ('0','1')
+		
+		AND 
+		(
+		  pub_vehicle_scope.cityid=#{city}
+		 or
+		  pub_vehicle_scope.cityid=#{offcity}
+		)
+		<!--<if test="companyid != null and companyid != ''">-->
+			<!-- AND pub_driver.leasescompanyid = #{companyid}-->
+		<!--</if>-->
+        <if test="belongleasecompany != null and belongleasecompany != ''">
+            AND pub_driver.belongleasecompany = #{belongleasecompany}
+        </if>
+		<![CDATA[
+			AND pub_driver.lng >= #{minLng}
+			AND pub_driver.lng <= #{maxLng}
+			AND pub_driver.lat >= #{minLat}
+			AND pub_driver.lat <= #{maxLat}
+		]]>
+	</select>
+
+	<select id="getSendRule" parameterType="PubSendRuleQueryParam" resultType="PubSendrules">
+		select * from pub_sendrules t
+		where t.status = 1
+		<if test="cityCode !=null and cityCode!=''">
+			and t.city = #{cityCode}
+		</if>
+		<if test="vehicleType !=null and vehicleType!=''">
+			and t.vehicletype = #{vehicleType}
+		</if>
+		<if test="platformType !=null and platformType!=''">
+			and t.platformtype = #{platformType}
+		</if>
+		<if test="useType !=null and useType!=''">
+			and t.usetype = #{useType}
+		</if>
+		<if test="sendType !=null and sendType!=''">
+			and t.sendtype = #{sendType}
+		</if>
+		and t.rulesstate ='0'
+	</select>
+	<!-- 弱调度获取可用司机列表 -->
+	<select id="getDriversInBound4TaxiKFL" resultType="PubDriver" parameterType="TaxiDriverInBoundParam">
+		SELECT
+			DISTINCT pub_driver.*,
+			pub_driver_vehicle_ref.vehicleid,
+			pub_vehcline.name as vehclinename,
+      		pub_vehcbrand.name as vehcbrandname,
+      		concat((
+					SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌省'
+						AND pub_dictionary.value = pub_vehicle.platenoprovince
+						AND pub_dictionary.status = 1
+						limit 0,1
+					),
+					(
+						SELECT
+							pub_dictionary.text
+						FROM
+							pub_dictionary
+						WHERE
+							pub_dictionary.type = '车牌市'
+						AND pub_dictionary.value = pub_vehicle.platenocity
+						AND pub_dictionary.status = 1
+						limit 0,1
+					),
+					pub_vehicle.plateno
+			) as plateno
+		FROM
+			pub_driver
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id
+		LEFT JOIN pub_vehicle ON pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.id
+		LEFT JOIN pub_vehcbrand ON pub_vehcbrand.id = pub_vehcline.vehcBrandID
+		LEFT JOIN pub_vehicle_scope ON pub_vehicle.id = pub_vehicle_scope.vehicleid
+		WHERE
+			pub_driver.status = 1
+		AND pub_driver_vehicle_ref.status = 1
+		AND pub_vehicle.status=1
+		AND pub_vehcline.status=1
+		AND pub_vehcbrand.status=1
+		AND pub_vehicle_scope.status=1
+		<if test="userid != null and userid != ''">
+		AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
+		</if>
+		AND pub_driver.vehicletype=1
+		AND pub_driver.workstatus in ('0','1','2')
+		AND pub_driver.passworkstatus in ('0','1')
+		
+		AND 
+		(
+		  pub_vehicle_scope.cityid=#{city}
+		 or
+		  pub_vehicle_scope.cityid=#{offcity}
+		)
+		<!--<if test="companyid != null and companyid != ''">-->
+			<!--AND pub_driver.leasescompanyid = #{companyid}-->
+		<!--</if>-->
+        <if test="belongleasecompany != null and belongleasecompany != ''">
+            AND pub_driver.belongleasecompany = #{belongleasecompany}
+        </if>
+		<![CDATA[
+			AND pub_driver.lng >= #{minLng}
+			AND pub_driver.lng <= #{maxLng}
+			AND pub_driver.lat >= #{minLat}
+			AND pub_driver.lat <= #{maxLat}
+		]]>
+	</select>
+	
+	<!-- 获取司机未出行的预约订单的时间 （天）-->
+	<select id="getDriverUnServiceTimesByDay" resultType="String" parameterType="String">
+		SELECT
+			DISTINCT DATE_FORMAT(op_taxiorder.usetime,'%Y-%m-%d') as usetime
+		FROM
+			op_taxiorder
+		WHERE
+			op_taxiorder.status = 1
+		 and op_taxiorder.orderstatus in ('2')
+		 and op_taxiorder.isusenow='0'
+		 and op_taxiorder.driverid=#{driverid}
+		UNION
+		 SELECT
+			DISTINCT DATE_FORMAT(op_order.usetime,'%Y-%m-%d') as usetime
+		FROM
+			op_order
+		WHERE
+			op_order.status = 1
+		 and op_order.orderstatus in ('2')
+		 and op_order.isusenow='0'
+		 and op_order.driverid=#{driverid}
+		UNION
+			SELECT
+				DISTINCT DATE_FORMAT(org_order.usetime,'%Y-%m-%d') as usetime
+			FROM
+				org_order
+			WHERE
+				org_order.status = 1
+			 and org_order.orderstatus in ('2')
+			 and org_order.isusenow='0'
+			 and org_order.driverid=#{driverid}
+	</select>
+
+
+	<!-- 获取网约车司机未出行的预约订单的时间 （天）-->
+	<select id="listCarDriverUnServiceTimes" resultType="String" parameterType="String">
+		SELECT
+		DISTINCT DATE_FORMAT(op_order.usetime,'%Y-%m-%d') as usetime
+		FROM
+		op_order
+		WHERE
+		op_order.status = 1
+		and op_order.orderstatus in ('2')
+		and op_order.isusenow='0'
+		and op_order.driverid=#{driverid}
+		UNION
+		SELECT
+		DISTINCT DATE_FORMAT(org_order.usetime,'%Y-%m-%d') as usetime
+		FROM
+		org_order
+		WHERE
+		org_order.status = 1
+		and org_order.orderstatus in ('2')
+		and org_order.isusenow='0'
+		and org_order.driverid=#{driverid}
+	</select>
+	
+</mapper>
