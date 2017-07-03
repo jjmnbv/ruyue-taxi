@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.touch.mapper.PartnerUseCarMapper">
+
+    <!-- 获取全量城市列表 -->
+	<select id="getFullCityList" resultType="CityDTO">
+		select
+			distinct pub_cityaddr.id as cityId,pub_cityaddr.city as cityName
+		from
+		    pub_cityaddr
+		where
+		    pub_cityaddr.status=1
+		order by pub_cityaddr.cityInitials 
+	</select>
+	
+	<!-- 获取服务城市列表 -->
+	<select id="getServiceCityList" resultType="CityDTO" parameterType="String">
+		select
+			distinct pub_cityaddr.id as cityId,pub_cityaddr.city as cityName
+		from
+		    pub_cityaddr,
+		    le_accountrules
+		where
+			le_accountrules.status=1
+		and pub_cityaddr.status=1	
+		and le_accountrules.city=pub_cityaddr.id
+		and le_accountrules.rulesstate='0'
+		and le_accountrules.leasescompanyid=#{companyid}
+	</select>
+	
+	<!-- 根据城市获取城市机场列表 -->
+	<select id="getAirPortList" parameterType="String" resultType="AirPortDTO">
+		select
+			pub_airportaddr.id as airportId,pub_airportaddr.name as airportName,pub_airportaddr.lat as latitude,pub_airportaddr.lng as longitude
+		from
+			pub_airportaddr,
+			pub_cityaddr
+		where
+			pub_airportaddr.status=1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=pub_airportaddr.city
+		and pub_cityaddr.id=#{cityId}
+	</select>
+	
+	<!-- 查询租赁公司在某个城市提供的服务 -->
+	<select id="getServiceBusiness" resultType="ServiceBusinessDTO" parameterType="HashMap">
+		SELECT
+			distinct le_accountrules.rulestype as businessId,
+			(case le_accountrules.rulestype when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as businessName
+		FROM
+			le_accountrules
+		WHERE
+			le_accountrules.status=1
+		and le_accountrules.rulesstate='0'
+		and le_accountrules.leasescompanyid=#{companyid}
+		and le_accountrules.type=#{type}
+		and le_accountrules.city=#{cityId}
+		order by le_accountrules.rulestype
+	</select>
+	
+	<!-- 获取服务车型列表-->
+	<select id="getServiceModels" parameterType="HashMap" resultType="ServiceModelsDTO">
+		SELECT
+			le_vehiclemodels.Id as modelsId,le_vehiclemodels.name as modelsName,le_vehiclemodels.logo as modelsLogo
+		FROM
+		<if test="organid!=null and organid!=''">
+		 	le_company_rules_ref,
+		</if>
+			le_accountrules,
+			le_vehiclemodels
+		WHERE
+			le_accountrules.status=1		
+		AND le_vehiclemodels.status=1
+		AND le_vehiclemodels.Id=le_accountrules.cartype
+		AND le_vehiclemodels.leasescompanyid=le_accountrules.leasescompanyid		
+		AND le_accountrules.type=#{type}
+		AND le_accountrules.rulesstate='0'
+		<if test="organid!=null and organid!=''">
+		 AND le_company_rules_ref.status = 1
+		 AND le_company_rules_ref.id = le_accountrules.rulesrefid
+		 AND le_company_rules_ref.rulestate=1
+		 AND le_company_rules_ref.starttime&lt;now()
+		 AND le_company_rules_ref.endtime&gt;now()
+		 AND le_company_rules_ref.organid in (
+ 					SELECT
+ 						organ.id
+ 					FROM
+ 						org_organ organ
+ 					WHERE
+ 						organ. STATUS = 1
+ 					AND organ.creditcode = (
+ 						SELECT
+ 							org_organ.creditcode
+ 						FROM
+ 							org_organ
+ 						WHERE
+ 							org_organ. STATUS = 1
+ 						AND org_organ.id = #{organid}
+ 					)
+ 					AND organ.id IN (
+						SELECT
+							org_organ_company_ref.organid
+						FROM
+							org_organ_company_ref
+						WHERE
+							org_organ_company_ref. STATUS = 1
+						AND (
+							org_organ_company_ref.mainaccount = '0'
+							OR org_organ_company_ref.bindstate = '1'
+						)
+					)
+			)
+		 AND le_company_rules_ref.leasescompanyid=#{companyid}
+		</if>
+		AND le_accountrules.city=#{cityId}
+		AND le_accountrules.rulestype=#{businessId}
+		AND le_accountrules.leasescompanyid=#{companyid}
+		ORDER BY le_vehiclemodels.level
+	</select>
+
+    <!-- 获取计费规则 -->
+    <select id="getOrgOrderCost" resultType="HashMap" parameterType="HashMap">
+		SELECT
+			le_accountrules.startprice,le_accountrules.rangeprice,le_accountrules.timeprice,le_accountrules.timetype,le_accountrules.perhour,le_vehiclemodels.name,le_vehiclemodels.logo,le_accountrules.rulestype
+		FROM
+			le_accountrules left join le_vehiclemodels on (le_accountrules.cartype = le_vehiclemodels.Id)
+		WHERE 1=1
+			AND le_accountrules.status = 1
+			AND le_accountrules.rulesstate = 0
+			AND le_accountrules.leasescompanyid = #{companyid}
+			AND le_accountrules.city = #{city}
+			<!-- 1-约车 2-接机 3-送机-->
+		 	AND le_accountrules.rulestype = #{ordertype}
+		 	AND le_accountrules.cartype = #{cartype}
+		 	<!-- 0-标准计费规则 1-个性化计费规则 -->
+			AND le_accountrules.type = #{rulestype}
+	</select>
+
+    <!-- 根据订单号查询订单基本信息 -->
+    <select id="getOrgOrderByOrderno" resultType="map" parameterType="string">
+        select
+          org_order.*, org_user.account,
+          (select pub_cityaddr.city from pub_cityaddr where org_order.oncity = pub_cityaddr.id) oncityname,
+          (select pub_cityaddr.city from pub_cityaddr where org_order.offcity = pub_cityaddr.id) offcityname,
+          (select pub_cityaddr.city from pub_cityaddr where org_order.startcity = pub_cityaddr.id) startcityname,
+          (select pub_cityaddr.city from pub_cityaddr where org_order.endcity = pub_cityaddr.id) endcityname
+        from
+          org_order left join org_user on org_order.userid = org_user.id
+        where
+          org_order.orderno = #{orderno}
+    </select>
+
+    <!-- 根据司机id查询司机基本信息 -->
+    <select id="getPubDriverById" resultType="map" parameterType="string">
+        select
+          pub_driver.*, le_vehiclemodels.name driverModelsName,
+          concat(
+			(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenoprovince = pub_dictionary.value and pub_dictionary.type = "车牌省"),
+			(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenocity = pub_dictionary.value and pub_dictionary.type = "车牌市"),
+			pub_vehicle.plateno
+		  ) plateno
+        from
+          pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
+          left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+          left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
+          left join le_vehcline_models_ref on pub_vehcline.id = le_vehcline_models_ref.vehclineid
+          left join le_vehiclemodels on le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.id
+        where
+          pub_driver.id = #{driverid} and pub_driver_vehicle_ref.status = 1 and le_vehcline_models_ref.status = 1
+    </select>
+
+    <!-- 查询订单数据 -->
+    <select id="getSimpleOrder" resultType="map" parameterType="map">
+        select
+          org_order.*, org_user.account,
+          (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_order.oncity) oncityname,
+          (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_order.offcity) offcityname
+        from
+          org_order left join org_user on org_order.userid = org_user.id
+        where
+          org_order.status = 1
+          <if test='null != userid and "" != userid'>
+              and org_order.userid = #{userid}
+          </if>
+          <if test='null != startTime and "" != startTime'>
+            <![CDATA[
+                and org_order.usetime >= date_format(#{startTime}, '%Y-%m-%d %H:%i:%s')
+            ]]>
+          </if>
+          <if test='null != endTime and "" != endTime'>
+            <![CDATA[
+                and org_order.usetime <= date_format(#{endTime}, '%Y-%m-%d %H:%i:%s')
+            ]]>
+          </if>
+          <if test='null != orderno and "" != orderno'>
+              and org_order.orderno = #{orderno}
+          </if>
+    </select>
+
+    <!-- 根据手机号查询司机 -->
+    <select id="getDriverByPhone" parameterType="string" resultType="PubDriver">
+      select * from pub_driver where status = 1 and phone = #{phone} limit 1
+    </select>
+
+    <!-- 添加行程报警 -->
+    <insert id="insertPubAlarmprocessSaveDto" parameterType="PubAlarmprocessSaveDto">
+      insert into pub_alarmprocess(id, platformtype, leasecompanyid, usertype, ordertype, userid, alarmsource, alarmtype, alarmtime, orderno,
+        driverid, processstatus, createtime, updatetime, status, creater, updater, lng, lat)
+      values(#{id}, #{platformtype}, #{leasecompanyid}, #{usertype}, #{ordertype}, #{userid}, #{alarmsource}, #{alarmtype}, #{alarmtime}, #{orderno},
+        #{driverid}, #{processstatus}, now(), now(), 1, #{creater}, #{updater}, #{lng}, #{lat})
+    </insert>
+
+    <!-- 根据租赁公司id查询对应管理员 -->
+    <select id="getLeUserByCompanyid" resultType="string" parameterType="string">
+      select id from le_user where id in (select userid from le_roleuser where roleid in
+        (select le_rolemanagement.id from le_rolemanagement where le_rolemanagement.status = 1
+          and le_rolemanagement.roletype = 123 and le_rolemanagement.leasescompanyid = #{companyid}))
+    </select>
+
+    <!-- 修改订单支付状态 -->
+    <update id="updateOrgOrderPaymentStatus" parameterType="OrgOrder">
+      update org_order set updatetime = now(), paymentstatus = #{paymentstatus}, paytype = #{paytype} where orderno = #{orderno}
+    </update>
+
+    <!-- 添加订单支付记录 -->
+    <insert id="insertOrgOrderpaymentrecord" parameterType="map">
+        insert into org_orderpaymentrecord(outtradeno, orderno, paymenttype, tradeno, createtime, updatetime, status)
+          values(#{outtradeno}, #{orderno}, #{paymenttype}, #{tradeno}, now(), now(), 1)
+    </insert>
+
+    <!-- 修改司机评分 -->
+    <update id="updateDriverRate" parameterType="map">
+        update pub_driver set updatetime = now(), avgrate = #{avgrate} where id = #{driverid}
+    </update>
+
+    <!-- 修改订单评分 -->
+    <update id="updateOrgOrderRate" parameterType="OrgOrder">
+        update org_order set updatetime = now(), userrate = #{userrate}, usercomment = #{usercomment} where orderno = #{orderno}
+    </update>
+
+        <resultMap type="HashMap" id="smsobj">
+			<id column="id" property="id" javaType="String"></id>
+			<result column="smstype" property="smstype" javaType="String"></result>
+			<result column="usertype" property="usertype" javaType="String"></result>
+			<result column="username" property="username" javaType="String"></result>
+			<result column="smscode" property="smscode" javaType="String"></result>
+			<result column="createtime" property="createtime" javaType="Date"></result>
+			<result column="updatetime" property="updatetime" javaType="Date"></result>
+			<result column="status" property="status" javaType="int"></result>
+	    </resultMap>
+
+
+        <!-- 获取用户的token -->
+		<select id="getUserTokenByUserId" parameterType="HashMap" resultType="HashMap">
+			SELECT
+				*
+			FROM
+				pub_usertoken
+			WHERE
+				status = 1
+			AND userid = #{userid}
+			AND usertype = #{usertype}
+		</select>
+
+        <!-- 添加或者更新用户的token -->
+		<insert id="createOrUpdateUsertoken" parameterType="HashMap">
+			<if test="id !=null and id != '' ">
+				<!-- 添加 -->
+				INSERT INTO pub_usertoken (
+					id,
+					userid,
+					usertype,
+					usertoken,
+					uuid,
+					createtime,
+					updatetime,
+					status
+				)
+				VALUES
+					(
+					#{id},
+					#{userid},
+					#{usertype},
+					#{usertoken},
+					#{uuid},
+					now(),
+					now(),
+					1
+				)
+			</if>
+			<if test="id=='' or id==null">
+				<!-- 更新 -->
+				UPDATE pub_usertoken
+				SET usertoken = #{usertoken},
+				 uuid = #{uuid},
+				 updatetime = now()
+				WHERE
+					status = 1
+				AND userid = #{userid}
+				AND usertype = #{usertype}
+			</if>
+		</insert>
+
+		<!-- 删除验证码 -->
+		<update id="deleteSMSCode" parameterType="Map">
+			UPDATE pub_smstoken
+			SET
+			 smscode = null,
+			 updatetime = now()
+			WHERE
+				pub_smstoken.smstype=#{smstype}
+			and pub_smstoken.usertype=#{usertype}
+			and pub_smstoken.username=#{phone}
+			and pub_smstoken.status=1
+		</update>
+
+
+        <!-- 保存验证码 -->
+    	<insert id="saveSMSCode" parameterType="HashMap">
+			INSERT INTO pub_smstoken (
+				id,
+				smstype,
+				usertype,
+				username,
+				smscode,
+				createtime,
+				updatetime,
+				status
+			)
+			VALUES (
+				#{id},
+				#{smstype},
+				#{usertype},
+				#{username},
+				#{smscode},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+
+	<!-- 获取登录验证码 -->
+	<select id="getSMSInfo" parameterType="HashMap" resultMap="smsobj" >
+		SELECT
+			*
+		FROM
+			pub_smstoken
+		WHERE
+			pub_smstoken.usertype = #{usertype}
+		AND pub_smstoken.smstype = #{smstype}
+		AND pub_smstoken.username = #{phone}
+		AND pub_smstoken.status = 1
+	</select>
+
+	<!-- 校验是否存在验证码 -->
+	<select id="hasSMSCode" parameterType="HashMap" resultType="Boolean">
+		SELECT
+			count(*) > 0
+		FROM
+			pub_smstoken
+		WHERE
+			pub_smstoken.usertype = #{usertype}
+		AND pub_smstoken.smstype = #{smstype}
+		AND pub_smstoken.username = #{username}
+		AND pub_smstoken.status = 1
+	</select>
+
+	<!-- 更新验证码 -->
+	<update id="updateSMSCode" parameterType="HashMap">
+		UPDATE pub_smstoken
+		SET pub_smstoken.smscode = #{smscode},
+		 pub_smstoken.updatetime = now()
+		WHERE
+			pub_smstoken.usertype = #{usertype}
+		AND pub_smstoken.smstype = #{smstype}
+		AND pub_smstoken.username = #{username}
+	</update>
+
+   <!-- 获取机构端用户信息，获取的是最新的并且除开超管的用户 ,并且是渠道客户-->
+	<select id="getUser4Org" parameterType="String" resultType="OrgUser">
+		SELECT
+			*,
+			(SELECT org_organ.fullname from org_organ where org_organ.id=org_user.organid)as orgcaption,
+			(select org_dept.deptname from org_dept where org_dept.status=1 and org_dept.id = org_user.dpetid LIMIT 0,1)  as deptcation
+		FROM
+			org_user
+		WHERE
+			account = #{account} AND org_user.usertype !='1' and customerType='1' order by createtime desc limit 1
+	</select>
+
+    <!-- 更新机构用户信息 -->
+	<update id="updateUser4Org" parameterType="HashMap">
+		UPDATE org_user
+		SET
+			<if test=" nickname!=null and nickname!='' ">
+				org_user.nickname = #{nickname},
+			</if>
+			<if test=" sex!=null and sex!='' ">
+				org_user.sex = #{sex},
+			</if>
+			<if test=" path!=null and path!='' ">
+				org_user.headportraitmin = #{path},
+				org_user.headportraitmax = #{path},
+			</if>
+			updatetime=now()
+		WHERE
+			org_user.id = #{userid}
+	</update>
+
+    <!-- 添加机构端app登录用户日志 -->
+	<insert id="addLog4Org" parameterType="HashMap">
+		INSERT INTO org_userloginlog (
+			id,
+			userid,
+			ipaddr,
+			device,
+			version,
+			appversion,
+			phonebrand,
+			phonemodel,
+			browserversion,
+			browsertype,
+			loginstatus,
+			logintime,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+			#{id},
+			#{userid},
+			null,
+			#{device},
+			#{version},
+			#{appversion},
+			#{phonebrand},
+			#{phonemodel},
+			#{browserversion},
+			#{browsertype},
+			#{loginstatus},
+			now(),
+			now(),
+			now(),
+			1
+			)
+	</insert>
+
+	<update id="addAuthTimeliness" parameterType="Map">
+	    update ch_info
+           set
+           updatetime=NOW(),
+       <if test="token == null">
+           tokenovertime=date_add(tokenovertime,interval #{overtime} minute)
+       </if>
+       <if test="token!=null">
+           tokenovertime=date_add(NOW(),interval #{overtime} minute),
+           token=#{token}
+       </if>
+           where channelkey=#{channelkey} and status='1'
+	</update>
+
+	<select id="getAuthInfoByKey" parameterType="String" resultType="HashMap">
+	    select token from ch_info ch,org_organ org
+	    where channelkey=#{channelkey} 
+	      and ch.organid=org.id
+	      and org.status='1'
+	      and ch.status='1'
+	</select>
+
+    <select id="checkRegister4Org" resultType="Boolean">
+         select count(*) from org_user 
+	     where organid in (select organid from ch_info where channelkey=#{channelkey} and status='1') 
+	      and account=#{phone}
+	      and customertype='1'
+          and status='1' 
+    </select>
+    
+    <!-- 注册机构用户(渠道客户) -->
+    <insert id="registerOrgUser" parameterType="OrgUser">
+		insert into org_user(id,organid,dpetid,usertype,account,email,nickname,userpassword,sex,specialstate,headportraitmin,headportraitmax,registertime,disablestate,disablehis,usetimes,gpsspeed,gpsdirection,lng,lat,createtime,UpdateTime,Status,customertype)
+			values (#{id},#{organId},#{dpetId},#{userType},#{account},#{email},#{nickName},#{userPassword},#{sex},#{specialState},#{headPortraitMin},#{headPortraitMax},NOW(),#{disableState},#{disableHis},#{useTimes},#{gpsSpeed},#{gpsDirection},#{lng},#{lat},now(),now(),1,#{customerType})
+	</insert>
+	
+	<select id="getChInfoByKey" parameterType="String" resultType="Map">
+	    select ch.organid,org.fullname as companyname from ch_info ch,org_organ org 
+	    where ch.channelkey=#{channelkey} 
+	      and ch.organid=org.id
+	      and org.status='1'
+	      and ch.status='1'
+	</select>
+	
+	<select id="getDeptTreeNodes" parameterType="String" resultType="TreeNode">
+	    SELECT  		 	
+	          org_dept.id as id, 
+			  org_dept.deptname as name
+			  FROM
+			 	org_dept
+			 WHERE
+			 	org_dept.status = 1
+				AND org_dept.organid in (SELECT
+						organ.id
+					FROM
+						org_organ organ
+					WHERE
+						organ. STATUS = 1
+					AND organ.creditcode = (
+						SELECT
+							org_organ.creditcode
+						FROM
+							org_organ
+						WHERE
+							org_organ. STATUS = 1
+						AND org_organ.id =#{organid}
+					)
+				)
+	</select>
+	
+	<!-- 判断是否已经存在某个资源id -->
+	<select id="hasResId" parameterType="String" resultType="boolean">
+		SELECT
+			count(*)
+		FROM
+			org_dept
+		WHERE
+			org_dept.status = 1
+		AND org_dept.resid = #{resid}
+	</select>
+	
+	<insert id="addDept" parameterType="HashMap">
+		INSERT INTO org_dept (
+			id,
+			organid,
+			parentid,
+			resid,
+			deptname,
+			LEVEL,
+			createtime,
+			creater,
+			updatetime,
+			updater,
+			sequence,
+			status
+		)
+		VALUES
+		(
+			#{id},
+			#{organid},
+			#{parentid},
+			#{resid},
+			#{deptname},
+			#{level},
+			now(),
+			#{userid},
+			now(),
+			#{userid},
+			1,
+			1
+		)
+	</insert>
+</mapper>

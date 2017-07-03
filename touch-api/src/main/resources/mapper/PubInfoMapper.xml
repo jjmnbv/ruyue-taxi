@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.touch.mapper.PubInfoMapper">
+
+	<select id="getOrgUserInfo" resultType="HelloWordUser" parameterType="String">
+		select * from org_user where org_user.account=#{account}
+	</select>
+	
+	<!-- 根据channelkey和channelid获取channel信息 -->
+	<select id="getChannelInfo" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+			ch_info
+		WHERE
+			ch_info.status = 1
+		<if test="channelkey!=null and channelkey!=''">
+			and ch_info.channelkey=#{channelkey}
+		</if>
+		<if test="channelid!=null and channelid!=''">
+			and ch_info.channelid=#{channelid}
+		</if>
+		<if test="(channelkey==null or channelkey=='') and (channelid==null or channelid=='') ">
+			and 1!=1
+		</if>
+	</select>
+	
+	<!-- 添加请求标准化接口的记录 -->
+	<select id="addRequestRecord" parameterType="Map">
+		INSERT INTO ch_interfacerequest(
+			id,
+			interfacename,
+			requesttime,
+			requeststate,
+			errormessage,
+			requestaddr,
+			responsetime,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{interfacename},
+				now(),
+				#{requeststate},
+				#{errormessage},
+				#{requestaddr},
+				#{responsetime},
+				now(),
+				now(),
+				1
+			)
+	</select>
+
+	<!-- 根据渠道查询租赁公司 -->
+	<select id="getCompanyByChannel" parameterType="map" resultType="map">
+		select
+			org_organ_company_ref.companyid
+		from
+			ch_info left join org_organ_company_ref on ch_info.organid = org_organ_company_ref.organid
+		where
+			ch_info.status = 1 and org_organ_company_ref.status = 1 and ch_info.channelkey=#{channelkey}
+		limit 1
+	</select>
+
+	<!-- 根据渠道查询机构用户 -->
+	<select id="getOrgUserByChannel" parameterType="map" resultType="map">
+		select
+			org_user.*
+		from
+			org_user left join ch_info on org_user.organid = ch_info.organid
+		where
+			org_user.status = 1 and ch_info.status = 1 and ch_info.channelkey=#{channelkey}
+			and org_user.account = #{account}
+		limit 1
+	</select>
+	
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.touch.mapper.PartnerManageMapper">
+
+    <!-- 获取未支付的订单列表 -->
+    <select id="getUnPaidOrders" parameterType="Map" resultType="Map">
+        select
+            org_order.*, org_user.account,
+            (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_order.oncity) oncityname,
+            (select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_order.offcity) offcityname
+        from
+          org_order left join org_user on org_order.userid = org_user.id
+        where
+            org_order.status = 1
+        and org_order.userid = #{userid}
+        and org_order.orderstatus = '7'
+        and org_order.paymentstatus in ('1')
+    </select>
+</mapper>
