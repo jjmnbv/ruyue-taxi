@@ -1,0 +1,150 @@
+
+
+/*网约车的样式表*/
+.top {
+    /*border:yellow 1px solid;*/
+    background: url('../../Content/images/img_ditubj.png') no-repeat center;
+    width: 1080px;
+    height: 266px;
+    vertical-align: middle;
+    /*background-size:100% auto;*/
+    position: absolute;
+    margin-top: 80px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.topC {
+    background: url('../../Content/images/img_banner.png') no-repeat center;
+    width: 1080px;
+    height: 150px;
+    vertical-align: middle;
+    margin: 0px auto;
+    position: absolute;
+    z-index: 1;
+}
+
+.content {
+    /*border:red 3px solid;*/
+    margin-top: 169px;
+    margin-left: 200px;
+    margin-right: auto;
+    width: 650px;
+    height: auto;
+    background-color: white !important;
+    /*border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    text-shadow: 0 -1px 1px rgba(0,0,0,0.25);*/
+    background: url('../../Content/images/contentbg.png') no-repeat center;
+    background-size: 120% 110%;
+    position: absolute;
+    margin-bottom: 100px;
+}
+h2 {
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+/*下拉框的样式*/
+.cSelect {
+    height: 30px;
+    font-size: 18px;
+    font-family: 'Microsoft YaHei';
+    width: 500px;
+    margin-bottom: 10px;
+}
+
+.required {
+    color: red;
+    font-size: 16px;
+    font-family: 'Microsoft YaHei';
+}
+
+.lbltext {
+    color: black;
+    font-size: 18px;
+    font-family: 'Microsoft YaHei';
+}
+
+textarea {
+    color: rgba(0,0,0,0.25);
+    font-size: 18px;
+    font-family: 'Microsoft YaHei';
+    width: 496px;
+    margin-bottom: 10px;
+    height: 30px;
+}
+
+.cDiv {
+    padding-left: 50px;
+    width: 95%;
+    border-left: red 1px solid;
+    width: 500px;
+    margin-left: 40px;
+    margin-bottom: -6px;
+    padding-top: 2px;
+}
+
+.cDivGray {
+    padding-left: 50px;
+    width: 95%;
+    border-left: gray 1px solid;
+    width: 500px;
+    margin-left: 40px;
+    margin-bottom: -6px;
+    padding-top: 2px;
+}
+
+.number {
+    color: red;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.numberGray {
+    color: gray;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.Cimg {
+    background: url('../../Content/images/icon_yuan_pre.png') no-repeat center;
+    width: 50px;
+    height: 50px;
+    float: left;
+    margin-left: 15px;
+    background-size: 100% auto;
+}
+
+.CimgGray {
+    background: url('../../Content/images/icon_yuan.png') no-repeat center;
+    width: 50px;
+    height: 50px;
+    float: left;
+    margin-left: 15px;
+    background-size: 100% auto;
+}
+
+.STYLE1 {
+    font-size: 16px;
+    font-family: 'Microsoft YaHei';
+}
+
+.radioC {
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+.test ul{list-style:none;}
+.test li{float:left;width:60px;margin-left:3px;line-height:20px;}
+.test a{display:block;text-align:center;height:20px;color:black;}
+.test a:link{color:#666;text-decoration:none;}
+.test a:visited{text-decoration:underline;}
+.test a:hover{font-weight:bold;text-decoration:none;}
+
+.listright ul{list-style:none;font-size:12px;}
+.listright li{float:left;width:80px;margin-left:3px;line-height:20px;}
+

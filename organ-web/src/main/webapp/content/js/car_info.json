@@ -1,0 +1,59 @@
+[
+	{
+		id: "xxxxx1", "model": "经济型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_putongshangwuche.png"               
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_haohuaxing.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_jingjiche.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_shushixing.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_jingjiche.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_haohuaxing.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_shushixing.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "25.00","timeprice":"30.00","img":"../img/bg_putongshangwuche.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "14.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_jingjiche.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "26.00","timeprice":"30.00","img":"../img/bg_haohuaxing.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "13.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_shushixing.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_jingjiche.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_putongshangwuche.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_haohuaxing.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "1s.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_shushixing.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "12.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_jingjiche.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_putongshangwuche.png"
+	},
+	{
+		id: "xxxxx2", "model": "豪华型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_haohuaxing.png"
+	},
+	{
+		id: "xxxxx3", "model": "节能型", "startprice": "10.00", "rangeprice": "20.00","timeprice":"30.00","img":"../img/bg_shushixing.png"
+	}
+]

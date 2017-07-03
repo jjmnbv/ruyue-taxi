@@ -1,0 +1,12 @@
+.ztimepicker{position: relative;width: 330px;}
+.ztimepicker_input{width: 100%;}
+.ztimebox_s{overflow: auto;}
+.ztimebox_s>ul{float: left;width:33.333%;height:220px;vertical-align: top;}
+.zhour{overflow-y: scroll;}
+.znow{width:100%;padding: 4px 10px;border-bottom:1px solid #dbdbdb;color: #0167da;}
+.ztimebox{border:1px solid #dbdbdb;width:330px;background:#fff;position: absolute;top:29px;z-index:1000;display: none;}
+.ztimebox_s li{line-height:200%;text-align:center;}
+.ztimebox_s li:first-child{padding-top: 6px;}
+.ztimebox_s>ul+ul{border-left:1px solid #dbdbdb;}
+.ztimebox_s .selected,.zday>li:hover,.zhour>li:hover,.zmin>li:hover{background: #e5e5e5;}
+.zhour::-webkit-scrollbar,.zhour::-o-scrollbar,.zhour::-moz-scrollbar,.zhour::-ms-scrollbar{width: 1px;background-color: #F5F5F5;}

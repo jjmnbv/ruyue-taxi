@@ -1,0 +1,127 @@
+.con_body {
+  background-color: #fff;
+  text-align: center;
+  padding: 60px 0;
+}
+.con_body .title {
+  font-size: 28px;
+  color: #1A1A1A;
+}
+.con_body img {
+  margin: 34px 0 40px 0;
+}
+.con_body .info {
+  color: #1A1A1A;
+  font-size: 16px;
+}
+.con_body .btn_box {
+  width: 260px;
+  margin: 76px auto 0;
+}
+.con_body .btn_box span {
+  display: inline-block;
+  width: 120px;
+  height: 36px;
+  line-height: 36px;
+  font-size: 13px;
+  cursor: pointer;
+  cursor: hand;
+}
+.con_body .btn_box .btn_left {
+  color: #fff;
+  margin-right: 16px;
+  background: url(../img/btn_ckdd.png) no-repeat;
+}
+.con_body .btn_box .btn_left:hover {
+  background-image: url(../img/btn_ckdd_pre.png);
+}
+.con_body .btn_box .btn_right {
+  color: #686868;
+  background: url(../img/btn_qxdd.png) no-repeat;
+}
+.popup_box {
+  display: none;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  background: rgba(0, 0, 0, 0.3);
+  filter: alpha(opacity=30);
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.popup_box .popup {
+  width: 620px;
+  background: #fff;
+  margin: 200px auto;
+  position: relative;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+}
+.popup_box .popup .popup_title {
+  height: 69px;
+  line-height: 70px;
+  font-size: 22px;
+  text-align: center;
+  border-bottom: 1px solid #E4E4E4;
+  position: relative;
+}
+.popup_box .popup .popup_title i {
+  display: inline-block;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 25px;
+  height: 25px;
+  background: url(../img/btn_close.png) no-repeat;
+  cursor: hand;
+  cursor: pointer;
+}
+.popup_box .popup .popup_content {
+  min-height: 200px;
+  position: relative;
+  padding: 10px 0 0 30px;
+}
+.popup_box .popup .popup_content table {
+  color: #585858;
+  font-size: 14px;
+}
+.popup_box .popup .popup_content table td {
+  padding-right: 20px;
+  height: 40px;
+}
+.popup_box .popup .popup_content table span {
+  color: red;
+  vertical-align: middle;
+}
+.popup_box .popup .popup_content table .td_right {
+  text-align: right;
+}
+.popup_box .popup .popup_footer {
+  height: 59px;
+  border-top: 1px solid #E4E4E4;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+.popup_box .popup .popup_footer span {
+  display: inline-block;
+  width: 88px;
+  height: 36px;
+  text-align: center;
+  line-height: 36px;
+  margin-top: 10px;
+  float: right;
+  margin-right: 20px;
+  cursor: pointer;
+  cursor: hand;
+}
+.popup_box .popup .popup_footer .sure {
+  color: #fff;
+  background: url(../img/btn_88px.png) no-repeat;
+}
+.popup_box .popup .popup_footer .cancel {
+  background: url(../img/btn_88px2.png) no-repeat;
+}
+/*# sourceMappingURL=yueche_tijiaochenggong.css.map */
