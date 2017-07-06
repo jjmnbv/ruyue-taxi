@@ -56,6 +56,9 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
+springBoot {
+    mainClass = "com.szyciov.supervision.SupervisionApplication"
+}
 
 
 repositories {
@@ -65,9 +68,13 @@ repositories {
 }
 
 dependencies {
+    //spring boot
     compile(group: 'org.springframework.boot', name: 'spring-boot-starter', version:'1.5.4.RELEASE') {
         exclude(module: 'commons-logging')
     }
+
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-aop')
 
     compile group: 'org.apache.httpcomponents', name: 'httpmime', version:'4.5.3'

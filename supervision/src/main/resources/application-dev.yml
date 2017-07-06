@@ -4,8 +4,9 @@ spring:
     username: dbdev
     password: gtg@0705ROd
 service:
-    url: http://120.76.199.119:8099/api/transfer
-    company:
-      code: RY
-      key: SLj16Qq7FK9nbyi4
-    port: 8080
+  url: http://120.76.199.119:8099/api/transfer
+  company:
+    code: RY
+    key: SLj16Qq7FK9nbyi4
+server:
+  port: 8080

@@ -1,20 +1,9 @@
-server:
-  service:
-    url: http://120.76.199.119:8099/api/transfer
-    company: RY
-    port: 8080
-    context-path: #/ruyue/
-    cache:
-        type: redis
 logging:
   level:
     tk.mybatis: DEBUG
-    com.xunxintech.ruyue.coach: DEBUG
 spring:
   datasource:
     name: ruyue
-    # 使用druid数据源
-    #type: com.alibaba.druid.pool.DruidDataSource
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.jdbc.Driver
     filters: stat
@@ -45,15 +34,15 @@ spring:
       maxRequests: 500
       maxRequestsPerHost: 50
 mybatis:
-    type-aliases-package: tk.mybatis.springboot.model
-    mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: tk.mybatis.springboot.model
+  mapper-locations: classpath:mapper/*.xml
 mapper:
-    mappers:
-        - tk.mybatis.mapper.common.Mapper
-    not-empty: false
-    identity: MYSQL
+  mappers:
+    - tk.mybatis.mapper.common.Mapper
+  not-empty: false
+  identity: MYSQL
 pagehelper:
-    helperDialect: mysql
-    reasonable: true
-    supportMethodsArguments: true
-    params: count=countSql
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
