@@ -1,5 +1,7 @@
 package com.szyciov.supervision.test;
 
+import com.szyciov.supervision.util.GzwycApi;
+
 /**
  * 测试接口类
  * Created by 林志伟 on 2017/7/5.

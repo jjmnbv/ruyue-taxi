@@ -56,6 +56,11 @@
 			<artifactId>httpcore</artifactId>
 			<version>4.4.6</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>fluent-hc</artifactId>
+			<version>4.5.3</version>
+		</dependency>
 
 		<!--jackson依赖-->
 		<dependency>
@@ -93,6 +98,11 @@
 			<artifactId>jackson-dataformat-xml</artifactId>
 			<version>2.6.4</version>
 		</dependency>
+		<dependency>
+			<groupId>com.xunxintech.ruyue.coach</groupId>
+			<artifactId>ry-coach-common-io</artifactId>
+			<version>1.1.38</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -126,7 +136,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.5</version>
+				<version>3.0.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

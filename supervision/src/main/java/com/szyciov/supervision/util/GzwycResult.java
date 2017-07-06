@@ -1,4 +1,4 @@
-package com.szyciov.supervision.test;
+package com.szyciov.supervision.util;
 
 /**
  * 网约车响应结果

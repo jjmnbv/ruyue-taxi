@@ -1,0 +1,59 @@
+server:
+  service:
+    url: http://120.76.199.119:8099/api/transfer
+    company: RY
+    port: 8080
+    context-path: #/ruyue/
+    cache:
+        type: redis
+logging:
+  level:
+    tk.mybatis: DEBUG
+    com.xunxintech.ruyue.coach: DEBUG
+spring:
+  datasource:
+    name: ruyue
+    # 使用druid数据源
+    #type: com.alibaba.druid.pool.DruidDataSource
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    filters: stat
+    maxActive: 100
+    initialSize: 1
+    maxWait: 60000
+    minIdle: 10
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: select 'x'
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxOpenPreparedStatements: 100
+  http:
+    encoding:
+      charset: utf-8
+      enable: true
+      force: true
+    timeout:
+      connect: 60000
+      socket: 60000
+      write: 60000
+    headers:
+      Connection: close
+    dispatcher:
+      maxRequests: 500
+      maxRequestsPerHost: 50
+mybatis:
+    type-aliases-package: tk.mybatis.springboot.model
+    mapper-locations: classpath:mapper/*.xml
+mapper:
+    mappers:
+        - tk.mybatis.mapper.common.Mapper
+    not-empty: false
+    identity: MYSQL
+pagehelper:
+    helperDialect: mysql
+    reasonable: true
+    supportMethodsArguments: true
+    params: count=countSql
