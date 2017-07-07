@@ -8,17 +8,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
 /**
- * @Title:RyMeterServiceApplicationTest.java
+ * @Title:RyMeterServiceApplication.java
  * @Package com.ry.taxi
  * @Description
  * @author zhangdd
- * @date 2017Äê7ÔÂ7ÈÕ ÉÏÎç11:14:43
- * @version 
+ * @date 2017å¹´7æœˆ6æ—¥
+ * @version
  *
- * @Copyrigth  °æÈ¨ËùÓĞ (C) 2017 ¹ãÖİÑ¶ĞÄĞÅÏ¢¿Æ¼¼ÓĞÏŞ¹«Ë¾.
+ * @Copyrigth  ç‰ˆæƒæ‰€æœ‰ (C) 2017 å¹¿å·è®¯å¿ƒä¿¡æ¯ç§‘æŠ€æœ‰é™å…¬å¸.
  */
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class RyMeterServiceApplicationTest {
