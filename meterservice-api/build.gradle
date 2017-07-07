@@ -1,0 +1,201 @@
+def nexusurl = System.getProperty("nexusurl") ?: "${nexusurldefault}"
+
+def devrepourl="${nexusurl}/repository/maven-snapshots/"
+def relrepourl="${nexusurl}/repository/maven-releases/"
+def pubrepourl= "${nexusurl}/repository/maven-public/"
+
+
+
+println "nexus url : ${nexusurl}"
+
+
+buildscript {
+    ext {
+        springBootVersion = '1.5.3.RELEASE'
+        nexusurl = System.getProperty("nexusurl") ?: "http://192.168.81.66:8081/"
+        pubrepourl= "${nexusurl}/repository/maven-public/"
+    }
+    repositories {
+        mavenLocal()
+        maven { url "${pubrepourl}" }
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'maven'
+apply plugin: 'idea'
+
+
+group = "com.ry.taxi"
+def artifactId = "meterservice-api"
+
+
+version = "1.0.0-SNAPSHOT"
+
+
+
+def paramRelease =  project.properties.get("release")
+if("${paramRelease}" != "null"){
+    version = version.replace("-SNAPSHOT","")
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+def repourl=devrepourl
+
+if (!version.contains("SNAPSHOT")){
+    repourl=relrepourl
+}
+
+springBoot {
+    mainClass = "com.ry.taxi.RyTaxiMeterServiceApplication"
+}
+
+repositories {
+    mavenLocal()
+    maven { url pubrepourl } // 自定义库地址
+    mavenCentral()
+}
+
+configurations {
+    providedRuntime
+    all*.exclude module: 'spring-boot-devtools'
+}
+//打包源代码
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+}
+
+dependencies {
+    //spring boot
+    compile('org.mybatis.spring.boot:mybatis-spring-boot-starter:1.1.1')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-aop')
+    //compile('org.springframework.boot:spring-boot-starter-data-redis')
+    //compile 'org.springframework.cloud:spring-cloud-starter-eureka'
+
+    //cache
+    compile ('org.springframework.boot:spring-boot-starter-cache')
+    compile ('org.springframework.boot:spring-boot-starter-data-redis')
+
+    //compile('org.springframework.boot:spring-boot-starter-data-jpa')
+    //compile('org.hibernate:hibernate-core:5.2.8.Final')
+    //compile('org.hibernate:hibernate-entitymanager:5.2.8.Final')
+
+    //apache common
+    compile 'commons-lang:commons-lang:2.6'
+    //compile 'commons-beanutils:commons-beanutils:1.6'
+    //compile 'commons-collections:commons-collections:20040616'
+    //compile 'commons-logging:commons-logging:1.1.1'
+    compile 'commons-codec:commons-codec'
+
+    //DataSource
+    compile('com.zaxxer:HikariCP:2.4.7')
+    compile 'tk.mybatis:mapper:3.3.9'
+    compile 'org.mybatis.generator:mybatis-generator-core:1.3.5'
+    compile 'com.github.pagehelper:pagehelper:4.1.6'
+    runtime('mysql:mysql-connector-java')
+    //compile 'com.alibaba:druid:1.0.16'
+
+    // net.sf
+    compile 'net.sf.json-lib:json-lib:2.4:jdk15'
+    //compile 'net.sf.ezmorph:ezmorph:1.0.4'
+
+    //liquibase
+    //compile('org.liquibase:liquibase-core')
+
+    // fasterxml jackson
+    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.8.4'
+    compile 'com.fasterxml.jackson.module:jackson-module-parameter-names:2.8.4'
+    
+    //ruyue coach	
+    compile 'com.xunxintech.ruyue.coach:ry-coach-common-io:1.1.38'
+
+    //lombok
+    compile 'org.projectlombok:lombok:1.16.16'
+
+    //h2
+    //runtime('com.h2database:h2')
+
+    //test
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+
+
+}
+//gradle profiles param
+def pro =  project.properties.get("springProfiles")
+
+if("${pro}" != "null"){
+    test.systemProperty 'spring.profiles.active', "${pro}"
+    println "spring.profiles.active=${pro}"
+}
+
+task showTestTaskClasspath << {
+    test.classpath.each { println it }
+}
+
+task fatJar(type: Jar) {
+    baseName = "$artifactId"
+    version = "$project.version"
+    exclude('com/ruyue/taxi/RyTaxiMeterServiceApplication*')
+    exclude('config')
+    exclude('error*')
+    // from {configurations.compile.filter{!it.name.startsWith('ry-coach-common') && !it.name.startsWith('lombok')}.collect { it.isDirectory() ? it : zipTree(it)}}
+    with jar
+}
+
+install{
+    repositories{
+        mavenInstaller {
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+
+
+    }
+
+}
+//上传到nexus
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: repourl)
+                    {
+                        authentication(userName: "$nexususer", password: "$nexuspwd")
+                    }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}
+//fatJar.dependsOn javadocJar
+fatJar.mustRunAfter jar
+install.dependsOn fatJar
+uploadArchives.dependsOn install
