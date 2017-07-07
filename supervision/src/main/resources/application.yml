@@ -21,6 +21,7 @@ spring:
     poolPreparedStatements: true
     maxOpenPreparedStatements: 100
   http:
+    compression: false
     encoding:
       charset: utf-8
       enable: true

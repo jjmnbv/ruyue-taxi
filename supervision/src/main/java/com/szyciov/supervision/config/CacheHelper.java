@@ -30,13 +30,15 @@ public class CacheHelper implements InitializingBean{
 
     private@Value("${spring.http.dispatcher.maxRequestsPerHost:50}") int maxRequestsPerHost;
 
+    private @Value("${spring.http.compression:false}")boolean compression;
+
 
     @Override
     public void afterPropertiesSet() throws Exception {
         p_serviceUrl = serverUrl;
         p_companyId = companyId;
         p_key = key;
-        HttpClientUtil.initHttpClient(socketTimeout,connectTimeout,writeTimeout,null,maxRequests, maxRequestsPerHost, false);
+        HttpClientUtil.initHttpClient(socketTimeout,connectTimeout,writeTimeout,null,maxRequests, maxRequestsPerHost, compression);
     }
 
 
