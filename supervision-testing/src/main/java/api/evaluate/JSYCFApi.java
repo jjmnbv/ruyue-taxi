@@ -26,7 +26,7 @@ public class JSYCFApi extends EvaluateApi {
      */
     private String punishReason;
     /**
-     *处罚原因
+     *处罚结果
      */
     private String punishResult;
 }
