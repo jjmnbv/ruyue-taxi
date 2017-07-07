@@ -16,11 +16,11 @@ public enum RequestType {
         this.description = desp;
     }
 
-    public String getValue(){
+    public String value(){
         return this.value;
     }
 
-    public String getDescription(){
+    public String description(){
         return this.description;
     }
 }

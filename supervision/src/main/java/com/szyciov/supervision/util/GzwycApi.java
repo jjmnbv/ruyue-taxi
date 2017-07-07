@@ -4,6 +4,8 @@ import com.szyciov.supervision.TaxiExecption;
 import com.szyciov.supervision.config.CacheHelper;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
+import lombok.Cleanup;
+import org.apache.http.Consts;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -24,10 +26,19 @@ import java.time.format.DateTimeFormatter;
 public class GzwycApi {
 
     private static Logger logger = LoggerFactory.getLogger(GzwycApi.class);
-    public static final String SEPARATOR_UNDERLINE = "_";
-    private static char[] commonDigit = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-    public static final String DATA_P = "yyyyMMddHHmmssSSS";
+    private static final String SIGN_TYPE = "MD5";
+    private static final String FILE_SUFFIX = ".json";
+    private static final String BINFILE_AUTH = "binfile-auth";
+    private static final String BINFILE_MD5 = "binfile-md5";
+    private static final String BINFILE_GZIP = "binfile-gzip";
+    private static final String BINFILE_REQLEN = "binfile-reqlen";
+    private static final String BIN_FILE = "binFile";
+    private static final String FILENAME = "filename";
+    private static final String GZIP_FALSE = "false";
+    private static final String SEPARATOR_UNDERLINE = "_";
+    private static char[] commonDigit = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    private static final String DATA_P = "yyyyMMddHHmmssSSS";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_P);
 
@@ -35,32 +46,33 @@ public class GzwycApi {
         String responseString = sendMsg(request, false);
         return JSONUtil.objectMapper.readValue(responseString, GzwycResult.class);
     }
+
     public static String token(BasicRequest request) throws IOException {
         return sendMsg(request, true);
     }
 
     private static String sendMsg(BasicRequest request, Boolean isToken) throws IOException {
         HttpPost post = new HttpPost(CacheHelper.getServiceUrl());
-        InputStream in = new ByteArrayInputStream(request.getResult().getBytes("UTF-8"));
+        @Cleanup InputStream in = new ByteArrayInputStream(request.getResult().getBytes(Consts.UTF_8.name()));
         String md5 = hash(in);
         in.reset();
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        post.addHeader("binfile-md5", md5);
+        post.addHeader(BINFILE_MD5, md5);
         if (isToken) {
-            post.addHeader("binfile-auth", CacheHelper.getCompanyId());//平台标识
+            post.addHeader(BINFILE_AUTH, CacheHelper.getCompanyId());//平台标识
         } else {
-            post.addHeader("binfile-auth", request.getToken());//token
+            post.addHeader(BINFILE_AUTH, request.getToken());//token
         }
 
-        post.addHeader("binfile-gzip", "false");
-        post.addHeader("binfile-reqlen", String.valueOf(in.available()));//请求长度
+        post.addHeader(BINFILE_GZIP, GZIP_FALSE);
+        post.addHeader(BINFILE_REQLEN, String.valueOf(in.available()));//请求长度
         String fileName = new StringBuffer(CacheHelper.getCompanyId()).append(SEPARATOR_UNDERLINE)
-                .append(request.getInterfaceType().getValue()).append(SEPARATOR_UNDERLINE)
-                .append(request.getCommand().getValue()).append(SEPARATOR_UNDERLINE).append(request.getRequestType().getValue()).append(SEPARATOR_UNDERLINE)
-                .append(LocalDateTime.now().format(formatter)).append(".json").toString();
+                .append(request.getInterfaceType().value()).append(SEPARATOR_UNDERLINE)
+                .append(request.getCommand().value()).append(SEPARATOR_UNDERLINE).append(request.getRequestType().value()).append(SEPARATOR_UNDERLINE)
+                .append(LocalDateTime.now().format(formatter)).append(FILE_SUFFIX).toString();
 
-        builder.addBinaryBody("binFile", in, ContentType.DEFAULT_BINARY, fileName);// 文件
-        builder.addTextBody("filename", fileName, ContentType.create(ContentType.DEFAULT_TEXT.getMimeType(), "UTF-8"));
+        builder.addBinaryBody(BIN_FILE, in, ContentType.DEFAULT_BINARY, fileName);// 文件
+        builder.addTextBody(FILENAME, fileName, ContentType.create(ContentType.DEFAULT_TEXT.getMimeType(), "UTF-8"));
         post.setEntity(builder.build());
         logger.debug("request params -> headers:{}, fileName:{}", JSONUtil.toJackson(post.getAllHeaders()), fileName);
         return HttpClientUtil.sendHttpPost(post, ContentType.APPLICATION_FORM_URLENCODED);
@@ -69,7 +81,7 @@ public class GzwycApi {
     public static String hash(InputStream in) {
         try {
             byte[] buffer = new byte[1024];
-            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            MessageDigest md5 = MessageDigest.getInstance(SIGN_TYPE);
             int numRead = 0;
             while ((numRead = in.read(buffer)) > 0) {
                 md5.update(buffer, 0, numRead);

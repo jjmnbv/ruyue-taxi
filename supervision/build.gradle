@@ -95,7 +95,7 @@ dependencies {
         exclude(module: 'commons-logging')
     }
 
-    compile('com.xunxintech.ruyue.coach:ry-coach-common-io:1.1.39-SNAPSHOT')
+    compile('com.xunxintech.ruyue.coach:ry-coach-common-io:1.1.40-SNAPSHOT')
 
     //DataSource
     compile('com.zaxxer:HikariCP:2.4.7')
