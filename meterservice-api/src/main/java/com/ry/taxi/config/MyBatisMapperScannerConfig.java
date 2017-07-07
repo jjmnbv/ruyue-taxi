@@ -33,7 +33,7 @@ public class MyBatisMapperScannerConfig {
     public MapperScannerConfigurer mapperScannerConfigurer() {
         MapperScannerConfigurer mapperScannerConfigurer = new MapperScannerConfigurer();
         mapperScannerConfigurer.setSqlSessionFactoryBeanName("sqlSessionFactory");
-        mapperScannerConfigurer.setBasePackage("com.xunxintech.ruyue.coach.*.mapper");
+        mapperScannerConfigurer.setBasePackage("com.ry.taxi.*.mapper");
         Properties properties = new Properties();
         properties.setProperty("mappers", "tk.mybatis.mapper.common.Mapper");
         properties.setProperty("notEmpty", "false");

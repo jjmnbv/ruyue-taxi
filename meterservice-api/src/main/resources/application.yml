@@ -6,7 +6,8 @@ server:
 logging:
     level:
         tk.mybatis: DEBUG
-        com.xunxintech.ruyue.coach: DEBUG
+        com.ry.taxi: DEBUG   
+    config: classpath:logback-spring.xml   
 
 spring:
     datasource:

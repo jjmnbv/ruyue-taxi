@@ -11,10 +11,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Package com.ry.taxi
  * @Description
  * @author zhangdd
- * @date 2017Äê7ÔÂ7ÈÕ ÉÏÎç11:10:44
+ * @date 2017å¹´7æœˆ6æ—¥
  * @version 
  *
- * @Copyrigth  °æÈ¨ËùÓĞ (C) 2017 ¹ãÖİÑ¶ĞÄĞÅÏ¢¿Æ¼¼ÓĞÏŞ¹«Ë¾.
+ * @Copyrigth  ç‰ˆæƒæ‰€æœ‰ (C) 2017 å¹¿å·è®¯å¿ƒä¿¡æ¯ç§‘æŠ€æœ‰é™å…¬å¸.
  */
 @SpringBootApplication
 public class RyMeterServiceApplication {
