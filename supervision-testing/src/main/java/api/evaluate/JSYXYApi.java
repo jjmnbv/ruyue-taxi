@@ -1,9 +1,12 @@
 package api.evaluate;
 
+import lombok.Data;
+
 /**
  * 3.6.4	驾驶员信誉信息(JSYXY)
  * Created by 林志伟 on 2017/7/7.
  */
+@Data
 public class JSYXYApi extends EvaluateApi {
     public JSYXYApi() {
         super();

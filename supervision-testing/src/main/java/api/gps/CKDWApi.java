@@ -1,9 +1,12 @@
 package api.gps;
 
+import lombok.Data;
+
 /**
  * 3.5.2	乘客定位信息（来自乘客手机app）*(CKDW) 实时
  * Created by 林志伟 on 2017/7/7.
  */
+@Data
 public class CKDWApi extends GpsApi {
     public CKDWApi() {
         super();
