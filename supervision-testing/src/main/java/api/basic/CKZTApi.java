@@ -1,0 +1,27 @@
+package api.basic;
+
+import lombok.Data;
+
+/**
+ * 3.2.15	网约车乘客状态信息(CKZT)
+ * Created by 林志伟 on 2017/7/7.
+ */
+@Data
+public class CKZTApi extends BasicApi {
+    public CKZTApi(){
+        super();
+        setCommand("CKZT");
+    }
+//    入黑名单日期
+    private String inDate;
+//  出黑名单日期
+    private String outDate;
+//  乘客电话
+    private String passengerPhone;
+//    原因
+    private String cause;
+
+
+
+
+}

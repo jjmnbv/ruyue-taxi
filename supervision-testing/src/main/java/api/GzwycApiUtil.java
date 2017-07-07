@@ -1,3 +1,5 @@
+package api;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
@@ -8,18 +10,20 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.List;
 
 /**
- * 网约车接口类
+ * 网约车接口发送工具类
  * Created by 林志伟 on 2017/7/4.
  */
-public class GzwycApi {
+public class GzwycApiUtil {
 
 //    private String serverUrl="http://wycapi.gzjt.gov.cn/api/app/common/binapi";
     private String serverUrl="http://120.76.199.119:8099/api/transfer";
@@ -93,11 +97,11 @@ public class GzwycApi {
     public String getToken(){
         String result = "{\"platform\":\""+companyId+"\",\"key\":\""+key+"\"}";
         try {
-            GzwycApi gzwycApi=new GzwycApi();
-            gzwycApi.setApiType("TOKEN");
-            gzwycApi.setCommand("ACCESS");
-            gzwycApi.setGetToken(true);
-            GzwycResult gzwycResult=gzwycApi.send(result);
+            GzwycApiUtil gzwycApiUtil =new GzwycApiUtil();
+            gzwycApiUtil.setApiType("TOKEN");
+            gzwycApiUtil.setCommand("ACCESS");
+            gzwycApiUtil.setGetToken(true);
+            GzwycResult gzwycResult= gzwycApiUtil.send(result);
             if(gzwycResult.getStatus()==200){
                 ObjectMapper objectMapper=new ObjectMapper();
                 Map map= objectMapper.readValue(gzwycResult.getContent(), Map.class);
@@ -114,6 +118,47 @@ public class GzwycApi {
 
     }
 
+    /**
+     * 发送请求
+     * @param apiRequestParam
+     * @return
+     * @throws Exception
+     */
+    public GzwycResult send(ApiRequestParam<? extends BaseApi> apiRequestParam) throws Exception {
+        if(apiRequestParam.getItems()==null||apiRequestParam.getItems().size()<=0){
+            GzwycResult gzwycResult=new GzwycResult();
+            gzwycResult.setStatus(-1);
+            gzwycResult.setContent("传递参数不能为空！");
+            return  gzwycResult;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        String result=mapper.writeValueAsString(apiRequestParam);
+        System.out.println("解析："+result);
+        this.setApiType(apiRequestParam.getItems().get(0).getApiType());
+        this.setCommand(apiRequestParam.getItems().get(0).getCommand());
+        return this.send(result);
+
+    }
+    /**
+     * 发送请求
+     * @param items
+     * @return
+     * @throws Exception
+     */
+    public GzwycResult send(List<? extends  BaseApi> items) throws Exception {
+        ApiRequestParam apiRequestParam=new ApiRequestParam();
+        apiRequestParam.setItems(items);
+        return  this.send(apiRequestParam);
+    }
+
+
+
+    /**
+     * 发送请求
+     * @param result
+     * @return
+     * @throws Exception
+     */
     public GzwycResult send(String result) throws Exception {
         HttpPost post = new HttpPost(this.serverUrl);
         InputStream in;
@@ -126,8 +171,11 @@ public class GzwycApi {
         if(isGetToken){
             post.addHeader("binfile-auth", companyId);//平台标识
         }else{
-            post.addHeader("binfile-auth", this.getToken());//token
-//            post.addHeader("binfile-auth", companyId);//平台标识
+            String token=this.getToken();
+            if(token==null){
+                return  new GzwycResult(-2,"获取token失败！");
+            }
+            post.addHeader("binfile-auth", token);//token
         }
 
         post.addHeader("binfile-gzip", "false");
@@ -152,11 +200,15 @@ public class GzwycApi {
 //		clientBuilder.setProxy(proxy);----放开抓包
         CloseableHttpClient client = clientBuilder.build();
         HttpResponse response = client.execute(post);
-        System.out.println(response.toString());
         GzwycResult gzwycResult=new GzwycResult();
         gzwycResult.setStatus(response.getStatusLine().getStatusCode());
-        gzwycResult.setContent(EntityUtils.toString(response.getEntity()));
+        String content=EntityUtils.toString(response.getEntity());
+        content=new String(content.getBytes("ISO-8859-1"),"UTF-8");
+        gzwycResult.setContent(content);
         System.out.println(gzwycResult);
+        if(!isGetToken)
+            gzwycResult.parseContent();
+//        System.out.println(gzwycResult);
         return  gzwycResult;
     }
 

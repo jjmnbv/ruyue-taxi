@@ -1,10 +1,13 @@
+import api.GzwycApiUtil;
+import api.GzwycResult;
+
 /**
  * 测试接口类
  * Created by 林志伟 on 2017/7/5.
  */
 public class Test_GzwycApi {
     public static void main(String[] args){
-        GzwycApi gzwycApi=new GzwycApi();
+        GzwycApiUtil gzwycApiUtil =new GzwycApiUtil();
         //设置参数
         String companyId="RY";
         String result = "{\"items\":[{\"companyId\":\""+companyId+"\",\"vehicleNum\":1,\"driverNum\":0.00,\"symbol\":\"123123123\","
@@ -19,18 +22,18 @@ public class Test_GzwycApi {
                 + "\"flag\":\"1\",\"updateTime\":\"2018-12-23 17:30:00\"}"
                 + "]}";
 //        设置接口类型
-        gzwycApi.setApiType("BASIC");
+        gzwycApiUtil.setApiType("BASIC");
 //        设置命令
-        gzwycApi.setCommand("PTYYGM");
+        gzwycApiUtil.setCommand("PTYYGM");
         try {
 //            发送请求
-            GzwycResult gzwycResult=gzwycApi.send(result);
+            GzwycResult gzwycResult= gzwycApiUtil.send(result);
             System.out.println("result:"+gzwycResult);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        String token=gzwycApi.getToken();
+//        String token=gzwycApiUtil.getToken();
 //        System.out.println("token:"+token);
 
     }
