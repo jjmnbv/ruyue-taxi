@@ -1,6 +1,7 @@
 logging:
   level:
     tk.mybatis: DEBUG
+    com.szyciov.supervision: DEBUG
 spring:
   datasource:
     name: ruyue

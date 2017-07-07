@@ -7,6 +7,8 @@ import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,6 +23,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class GzwycApi {
 
+    private static Logger logger = LoggerFactory.getLogger(GzwycApi.class);
     public static final String SEPARATOR_UNDERLINE = "_";
     private static char[] commonDigit = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
@@ -42,7 +45,6 @@ public class GzwycApi {
         String md5 = hash(in);
         in.reset();
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        System.out.println("md5:" + md5);
         post.addHeader("binfile-md5", md5);
         if (isToken) {
             post.addHeader("binfile-auth", CacheHelper.getCompanyId());//平台标识
@@ -54,13 +56,13 @@ public class GzwycApi {
         post.addHeader("binfile-reqlen", String.valueOf(in.available()));//请求长度
         String fileName = new StringBuffer(CacheHelper.getCompanyId()).append(SEPARATOR_UNDERLINE)
                 .append(request.getInterfaceType().getValue()).append(SEPARATOR_UNDERLINE)
-                .append(request.getCommand().getValue()).append(request.getRequestType().getValue())
+                .append(request.getCommand().getValue()).append(SEPARATOR_UNDERLINE).append(request.getRequestType().getValue()).append(SEPARATOR_UNDERLINE)
                 .append(LocalDateTime.now().format(formatter)).append(".json").toString();
 
         builder.addBinaryBody("binFile", in, ContentType.DEFAULT_BINARY, fileName);// 文件
         builder.addTextBody("filename", fileName, ContentType.create(ContentType.DEFAULT_TEXT.getMimeType(), "UTF-8"));
         post.setEntity(builder.build());
-
+        logger.debug("request params -> headers:{}, fileName:{}", JSONUtil.toJackson(post.getAllHeaders()), fileName);
         return HttpClientUtil.sendHttpPost(post, ContentType.APPLICATION_FORM_URLENCODED);
     }
 

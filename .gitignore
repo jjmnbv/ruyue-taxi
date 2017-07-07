@@ -29,3 +29,4 @@ nbdist/
 .myeclipse/
 logs/
 .idea/
+supervision/out/

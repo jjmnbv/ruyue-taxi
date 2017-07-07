@@ -31,7 +31,7 @@ public class LogAspect {
     public void afterThrow(JoinPoint joinPoint, Exception ex)throws JsonProcessingException{
         Object[] args = joinPoint.getArgs();
         //TODO 日志记录
-        logger.error("请求前置拦截,request:{}, errorMessage:{} ", JSONUtil.toJackson(getBasicRequest(args)) ,ex.getMessage());
+        logger.error("请求异常拦截,request:{}, errorMessage:{} ", JSONUtil.toJackson(getBasicRequest(args)) ,ex.getMessage());
 
     }
 
