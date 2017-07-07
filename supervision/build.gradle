@@ -76,6 +76,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-aop')
+    compile('org.springframework.boot:spring-boot-starter-tomcat')
 
     compile group: 'org.apache.httpcomponents', name: 'httpmime', version:'4.5.3'
     compile(group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5.3') {
@@ -159,6 +160,20 @@ uploadArchives {
             pom.groupId = "$project.group"
         }
     }
+}
+task writeNewPom << {
+    pom {
+        project {
+            inceptionYear '2008'
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+        }
+    }.writeTo("$buildDir/pom_new.xml")
 }
 //install.dependsOn fatJar
 //fatJar.mustRunAfter jar
