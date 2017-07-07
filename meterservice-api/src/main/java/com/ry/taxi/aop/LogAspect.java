@@ -17,10 +17,10 @@ import com.xunxintech.ruyue.coach.io.json.JSONUtil;
  * @Package com.ry.taxi.intercepter
  * @Description
  * @author zhangdd
- * @date 2017Äê7ÔÂ7ÈÕ ÉÏÎç9:16:35
+ * @date 2017å¹´7æœˆ7æ—¥ ä¸Šåˆ9:16:35
  * @version 
  *
- * @Copyrigth  °æÈ¨ËùÓĞ (C) 2017 ¹ãÖİÑ¶ĞÄĞÅÏ¢¿Æ¼¼ÓĞÏŞ¹«Ë¾.
+ * @Copyrigth  ç‰ˆæƒæ‰€æœ‰ (C) 2017 å¹¿å·è®¯å¿ƒä¿¡æ¯ç§‘æŠ€æœ‰é™å…¬å¸.
  */
 @Component
 @Aspect
@@ -34,26 +34,33 @@ public class LogAspect {
 	@Before(value = "aspect()")
 	public void before(JoinPoint jp) throws JsonProcessingException {
 		String className = jp.getThis().toString();
-		String methodName = jp.getSignature().getName();   //»ñµÃ·½·¨Ãû
-		Object[] args = jp.getArgs();  //»ñµÃ²ÎÊıÁĞ±í	
-		logger.info("ÇëÇóÇ°ÖÃÀ¹½Ø,{}.{}, request:{}", className, methodName, getArgsList(args));
+		String methodName = jp.getSignature().getName();   //è·å¾—æ–¹æ³•å
+		Object[] args = jp.getArgs();  //è·å¾—å‚æ•°åˆ—è¡¨	
+		logger.info("è¯·æ±‚å‰ç½®æ‹¦æˆª,{}.{}, request:{}", className, methodName, getArgsList(args));
 	}
-	
 	
 	@AfterThrowing(pointcut="aspect()", throwing="ex")    
 	public void afterThrow(JoinPoint jp, Exception ex)throws JsonProcessingException{        
 		String className = jp.getThis().toString();
-		String methodName = jp.getSignature().getName();   //»ñµÃ·½·¨Ãû
-		Object[] args = jp.getArgs();  //»ñµÃ²ÎÊıÁĞ±í
-		logger.error("ÇëÇóÒì³£À¹½Ø,{}.{},request:{}, errorMessage:{} ",className, methodName,getArgsList(args) ,ex.getMessage());    
+		String methodName = jp.getSignature().getName();   //è·å¾—æ–¹æ³•å
+		Object[] args = jp.getArgs();  //è·å¾—å‚æ•°åˆ—è¡¨
+		logger.error("è¯·æ±‚å¼‚å¸¸æ‹¦æˆª,{}.{},request:{}, errorMessage:{} ",className, methodName,getArgsList(args) ,ex.getMessage());    
 	}
+	
+    @AfterReturning(pointcut="aspect()", returning="rvt")
+    public void log(JoinPoint jp, Object rvt) throws JsonProcessingException {
+    	String className = jp.getThis().toString();
+		String methodName = jp.getSignature().getName();   //è·å¾—æ–¹æ³•å
+		Object[] args = jp.getArgs();  //è·å¾—å‚æ•°åˆ—è¡¨      
+		logger.info("è¯·æ±‚è¿”å›å€¼æ‹¦æˆª,{}.{}, request:{},result:{}", className, methodName, getArgsList(args),JSONUtil.toJackson(rvt));
+    }
 	
 	@After(value = "aspect()")    
 	public void alter(JoinPoint jp) throws JsonProcessingException {        
 		String className = jp.getThis().toString();
-		String methodName = jp.getSignature().getName();   //»ñµÃ·½·¨Ãû
-		Object[] args = jp.getArgs();  //»ñµÃ²ÎÊıÁĞ±í      
-		logger.info("ÇëÇóºóÖÃÀ¹½Ø,{}.{}, request:{}", className, methodName, getArgsList(args));
+		String methodName = jp.getSignature().getName();   //è·å¾—æ–¹æ³•å
+		Object[] args = jp.getArgs();  //è·å¾—å‚æ•°åˆ—è¡¨      
+		logger.info("è¯·æ±‚åç½®æ‹¦æˆª,{}.{}, request:{}", className, methodName, getArgsList(args));
 	}
 	
 	
@@ -62,7 +69,7 @@ public class LogAspect {
 			return null;
 		StringBuilder argStr = new StringBuilder("");
 		for(int i = 0; i < args.length ; i ++){
-			argStr.append("²ÎÊı").append(i).append(":").append(JSONUtil.toJackson(args[i])).append(";");
+			argStr.append("å‚æ•°").append(i).append(":").append(JSONUtil.toJackson(args[i])).append(";");
 		}
 		return argStr.toString();
 	}
