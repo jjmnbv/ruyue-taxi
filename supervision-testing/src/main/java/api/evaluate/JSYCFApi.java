@@ -14,7 +14,7 @@ public class JSYCFApi extends EvaluateApi {
     }
 
     /**
-     * 3.6.3	驾驶员处罚信息（JSYCF）
+     * 机动车驾驶证号
      */
     private String licenseId;
     /**
