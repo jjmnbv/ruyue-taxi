@@ -133,7 +133,7 @@ public class GzwycApiUtil {
         }
         ObjectMapper mapper = new ObjectMapper();
         String result=mapper.writeValueAsString(apiRequestParam);
-        System.out.println("解析："+result);
+//        System.out.println("解析："+result);
         this.setApiType(apiRequestParam.getItems().get(0).getApiType());
         this.setCommand(apiRequestParam.getItems().get(0).getCommand());
         return this.send(result);
@@ -166,7 +166,7 @@ public class GzwycApiUtil {
         String md5 = hash(in);
         in.reset();
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        System.out.println("md5:"+md5);
+//        System.out.println("md5:"+md5);
         post.addHeader("binfile-md5", md5);
         if(isGetToken){
             post.addHeader("binfile-auth", companyId);//平台标识
@@ -181,11 +181,12 @@ public class GzwycApiUtil {
         post.addHeader("binfile-gzip", "false");
         post.addHeader("binfile-reqlen", String.valueOf(in.available()));//请求长度
         String filename = this.getCompanyId()+"_"+this.getApiType()+"_"+this.getCommand()+"_"+this.getRequestResponce()+"_"+this.getNowDate()+".json";
-        System.out.println("filename:"+filename);
+        System.out.println("文件名:"+filename);
+        System.out.println("参数内容:"+result);
         builder.addBinaryBody("binFile", in, ContentType.DEFAULT_BINARY, filename);// 文件
         builder.addTextBody("filename", filename, ContentType.create(ContentType.DEFAULT_TEXT.getMimeType(), "UTF-8"));
         post.setEntity(builder.build());
-        System.out.println(post.toString());
+        System.out.println("请求相关参数:"+post.toString());
 
         int connTimeout = 10000;
         int soTimeout = -1;
@@ -205,7 +206,7 @@ public class GzwycApiUtil {
         String content=EntityUtils.toString(response.getEntity());
         content=new String(content.getBytes("ISO-8859-1"),"UTF-8");
         gzwycResult.setContent(content);
-        System.out.println(gzwycResult);
+//        System.out.println(gzwycResult);
         if(!isGetToken)
             gzwycResult.parseContent();
 //        System.out.println(gzwycResult);

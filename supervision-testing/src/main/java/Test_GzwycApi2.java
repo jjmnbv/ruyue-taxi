@@ -1,4 +1,5 @@
 import api.ApiRequestParam;
+import api.ApiResponceParam;
 import api.GzwycApiUtil;
 import api.GzwycResult;
 import api.basic.PTJBApi;
@@ -7,11 +8,13 @@ import java.util.*;
 import java.util.List;
 
 /**
+ * 标准调用示例
  * Created by 林志伟 on 2017/7/6.
  */
 public class Test_GzwycApi2 {
     public static void main(String[] args) throws Exception {
 
+//        创建api对象
         PTJBApi ptjbApi=new PTJBApi();
         ptjbApi.setSymbol("RY_0001");
         ptjbApi.setCompanyId("RY");
@@ -37,14 +40,20 @@ public class Test_GzwycApi2 {
         ptjbApi.setServiceItem("454545454");
         ptjbApi.setServiceItem("1114ds4d54s5d4");
 
-
-
+        //支持多个对象的请求
         List<PTJBApi> items= new ArrayList<PTJBApi>();
         items.add(ptjbApi);
-//        ApiRequestParam<PTJBApi> apiReqParam=new ApiRequestParam<PTJBApi>();
-//        apiReqParam.setItems(items);
         GzwycApiUtil gzwycApiUtil =new GzwycApiUtil();
         GzwycResult gzwycResult= gzwycApiUtil.send(items);
-        System.out.println(gzwycResult);
+        System.out.println("响应状态码:"+gzwycResult.getStatus());
+        System.out.println("响应内容:"+gzwycResult.getContent());
+        if(gzwycResult.getStatus()==200){
+            //获取解析结果
+            ApiResponceParam apiResponceParam=gzwycResult.getApiResponceParam();
+            System.out.println("响应结果列表:"+apiResponceParam.getItems());
+            System.out.println("响应成功数目:"+apiResponceParam.getSuccessNum());
+            System.out.println("响应失败数目:"+apiResponceParam.getFailNum());
+        }
+
     }
 }
