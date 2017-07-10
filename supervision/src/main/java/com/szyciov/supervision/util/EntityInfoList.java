@@ -14,4 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 public class EntityInfoList<T> {
     private List<T> items;
+    
+    public boolean isAllSuccess(){
+    	return items != null && items.size() > 0;
+    }
 }

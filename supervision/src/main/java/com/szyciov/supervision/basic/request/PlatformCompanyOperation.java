@@ -1,9 +1,10 @@
 package com.szyciov.supervision.basic.request;
 
-import com.szyciov.supervision.util.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.szyciov.supervision.util.BaseEntity;
 
 /**
  * Created by admin on 2017/7/7.

@@ -3,6 +3,12 @@ spring:
     url: jdbc:mysql://rm-wz9v15h50ci9vu25yo.mysql.rds.aliyuncs.com:3306/carservice_dev?useUnicode=true&characterEncoding=utf-8
     username: dbapp
     password: gtg0705d
+  rabbitmq:
+    host: 120.76.199.119
+    port: 5672
+    username: admin
+    password: rytaxi886
+    virtual-host: /
 service:
   url: http://120.76.199.119:8099/api/transfer
   company:

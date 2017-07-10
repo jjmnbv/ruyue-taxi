@@ -1,12 +1,18 @@
 package com.szyciov.supervision.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.szyciov.supervision.TaxiExecption;
-import com.szyciov.supervision.config.CacheHelper;
-import com.xunxintech.ruyue.coach.io.json.JSONUtil;
-import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import lombok.Cleanup;
+
 import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.client.methods.HttpPost;
@@ -15,19 +21,11 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.TypeVariable;
-import java.security.MessageDigest;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.szyciov.supervision.TaxiExecption;
+import com.szyciov.supervision.config.CacheHelper;
+import com.xunxintech.ruyue.coach.io.json.JSONUtil;
+import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 
 /**
  * 网约车接口类
@@ -52,7 +50,7 @@ public class GzwycApi {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_P);
 
-    public static <T extends BaseEntity> EntityInfoList<T> send(BasicRequest request,TypeReference t) throws IOException {
+    public static <T extends BaseEntity> EntityInfoList<T> send(BasicRequest request,@SuppressWarnings("rawtypes") TypeReference t) throws IOException {
         String responseString = sendMsg(request, false);
         EntityInfoList<T> infoList = JSONUtil.objectMapper.readValue(responseString, t);
         //过滤发送成功的消息
