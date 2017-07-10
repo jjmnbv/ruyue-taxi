@@ -4,7 +4,6 @@ import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import sun.net.www.http.HttpClient;
 
 /**
  * Created by admin on 2017/7/6.

@@ -4,7 +4,8 @@ package com.szyciov.supervision.enums;
  * Created by admin on 2017/7/6.
  */
 public enum CommandEnum {
-    ACCESS("ACCESS","");
+    ACCESS("ACCESS",""),
+    PTYYGM("PTYYGM","");
 
     private String value;
     private String description;

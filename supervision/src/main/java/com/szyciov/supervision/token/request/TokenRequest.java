@@ -1,4 +1,4 @@
-package com.szyciov.supervision.token.domain;
+package com.szyciov.supervision.token.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

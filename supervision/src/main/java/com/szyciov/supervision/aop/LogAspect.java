@@ -2,7 +2,7 @@ package com.szyciov.supervision.aop;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.szyciov.supervision.util.BasicRequest;
-import com.szyciov.supervision.util.GzwycResult;
+import com.szyciov.supervision.util.EntityInfoList;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -67,14 +67,14 @@ public class LogAspect {
         return null;
     }
 
-    private GzwycResult getResult(Object[] params){
+    private EntityInfoList getResult(Object[] params){
         if(params==null||params.length<=0){
             return null;
         }
         for(int i=0;i<params.length;i++){
             Object obj = params[i];
-            if(obj instanceof GzwycResult){
-                return (GzwycResult)obj;
+            if(obj instanceof EntityInfoList){
+                return (EntityInfoList)obj;
             }
         }
         return null;
