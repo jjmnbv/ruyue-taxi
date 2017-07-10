@@ -1,8 +1,7 @@
-import api.ApiRequestParam;
 import api.ApiResponceParam;
 import api.GzwycApiUtil;
 import api.GzwycResult;
-import api.basic.PTJBApi;
+import api.basic.CompanyBaseInfo;
 
 import java.util.*;
 import java.util.List;
@@ -15,34 +14,34 @@ public class Test_GzwycApi2 {
     public static void main(String[] args) throws Exception {
 
 //        创建api对象
-        PTJBApi ptjbApi=new PTJBApi();
-        ptjbApi.setSymbol("RY_0001");
-        ptjbApi.setCompanyId("RY");
-        ptjbApi.setCompanyName("讯心科技");
-        ptjbApi.setIdentifier("54456454545454");
-        ptjbApi.setContactPhone("88888888");
-        ptjbApi.setAddress("852123");
-        ptjbApi.setBusinessScope("约租车");
-        ptjbApi.setContactAddress("广州天河元岗");
-        ptjbApi.setEconomicType("不知");
-        ptjbApi.setRegCapital("100w");
-        ptjbApi.setLegalName("乔巴");
-        ptjbApi.setIdentifierPhoto("http://fasfasfsf//fadsdfs");
-        ptjbApi.setState(0);
-        ptjbApi.setFlag(0);
-        ptjbApi.setUpdateTime("20170704144012");
-        ptjbApi.setGzAd("sdsds");
-        ptjbApi.setResponsible("sdsfdsfsdf");
-        ptjbApi.setResponsibleWay("s4d5s4d5s4d5s4d");
-        ptjbApi.setParentCompany("广州交通集团");
-        ptjbApi.setParentAd("455645s4d4s");
-        ptjbApi.setPostCode("554d4sd4");
-        ptjbApi.setServiceItem("454545454");
-        ptjbApi.setServiceItem("1114ds4d54s5d4");
+        CompanyBaseInfo companyBaseInfo =new CompanyBaseInfo();
+        companyBaseInfo.setSymbol("RY_0001");
+        companyBaseInfo.setCompanyId("RY");
+        companyBaseInfo.setCompanyName("讯心科技");
+        companyBaseInfo.setIdentifier("54456454545454");
+        companyBaseInfo.setContactPhone("88888888");
+        companyBaseInfo.setAddress("852123");
+        companyBaseInfo.setBusinessScope("约租车");
+        companyBaseInfo.setContactAddress("广州天河元岗");
+        companyBaseInfo.setEconomicType("不知");
+        companyBaseInfo.setRegCapital("100w");
+        companyBaseInfo.setLegalName("乔巴");
+        companyBaseInfo.setIdentifierPhoto("http://fasfasfsf//fadsdfs");
+        companyBaseInfo.setState(0);
+        companyBaseInfo.setFlag(0);
+        companyBaseInfo.setUpdateTime("20170704144012");
+        companyBaseInfo.setGzAd("sdsds");
+        companyBaseInfo.setResponsible("sdsfdsfsdf");
+        companyBaseInfo.setResponsibleWay("s4d5s4d5s4d5s4d");
+        companyBaseInfo.setParentCompany("广州交通集团");
+        companyBaseInfo.setParentAd("455645s4d4s");
+        companyBaseInfo.setPostCode("554d4sd4");
+        companyBaseInfo.setServiceItem("454545454");
+        companyBaseInfo.setServiceItem("1114ds4d54s5d4");
 
         //支持多个对象的请求
-        List<PTJBApi> items= new ArrayList<PTJBApi>();
-        items.add(ptjbApi);
+        List<CompanyBaseInfo> items= new ArrayList<CompanyBaseInfo>();
+        items.add(companyBaseInfo);
         GzwycApiUtil gzwycApiUtil =new GzwycApiUtil();
         GzwycResult gzwycResult= gzwycApiUtil.send(items);
         System.out.println("响应状态码:"+gzwycResult.getStatus());

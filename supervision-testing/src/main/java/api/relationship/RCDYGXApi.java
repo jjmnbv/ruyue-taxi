@@ -1,6 +1,5 @@
 package api.relationship;
 
-import api.evaluate.EvaluateApi;
 import lombok.Data;
 
 /**
@@ -8,7 +7,7 @@ import lombok.Data;
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-public class RCDYGXApi extends RelationshipApi {
+public class RCDYGXApi extends HumanVehicleInfo {
     public RCDYGXApi() {
         super();
         setCommand("RCDYGX");
