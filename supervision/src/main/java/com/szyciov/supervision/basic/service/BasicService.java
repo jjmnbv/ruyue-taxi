@@ -1,4 +1,4 @@
-package com.szyciov.supervision.service;
+package com.szyciov.supervision.basic.service;
 
 import java.io.IOException;
 
