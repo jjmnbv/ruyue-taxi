@@ -4,12 +4,11 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.supervision.api.basic.CompanyOperateInfo;
-import com.szyciov.supervision.service.BasicService;
+import com.szyciov.supervision.basic.service.BasicService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,6 +36,7 @@ public class BasicServiceTest extends SupervisionApplicationTests
 		EntityInfoList<CompanyOperateInfo> infoList = new EntityInfoList<CompanyOperateInfo>(list);
 		String result = JSONUtil.toJackson(infoList);
 		EntityInfoList<CompanyOperateInfo> response = basicService.sendCompanyOperateInfo(result);
+		System.out.println(response);
 
 		assertThat(response, notNullValue());
 	}

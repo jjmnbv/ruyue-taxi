@@ -21,7 +21,7 @@ public class LogAspect {
 
     private final static Logger logger = LoggerFactory.getLogger(LogAspect.class);
     
-    @Pointcut("execution(* com.szyciov.supervision.service..*(..))")
+    @Pointcut("execution(* com.szyciov.supervision.*.service..*(..))")
     public void aspect(){
 
     }
