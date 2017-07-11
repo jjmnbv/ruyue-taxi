@@ -111,7 +111,13 @@ dependencies {
 
 
     compile 'com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'
+    
 }
+
+configurations.all {
+   exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+}
+
 jar {
     baseName = "$artifactId"
     version = "$project.version"
