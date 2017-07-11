@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.supervision.api.BaseApi;
 import lombok.Cleanup;
 
 import org.apache.http.Consts;
@@ -50,7 +51,7 @@ public class GzwycApi {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_P);
 
-    public static <T extends BaseEntity> EntityInfoList<T> send(BasicRequest request,@SuppressWarnings("rawtypes") TypeReference t) throws IOException {
+    public static <T extends BaseApi> EntityInfoList<T> send(BasicRequest request, @SuppressWarnings("rawtypes") TypeReference t) throws IOException {
         String responseString = sendMsg(request, false);
         EntityInfoList<T> infoList = JSONUtil.objectMapper.readValue(responseString, t);
         //过滤发送成功的消息
@@ -89,7 +90,10 @@ public class GzwycApi {
 
         Map<String, String> headerMap = Arrays.asList(post.getAllHeaders()).stream().collect(Collectors.toMap(Header::getName, Header::getValue));
         logger.debug("request params -> headers:{}, fileName:{}", JSONUtil.toJackson(headerMap), fileName);
-        return HttpClientUtil.sendHttpPost(post, ContentType.APPLICATION_FORM_URLENCODED);
+        String content=HttpClientUtil.sendHttpPost(post, ContentType.APPLICATION_FORM_URLENCODED);
+        content=new String(content.getBytes("ISO-8859-1"),"UTF-8");
+        logger.debug("responce content -> content:{}", content);
+        return content;
     }
 
     public static String hash(InputStream in) {

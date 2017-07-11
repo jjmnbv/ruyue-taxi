@@ -1,12 +1,12 @@
 package com.szyciov.supervision.mq;
 
+import com.supervision.api.basic.CompanyOperateInfo;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.szyciov.supervision.basic.request.PlatformCompanyOperation;
-import com.szyciov.supervision.basic.service.BasicService;
+import com.szyciov.supervision.service.BasicService;
 import com.szyciov.supervision.util.EntityInfoList;
 
 /**
@@ -22,7 +22,7 @@ public class PlatformCompanyOperationReceiver
 	@RabbitHandler
 	public void consumer(String message) throws Exception
 	{
-		EntityInfoList<PlatformCompanyOperation> response = basicService.sendPlatformCompanyOperation(message);
+		EntityInfoList<CompanyOperateInfo> response = basicService.sendCompanyOperateInfo(message);
 
 		if (!response.isAllSuccess())
 		{
