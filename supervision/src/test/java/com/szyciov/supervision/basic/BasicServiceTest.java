@@ -8,13 +8,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.supervision.api.basic.CompanyOperateInfo;
+import com.szyciov.supervision.service.BasicService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.szyciov.supervision.Constants;
+
 import com.szyciov.supervision.SupervisionApplicationTests;
-import com.szyciov.supervision.basic.request.PlatformCompanyOperation;
-import com.szyciov.supervision.basic.service.BasicService;
+
 import com.szyciov.supervision.util.EntityInfoList;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
@@ -24,17 +25,18 @@ import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 public class BasicServiceTest extends SupervisionApplicationTests
 {
 
-	private @Autowired BasicService basicService;
+	private @Autowired
+	BasicService basicService;
 
 	@Test
 	public void test() throws IOException
 	{
-		List<PlatformCompanyOperation> list = new ArrayList<PlatformCompanyOperation>();
-		PlatformCompanyOperation info = new PlatformCompanyOperation("Test", "RY", 1, 1, 1, Long.valueOf(LocalDateTime.now().format(Constants.DATE_FORMAT)));
+		List<CompanyOperateInfo> list = new ArrayList<CompanyOperateInfo>();
+		CompanyOperateInfo info = new CompanyOperateInfo(4,5);
 		list.add(info);
-		EntityInfoList<PlatformCompanyOperation> infoList = new EntityInfoList<PlatformCompanyOperation>(list);
+		EntityInfoList<CompanyOperateInfo> infoList = new EntityInfoList<CompanyOperateInfo>(list);
 		String result = JSONUtil.toJackson(infoList);
-		EntityInfoList<PlatformCompanyOperation> response = basicService.sendPlatformCompanyOperation(result);
+		EntityInfoList<CompanyOperateInfo> response = basicService.sendCompanyOperateInfo(result);
 
 		assertThat(response, notNullValue());
 	}
