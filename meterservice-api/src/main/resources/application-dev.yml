@@ -9,5 +9,11 @@ spring:
         host: 192.168.81.66
         password: 
         port: 6379
-
+GCI:
+    encryption: 1 #地图类型 1高德 2百度
+    appid: 
+    service: 
+        host: 
+        port: 
+        http: https:${host}:${port}/Chuzu/api/v1/Jkdd/gettaximonitorgpsreal?appid=${appid}&encryption=${encryption}
 

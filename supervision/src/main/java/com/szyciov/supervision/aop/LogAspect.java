@@ -21,8 +21,7 @@ public class LogAspect {
 
     private final static Logger logger = LoggerFactory.getLogger(LogAspect.class);
     
-    public static ThreadLocal<Integer> messageSize = new ThreadLocal<Integer>();
-    @Pointcut("execution(* com.szyciov.supervision.*.service..*(..))")
+    @Pointcut("execution(* com.szyciov.supervision.service..*(..))")
     public void aspect(){
 
     }
@@ -44,13 +43,10 @@ public class LogAspect {
         Object[] args = joinPoint.getArgs();
         //TODO 日志记录
         logger.info("请求前置拦截,request:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)) ,JSONUtil.toJackson(getResult(args)));
-
-
     }
 
     @After(value = "aspect()")
     public void alter(JoinPoint joinPoint) throws JsonProcessingException {
-
         Object[] args = joinPoint.getArgs();
         //TODO 日志记录
 		EntityInfoList result = getResult(args);

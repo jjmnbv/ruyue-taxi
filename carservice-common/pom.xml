@@ -442,7 +442,14 @@
 		    <version>3.2.0</version>
 		</dependency>
 		<!-- end二维码 -->
-		
+		<!--注解-->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.16.16</version>
+			<scope>compile</scope>
+		</dependency>
+		<!---->
 	</dependencies>
 
 	<build>
