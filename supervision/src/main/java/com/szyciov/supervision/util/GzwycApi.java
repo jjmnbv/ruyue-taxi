@@ -90,7 +90,10 @@ public class GzwycApi {
 
         Map<String, String> headerMap = Arrays.asList(post.getAllHeaders()).stream().collect(Collectors.toMap(Header::getName, Header::getValue));
         logger.debug("request params -> headers:{}, fileName:{}", JSONUtil.toJackson(headerMap), fileName);
-        return HttpClientUtil.sendHttpPost(post, ContentType.APPLICATION_FORM_URLENCODED);
+        String content=HttpClientUtil.sendHttpPost(post, ContentType.APPLICATION_FORM_URLENCODED);
+        content=new String(content.getBytes("ISO-8859-1"),"UTF-8");
+        logger.debug("responce content -> content:{}", content);
+        return content;
     }
 
     public static String hash(InputStream in) {
