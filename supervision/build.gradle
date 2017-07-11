@@ -111,6 +111,7 @@ dependencies {
 
 
     compile 'com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'
+    compile 'org.codehaus.janino:janino:3.0.7'
     
 }
 

@@ -36,6 +36,7 @@ public class BasicServiceTest extends SupervisionApplicationTests
 		EntityInfoList<CompanyOperateInfo> infoList = new EntityInfoList<CompanyOperateInfo>(list);
 		String result = JSONUtil.toJackson(infoList);
 		EntityInfoList<CompanyOperateInfo> response = basicService.sendCompanyOperateInfo(result);
+		System.out.println(response);
 
 		assertThat(response, notNullValue());
 	}

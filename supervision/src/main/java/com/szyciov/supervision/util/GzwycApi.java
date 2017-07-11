@@ -57,6 +57,7 @@ public class GzwycApi {
         //过滤发送成功的消息
         List<T> collect = infoList.getItems().stream().filter(i -> i.getSuccess() == 0).collect(Collectors.toList());
         infoList.setItems(collect);
+        logger.info("FAILINFO -> result:{} ",JSONUtil.toJackson(infoList));
         return infoList;
     }
 
