@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.szyciov.supervision.util.BasicRequest;
 import com.szyciov.supervision.util.EntityInfoList;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
@@ -13,12 +14,14 @@ import org.springframework.stereotype.Component;
 /**
  * Created by admin on 2017/7/6.
  */
-@Component
 @Aspect
+@Component
+@SuppressWarnings("rawtypes")
 public class LogAspect {
 
     private final static Logger logger = LoggerFactory.getLogger(LogAspect.class);
     
+    public static ThreadLocal<Integer> messageSize = new ThreadLocal<Integer>();
     @Pointcut("execution(* com.szyciov.supervision.*.service..*(..))")
     public void aspect(){
 
@@ -50,7 +53,8 @@ public class LogAspect {
 
         Object[] args = joinPoint.getArgs();
         //TODO 日志记录
-        logger.info("请求后置拦截,request:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)) ,JSONUtil.toJackson(getResult(args)));
+		EntityInfoList result = getResult(args);
+		logger.info("请求后置拦截,request:{}, isAllSuccess:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)), result.isAllSuccess(), JSONUtil.toJackson(result));
 
     }
 
@@ -67,7 +71,7 @@ public class LogAspect {
         return null;
     }
 
-    private EntityInfoList getResult(Object[] params){
+	private EntityInfoList getResult(Object[] params){
         if(params==null||params.length<=0){
             return null;
         }
