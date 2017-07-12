@@ -11,9 +11,11 @@ spring:
         port: 6379
 GCI:
     encryption: 1 #地图类型 1高德 2百度
-    appid: 
+    appid: GCI
     service: 
-        host: 
-        port: 
-        http: https:${host}:${port}/Chuzu/api/v1/Jkdd/gettaximonitorgpsreal?appid=${appid}&encryption=${encryption}
+        host: 127.0.0.1
+        port: 1223
+        http: https:${GCI.service.host}:${GCI.service.port}/Chuzu/api/v1/Jkdd/gettaximonitorgpsreal?appid=${GCI.appid}&encryption=${GCI.encryption}
 
+DES:
+  iv: 123456

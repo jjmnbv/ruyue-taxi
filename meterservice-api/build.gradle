@@ -135,6 +135,8 @@ dependencies {
     
     //ruyue coach	
     compile 'com.xunxintech.ruyue.coach:ry-coach-common-io:1.1.38'
+    compile 'com.xunxintech.ruyue.coach:ry-coach-common-encryption:1.0.5-SNAPSHOT'
+
 
     //lombok
     compile 'org.projectlombok:lombok:1.16.16'

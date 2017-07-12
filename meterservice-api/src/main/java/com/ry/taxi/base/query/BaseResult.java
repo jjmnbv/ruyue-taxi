@@ -3,19 +3,18 @@
  */
 package com.ry.taxi.base.query;
 
-import org.apache.http.impl.execchain.MainClientExec;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+
 /**
- * @Title:BaseResponse.java
- * @Package com.ry.taxi.base.common
- * @Description »ù´¡·µ»ØÀà
+ * @Title:RealTaxiMonitor.java
+ * @Package com.ry.taxi.sync.monitor
+ * @Description
  * @author zhangdd
- * @date 2017Äê7ÔÂ10ÈÕ ÏÂÎç3:32:08
+ * @date 2017å¹´7æœˆ10æ—¥ ä¸‹åˆ4:17:37
  * @version 
  *
- * @Copyrigth  °æÈ¨ËùÓĞ (C) 2017 ¹ãÖİÑ¶ĞÄĞÅÏ¢¿Æ¼¼ÓĞÏŞ¹«Ë¾.
+ * @Copyrigth  ç‰ˆæƒæ‰€æœ‰ (C) 2017 å¹¿å·è®¯å¿ƒä¿¡æ¯ç§‘æŠ€æœ‰é™å…¬å¸.
  */
 public class BaseResult<T> {
 

@@ -3,33 +3,76 @@
  */
 package com.ry.taxi.sync.monitor;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
+
+import net.sf.json.JSONObject;
 
 /**
  * @Title:RealTaxiMonitor.java
  * @Package com.ry.taxi.sync.monitor
  * @Description
  * @author zhangdd
- * @date 2017Äê7ÔÂ10ÈÕ ÏÂÎç4:17:37
+ * @date 2017å¹´7æœˆ10æ—¥ ä¸‹åˆ4:17:37
  * @version 
  *
- * @Copyrigth  °æÈ¨ËùÓĞ (C) 2017 ¹ãÖİÑ¶ĞÄĞÅÏ¢¿Æ¼¼ÓĞÏŞ¹«Ë¾.
+ * @Copyrigth  ç‰ˆæƒæ‰€æœ‰ (C) 2017 å¹¿å·è®¯å¿ƒä¿¡æ¯ç§‘æŠ€æœ‰é™å…¬å¸.
  */
+
 @Component
 public class RealTaxiMonitor {
 	
-	/*
-	 * »ñÈ¡ÊµÊ±GPSÊı¾İ 15s¸üĞÂÒ»´Î
-	 */
+
 	@Value("${GCI.service.http}")
-	private static String GPSHTTP;
+	private String GPSHTTP;
 	
+	@Value("${spring.thread.corePoolSize:15}")
+	private  int corePoolSize;
+	
+	@Value("${spring.thread.maxPoolSize:100}")
+	private  int maxPoolSize;
+	@Value("${spring.thread.queueSize:5000}")
+	private  int queueSize;
+	
+	private static ThreadPoolExecutor gpsPool = null; 
+	
+
+	
+	/*
+	 * è·å–GPSå®æ—¶ä¿¡æ¯,15sæ›´æ–°ä¸€æ¬¡
+	 */
 	@Scheduled(cron="0/15 0 0 * * ?")
 	public void getRealGps(){
+		initGpsPool();
+		gpsPool.execute(new Runnable(){
+			@Override
+			public void run() {
 		
+				//å¤„ç†è¿‡ç¨‹
+				
+			}
+		});
+	}
+	
+    /*
+     * åˆå§‹åŒ–GPSè®¾ç½®
+     */
+	private void initGpsPool(){
+		if(gpsPool == null){
+			synchronized (this) {
+				if(gpsPool== null){
+					gpsPool = new ThreadPoolExecutor(corePoolSize, maxPoolSize, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(queueSize));
+				}
+			}
+		}
 	}
 
 }
