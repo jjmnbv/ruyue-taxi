@@ -13,11 +13,12 @@ import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
  * @Package com.ry.taxi.config
  * @Description
  * @author zhangdd
- * @date 2017Äê7ÔÂ10ÈÕ ÏÂÎç4:46:58
+ * @date 2017å¹´7æœˆ10æ—¥ ä¸‹åˆ4:46:58
  * @version 
  *
- * @Copyrigth  °æÈ¨ËùÓĞ (C) 2017 ¹ãÖİÑ¶ĞÄĞÅÏ¢¿Æ¼¼ÓĞÏŞ¹«Ë¾.
+ * @Copyrigth  ç‰ˆæƒæ‰€æœ‰ (C) 2017 å¹¿å·è®¯å¿ƒä¿¡æ¯ç§‘æŠ€æœ‰é™å…¬å¸.
  */
+
 public class CacheHelper implements InitializingBean {
 
     private@Value("${spring.http.timeout.connect:60000}") int connectTimeout;

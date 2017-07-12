@@ -7,92 +7,93 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
+
 /**
- * @Title:RealTimeGps.java
- * @Package com.ry.taxi.sync.response
- * @Description ½»Í¶ÊµÊ±GPSĞÅÏ¢
+ * @Title:RealTaxiMonitor.java
+ * @Package com.ry.taxi.sync.monitor
+ * @Description
  * @author zhangdd
- * @date 2017Äê7ÔÂ10ÈÕ ÏÂÎç4:06:20
+ * @date 2017å¹´7æœˆ10æ—¥ ä¸‹åˆ4:17:37
  * @version 
  *
- * @Copyrigth  °æÈ¨ËùÓĞ (C) 2017 ¹ãÖİÑ¶ĞÄĞÅÏ¢¿Æ¼¼ÓĞÏŞ¹«Ë¾.
+ * @Copyrigth  ç‰ˆæƒæ‰€æœ‰ (C) 2017 å¹¿å·è®¯å¿ƒä¿¡æ¯ç§‘æŠ€æœ‰é™å…¬å¸.
  */
 @Data
 public class RealTimeGps {
 	/*
-	 * ³µÅÆºÅ
+	 * ï¿½ï¿½ï¿½Æºï¿½
 	 */
 	@JsonProperty("PlateNo")
 	private String plateNo;
 	
 	/*
-	 * ·Ö¹«Ë¾Ãû
+	 * ï¿½Ö¹ï¿½Ë¾ï¿½ï¿½
 	 */
 	@JsonProperty("company")
 	private String company;
 	
 	/*
-	 * ×Ü¹«Ë¾Ãû
+	 * ï¿½Ü¹ï¿½Ë¾ï¿½ï¿½
 	 */
 	@JsonProperty("MainCompany")
 	private String mainCompany;
 	
 	/*
-	 * Gps×´Ì¬ 0Ï¨»ğ 1¿Õ³µ 2ÖØ³µ
+	 * Gps×´Ì¬ 0Ï¨ï¿½ï¿½ 1ï¿½Õ³ï¿½ 2ï¿½Ø³ï¿½
 	 */
 	@JsonProperty("GpsStatus")
 	private Integer gpsStatus;
 	
 	/*
-	 * GpsÊ±¼ä£¬¸ñÊ½yyyy-MM-dd HH:mm:ss 
+	 * GpsÊ±ï¿½ä£¬ï¿½ï¿½Ê½yyyy-MM-dd HH:mm:ss 
 	 */
 	@JsonProperty("GpsTime")
 	private String gpsTime;
 	
 	/*
-	 * ¾­¶È
+	 * ï¿½ï¿½ï¿½ï¿½
 	 */
 	@JsonProperty("Longitude")
 	private Double longitude;
 	
 	/*
-	 * Î³¶È
+	 * Î³ï¿½ï¿½
 	 */
 	@JsonProperty("Latitude")
 	private Double latitude;
 	
 	/*
-	 * ËÙ¶È ¹«Àï/Ğ¡Ê±
+	 * ï¿½Ù¶ï¿½ ï¿½ï¿½ï¿½ï¿½/Ğ¡Ê±
 	 */
 	@JsonProperty("Speed")
 	private Integer speed;
 	
 	/*
-	 * ·½Ïò 0~360¶È
+	 * ï¿½ï¿½ï¿½ï¿½ 0~360ï¿½ï¿½
 	 */
 	@JsonProperty("Direction")
 	private Integer direction;
 	
 	/*
-	 * ¸ß¶È Ã×
+	 * ï¿½ß¶ï¿½ ï¿½ï¿½
 	 */
 	@JsonProperty("height")
 	private Integer Height;
 	
 	/*
-	 * ÓĞĞ§ĞÔ 0ÎŞĞ§ 1ÓĞĞ§
+	 * ï¿½ï¿½Ğ§ï¿½ï¿½ 0ï¿½ï¿½Ğ§ 1ï¿½ï¿½Ğ§
 	 */
 	@JsonProperty("effective")
 	private Integer Effective;
 	
 	/*
-	 * µ±°àË¾»úĞÕÃû
+	 * ï¿½ï¿½ï¿½ï¿½Ë¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	 */
 	@JsonProperty("drivername")
 	private String drivername;
 	
 	/*
-	 * µ±°àË¾»ú×Ê¸ñÖ¤ºÅ
+	 * ï¿½ï¿½ï¿½ï¿½Ë¾ï¿½ï¿½ï¿½Ê¸ï¿½Ö¤ï¿½ï¿½
 	 */
 	@JsonProperty("driverno")
 	private String driverno;
