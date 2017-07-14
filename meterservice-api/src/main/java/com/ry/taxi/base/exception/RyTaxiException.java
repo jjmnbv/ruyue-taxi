@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.ry.taxi.base.Exception;
+package com.ry.taxi.base.exception;
 
 /**
  * @Title:RealTaxiMonitor.java
