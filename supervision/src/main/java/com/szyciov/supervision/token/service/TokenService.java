@@ -26,8 +26,8 @@ public class TokenService {
     private static String ACCESS_TOKEN;
 
     public static String getToken() throws IOException {
+
         if(ACCESS_TOKEN!=null){
-            System.out.println("缓存中获取");
             return  ACCESS_TOKEN;
         }
         TokenRequest tokenRequest = new TokenRequest(CacheHelper.getCompanyId(), CacheHelper.getKey());
