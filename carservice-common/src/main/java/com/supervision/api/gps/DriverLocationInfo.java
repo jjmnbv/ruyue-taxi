@@ -1,18 +1,19 @@
 package com.supervision.api.gps;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.5.1	驾驶员定位信息（来自司机手机app）(JSYDW) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class DriverLocationInfo extends GpsApi {
-
+    public DriverLocationInfo() {
+        super();
+        setCommand(CommandEnum.DriverLocationInfo);
+    }
     /**
      * 行政区划代码
      */

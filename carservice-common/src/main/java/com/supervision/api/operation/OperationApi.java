@@ -2,6 +2,7 @@ package com.supervision.api.operation;
 
 
 import com.supervision.api.BaseApi;
+import com.supervision.enums.InterfaceType;
 import lombok.Data;
 
 /**
@@ -10,6 +11,9 @@ import lombok.Data;
  */
 @Data
 public class OperationApi extends BaseApi {
-
+    public OperationApi() {
+        super();
+        setApiType(InterfaceType.OPERATION);
+    }
 
 }

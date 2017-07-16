@@ -1,18 +1,19 @@
 package com.supervision.api.order;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.3.5	订单补传*(DDBC) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class OrderSupplements extends OrderApi {
-
+    public OrderSupplements() {
+        super();
+        setCommand(CommandEnum.OrderSupplements);
+    }
 
     //    订单编号
     private String orderId;

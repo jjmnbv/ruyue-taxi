@@ -1,20 +1,22 @@
 package com.supervision.api.order;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.3.7	驾驶员上班*(JSYSB) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class DriverOnWork extends OrderApi {
 
 
+    public DriverOnWork(){
+        super();
+        setCommand(CommandEnum.DriverOnWork);
 
+    }
 
     /**
      * identifier

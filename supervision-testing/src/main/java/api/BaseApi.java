@@ -11,6 +11,8 @@ import java.io.Serializable;
  */
 @Data
 public class BaseApi implements Serializable {
+    private Integer success;
+    private String reason;
     //  api 类型,不转换成json
     @JsonIgnore
     private String apiType;

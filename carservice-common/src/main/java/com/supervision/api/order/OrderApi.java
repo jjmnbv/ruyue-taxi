@@ -1,8 +1,9 @@
 package com.supervision.api.order;
 
-
 import com.supervision.api.BaseApi;
+import com.supervision.enums.InterfaceType;
 import lombok.Data;
+
 
 /**
  * 订单数据
@@ -10,7 +11,9 @@ import lombok.Data;
  */
 @Data
 public class OrderApi extends BaseApi {
-
+    public OrderApi(){
+        setApiType(InterfaceType.ORDER);
+    }
 
     //    行政区划编号
     private String address;

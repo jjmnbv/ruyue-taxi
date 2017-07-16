@@ -1,17 +1,19 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.2.10	网约车驾驶员基本信息(JSYJB)
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class DriverInfo extends BasicApi {
+    public DriverInfo() {
+        super();
+        setCommand(CommandEnum.DriverInfo);
+    }
 
 //    注册地行政区划编号
     private String address;

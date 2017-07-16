@@ -1,17 +1,19 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.2.14	网约车乘客基本信息(CKJB)
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PassengerInfo extends BasicApi {
+    public PassengerInfo(){
+        super();
+        setCommand(CommandEnum.PassengerInfo);
+    }
 //    注册时间
     private String registerDate;
 //    乘客电话

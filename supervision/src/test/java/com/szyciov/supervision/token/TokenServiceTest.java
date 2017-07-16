@@ -17,12 +17,15 @@ import static org.junit.Assert.assertThat;
 public class TokenServiceTest extends SupervisionApplicationTests{
     private @Autowired TokenService tokenService;
 
-//    @Test
+    @Test
     public void testToken() throws IOException {
         String token = tokenService.getToken();
+        System.out.println(token);
         assertThat(token, notNullValue());
         assertThat("s",is("s"));
+        token = tokenService.getToken();
         System.out.println(token);
+
     }
 
 }

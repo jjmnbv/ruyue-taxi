@@ -1,33 +1,30 @@
 package com.szyciov.supervision.mq;
 
-import com.supervision.api.basic.CompanyOperateInfo;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.szyciov.supervision.basic.service.BasicService;
-import com.szyciov.supervision.util.EntityInfoList;
+import com.szyciov.supervision.api.service.BaseService;
 
 /**
  * Created by admin on 2017/7/10.
  */
 @Component
-@RabbitListener(queues = "test_queues")
+//@RabbitListener(queues = "")
 public class PlatformCompanyOperationReceiver
 {
 
-	private @Autowired BasicService basicService;
+	private @Autowired
+	BaseService basicService;
 
-	@RabbitHandler
-	public void consumer(String message) throws Exception
-	{
-		EntityInfoList<CompanyOperateInfo> response = basicService.sendCompanyOperateInfo(message);
-
-		if (!response.isAllSuccess())
-		{
-			// TODO 处理未成功上传的数据
-		}
-
-	}
+////	@RabbitHandler
+//	public void consumer(String message) throws Exception
+//	{
+//		EntityInfoList<CompanyOperateInfo> response = basicService.sendCompanyOperateInfo(message);
+//
+//		if (!response.isAllSuccess())
+//		{
+//			// TODO 处理未成功上传的数据
+//		}
+//
+//	}
 }

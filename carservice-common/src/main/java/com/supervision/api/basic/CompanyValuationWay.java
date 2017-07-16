@@ -1,17 +1,19 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.2.6	网约车平台公司计程计价方式(PTYJ)
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class CompanyValuationWay extends BasicApi {
+    public CompanyValuationWay(){
+        super();
+        setCommand(CommandEnum.CompanyValuationWay);
+    }
 //    行政区划代码
     private String address;
 //    运价类型编码

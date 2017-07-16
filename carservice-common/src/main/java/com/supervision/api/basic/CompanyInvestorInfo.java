@@ -1,8 +1,8 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
@@ -10,9 +10,11 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class CompanyInvestorInfo extends BasicApi {
+    public CompanyInvestorInfo(){
+        super();
+        setCommand(CommandEnum.CompanyInvestorInfo);
+    }
 //    所属平台公司统一社会信用代码
     private String epCode;
 //    investerName

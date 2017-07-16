@@ -1,18 +1,19 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.2.1	网约车平台公司基本信息(PTJB)
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class CompanyBaseInfo extends BasicApi{
-
+    public CompanyBaseInfo() {
+        super();
+        this.setCommand(CommandEnum.CompanyBaseInfo);
+    }
 
 //    企业名称
     private String companyName;
@@ -38,6 +39,10 @@ public class CompanyBaseInfo extends BasicApi{
     private String legalPhone;
 //   法人代表身份证扫描件文件
     private String legalPhoto;
+    //法人代表身份证扫描件文件编号
+    private String legalPhotoId;
+
+
 //  营业执照副本扫描件文件
     private String identifierPhoto;
 //    广州通信地址

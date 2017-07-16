@@ -1,6 +1,8 @@
 package com.supervision.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.supervision.enums.CommandEnum;
+import com.supervision.enums.InterfaceType;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -13,9 +15,15 @@ import java.io.Serializable;
 public class BaseApi implements Serializable {
     private Integer success;
     private String reason;
+    //  api 类型,不转换成json
+    @JsonIgnore
+    private InterfaceType apiType;
+    //  api 命令
+    @JsonIgnore
+    private CommandEnum command;
 
     //    公司标识，与交通部一致,平台标识。
-    private String companyId;
+    private String companyId="RY";
 
 
 }

@@ -1,18 +1,19 @@
 package com.supervision.api.order;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.3.6	订单违约*(DDWY) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class OrderBreach extends OrderApi {
-
+    public OrderBreach(){
+        super();
+        setCommand(CommandEnum.OrderBreach);
+    }
     //    订单编号
     private String orderId;
 

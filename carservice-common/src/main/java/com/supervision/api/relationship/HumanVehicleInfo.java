@@ -1,18 +1,19 @@
 package com.supervision.api.relationship;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.7	人车对应关系信息数据*(RCDYGX)
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class HumanVehicleInfo extends RelationshipApi {
-
+public class HumanVehicleInfo extends RelationShipApi {
+    public HumanVehicleInfo() {
+        super();
+        setCommand(CommandEnum.HumanVehicleInfo);
+    }
 
     /**
      * 注册地行政区划编号	见GB/T 2260

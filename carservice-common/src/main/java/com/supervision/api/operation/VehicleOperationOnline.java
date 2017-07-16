@@ -1,18 +1,19 @@
 package com.supervision.api.operation;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.4.1	车辆营运上线(CLYYSX) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class VehicleOperationOnline extends OperationApi {
-
+    public VehicleOperationOnline(){
+        super();
+        setCommand(CommandEnum.VehicleOperationOnline);
+    }
 
     /**
      * 机动车驾驶证号
