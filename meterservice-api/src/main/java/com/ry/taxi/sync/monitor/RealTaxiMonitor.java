@@ -7,14 +7,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
-
-import net.sf.json.JSONObject;
 
 /**
  * @Title:RealTaxiMonitor.java
@@ -26,7 +21,13 @@ import net.sf.json.JSONObject;
  *
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
-
+/*
+ * 这个接口做的时候要主意了，传入的参数车牌列表，中间用半角逗号分隔，为空则表示查全部车牌, 也就士说程序启动的时候应该获取所有的列表数据
+ * 然后系统需要建立相应的线程池，定时，例如15s, 获取一次基础数据
+ * 我看到RealTaxiMonitor类里面有类似的设计，但是请考虑一下初始化，多线程，分批的设计
+ * 还有关于数据存储，在做表设计的时候要考虑到查询的效率，应该在适当的列做索引
+ * 如果目前因为不必在我们系统做GPS的轨迹查询，所以，GPS的数据可以先存7天，做成可配置的参数，这样就可以节省我们的存储了
+ */
 @Component
 public class RealTaxiMonitor {
 	
