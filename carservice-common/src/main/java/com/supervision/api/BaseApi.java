@@ -22,6 +22,12 @@ public class BaseApi implements Serializable {
     @JsonIgnore
     private CommandEnum command;
 
+    /**
+     * 失败次数
+     */
+    @JsonIgnore
+    private int requestFailNum=0;
+
     //    公司标识，与交通部一致,平台标识。
     private String companyId="RY";
 
