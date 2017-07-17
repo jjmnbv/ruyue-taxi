@@ -1,4 +1,4 @@
-package com.szyciov.supervision.enums;
+package com.supervision.enums;
 
 /**
  * Created by admin on 2017/7/6.

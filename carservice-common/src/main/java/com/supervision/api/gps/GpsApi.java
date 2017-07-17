@@ -2,6 +2,7 @@ package com.supervision.api.gps;
 
 
 import com.supervision.api.BaseApi;
+import com.supervision.enums.InterfaceType;
 import lombok.Data;
 
 /**
@@ -10,7 +11,10 @@ import lombok.Data;
  */
 @Data
 public class GpsApi extends BaseApi {
-
+    public GpsApi() {
+        super();
+        setApiType(InterfaceType.GPS);
+    }
 
     /**
      * 当前位置行政区划编号

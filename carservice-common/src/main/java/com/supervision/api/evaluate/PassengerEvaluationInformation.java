@@ -1,17 +1,19 @@
 package com.supervision.api.evaluate;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.6.1	乘客评价信息(CKPJ) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PassengerEvaluationInformation extends EvaluateApi {
+    public PassengerEvaluationInformation() {
+        super();
+        setCommand(CommandEnum.PassengerEvaluationInformation);
+    }
 
     /**
      * 订单编号	与发送交通部一致

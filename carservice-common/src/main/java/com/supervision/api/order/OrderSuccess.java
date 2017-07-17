@@ -1,18 +1,19 @@
 package com.supervision.api.order;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * DDCG
+ * 订单成功
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class OrderSuccess extends OrderApi {
-
+    public OrderSuccess(){
+        super();
+        setCommand(CommandEnum.OrderSuccess);
+    }
 
     //    订单编号
     private String orderId;

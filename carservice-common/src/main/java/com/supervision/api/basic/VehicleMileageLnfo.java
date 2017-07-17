@@ -1,8 +1,8 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
@@ -10,10 +10,11 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class VehicleMileageLnfo extends BasicApi {
-
+    public VehicleMileageLnfo() {
+        super();
+        setCommand(CommandEnum.VehicleMileageLnfo);
+    }
 //    注册地行政区划编号
     private String address;
 //    车牌号码

@@ -1,18 +1,19 @@
 package com.supervision.api.operation;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.4.5	营运支付(YYZF) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class OperationPay extends OperationApi {
-
+    public OperationPay() {
+        super();
+        setCommand(CommandEnum.OperationPay);
+    }
 
     /**
      * 订单编号	与发送交通部一致
@@ -58,6 +59,28 @@ public class OperationPay extends OperationApi {
      * 车辆实际出发纬度	单位：1*10-6度
      */
     private String depLatitude;
+
+    /**
+     * 实际上车地点
+     */
+    private String depArea;
+
+
+    /**
+     * 实际上车时间
+     */
+    private String depTime;
+
+
+    /**
+     *  车辆实际到达经度
+     */
+    private String destLongitude;
+
+    /**
+     *  车辆实际到达纬度
+     */
+    private String destLatitude;
     /**
      * 实际下车地点
      */

@@ -1,18 +1,24 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.2.4	网约车平台公司服务机构(PTFWJG)
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class CompanyServiceOrgan extends BasicApi {
+    public CompanyServiceOrgan(){
+        super();
+        this.setCommand(CommandEnum.CompanyServiceOrgan);
+    }
 
+    /**
+     * 行政区划代码
+     */
+    private String address;
 
 //    服务机构名称
     private String serviceName;
@@ -22,6 +28,14 @@ public class CompanyServiceOrgan extends BasicApi {
     private String detailAddress;
 //  服务机构负责人姓名
     private String responsibleName;
+
+    /**
+     * 服务机构负责人联系方式
+     */
+    private String responsiblePhone;
+
+
+
 //  服务机构管理人姓名
     private String managerName;
 //    服务机构管理人联系方式

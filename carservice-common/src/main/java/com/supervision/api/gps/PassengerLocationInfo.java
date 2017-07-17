@@ -1,18 +1,19 @@
 package com.supervision.api.gps;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.5.2	乘客定位信息（来自乘客手机app）*(CKDW) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PassengerLocationInfo extends GpsApi {
-
+    public PassengerLocationInfo() {
+        super();
+        setCommand(CommandEnum.PassengerLocationInfo);
+    }
 
     /**
      * 订单编号

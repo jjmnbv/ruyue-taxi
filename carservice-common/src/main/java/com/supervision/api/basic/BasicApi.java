@@ -2,9 +2,8 @@ package com.supervision.api.basic;
 
 
 import com.supervision.api.BaseApi;
-import lombok.AllArgsConstructor;
+import com.supervision.enums.InterfaceType;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 基础数据api
@@ -13,7 +12,9 @@ import lombok.NoArgsConstructor;
 @Data
 public class BasicApi extends BaseApi {
 
-
+    public BasicApi(){
+        this.setApiType(InterfaceType.BASIC);
+    }
 
     //    唯一标识
     private String symbol;

@@ -1,8 +1,8 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
@@ -10,9 +10,11 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class VehicleInsuranceInfo extends BasicApi {
+    public VehicleInsuranceInfo() {
+        super();
+        setCommand(CommandEnum.VehicleInsuranceInfo);
+    }
 //    车辆号牌
     private String vehicleNo;
 //    车牌颜色

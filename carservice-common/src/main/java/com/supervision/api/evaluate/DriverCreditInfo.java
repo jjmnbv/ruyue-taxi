@@ -1,17 +1,19 @@
 package com.supervision.api.evaluate;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.6.4	驾驶员信誉信息(JSYXY)
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class DriverCreditInfo extends EvaluateApi {
+    public DriverCreditInfo() {
+        super();
+        setCommand(CommandEnum.DriverCreditInfo);
+    }
 
     /**
      * 注册地行政区划编号	驾驶员在平台的注册地，见GB/T 2260

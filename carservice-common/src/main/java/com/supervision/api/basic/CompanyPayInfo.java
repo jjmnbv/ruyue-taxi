@@ -1,18 +1,19 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.2.3网约车平台公司支付信息(PTZF)
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class CompanyPayInfo extends BasicApi {
-
+    public CompanyPayInfo(){
+        super();
+        setCommand(CommandEnum.CompanyPayInfo);
+    }
 
 //    银行或者非银行支付机构名称
     private String payName;

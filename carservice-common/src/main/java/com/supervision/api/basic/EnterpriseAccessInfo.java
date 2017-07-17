@@ -1,8 +1,8 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
@@ -10,10 +10,11 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class EnterpriseAccessInfo extends BasicApi {
-
+    public EnterpriseAccessInfo(){
+        super();
+        setCommand(CommandEnum.EnterpriseAccessInfo);
+    }
 //    行政区划编号
     private String address;
 //    企业名称

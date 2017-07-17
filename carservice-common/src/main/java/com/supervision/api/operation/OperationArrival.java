@@ -1,18 +1,19 @@
 package com.supervision.api.operation;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.4.4	营运到达(YYDD) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class OperationArrival extends OperationApi {
-
+    public OperationArrival() {
+        super();
+        setCommand(CommandEnum.OperationArrival);
+    }
 
     /**
      * 订单编号	与发送交通部一致

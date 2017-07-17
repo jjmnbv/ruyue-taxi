@@ -9,6 +9,7 @@ spring:
     username: admin
     password: rytaxi886
     virtual-host: /
+    queue-default-name: supervision_api_object_queue
 service:
   url: http://120.76.199.119:8099/api/transfer
   company:

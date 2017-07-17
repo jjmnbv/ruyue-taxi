@@ -1,18 +1,19 @@
 package com.supervision.api.operation;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.4.3	营运出发(YYCF) 实时
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class OperationDeparture extends OperationApi {
-
+    public OperationDeparture() {
+        super();
+        setCommand(CommandEnum.OperationDeparture);
+    }
 
     /**
      * 订单编号	与发送交通部一致

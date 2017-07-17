@@ -1,18 +1,19 @@
 package com.supervision.api.evaluate;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.6.3	驾驶员处罚信息（JSYCF）
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class DriverPenaltyInfo extends EvaluateApi {
-
+    public DriverPenaltyInfo() {
+        super();
+        setCommand(CommandEnum.DriverPenaltyInfo);
+    }
 
     /**
      * 机动车驾驶证号

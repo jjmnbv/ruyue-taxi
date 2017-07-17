@@ -51,21 +51,18 @@ public class GzwycApi {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_P);
 
-    public static <T extends BaseApi> EntityInfoList<T> send(BasicRequest request, @SuppressWarnings("rawtypes") TypeReference t) throws IOException {
-        String responseString = sendMsg(request, false);
-        EntityInfoList<T> infoList = JSONUtil.objectMapper.readValue(responseString, t);
-        //过滤发送成功的消息
-        List<T> collect = infoList.getItems().stream().filter(i -> i.getSuccess() == 0).collect(Collectors.toList());
-        infoList.setItems(collect);
-        logger.info("FAILINFO -> result:{} ",JSONUtil.toJackson(infoList));
-        return infoList;
+    public static HttpContent send(BasicRequest request) throws IOException {
+        HttpContent httpContent = sendMsg(request, false);
+
+
+        return httpContent;
     }
 
-    public static String token(BasicRequest request) throws IOException {
+    public static HttpContent token(BasicRequest request) throws IOException {
         return sendMsg(request, true);
     }
 
-    public static String sendMsg(BasicRequest request, Boolean isToken) throws IOException {
+    public static HttpContent sendMsg(BasicRequest request, Boolean isToken) throws IOException {
         HttpPost post = new HttpPost(CacheHelper.getServiceUrl());
         @Cleanup InputStream in = new ByteArrayInputStream(request.getResult().getBytes(Consts.UTF_8.name()));
         String md5 = hash(in);
@@ -90,11 +87,10 @@ public class GzwycApi {
         post.setEntity(builder.build());
 
         Map<String, String> headerMap = Arrays.asList(post.getAllHeaders()).stream().collect(Collectors.toMap(Header::getName, Header::getValue));
-        logger.debug("request params -> headers:{}, fileName:{}", JSONUtil.toJackson(headerMap), fileName);
-        String content=HttpClientUtil.sendHttpPost(post, ContentType.APPLICATION_FORM_URLENCODED);
-        content=new String(content.getBytes("ISO-8859-1"),"UTF-8");
-        logger.debug("responce content -> content:{}", content);
-        return content;
+//        logger.debug("request params -> headers:{}, fileName:{}", JSONUtil.toJackson(headerMap), fileName);
+        HttpContent httpContent=HttpUtil.sendHttpPost(post);
+//        logger.debug("responce content -> content:{}", httpContent);
+        return httpContent;
     }
 
     public static String hash(InputStream in) {

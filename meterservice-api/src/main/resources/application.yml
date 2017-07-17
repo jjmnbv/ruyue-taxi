@@ -30,18 +30,21 @@ spring:
         poolPreparedStatements: true
         maxOpenPreparedStatements: 100
     http:
-        encoding:
+       encoding:
             charset: utf-8
-            enable: true
+            enabled: true
             force: true
-        timeout:
+       content-type: text/html 
+       timeout:
             connect: 60000
             read: 60000
             write: 60000
-        headers:
+       headers:
             Connection: close
-        dispatcher: 
+       dispatcher: 
           maxRequests: 500
-          maxRequestsPerHost: 50      
-        station:
-            sync: true
+          maxRequestsPerHost: 50    
+    thread:
+        corePoolSize: 15
+        maxPoolSize: 100
+        queueSize: 5000

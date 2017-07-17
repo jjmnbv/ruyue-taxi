@@ -1,17 +1,20 @@
 package com.supervision.api.evaluate;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import redis.clients.jedis.Protocol;
 
 /**
  * 3.6.2	乘客投诉处理信息*（CKTSCL）
  * Created by 林志伟 on 2017/7/7.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PassengerComplaintInfo extends EvaluateApi {
+    public PassengerComplaintInfo(){
+        super();
+        setCommand(CommandEnum.PassengerComplaintInfo);
+    }
 
     /**
      * 订单编号	与发送交通部一致

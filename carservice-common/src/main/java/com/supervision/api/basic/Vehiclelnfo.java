@@ -1,18 +1,19 @@
 package com.supervision.api.basic;
 
+import com.supervision.enums.CommandEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 3.2.7	网约车车辆基本信息(CLJB)
  * Created by 林志伟 on 2017/7/6.
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Vehiclelnfo extends BasicApi {
-
+    public Vehiclelnfo(){
+        super();
+        setCommand(CommandEnum.Vehiclelnfo);
+    }
 //    车辆所在城市（注册地行政区划编号）
     private String address;
 //    车牌号码
@@ -67,6 +68,9 @@ public class Vehiclelnfo extends BasicApi {
     private String nextFixDate;
 //    车辆年度审验状态
     private String checkState;
+//  车辆年度审验日期
+    private String checkDate;
+
 //网约车发票打印设备序列号
     private String feePrintId;
 //    卫星定位装置品牌
