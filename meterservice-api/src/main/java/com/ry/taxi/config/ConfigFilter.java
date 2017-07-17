@@ -73,7 +73,7 @@ public class ConfigFilter implements HandlerInterceptor {
 		
 		logger.debug("request parameter cmd:{},key:{},userId:{},args:{},sign:{}", cmd, key, userId, args, sign);
 		
-		if (cmd != null && key != null && userId != null && sign != null ) {
+		if (cmd != null && key != null && userId != null && args != null &&sign != null ) {
 			try {
 				String checkSign = MD5.MD5Encode(DESUtils.encode(key, args, ivCode), encoding);
 				if(checkSign.equals(sign))

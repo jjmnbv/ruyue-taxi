@@ -7,6 +7,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -40,18 +43,18 @@ public class RealTaxiMonitor {
 	
 	@Value("${spring.thread.maxPoolSize:100}")
 	private  int maxPoolSize;
+	
 	@Value("${spring.thread.queueSize:5000}")
 	private  int queueSize;
 	
 	private static ThreadPoolExecutor gpsPool = null; 
-	
 
 	
 	/*
 	 * 获取GPS实时信息,15s更新一次
 	 */
 	@Scheduled(cron="0/15 0 0 * * ?")
-	public void getRealGps(){
+	public void realGps(){
 		initGpsPool();
 		gpsPool.execute(new Runnable(){
 			@Override
@@ -61,6 +64,14 @@ public class RealTaxiMonitor {
 				
 			}
 		});
+	}
+	
+	/*
+	 * 获取实时GPS数据
+	 */
+	public void getRealGps(){
+		
+		
 	}
 	
     /*
