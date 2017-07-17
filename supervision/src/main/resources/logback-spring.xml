@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
-    
+
     <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-           <Pattern>.%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %n</Pattern>
+            <Pattern>.%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %n</Pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-           <level>TRACE</level>
+            <level>TRACE</level>
         </filter>
     </appender>
-    
-    
+
+
     <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
             <evaluator>
-                 <expression>return message.contains("API_INFO");</expression>
+                <expression>return message.contains("API_INFO");</expression>
             </evaluator>
             <OnMismatch>ACCEPT</OnMismatch>
             <OnMatch>DENY</OnMatch>
@@ -137,8 +137,8 @@
             </Pattern>
         </layout>
     </appender>
-            
-     <root level="INFO">
+
+    <root level="INFO">
         <appender-ref ref="INFO_FILE"/>
         <appender-ref ref="ERROR_FILE"/>
         <appender-ref ref="API_INFO"/>
@@ -146,6 +146,6 @@
         <appender-ref ref="API_DEBUG"/>
     </root>
     <logger name="com.szyciov.supervision" level="DEBUG"/>
-      
+
 
 </configuration>

@@ -45,7 +45,7 @@ public class BaseService {
     public EntityInfoList<? extends BaseApi> sendApi(List<? extends BaseApi> list) throws IOException {
 
         if (list == null || list.size() <= 0) {
-            logger.error("API_INFO:发送请求数据-接收数据为空");
+            logger.error("API_INFO:发送请求数据|接收数据为空");
             return null;
         }
 
@@ -68,9 +68,9 @@ public class BaseService {
             infoList2.setItems(collect);
 
             if (infoList2.getItems() != null && infoList2.getItems().size() > 0) {
-                logger.error("API_INFO:发送请求数据失败|接口类型:{}|接口描述:{}|命令类型:{}|命令描述:{}|失败记录:{}", interfaceType.value(), interfaceType.description(), commandEnum.value(), commandEnum.description(), JSONUtil.toJackson(collect));
+                logger.error("API_INFO:发送请求数据失败:{}|接口类型:{}|接口描述:{}|命令类型:{}|命令描述:{}|失败记录:{}",list.get(0).getRequestFailNum(), interfaceType.value(), interfaceType.description(), commandEnum.value(), commandEnum.description(), JSONUtil.toJackson(collect));
             } else {
-                logger.info("API_INFO:发送请求数据成功|接口类型:{}|接口描述:{}|命令类型:{}|命令描述:{}|发送成功数目:{}", interfaceType.value(), interfaceType.description(), commandEnum.value(), commandEnum.description(), list.size());
+                logger.info("API_INFO:发送请求数据成功:{}|接口类型:{}|接口描述:{}|命令类型:{}|命令描述:{}|发送成功数目:{}",list.get(0).getRequestFailNum(), interfaceType.value(), interfaceType.description(), commandEnum.value(), commandEnum.description(), list.size());
             }
             return infoList2;
         } else if (httpContent.getStatus() == 950) {//状态处理,token失效，重新获取
@@ -85,7 +85,7 @@ public class BaseService {
         } else {
 
         }
-        logger.error("API_INFO:发送请求数据|接口类型:{}|接口描述:{}|命令类型:{}|命令描述:{}|状态码:{}|返回内容:{}", interfaceType.value(), interfaceType.description(), commandEnum.value(), commandEnum.description(), httpContent.getStatus(), httpContent.getContent());
+        logger.error("API_INFO:发送请求数据:{}|接口类型:{}|接口描述:{}|命令类型:{}|命令描述:{}|状态码:{}|返回内容:{}",list.get(0).getRequestFailNum(), interfaceType.value(), interfaceType.description(), commandEnum.value(), commandEnum.description(), httpContent.getStatus(), httpContent.getContent());
         return null;
 
     }
