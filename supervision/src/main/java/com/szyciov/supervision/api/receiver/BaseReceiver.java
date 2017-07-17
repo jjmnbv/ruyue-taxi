@@ -6,6 +6,7 @@ import com.szyciov.supervision.api.service.BaseService;
 import com.szyciov.supervision.mq.MessageReceiver;
 import com.szyciov.supervision.token.service.TokenService;
 
+import com.szyciov.supervision.util.EntityInfoList;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.util.List;
 
