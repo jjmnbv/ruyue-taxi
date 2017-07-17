@@ -18,7 +18,7 @@
                 <expression>return message.contains("API_INFO");</expression>
             </evaluator>
             <OnMismatch>ACCEPT</OnMismatch>
-            <OnMatch>DENY</OnMatch>
+            <OnMatch>NEUTRAL</OnMatch>
         </filter>
         <File>logs/info.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
