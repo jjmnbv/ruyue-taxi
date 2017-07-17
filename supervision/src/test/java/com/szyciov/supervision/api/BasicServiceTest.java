@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 import com.supervision.api.basic.*;
 import com.szyciov.supervision.util.FileUtil;
 import org.junit.Test;
+import org.springframework.util.ResourceUtils;
 
 /**
  * 基础数据从测试
@@ -503,7 +505,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.18	个体驾驶员合同信息*(GTJSYHT)
 	 */
 	@Test
-	public void testDriverCntractInfo(){
+	public void testDriverCntractInfo() throws FileNotFoundException {
 		List<DriverCntractInfo> list = new ArrayList<DriverCntractInfo>();
 		DriverCntractInfo driverCntractInfo=new DriverCntractInfo();
 		driverCntractInfo.setSymbol(getSymbol());
@@ -521,8 +523,8 @@ public class BasicServiceTest extends ApiServiceTest
 		driverCntractInfo.setVehCertNo("dsdghshdsujd");
 		driverCntractInfo.setType("ZC");
 		driverCntractInfo.setContractType("HT");
-
-		driverCntractInfo.setContractPhoto(FileUtil.PDFToBase64(new File("E:\\讯心\\如约的士\\code\\ry-taxi\\supervision\\src\\test\\java\\com\\szyciov\\supervision\\api\\pdf\\test.pdf")));
+		File file = ResourceUtils.getFile("classpath:pdf/test.pdf");
+		driverCntractInfo.setContractPhoto(FileUtil.PDFToBase64(file));
 		driverCntractInfo.setContractStatus("YX");
 		driverCntractInfo.setSignTime("20160905120202");
 		driverCntractInfo.setValidTime("20161005");
