@@ -16,5 +16,6 @@ import com.ry.taxi.order.domain.OpTaxiOrder;
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
 public interface OpTaxiOrderMapper {
-	public OpTaxiOrder getOpTaxiOrder(OpTaxiOrder order);
+	
+	public OpTaxiOrder getOpTaxiOrder(String thirdOrderno);
 }
