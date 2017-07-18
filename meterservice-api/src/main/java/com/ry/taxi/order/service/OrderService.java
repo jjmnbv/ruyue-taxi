@@ -4,6 +4,7 @@
 package com.ry.taxi.order.service;
 
 import com.ry.taxi.order.domain.OpTaxiOrder;
+import com.ry.taxi.order.request.DriverTakeParam;
 
 /**
  * @Title:OrderService.java
@@ -17,6 +18,6 @@ import com.ry.taxi.order.domain.OpTaxiOrder;
  */
 public interface OrderService {
 	
-	public OpTaxiOrder getOpTaxiOrder(OpTaxiOrder order);
+	int doTakingOrder (DriverTakeParam param);
 	
 }

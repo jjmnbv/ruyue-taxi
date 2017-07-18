@@ -24,6 +24,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OpTaxiOrder {	
+	
+    /**
+     * 订单号
+     */
+	private String orderno;
+	/**
+	 * 订单状态
+	 */
+	private String status;
 	/**
 	 * 调度费
 	 */

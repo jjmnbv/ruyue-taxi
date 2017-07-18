@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="mapper.order.OpTaxiOrderMapper">
+<mapper namespace="com.ry.taxi.order.mapper.OpTaxiOrderMapper">
 	<select id = "getOpTaxiOrder" resultType="com.ry.taxi.order.domain.OpTaxiOrder">
 		SELECT
 			oo.*	
 		FROM op_taxiorder oo
 		WHERE  oo.`status` = 1
-		<if test="driverid != null and driverid != ''">
-		AND oo.driverid = #{driverid}
-		</if>
 		AND oo.orderno = #{orderno}
 	</select>
 
