@@ -141,7 +141,14 @@ public class BaseOrderController {
 		}	
 		
 		int resultCode = orderService.doDriverArrival(driverArrivalParam);
-		return null;
+		if (resultCode > 0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultCode), ""));
+			result.setResult(ERROR_RESPONSE);
+			return JSONUtil.toJackson(result);
+			
+		}
+		result.setResult(SUCESS_RESPONSE);	
+		return JSONUtil.toJackson(result);
 		
 	}
 	
@@ -172,6 +179,8 @@ public class BaseOrderController {
 	 * 压表通知
 	 */
 	public String startCalculation(String jsonParam){
+		
+		
 		
 		return null;
 		
