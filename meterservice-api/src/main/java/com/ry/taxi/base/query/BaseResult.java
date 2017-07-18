@@ -63,6 +63,5 @@ public class BaseResult<T> {
 		Data = data;
 	}
 	
-	//#####################################
 
 }

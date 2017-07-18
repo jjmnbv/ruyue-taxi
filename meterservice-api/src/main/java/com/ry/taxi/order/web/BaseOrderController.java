@@ -4,7 +4,6 @@
 package com.ry.taxi.order.web;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,10 +14,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.base.constant.UrlRequestConstant;
 import com.ry.taxi.base.query.BaseResult;
+import com.ry.taxi.order.request.DriverCancelParam;
+import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.xunxintech.ruyue.coach.io.file.PropertiesUtil;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
@@ -101,7 +104,18 @@ public class BaseOrderController {
 	/*
 	 * 司机执行订单通知
 	 */
-	public String driverStartOrder(String jsonParam){
+	public String driverStartOrder(String jsonParam) {
+		
+		
+		try {
+			DriverStartParam driverStartParam = JSONUtil.objectMapper.readValue(jsonParam, DriverStartParam.class);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		BaseResult<String> result = new BaseResult<String>();
+		
 		
 		return null;
 		
@@ -111,7 +125,7 @@ public class BaseOrderController {
 	 * 司机到达乘客起点位置消息
 	 */
 	public String driverArrival(String jsonParam){
-		
+			
 		return null;
 		
 	}
@@ -120,6 +134,14 @@ public class BaseOrderController {
 	 * 司机取消通知
 	 */
 	public String driverCancelOrder(String jsonParam){
+		
+		try {
+			DriverCancelParam drivercancel = JSONUtil.objectMapper.readValue(jsonParam, DriverCancelParam.class);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		
 		return null;
 		
