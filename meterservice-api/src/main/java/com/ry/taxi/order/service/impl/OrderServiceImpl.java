@@ -19,6 +19,7 @@ import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
 import com.ry.taxi.order.request.DriverArrivalParam;
+import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 
 import com.ry.taxi.order.request.DriverTakeParam;
@@ -111,7 +112,8 @@ public class OrderServiceImpl implements OrderService {
 	
 
 	@Override
-	public String doStartOrder(DriverStartParam param) {
+	@Transactional
+	public int doDriverStart(DriverStartParam param) {
 		// TODO Auto-generated method stub
 		String token = "";
 		
@@ -121,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
 		
 		
 		
-		return null;
+		return 0;
 	}
 
 	@Transactional
@@ -139,6 +141,15 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3012.getValue();//订单不存在
+		return 0;
+	}
+
+
+
+	@Override
+	@Transactional
+	public int doDriverCancel(DriverCancelParam param) {
+		// TODO Auto-generated method stub
 		return 0;
 	}
 
