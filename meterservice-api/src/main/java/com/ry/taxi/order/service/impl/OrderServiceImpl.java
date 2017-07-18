@@ -7,14 +7,17 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ry.taxi.Util.AddressUitl;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
+import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.driver.enums.OrderState;
@@ -40,6 +43,7 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired
 	private OpTaxiOrderMapper opTaxiOrderMapper;
+	
 
 	@Transactional
 	@Override
@@ -96,6 +100,22 @@ public class OrderServiceImpl implements OrderService {
 		}
 		MessageUtil.sendMessage(om);
 		return true;
+	}
+	
+	
+
+	@Override
+	public String doStartOrder(DriverStartParam param) {
+		// TODO Auto-generated method stub
+		String token = "";
+		
+		//解析司机当前地址
+		JSONObject result = AddressUitl.getAddress(token);
+		
+		
+		
+		
+		return null;
 	}
 
 
