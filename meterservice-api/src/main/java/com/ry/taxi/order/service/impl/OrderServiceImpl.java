@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ry.taxi.Util.AddressUitl;
@@ -17,6 +18,7 @@ import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
+import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverStartParam;
 
 import com.ry.taxi.order.request.DriverTakeParam;
@@ -37,6 +39,7 @@ import com.szyciov.passenger.util.MessageUtil;
  *
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
+@Service
 public class OrderServiceImpl implements OrderService {
 	
 	@Autowired

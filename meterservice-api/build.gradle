@@ -145,7 +145,10 @@ dependencies {
     //runtime('com.h2database:h2')
     
     //ruyue taxi
-    compile ('com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT')
+    compile ('com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'){
+    	exclude module: 'slf4j-api'
+    	exclude module: 'slf4j-log4j12'
+    }
 
     //test
     testCompile('org.springframework.boot:spring-boot-starter-test')
