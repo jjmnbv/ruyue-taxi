@@ -3,6 +3,7 @@
  */
 package com.ry.taxi.order.service;
 
+import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 
 /**
@@ -18,5 +19,7 @@ import com.ry.taxi.order.request.DriverTakeParam;
 public interface OrderService {
 	
 	int doTakingOrder (DriverTakeParam param);
+	
+	int doDriverArrival (DriverArrivalParam param);
 	
 }

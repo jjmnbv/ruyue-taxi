@@ -20,4 +20,6 @@ public interface OpTaxiOrderMapper {
 	public OpTaxiOrder getOpTaxiOrder(String thirdOrderno);
 	
 	public int updateTakingOrder(OpTaxiOrder order);
+	
+	public int updateTaxiOrder(OpTaxiOrder order);
 }

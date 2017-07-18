@@ -15,12 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.base.constant.UrlRequestConstant;
 import com.ry.taxi.base.query.BaseResult;
+import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
@@ -47,6 +46,8 @@ public class BaseOrderController {
 	
 	@Autowired
     private OrderService orderService;
+	
+	private static final Integer SUCESS_RESPONSE = 1;
 	
 	private static final Integer ERROR_RESPONSE = 2;
 	
@@ -79,18 +80,24 @@ public class BaseOrderController {
 	public String driverTakeOrder(String jsonParam) throws JsonProcessingException{
 		DriverTakeParam driverTakeParam= null;
 		BaseResult<String> result = new BaseResult<String>();
+		result.setCmd(UrlRequestConstant.CMD_DRIVERTAKEORDER);
 		try {
 			driverTakeParam = JSONUtil.objectMapper.readValue(jsonParam, DriverTakeParam.class);
 		} catch (IOException e) {
-			logger.error("司机应邀通知,json参数转换失败:{}",e.getMessage());
-			result.setCmd(UrlRequestConstant.CMD_DRIVERTAKEORDER);
+			logger.error("司机应邀通知,json参数{}转换失败:{}",jsonParam,e.getMessage());
 			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
 			result.setResult(ERROR_RESPONSE);
 		    return JSONUtil.toJackson(result);
 		}
-		
 		int resultCode = orderService.doTakingOrder(driverTakeParam);
-		return null;
+		if (resultCode > 0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultCode), ""));
+			result.setResult(ERROR_RESPONSE);
+			return JSONUtil.toJackson(result);
+			
+		}
+		result.setResult(SUCESS_RESPONSE);	
+		return JSONUtil.toJackson(result);
 	}
 	
 	/*
@@ -116,8 +123,20 @@ public class BaseOrderController {
 	/*
 	 * 司机到达乘客起点位置消息
 	 */
-	public String driverArrival(String jsonParam){
-			
+	public String driverArrival(String jsonParam) throws JsonProcessingException{
+		DriverArrivalParam driverArrivalParam= null;
+		BaseResult<String> result = new BaseResult<String>();
+		result.setCmd(UrlRequestConstant.CMD_DRIVERTAKEORDER);
+		try {
+			driverArrivalParam = JSONUtil.objectMapper.readValue(jsonParam, DriverArrivalParam.class);
+		} catch (IOException e) {
+			logger.error("司机到达乘客起点位置通知,json参数{}转换失败:{}",jsonParam,e.getMessage());
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);
+		    return JSONUtil.toJackson(result);
+		}	
+		
+		int resultCode = orderService.doDriverArrival(driverArrivalParam);
 		return null;
 		
 	}
