@@ -106,7 +106,7 @@ public class OrderServiceImpl implements OrderService {
 	public int doDriverArrival(DriverArrivalParam param) {
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
 		taxiOrder.setOrderstatus(OrderState.ARRIVAL.state);
-		taxiOrder.setArrivaltime(new Date());  param.getArrivalTime()
+		taxiOrder.setArrivaltime(new Date()); // param.getArrivalTime()
 		taxiOrder.setArrivallat(taxiOrder.getOnaddrlat());
 		taxiOrder.setArrivallng(taxiOrder.getOnaddrlng());
 		taxiOrder.setArrivalcity(taxiOrder.getOncity());
