@@ -8,5 +8,22 @@
 		WHERE  oo.`status` = 1
 		AND oo.orderno = #{orderno}
 	</select>
+	
+	<update id="updateTakingOrder" parameterType="com.ry.taxi.order.domain.OpTaxiOrder">
+		UPDATE `op_taxiorder` oo SET 
+			oo.driverid = #{driverid}, 
+			oo.companyid = #{companyid},
+			oo.vehicleid = #{vehicleid}, 
+			oo.orderstatus =#{orderstatus},
+			oo.ordertime = #{ordertime}, 
+			oo.plateno = #{plateno}, 
+			oo.vehcbrandname = #{vehcbrandname}, 
+			oo.vehclinename = #{vehclinename}, 
+			oo.ordersortcolumn = #{ordersortcolumn},
+			oo.belongleasecompany = #{belongleasecompany},
+			oo.updatetime = NOW()
+		WHERE oo.thirdorderno = #{thirdorderno}
+		AND oo.orderstatus IN(0,1);
+	</update>
 
 </mapper>

@@ -36,6 +36,8 @@
 		lv.`name` cartype,
 		pvb.`Name` carbrand,
 		pvc.`name` carvehcline
+		pb.leasescompanyid,
+		pb.belongleasecompany
 		FROM
 		pub_driver pd
 		LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1

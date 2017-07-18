@@ -3,17 +3,25 @@
  */
 package com.ry.taxi.order.service.impl;
 
+import java.util.Date;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.order.domain.OpTaxiOrder;
+import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.driver.enums.OrderState;
+import com.szyciov.driver.enums.OrdersortColumn;
+import com.szyciov.driver.enums.PayState;
+import com.szyciov.message.TaxiOrderMessage;
+import com.szyciov.passenger.util.MessageUtil;
 
 /**
  * @Title:OrderServiceImpl.java
@@ -36,25 +44,59 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public int doTakingOrder(DriverTakeParam param) {
+		//查询订单信息
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
-		String orderStatus = null;
+		//1.判断订单状态是否为0-待接单，1-待人工派单,在这些订单状态下才能应邀成功
 		if (taxiOrder == null)
 			return ErrorEnum.e3012.getValue();//订单不存在
-//		
-//		WAITTAKE("0","待接单"),
-//		/**
-//		 * 待人工派单
-//		 */
-//		MANTICSEND("1","待人工派单"),
-//		OrderState.WAITTAKE(orderStatus = taxiOrder.getStatus())
-		else if (!(StringUtils.equals(OrderState.WAITTAKE.state, taxiOrder.getStatus()) || StringUtils.equals(OrderState.MANTICSEND.state, taxiOrder.getStatus())))
+		else if (!(StringUtils.equals(OrderState.WAITTAKE.state, taxiOrder.getOrderstatus()) || StringUtils.equals(OrderState.MANTICSEND.state, taxiOrder.getOrderstatus())))
+			return ErrorEnum.e3012.getValue();//订单状态不正确
+		//2.根据司机资格证,查询司机信息
+		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertNum());
 		
+		taxiOrder.setOrderstatus(OrderState.WAITSTART.state);
+		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.WAITSTART.state));
+		taxiOrder.setOrdertime(new Date());
+		taxiOrder.setPaymentstatus(PayState.ALLNOPAY.state);
+		taxiOrder.setCompanyid(driver.getLeasescompanyid());
+		taxiOrder.setDriverid(driver.getId());
+		taxiOrder.setVehicleid(driver.getVehicleid());
+		taxiOrder.setPlateno(driver.getPlateno());
+		taxiOrder.setVehcbrandname(driver.getCarbrand());
+		taxiOrder.setVehclinename(driver.getCarvehcline());
+		taxiOrder.setBelongleasecompany(driver.getBelongleasecompany());
 		
-					
+		int updateResult = opTaxiOrderMapper.updateTakingOrder(taxiOrder);
+		if (updateResult == 0)
+			return ErrorEnum.e3015.getValue();//订单状态不正确
+		if (!sendMessage4Order(taxiOrder,null))
+			return ErrorEnum.e3016.getValue();//订单状态-消息推送失败
 		return 0;
 	}
 	
-	
+	/**
+	 * 订单状态变更给司机和乘客发送推送
+	 */
+	private boolean sendMessage4Order(OpTaxiOrder order,List<String> phones){
+		String messagetype = null;
+		if(OrderState.WAITSTART.state.equals(order.getOrderstatus()) && phones == null){
+			messagetype = TaxiOrderMessage.TAKEORDER;
+		}else if(!OrderState.WAITSTART.state.equals(order.getOrderstatus()) && phones == null){
+			messagetype = TaxiOrderMessage.TAXI_ORDERHINT;
+		}else{
+			messagetype = TaxiOrderMessage.TAXI_DRIVERMESSAGE;
+		}
+		TaxiOrderMessage om = null;
+		//如果推送手机号为空,表示是抢单推送,推送给相关人
+		if(phones == null){
+			om = new TaxiOrderMessage(order,messagetype);
+			//推送给其他之前推送过抢单消息的司机
+		}else{
+			om = new TaxiOrderMessage(messagetype,phones);
+		}
+		MessageUtil.sendMessage(om);
+		return true;
+	}
 
 
 }

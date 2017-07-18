@@ -3,7 +3,6 @@
  */
 package com.ry.taxi.order.service;
 
-import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.request.DriverTakeParam;
 
 /**

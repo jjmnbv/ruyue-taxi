@@ -18,4 +18,6 @@ import com.ry.taxi.order.domain.OpTaxiOrder;
 public interface OpTaxiOrderMapper {
 	
 	public OpTaxiOrder getOpTaxiOrder(String thirdOrderno);
+	
+	public int updateTakingOrder(OpTaxiOrder order);
 }

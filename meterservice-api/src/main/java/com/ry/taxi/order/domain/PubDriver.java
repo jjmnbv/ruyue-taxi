@@ -65,5 +65,17 @@ public class PubDriver {
 	 * 司机类型(0-网约车 1-出租车)
 	 */
 	private String drivertype;
+	/**
+	  *所属租赁公司
+	  */
+	private String leasescompanyid;
+	/**
+	 * 车辆ID
+	 */
+	private String vehicleid;
+	/**
+	 * 归属车企,从字典表中读取
+	 */
+	private String belongleasecompany;
 
 }

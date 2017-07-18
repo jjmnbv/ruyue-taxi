@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,7 @@ import com.ry.taxi.base.query.BaseResult;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
+import com.ry.taxi.order.service.OrderService;
 import com.xunxintech.ruyue.coach.io.file.PropertiesUtil;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
@@ -43,7 +45,8 @@ public class BaseOrderController {
 	
 	private static Logger logger = LoggerFactory.getLogger(BaseOrderController.class);
 	
-
+	@Autowired
+    private OrderService orderService;
 	
 	private static final Integer ERROR_RESPONSE = 2;
 	
@@ -86,6 +89,7 @@ public class BaseOrderController {
 		    return JSONUtil.toJackson(result);
 		}
 		
+		int resultCode = orderService.doTakingOrder(driverTakeParam);
 		return null;
 	}
 	
