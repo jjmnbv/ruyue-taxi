@@ -103,20 +103,24 @@ public class BaseOrderController {
 	/*
 	 * 司机执行订单通知
 	 */
-	public String driverStartOrder(String jsonParam) {
-		
-		
+	public String driverStartOrder(String jsonParam) throws JsonProcessingException {
+		BaseResult<String> result = new BaseResult<String>();
+		DriverStartParam driverStartParam = null;
 		try {
-			DriverStartParam driverStartParam = JSONUtil.objectMapper.readValue(jsonParam, DriverStartParam.class);
+			driverStartParam = JSONUtil.objectMapper.readValue(jsonParam, DriverStartParam.class);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("司机执行订单通知,json参数转换失败:{}",e.getMessage());
+			result.setCmd(UrlRequestConstant.CMD_DRIVERSTARTORDER);
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);	
+			return JSONUtil.toJackson(result);
 		}
 
-		BaseResult<String> result = new BaseResult<String>();
+		String resultinfo = orderService.doStartOrder(driverStartParam);
 		
 		
-		return null;
+		return resultinfo;
 		
 	}
 	
@@ -151,13 +155,18 @@ public class BaseOrderController {
 	/*
 	 * 司机取消通知
 	 */
-	public String driverCancelOrder(String jsonParam){
-		
+	public String driverCancelOrder(String jsonParam) throws JsonProcessingException{
+		BaseResult<String> result = new BaseResult<String>();
+		DriverCancelParam drivercancel = null;
 		try {
-			DriverCancelParam drivercancel = JSONUtil.objectMapper.readValue(jsonParam, DriverCancelParam.class);
+			drivercancel = JSONUtil.objectMapper.readValue(jsonParam, DriverCancelParam.class);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("司机取消通知,json参数转换失败:{}",e.getMessage());
+			result.setCmd(UrlRequestConstant.CMD_DRIVERSTARTORDER);
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);	
+			return JSONUtil.toJackson(result);
 		}
 		
 		
