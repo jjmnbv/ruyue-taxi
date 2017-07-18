@@ -6,7 +6,7 @@
 			oo.*	
 		FROM op_taxiorder oo
 		WHERE  oo.`status` = 1
-		AND oo.orderno = #{orderno}
+		AND oo.thirdOrderno = #{thirdOrderno}
 	</select>
 	
 	<update id="updateTakingOrder" parameterType="com.ry.taxi.order.domain.OpTaxiOrder">

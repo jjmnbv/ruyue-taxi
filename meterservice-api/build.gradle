@@ -148,8 +148,9 @@ dependencies {
     compile ('com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'){
     	exclude module: 'slf4j-api'
     	exclude module: 'slf4j-log4j12'
+    	exclude group : 'org.springframework.security'
     }
-
+     
     //test
     testCompile('org.springframework.boot:spring-boot-starter-test')
 
