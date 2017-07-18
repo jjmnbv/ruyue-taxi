@@ -18,6 +18,7 @@ import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
 import com.ry.taxi.order.request.DriverStartParam;
+
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.driver.enums.OrderState;
@@ -65,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
 		taxiOrder.setCompanyid(driver.getLeasescompanyid());
 		taxiOrder.setDriverid(driver.getId());
 		taxiOrder.setVehicleid(driver.getVehicleid());
-		taxiOrder.setPlateno(driver.getPlateno());
+		taxiOrder.setPlateno(param.getPlateNum());
 		taxiOrder.setVehcbrandname(driver.getCarbrand());
 		taxiOrder.setVehclinename(driver.getCarvehcline());
 		taxiOrder.setBelongleasecompany(driver.getBelongleasecompany());
@@ -77,6 +78,8 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3016.getValue();//订单状态-消息推送失败
 		return 0;
 	}
+	
+	
 	
 	/**
 	 * 订单状态变更给司机和乘客发送推送
@@ -116,6 +119,24 @@ public class OrderServiceImpl implements OrderService {
 		
 		
 		return null;
+	}
+
+	@Transactional
+	@Override
+	public int doDriverArrival(DriverArrivalParam param) {
+		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		taxiOrder.setOrderstatus(OrderState.ARRIVAL.state);
+		taxiOrder.setArrivaltime(new Date());  param.getArrivalTime()
+		taxiOrder.setArrivallat(taxiOrder.getOnaddrlat());
+		taxiOrder.setArrivallng(taxiOrder.getOnaddrlng());
+		taxiOrder.setArrivalcity(taxiOrder.getOncity());
+		taxiOrder.setArrivaladdress(taxiOrder.getOnaddress());
+		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.ARRIVAL.state));
+		//更新订单
+		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
+		if (updateResult == 0)
+			return ErrorEnum.e3012.getValue();//订单不存在
+		return 0;
 	}
 
 
