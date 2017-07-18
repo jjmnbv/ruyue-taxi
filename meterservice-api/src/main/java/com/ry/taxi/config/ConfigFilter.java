@@ -94,13 +94,13 @@ public class ConfigFilter implements HandlerInterceptor {
 	
 	
 	static{
-		permitList.add("DriverTakeOrder");//司机应邀通知
-		permitList.add("DriverStartOrder");//司机执行订单通知
-		permitList.add("DriverArrival");//司机到达乘客起点通知
-		permitList.add("DriverCancelOrder");//司机取消订单通知
-		permitList.add("StartCalculation");//压表通知
-		permitList.add("EndCalculation");//起表通知
-		permitList.add("PaymentConfirmation");//支付确认通知
+		permitList.add(UrlRequestConstant.CMD_DRIVERTAKEORDER);//司机应邀通知
+		permitList.add(UrlRequestConstant.CMD_DRIVERSTARTORDER);//司机执行订单通知
+		permitList.add(UrlRequestConstant.CMD_DRIVERARRIVAL);//司机到达乘客起点通知
+		permitList.add(UrlRequestConstant.CMD_DRIVERCANCELORDER);//司机取消订单通知
+		permitList.add(UrlRequestConstant.CMD_STARTCALCULATION);//压表通知
+		permitList.add(UrlRequestConstant.CMD_ENDCALCULATION);//起表通知
+		permitList.add(UrlRequestConstant.CMD_PAYMENTCONFIRMATION);//支付确认通知
 		
 	}
 }
