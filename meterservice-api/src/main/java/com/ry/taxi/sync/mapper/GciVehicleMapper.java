@@ -5,7 +5,6 @@ package com.ry.taxi.sync.mapper;
 
 import java.util.List;
 
-import com.ry.taxi.sync.domain.GciVehicle;
 
 /**
  * @Title:GciVehicle.java
@@ -18,6 +17,6 @@ import com.ry.taxi.sync.domain.GciVehicle;
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
 public interface GciVehicleMapper {
-	List<GciVehicle> getAllVehicleList();
-
+	List<String> getAllVehicleList();
+    
 }

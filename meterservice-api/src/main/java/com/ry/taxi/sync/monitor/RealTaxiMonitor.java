@@ -76,8 +76,10 @@ public class RealTaxiMonitor {
 	
 	private static final String REP_TEXT = "statustext";
 	
-	private ConcurrentHashMap<String,String> verhicleMap;
-	
+	private static List<String> gpsList ;
+
+	private static final int verhicle_count = 200;
+
 	
 	/*
 	 * 获取GPS实时信息,15s更新一次
@@ -88,9 +90,21 @@ public class RealTaxiMonitor {
 		if((!initStart) && verhicleMap != null && verhicleMap.size() > 0){
 			gpsPool.execute(new RealTimeRunnalbe(""));
 		}
-		else
-			gpsPool.execute(new RealTimeRunnalbe(""));
-		changeInitStart();
+		else if (gpsList.size() > 0){
+			int size = gpsList.size();
+			int time = size/verhicle_count;
+			for(int i = 0; i < time; i ++){
+				String platenos = gpsList.subList(i*verhicle_count,(i+1)*verhicle_count).stream()
+						.collect(Collectors.joining(","));
+				gpsPool.execute(new RealTimeRunnalbe(platenos));
+			}
+			if (time * verhicle_count < size){
+				String platenoleft = gpsList.subList(time *verhicle_count,size).stream()
+						.collect(Collectors.joining(","));
+				gpsPool.execute(new RealTimeRunnalbe(platenoleft));
+			}
+			changeInitStart();
+		}
 	}
 	
 
@@ -108,13 +122,16 @@ public class RealTaxiMonitor {
 			}
 		}
 		//从数据库中获取所有的车辆
-		if(verhicleMap == null){
+		if(gpsList == null){
 			synchronized (this) {
-				if(verhicleMap== null){
-					verhicleMap = (ConcurrentHashMap<String, String>) gciVehicleMapper.getAllVehicleList().stream()
-							.collect(Collectors.toMap(GciVehicle::getPlateno, GciVehicle::getPlateno,  (oldValue, newValue) -> newValue));
-					if (verhicleMap == null)
-						verhicleMap = new ConcurrentHashMap<String, String>();
+				if(gpsList== null){
+					synchronized (gpsList = Collections) {
+						gciVehicleMapper.getAllVehicleList();
+					}
+					if (gpsList == null)
+						synchronized (gpsList = Collections) {
+							new ArrayList<String>();
+						}
 				}
 			}
 		}
@@ -144,8 +161,9 @@ public class RealTaxiMonitor {
 		@Override
 		public void run() {
 			 List<RealTimeGps> gpsList = getRealGps();
-			 
-			 
+			 if (gpsList.size() > 0){
+
+			 }
 		}
 		
 		/*
@@ -163,7 +181,6 @@ public class RealTaxiMonitor {
 			JSONArray datas = jsonObject.getJSONArray(REP_DATA);
 			List<RealTimeGps> gpsList = JSONArray.toList(datas, RealTimeGps.class, new JsonConfig());
 			return gpsList;
-			
 		}
 		
 		
