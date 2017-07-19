@@ -262,14 +262,38 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public int doStartCalculation(StartCalculationParam param) {	
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		
+		// 新增 开始服务地址城市  开始服务地址  开始服务地址经度 开始服务地址纬度
+		
+		//判断是否为百度地图坐标,如果不是需要转换
+		double lat = param.getLatitude();
+		double lng = param.getLongitude();
+		if (param.getMapType() != 1 ){
+			Point point = GpsUtil.bd_encrypt(lat, lng);
+			if (point!=null){
+				lat = point.getLat();
+				lng = point.getLng();
+			}
+		}
+		
+		//解析司机当前地址
+		JSONObject result = AddressUitl.getAddress(lat,lng);
+		//如果地址解析失败,返回失败
+		if(result.getInt("status") != Retcode.OK.code) {
+			logger.info(result.toString());
+			return ErrorEnum.e1005.getValue();
+		}		
+		
+		String startcity = result.getString("city");
+		String startaddress = result.getString("address");
+		
 		taxiOrder.setOrderstatus(OrderState.INSERVICE.state);
 		taxiOrder.setStarttime(DateUtil.string2Date(param.getPassengerGetOnTime()));
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.INSERVICE.state));
-		// 新增 开始服务地址城市  开始服务地址  开始服务地址经度 开始服务地址纬度
-		taxiOrder.setStartcity("");
-		taxiOrder.setStartaddress("");
-		taxiOrder.setStartlng(param.getLongitude());
-		taxiOrder.setStartllat(param.getLatitude());
+		taxiOrder.setStartcity(startcity);
+		taxiOrder.setStartaddress(startaddress);
+		taxiOrder.setStartlng(lat);
+		taxiOrder.setStartllat(lng);
 		//更新订单
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		if (updateResult == 0)
