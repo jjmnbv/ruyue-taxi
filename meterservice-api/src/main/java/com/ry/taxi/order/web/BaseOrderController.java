@@ -19,16 +19,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.base.constant.UrlRequestConstant;
 import com.ry.taxi.base.query.BaseResult;
-
 import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
+import com.ry.taxi.order.request.EndCalculationParam;
 import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.entity.PubDriver;
-import com.szyciov.enums.DriverEnum;
-import com.szyciov.param.BaiduApiQueryParam;
 import com.xunxintech.ruyue.coach.io.file.PropertiesUtil;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
@@ -228,6 +226,20 @@ public class BaseOrderController {
 	 * 起表通知
 	 */
 	public String endCalculation(String jsonParam){
+		
+		EndCalculationParam endparam = null;
+		
+		BaseResult<String> result = new BaseResult<String>();
+		
+		result.setCmd(UrlRequestConstant.CMD_ENDCALCULATION);
+		
+		try {
+			endparam = JSONUtil.objectMapper.readValue(jsonParam, EndCalculationParam.class);
+		} catch (IOException e) {
+			logger.error("起表通知,json参数:{},转换失败:{}",jsonParam,e.getMessage());
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);			
+		}
 		
 		return null;
 		

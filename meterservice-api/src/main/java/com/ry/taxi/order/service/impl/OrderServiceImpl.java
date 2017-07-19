@@ -26,6 +26,7 @@ import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
+import com.ry.taxi.order.request.EndCalculationParam;
 import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.driver.enums.OrderState;
@@ -299,6 +300,18 @@ public class OrderServiceImpl implements OrderService {
 		if (updateResult == 0)
 			return ErrorEnum.e3012.getValue();//订单不存在
 		sendMessage4Order(taxiOrder,null);
+		return 0;
+	}
+
+
+	/**
+	 * 起表
+	 */
+	@Override
+	public int doEndCalculation(EndCalculationParam param) {
+		
+		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
+		
 		return 0;
 	}
 
