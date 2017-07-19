@@ -4,11 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.http.entity.ContentType;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.ry.taxi.base.constant.PropertyConstant;
 import com.szyciov.entity.Retcode;
