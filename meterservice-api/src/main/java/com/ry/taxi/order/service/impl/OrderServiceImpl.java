@@ -7,7 +7,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,16 +18,20 @@ import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
+import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
-
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
 import com.szyciov.driver.enums.PayState;
+import com.szyciov.entity.Retcode;
 import com.szyciov.message.TaxiOrderMessage;
+import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.passenger.util.MessageUtil;
+
+import net.sf.json.JSONObject;
 
 /**
  * @Title:OrderServiceImpl.java
@@ -40,13 +45,17 @@ import com.szyciov.passenger.util.MessageUtil;
  */
 public class OrderServiceImpl implements OrderService {
 	
+	
+	private Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
+	
 	@Autowired
 	private DriverMapper driverMapper;
 	
 	@Autowired
 	private OpTaxiOrderMapper opTaxiOrderMapper;
 	
-
+	
+	
 	@Transactional
 	@Override
 	public int doTakingOrder(DriverTakeParam param) {
@@ -107,19 +116,52 @@ public class OrderServiceImpl implements OrderService {
 	}
 	
 	
-
+	/**
+	 * 司机执行订单通知（预约单）
+	 */
 	@Override
 	@Transactional
-	public int doDriverStart(DriverStartParam param) {
-		// TODO Auto-generated method stub
-		String token = "";
+	public int doDriverStart(DriverStartParam param,BaiduApiQueryParam baiduapiquery) {
 		
+		//查询订单信息
+		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
+		
+		if (taxiOrder == null){
+			//订单不存在
+			return ErrorEnum.e3012.getValue();
+		}else if(!(StringUtils.equals(OrderState.WAITSTART.state, taxiOrder.getOrderstatus()))){
+			//订单状态不正确
+			return ErrorEnum.e3012.getValue();
+		}
+				
 		//解析司机当前地址
-		JSONObject result = AddressUitl.getAddress(token);
+		JSONObject result = AddressUitl.getAddress(baiduapiquery);
 		
+		//如果地址解析失败,返回失败
+		if(result.getInt("status") != Retcode.OK.code) {
+			logger.info(result.toString());
+			return ErrorEnum.e1005.getValue();
+		}		
 		
+		String departurecity = result.getString("city");
+		String departureaddress = result.getString("address");
+		taxiOrder.setOrderstatus(OrderState.START.state);
+		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrderState.START.state));
+		taxiOrder.setOrdertime(new Date());
+		taxiOrder.setDeparturelat(baiduapiquery.getDriverLat());
+		taxiOrder.setDeparturelng(baiduapiquery.getDriverLng());
+		taxiOrder.setDeparturecity(departurecity);
+		taxiOrder.setDepartureaddress(departureaddress);
 		
+		//更新订单
+		int updateResult = opTaxiOrderMapper.updateTakingOrder(taxiOrder);
 		
+		if(updateResult == 0 ){
+			return ErrorEnum.e3015.getValue();//订单状态不正确
+		}
+		if (!sendMessage4Order(taxiOrder,null)){
+			return ErrorEnum.e3016.getValue();//订单状态-消息推送失败
+		}
 		return 0;
 	}
 
@@ -142,11 +184,25 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 
-
+	/**
+	 * 司机取消通知
+	 */
 	@Override
 	@Transactional
 	public int doDriverCancel(DriverCancelParam param) {
-		// TODO Auto-generated method stub
+		//查询订单信息
+		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
+		
+		if(taxiOrder == null){
+			//订单不存在
+			return ErrorEnum.e3012.getValue();
+		}else if(!(StringUtils.equals(OrderState.WAITSTART.state, taxiOrder.getOrderstatus()))){
+			//订单状态不正确
+			return ErrorEnum.e3012.getValue();
+		}
+		
+		
+		
 		return 0;
 	}
 

@@ -61,4 +61,52 @@
 		AND pd.jobnum = #{jobNum}
 		limit 1
 </select>
+
+	<update id="updatePubDriver" parameterType="PubDriver">
+		INSERT INTO `pub_driver`(`id`) 
+		VALUES(#{id})
+		ON DUPLICATE KEY UPDATE 
+			leasescompanyid=#{leasescompanyid},
+			jobnum=#{jobnum},
+			name=#{name},
+			phone=#{phone},
+			sex=#{sex},
+			userpassword=#{userpassword},
+			withdrawpwd=#{withdrawpwd},
+			driverstype=#{driverstype},
+			cardtime=#{cardtime},
+			city=#{city},
+			jobstatus=#{jobstatus},
+			identitytype=#{identitytype},
+			driversnum=#{driversnum},
+			driverphoto=#{driverphoto},
+			idcardnum=#{idcardnum},
+			idcardfront=#{idcardfront},
+			idcardback=#{idcardback},
+			<if test="workstatus!=null and workstatus!='' ">
+				workstatus=#{workstatus},
+			</if>
+			gpsspeed=#{gpsspeed},
+			gpsdirection=#{gpsdirection},
+			lng=#{lng},
+			lat=#{lat},
+			avgrate=#{avgrate},
+			ordercount=#{ordercount},
+			CreateTime=#{CreateTime},
+			UpdateTime=#{UpdateTime},
+			Creater=#{Creater},
+			Updater=#{Updater},
+			Status=#{Status},
+			headportraitmin=#{headportraitmin},
+			headportraitmax=#{headportraitmax},
+			driveryears=#{driveryears},
+			boundstate=#{boundstate},
+			lockstatus=#{lockstatus},
+			platformtype=#{platformtype},
+			passworkstatus=#{passworkstatus},
+			wdpwdchangestate=#{wdpwdchangestate},
+			heartbeattime=#{heartbeattime},
+			registrationid=#{registrationid}
+	</update>
+
 </mapper>

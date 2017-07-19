@@ -80,6 +80,19 @@ public class OpTaxiOrder extends AbstractOrder {
      * 第三方订单号
      */
     private String thirdorderno;
+    
+  
+    /**
+     * 出发城市
+     */
+	private String departurecity;
+    
+	/**
+	 * 出发地址
+	 */
+    private String departureaddress;
+    
+    
 
 	/**
 	 * @return the schedulefee
@@ -263,7 +276,21 @@ public class OpTaxiOrder extends AbstractOrder {
 		this.thirdorderno = thirdorderno;
 	}
     
-    
+    public String getDeparturecity() {
+		return departurecity;
+	}
+
+	public void setDeparturecity(String departurecity) {
+		this.departurecity = departurecity;
+	}
+
+	public String getDepartureaddress() {
+		return departureaddress;
+	}
+
+	public void setDepartureaddress(String departureaddress) {
+		this.departureaddress = departureaddress;
+	}
     
 	
 	

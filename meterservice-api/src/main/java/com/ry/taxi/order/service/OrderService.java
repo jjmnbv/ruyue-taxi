@@ -5,9 +5,11 @@ package com.ry.taxi.order.service;
 
 
 
+import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
+import com.szyciov.param.BaiduApiQueryParam;
 
 /**
  * @Title:OrderService.java
@@ -23,7 +25,7 @@ public interface OrderService {
 	
 	int doTakingOrder (DriverTakeParam param);
 	
-	int doDriverStart(DriverStartParam param);
+	int doDriverStart(DriverStartParam param,BaiduApiQueryParam baiduapiquery);
 
 	int doDriverArrival (DriverArrivalParam param);
 	
