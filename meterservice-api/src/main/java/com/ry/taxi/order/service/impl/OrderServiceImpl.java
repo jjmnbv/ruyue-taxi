@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ry.taxi.Util.AddressUitl;
+import com.ry.taxi.Util.map.AddressUitl;
+import com.ry.taxi.Util.map.GpsUtil;
+import com.ry.taxi.Util.map.Point;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.domain.PubDriver;
@@ -190,13 +192,36 @@ public class OrderServiceImpl implements OrderService {
 		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus()))
 			//订单状态不正确
 			return ErrorEnum.e3012.getValue();
+		
+		//判断是否为百度地图坐标,如果不是需要转换
+		double lat = param.getLatitude();
+		double lng = param.getLongitude();
+		if (param.getMapType() != 1 ){
+			Point point = GpsUtil.bd_encrypt(lat, lng);
+			if (point!=null){
+				lat = point.getLat();
+				lng = point.getLng();
+			}
+		}
+		
+		//解析司机当前地址
+		JSONObject result = AddressUitl.getAddress(lat,lng);
+
+		//如果地址解析失败,返回失败
+		if(result.getInt("status") != Retcode.OK.code) {
+			logger.info(result.toString());
+			return ErrorEnum.e1005.getValue();
+		}		
+		
+		String arrivalcity = result.getString("city");
+		String arrivaladdress = result.getString("address");
 
 		taxiOrder.setOrderstatus(OrderState.ARRIVAL.state);
 		taxiOrder.setArrivaltime(DateUtil.string2Date(param.getArrivalTime()));  
-		taxiOrder.setArrivallat(taxiOrder.getOnaddrlat());
-		taxiOrder.setArrivallng(taxiOrder.getOnaddrlng());
-		taxiOrder.setArrivalcity(taxiOrder.getOncity());
-		taxiOrder.setArrivaladdress(taxiOrder.getOnaddress());
+		taxiOrder.setArrivallat(lat);
+		taxiOrder.setArrivallng(lng);
+		taxiOrder.setArrivalcity(arrivalcity);
+		taxiOrder.setArrivaladdress(arrivaladdress);
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.ARRIVAL.state));
 		//更新订单
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
