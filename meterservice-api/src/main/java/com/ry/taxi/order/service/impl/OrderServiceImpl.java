@@ -145,10 +145,11 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();
 		}
 				
+		//根据司机资格证,查询司机信息
+		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertnum());
 		//解析司机当前地址
-
 		JSONObject result = AddressUitl.getAddress(param.getLatitude(),param.getLongitude());
-		
+
 		//如果地址解析失败,返回失败
 		if(result.getInt("status") != Retcode.OK.code) {
 			logger.info(result.toString());

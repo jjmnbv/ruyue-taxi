@@ -115,10 +115,7 @@ public class BaseOrderController {
 		DriverStartParam driverStartParam = null;
 		result.setCmd(UrlRequestConstant.CMD_DRIVERSTARTORDER);
 		
-		BaiduApiQueryParam baiduapiquery = new BaiduApiQueryParam();
-		baiduapiquery.setDriverLat(driver.get().getLat());
-		baiduapiquery.setOrderEndLng(driver.get().getLng());
-		
+	
 		try {
 			driverStartParam = JSONUtil.objectMapper.readValue(jsonParam, DriverStartParam.class);
 		} catch (IOException e) {
@@ -132,7 +129,7 @@ public class BaseOrderController {
 		int resultinfo = orderService.doDriverStart(driverStartParam);
 		
 		driver.get().setWorkstatus(DriverEnum.WORK_STATUS_SERVICE.code);
-		
+
 		if(resultinfo > 0){
 			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultinfo), ""));
 			result.setResult(ERROR_RESPONSE);

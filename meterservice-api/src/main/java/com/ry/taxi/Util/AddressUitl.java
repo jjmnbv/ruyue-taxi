@@ -12,24 +12,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.ry.taxi.base.constant.PropertyConstant;
 import com.szyciov.entity.Retcode;
-import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.util.InvokeUtil;
-import com.szyciov.util.SystemConfig;
-import com.szyciov.util.TemplateHelper;
 import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 
 import net.sf.json.JSONObject;
 
 public class AddressUitl {
 	
-	public static ThreadLocal<Long> starttime = new ThreadLocal<>();
-	
 	
 	public static JSONObject getAddress(double lat, double lng){
-		starttime.set(System.currentTimeMillis());
+		Long starttime = System.currentTimeMillis();
 		JSONObject result =getAddressTwo( lat,  lng);
-		return checkResult(result);
+		return checkResult(result,starttime);
 	}
+
+	
 	
 	private static JSONObject getAddressTwo(double lat, double lng){
 		Map<String, String> uriParam = new HashMap<>();
@@ -67,7 +64,7 @@ public class AddressUitl {
 	}
 	
 	
-	private static JSONObject checkResult(JSONObject result){
+	private static JSONObject checkResult(JSONObject result,long starttime){
 		if (result == null) {
 			result = new JSONObject();
 			result.put("status", Retcode.FAILED.code);
@@ -89,7 +86,7 @@ public class AddressUitl {
 			}
 		}
 		long endtime = System.currentTimeMillis();
-		double accesstime = ((double)(endtime - (starttime.get() == null ? endtime : starttime.get())))/1000;
+		double accesstime = ((double)(endtime - (starttime == 0 ? endtime : starttime)))/1000;
 		result.put("accesstime", accesstime+"s");
 		InvokeUtil.removeNullObejct(result,true,"yyyy-MM-dd HH:mm:ss");
 		return result;

@@ -76,6 +76,14 @@ public class PubDriver {
 	/**
 	 * 归属车企,从字典表中读取
 	 */
-	private String belongleasecompany;
+	private String belongleasecompany;	
+	/**
+	 * 经度
+	 */
+	private Double lng;
+	/**
+	 * 纬度
+	 */
+	private Double lat;
 
 }
