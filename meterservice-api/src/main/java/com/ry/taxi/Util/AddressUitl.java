@@ -23,16 +23,15 @@ public class AddressUitl {
 	
 	public static final String carserviceApiUrl = SystemConfig.getSystemProperty("carserviceApiUrl");
 	
-	public static ThreadLocal<Long> starttime = new ThreadLocal<>();
-	
+		
 	@Value(value="${yingyan_ak}")
 	private static  String parame;
 	
 	
 	public static JSONObject getAddress(@RequestBody BaiduApiQueryParam param){
-		starttime.set(System.currentTimeMillis());
 		JSONObject result =getAddressTwo(param);
-		return checkResult(result);
+		long starttime=System.currentTimeMillis();
+		return checkResult(result,starttime);
 	}
 	
 	
@@ -74,7 +73,7 @@ public class AddressUitl {
 	}
 	
 	
-	private static JSONObject checkResult(JSONObject result){
+	private static JSONObject checkResult(JSONObject result,long starttime){
 		if (result == null) {
 			result = new JSONObject();
 			result.put("status", Retcode.FAILED.code);
@@ -96,7 +95,7 @@ public class AddressUitl {
 			}
 		}
 		long endtime = System.currentTimeMillis();
-		double accesstime = ((double)(endtime - (starttime.get() == null ? endtime : starttime.get())))/1000;
+		double accesstime = ((double)(endtime - (starttime == 0 ? endtime : starttime)))/1000;
 		result.put("accesstime", accesstime+"s");
 		InvokeUtil.removeNullObejct(result,true,"yyyy-MM-dd HH:mm:ss");
 		return result;
