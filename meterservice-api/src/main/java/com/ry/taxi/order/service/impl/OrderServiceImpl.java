@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,13 +26,11 @@ import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
-import com.ry.taxi.order.web.BaseOrderController;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
 import com.szyciov.driver.enums.PayState;
 import com.szyciov.entity.Retcode;
 import com.szyciov.message.TaxiOrderMessage;
-import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
@@ -58,6 +57,13 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired
 	private OpTaxiOrderMapper opTaxiOrderMapper;
+	
+	public static String BAIDU_AK;
+    
+	@Value("${baiduak}")
+	public static void setBAIDU_AK(String baidu_ak) {
+		BAIDU_AK = baidu_ak;
+	}
 	
 	
 	
@@ -126,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
 	 */
 	@Override
 	@Transactional
-	public int doDriverStart(DriverStartParam param,BaiduApiQueryParam baiduapiquery) {
+	public int doDriverStart(DriverStartParam param) {
 		
 		//查询订单信息
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
@@ -141,7 +147,7 @@ public class OrderServiceImpl implements OrderService {
 				
 		//解析司机当前地址
 
-		JSONObject result = AddressUitl.getAddress(baiduapiquery);
+		JSONObject result = AddressUitl.getAddress(param.getLatitude(),param.getLongitude());
 		
 		//如果地址解析失败,返回失败
 		if(result.getInt("status") != Retcode.OK.code) {
@@ -154,8 +160,8 @@ public class OrderServiceImpl implements OrderService {
 		taxiOrder.setOrderstatus(OrderState.START.state);
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrderState.START.state));
 		taxiOrder.setOrdertime(new Date());
-		taxiOrder.setDeparturelat(baiduapiquery.getDriverLat());
-		taxiOrder.setDeparturelng(baiduapiquery.getDriverLng());
+		taxiOrder.setDeparturelat(param.getLatitude());
+		taxiOrder.setDeparturelng(param.getLongitude());
 		taxiOrder.setDeparturecity(departurecity);
 		taxiOrder.setDepartureaddress(departureaddress);
 		
@@ -178,6 +184,12 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public int doDriverArrival(DriverArrivalParam param) {
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		if (taxiOrder == null)
+			return ErrorEnum.e3012.getValue();//订单不存在
+		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus()))
+			//订单状态不正确
+			return ErrorEnum.e3012.getValue();
+
 		taxiOrder.setOrderstatus(OrderState.ARRIVAL.state);
 		taxiOrder.setArrivaltime(DateUtil.string2Date(param.getArrivalTime()));  
 		taxiOrder.setArrivallat(taxiOrder.getOnaddrlat());

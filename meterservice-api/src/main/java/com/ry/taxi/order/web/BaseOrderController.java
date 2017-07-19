@@ -129,7 +129,7 @@ public class BaseOrderController {
 			return JSONUtil.toJackson(result);
 		}
 
-		int resultinfo = orderService.doDriverStart(driverStartParam,baiduapiquery);
+		int resultinfo = orderService.doDriverStart(driverStartParam);
 		
 		driver.get().setWorkstatus(DriverEnum.WORK_STATUS_SERVICE.code);
 		

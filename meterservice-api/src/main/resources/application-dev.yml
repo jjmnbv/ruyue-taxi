@@ -19,5 +19,6 @@ GCI:
 
 DES:
   iv: 12345678
-  
-yingyan_ak: 5WMQoMkG1MBaizuSdXiT3o1xYRSokdGs
+baiduMap: 
+   ak: 5WMQoMkG1MBaizuSdXiT3o1xYRSokdGs
+   url: http://api.map.baidu.com/geocoder/v2/

@@ -4,54 +4,47 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.ry.taxi.base.constant.PropertyConstant;
 import com.szyciov.entity.Retcode;
 import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.util.InvokeUtil;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
+import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 
 import net.sf.json.JSONObject;
 
 public class AddressUitl {
 	
-	
-	public static final TemplateHelper templateHelper = new TemplateHelper();
-	
-	public static final String carserviceApiUrl = SystemConfig.getSystemProperty("carserviceApiUrl");
-	
 	public static ThreadLocal<Long> starttime = new ThreadLocal<>();
 	
-	@Value(value="${yingyan_ak}")
-	private static  String parame;
 	
-	
-	public static JSONObject getAddress(@RequestBody BaiduApiQueryParam param){
+	public static JSONObject getAddress(double lat, double lng){
 		starttime.set(System.currentTimeMillis());
-		JSONObject result =getAddressTwo(param);
+		JSONObject result =getAddressTwo( lat,  lng);
 		return checkResult(result);
 	}
 	
-	
-
-	private static JSONObject getAddressTwo(BaiduApiQueryParam param){
-		String url = "http://api.map.baidu.com/geocoder/v2/?location={lat},{lng}&output={output}&pois=1&ak={ak}";
-		Map<String, Object> uriParam = new HashMap<>();
-		uriParam.put("ak", SystemConfig.getSystemProperty(parame));
+	private static JSONObject getAddressTwo(double lat, double lng){
+		Map<String, String> uriParam = new HashMap<>();
+		uriParam.put("ak", PropertyConstant.BAIDU_AK);
 		uriParam.put("output", "json");
-		uriParam.put("lng", param.getOrderStartLng());
-		uriParam.put("lat", param.getOrderStartLat());
-		String str = templateHelper.dealRequestWithFullUrl(url, HttpMethod.POST, null, String.class, uriParam);
+		uriParam.put("location",String.valueOf(lat)+"," +String.valueOf(lng));
+		uriParam.put("pois","1");
+		String str = HttpClientUtil.sendHttpPost(PropertyConstant.BAIDU_URL, uriParam, ContentType.APPLICATION_JSON);
 		JSONObject result = JSONObject.fromObject(str);
 		if(Retcode.OK.code == result.getInt("status")){
-			double lat,lng;
+			double bdLat,bdLng;
 			String address,description,business,city;
 			JSONObject jsonAddr = result.getJSONObject("result").getJSONObject("addressComponent");
-			lat = result.getJSONObject("result").getJSONObject("location").getDouble("lat");
-			lng = result.getJSONObject("result").getJSONObject("location").getDouble("lng");
+			bdLat = result.getJSONObject("result").getJSONObject("location").getDouble("lat");
+			bdLng = result.getJSONObject("result").getJSONObject("location").getDouble("lng");
 			address = jsonAddr.getString("district");
 			address += jsonAddr.getString("street");
 			address += jsonAddr.getString("street_number");
@@ -59,8 +52,8 @@ public class AddressUitl {
 			business = result.getJSONObject("result").getString("business");
 			city = result.getJSONObject("result").getJSONObject("addressComponent").getString("city");
 			result.clear();
-			result.put("lat", lat);
-			result.put("lng", lng);
+			result.put("lat", String.valueOf(bdLat));
+			result.put("lng", String.valueOf(bdLng));
 			result.put("city", city);
 			result.put("address", address);
 			result.put("business", business);

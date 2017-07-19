@@ -5,6 +5,7 @@ package com.ry.taxi.config;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 
@@ -18,7 +19,7 @@ import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
  *
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
-
+@Component
 public class CacheHelper implements InitializingBean {
 
     private@Value("${spring.http.timeout.connect:60000}") int connectTimeout;

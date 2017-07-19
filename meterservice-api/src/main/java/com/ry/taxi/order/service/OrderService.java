@@ -26,7 +26,7 @@ public interface OrderService {
 	
 	int doTakingOrder (DriverTakeParam param);
 	
-	int doDriverStart(DriverStartParam param,BaiduApiQueryParam baiduapiquery);
+	int doDriverStart(DriverStartParam param);
 
 	int doDriverArrival (DriverArrivalParam param);
 	
