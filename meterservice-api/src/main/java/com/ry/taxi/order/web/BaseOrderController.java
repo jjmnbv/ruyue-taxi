@@ -127,8 +127,6 @@ public class BaseOrderController {
 		}
 
 		int resultinfo = orderService.doDriverStart(driverStartParam);
-		
-		driver.get().setWorkstatus(DriverEnum.WORK_STATUS_SERVICE.code);
 
 		if(resultinfo > 0){
 			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultinfo), ""));
