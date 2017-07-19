@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ry.taxi.Util.AddressUitl;
@@ -43,6 +44,7 @@ import net.sf.json.JSONObject;
  *
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
+@Service
 public class OrderServiceImpl implements OrderService {
 	
 	
