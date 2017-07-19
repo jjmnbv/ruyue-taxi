@@ -19,12 +19,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.base.constant.UrlRequestConstant;
 import com.ry.taxi.base.query.BaseResult;
+
 import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
+import com.szyciov.entity.PubDriver;
+import com.szyciov.enums.DriverEnum;
+import com.szyciov.param.BaiduApiQueryParam;
 import com.xunxintech.ruyue.coach.io.file.PropertiesUtil;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
@@ -47,6 +51,8 @@ public class BaseOrderController {
 	
 	@Autowired
     private OrderService orderService;
+	
+	public  ThreadLocal<PubDriver> driver = new ThreadLocal<PubDriver>();
 	
 	private static final Integer SUCESS_RESPONSE = 1;
 	
@@ -108,6 +114,11 @@ public class BaseOrderController {
 		BaseResult<String> result = new BaseResult<String>();
 		DriverStartParam driverStartParam = null;
 		result.setCmd(UrlRequestConstant.CMD_DRIVERSTARTORDER);
+		
+		BaiduApiQueryParam baiduapiquery = new BaiduApiQueryParam();
+		baiduapiquery.setDriverLat(driver.get().getLat());
+		baiduapiquery.setOrderEndLng(driver.get().getLng());
+		
 		try {
 			driverStartParam = JSONUtil.objectMapper.readValue(jsonParam, DriverStartParam.class);
 		} catch (IOException e) {
@@ -117,13 +128,17 @@ public class BaseOrderController {
 			result.setResult(ERROR_RESPONSE);	
 			return JSONUtil.toJackson(result);
 		}
-		int resultCode = orderService.doDriverStart(driverStartParam);
-		if (resultCode > 0){
-			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultCode), ""));
+
+		int resultinfo = orderService.doDriverStart(driverStartParam,baiduapiquery);
+		
+		driver.get().setWorkstatus(DriverEnum.WORK_STATUS_SERVICE.code);
+		
+		if(resultinfo > 0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultinfo), ""));
 			result.setResult(ERROR_RESPONSE);
 			return JSONUtil.toJackson(result);
-			
 		}
+		
 		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 		
@@ -175,8 +190,15 @@ public class BaseOrderController {
 			return JSONUtil.toJackson(result);
 		}
 		
+		int resultinfo = orderService.doDriverCancel(drivercancel);
 		
-		return null;
+		if(resultinfo>0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);
+		}
+		
+		result.setResult(SUCESS_RESPONSE);	
+		return JSONUtil.toJackson(result);
 		
 	}
 	
