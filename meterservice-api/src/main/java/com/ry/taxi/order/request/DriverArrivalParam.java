@@ -49,5 +49,20 @@ public class DriverArrivalParam {
 	 */
 	@JsonProperty("ArrivalTime")
 	private String arrivalTime;
-
+    
+	/**
+	 * 经度
+	 */
+	@JsonProperty("Longitude")
+	private double longitude;
+	/**
+	 * 纬度
+	 */
+	@JsonProperty("Latitude")
+	private double latitude ;
+	/**
+	 * 地图类型（0-高德，1-百度，2-谷歌）
+	 */
+	@JsonProperty("MapType")
+	private int mapType;
 }
