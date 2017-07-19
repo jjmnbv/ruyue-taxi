@@ -9,6 +9,8 @@ import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
+import com.ry.taxi.order.request.StartCalculationParam;
+
 
 /**
  * @Title:OrderService.java
@@ -29,6 +31,8 @@ public interface OrderService {
 	int doDriverArrival (DriverArrivalParam param);
 	
 	int doDriverCancel(DriverCancelParam param);
+    
+	int doStartCalculation(StartCalculationParam param);
 
 	
 }

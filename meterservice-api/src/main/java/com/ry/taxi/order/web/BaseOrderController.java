@@ -24,6 +24,7 @@ import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
+import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.enums.DriverEnum;
@@ -197,12 +198,28 @@ public class BaseOrderController {
 	/*
 	 * 压表通知
 	 */
-	public String startCalculation(String jsonParam){
+	public String startCalculation(String jsonParam) throws JsonProcessingException{
+		StartCalculationParam startParam = null;
+		BaseResult<String> result = new BaseResult<String>();
+		result.setCmd(UrlRequestConstant.CMD_DRIVERTAKEORDER);
+		try {
+			startParam = JSONUtil.objectMapper.readValue(jsonParam, StartCalculationParam.class);
+		} catch (IOException e) {
+			logger.error("压表通知,json参数{}转换失败:{}",jsonParam,e.getMessage());
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);
+		    return JSONUtil.toJackson(result);
+		}	
 		
-		
-		
-		return null;
-		
+		int resultCode = orderService.doStartCalculation(startParam);
+		if (resultCode > 0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultCode), ""));
+			result.setResult(ERROR_RESPONSE);
+			return JSONUtil.toJackson(result);
+			
+		}
+		result.setResult(SUCESS_RESPONSE);	
+		return JSONUtil.toJackson(result);
 	}
 	
 	/*

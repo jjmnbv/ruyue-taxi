@@ -23,7 +23,9 @@ import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
+import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
+import com.ry.taxi.order.web.BaseOrderController;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
 import com.szyciov.driver.enums.PayState;
@@ -31,6 +33,7 @@ import com.szyciov.entity.Retcode;
 import com.szyciov.message.TaxiOrderMessage;
 import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.passenger.util.MessageUtil;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 import net.sf.json.JSONObject;
 
@@ -48,7 +51,7 @@ import net.sf.json.JSONObject;
 public class OrderServiceImpl implements OrderService {
 	
 	
-	private Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
+	private static Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 	
 	@Autowired
 	private DriverMapper driverMapper;
@@ -144,7 +147,9 @@ public class OrderServiceImpl implements OrderService {
 		BaiduApiQueryParam.setOrderEndLat(driver.getLat());
 		
 		//解析司机当前地址
+
 		JSONObject result = AddressUitl.getAddress(BaiduApiQueryParam);
+
 		
 		//如果地址解析失败,返回失败
 		if(result.getInt("status") != Retcode.OK.code) {
@@ -173,13 +178,16 @@ public class OrderServiceImpl implements OrderService {
 		}
 		return 0;
 	}
-
+    
+	/**
+	 * 司机到达乘客起点
+	 */
 	@Transactional
 	@Override
 	public int doDriverArrival(DriverArrivalParam param) {
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
 		taxiOrder.setOrderstatus(OrderState.ARRIVAL.state);
-		taxiOrder.setArrivaltime(new Date()); // param.getArrivalTime()
+		taxiOrder.setArrivaltime(DateUtil.string2Date(param.getArrivalTime()));  
 		taxiOrder.setArrivallat(taxiOrder.getOnaddrlat());
 		taxiOrder.setArrivallng(taxiOrder.getOnaddrlng());
 		taxiOrder.setArrivalcity(taxiOrder.getOncity());
@@ -189,6 +197,7 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3012.getValue();//订单不存在
+		sendMessage4Order(taxiOrder,null);
 		return 0;
 	}
 
@@ -214,6 +223,31 @@ public class OrderServiceImpl implements OrderService {
 		
 		return 0;
 	}
+
+
+
+	/**
+	 * 压表
+	 */
+	@Override
+	public int doStartCalculation(StartCalculationParam param) {	
+		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		taxiOrder.setOrderstatus(OrderState.INSERVICE.state);
+		taxiOrder.setStarttime(DateUtil.string2Date(param.getPassengerGetOnTime()));
+		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.INSERVICE.state));
+		// 新增 开始服务地址城市  开始服务地址  开始服务地址经度 开始服务地址纬度
+		taxiOrder.setStartcity("");
+		taxiOrder.setStartaddress("");
+		taxiOrder.setStartlng(param.getLongitude());
+		taxiOrder.setStartllat(param.getLatitude());
+		//更新订单
+		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
+		if (updateResult == 0)
+			return ErrorEnum.e3012.getValue();//订单不存在
+		sendMessage4Order(taxiOrder,null);
+		return 0;
+	}
+
 
 
 }
