@@ -3,8 +3,6 @@
  */
 package com.ry.taxi.sync.monitor;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.ry.taxi.base.exception.RyTaxiException;
 import com.ry.taxi.sync.domain.GciSyncLog;
-import com.ry.taxi.sync.domain.GciVehicleTrace;
 import com.ry.taxi.sync.mapper.GciVehicleMapper;
 import com.ry.taxi.sync.query.RealTimeGps;
 import com.xunxintech.ruyue.coach.io.date.DateUtil;
@@ -168,6 +166,7 @@ public class RealTaxiMonitor {
 				synLog.setStatus(0);
 				synLog.setProcesstime(endTime - startTime);
 				gciVehicleMapper.insertTraceLog(synLog);
+				
 				if (realtimeList != null && realtimeList.size() > 0)
 					realtimeList.clear();
 			}
@@ -185,8 +184,7 @@ public class RealTaxiMonitor {
 			JSONObject jsonObject = JSONObject.fromObject(response);
 			int status =  jsonObject.getInt(REP_STATUS);
 			if (status < 200  || status > 299){
-				logger.error("请求GPS数据错误:{}",response);
-				return null;
+				throw new RyTaxiException(status,"请求GPS数据错误:" + response);
 			}
 			JSONArray datas = jsonObject.getJSONArray(REP_DATA);
 			List<RealTimeGps> realtimeList = JSONArray.toList(datas, RealTimeGps.class, new JsonConfig());
