@@ -44,11 +44,6 @@ public class StartCalculationParam {
 	@JsonProperty("OrderNum")
 	private String orderNum;
 	/**
-	 * 交易ID
-	 */
-	@JsonProperty("TransId")
-	private String transId;
-	/**
 	 * 经度
 	 */
 	@JsonProperty("Longitude")
@@ -63,11 +58,6 @@ public class StartCalculationParam {
 	 */
 	@JsonProperty("MapType")
     private int mapType;
-    /**
-     * 累计里程
-     */
-	@JsonProperty("AccumulatedDistance")
-	private double accumulatedDistance;
 	/**
 	 * 乘客上车时间
 	 */

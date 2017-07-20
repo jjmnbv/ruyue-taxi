@@ -75,14 +75,14 @@ public class RealTimeGps {
 	/*
 	 * 高度 米
 	 */
-	@JsonProperty("height")
-	private Integer Height;
+	@JsonProperty("Height")
+	private Integer height;
 	
 	/*
 	 * 有效性 0无效 1有效
 	 */
-	@JsonProperty("effective")
-	private Integer Effective;
+	@JsonProperty("Effective")
+	private Integer effective;
 	
 	/*
 	 * 当班司机姓名
@@ -95,5 +95,11 @@ public class RealTimeGps {
 	 */
 	@JsonProperty("driverno")
 	private String driverno;
+	
+	/*
+	 * 同步服务时间
+	 */
+	@JsonProperty("ServiceTime")
+	private String serviceTime;
 
 }

@@ -1,7 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ry.taxi.sync.mapper.GciVehicleMapper">
-	<select id ="getAllVehicleList" >
-		select plateno from gci_vehicle
+	
+	<insert id = "insertBathGps" parameterType="java.util.List">
+		insert into gci_vehicletrace(
+			plateno, gpsstatus, gpstime, longitude, latitude, 
+			speed,   direction, height,  effective,drivername,
+			driverno, company, maincompany
+		)
+		values
+		<foreach collection="list" item="gps" index="index"
+			separator=",">
+			(
+				#{gps.plateNo,jdbcType=VARCHAR},
+				#{gps.gpsStatus,jdbcType=VARCHAR},
+				#{gps.gpsStatus,jdbcType=INTEGER},
+				#{gps.longitude,jdbcType=DOUBLE},
+				#{gps.latitude,jdbcType=DOUBLE},
+				
+				#{gps.speed,jdbcType=INTEGER},
+				#{gps.direction,jdbcType=INTEGER},
+				#{gps.height,jdbcType=INTEGER},
+				#{gps.effective,jjdbcType=INTEGER},
+				#{gps.drivername,jdbcType=VARCHAR},
+				
+				#{gps.driverno,jdbcType=VARCHAR},
+				#{gps.company,jdbcType=VARCHAR},
+				#{gps.maincompany,jdbcType=VARCHAR}
+			)
+		</foreach>
+	</insert>
+	
+	<select id="getLastTrace" resultType="com.ry.taxi.sync.domain.GciSyncLog">
+		select * 
+		from gci_synclog 
+		where `Status` = 0
+		order by id desc 
+		limit 1	
 	</select>
+	
+	<insert id="insertTraceLog" parameterType="com.ry.taxi.sync.domain.GciSyncLog">
+		insert into gci_synclog
+		(
+			requesttime, synctime, refreshcount, processtime,
+			status,  errormsg    
+			
+		)
+		values
+		(
+			#{requesttime,jdbcType=VARCHAR},
+			#{synctime,jdbcType=VARCHAR},
+			#{refreshcount,jdbcType=VARCHAR},
+			#{processtime,jdbcType=VARCHAR},
+			
+			#{status,jdbcType=VARCHAR},
+			#{errormsg,jdbcType=VARCHAR}
+		)
+	
+	</insert>
+	
 </mapper>

@@ -3,15 +3,14 @@
  */
 package com.ry.taxi.sync.monitor;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +19,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.ry.taxi.order.web.BaseOrderController;
-import com.ry.taxi.sync.domain.GciVehicle;
+import com.ry.taxi.base.exception.RyTaxiException;
+import com.ry.taxi.sync.domain.GciSyncLog;
 import com.ry.taxi.sync.mapper.GciVehicleMapper;
 import com.ry.taxi.sync.query.RealTimeGps;
-import com.xunxintech.ruyue.coach.io.json.JSONUtil;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
 import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 
 import net.sf.json.JSONArray;
@@ -56,10 +55,10 @@ public class RealTaxiMonitor {
 	@Value("${GCI.service.http}")
 	private String gpsUrl;
 	
-	@Value("${spring.thread.corePoolSize:15}")
+	@Value("${spring.thread.corePoolSize:1}")
 	private  int corePoolSize;
 	
-	@Value("${spring.thread.maxPoolSize:100}")
+	@Value("${spring.thread.maxPoolSize:1}")
 	private  int maxPoolSize;
 	
 	@Value("${spring.thread.queueSize:5000}")
@@ -69,18 +68,16 @@ public class RealTaxiMonitor {
 	private GciVehicleMapper gciVehicleMapper;
 	
 	private static ThreadPoolExecutor gpsPool = null; 
-	
-	private static boolean initStart = true;//首次启动
+
+	private static final int VERHICLE_COUNT = 200; //每次处理的车辆
 	
 	private static final String REP_STATUS = "status";
 	
 	private static final String REP_DATA = "data";
 	
-	private static final String REP_TEXT = "statustext";
+	private	static final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
 	
-	private static List<String> gpsList ;
-
-	private static final int verhicle_count = 200;
+	private static final int hour = 6;
 
 	
 	/*
@@ -89,27 +86,16 @@ public class RealTaxiMonitor {
 	@Scheduled(cron="0/15 0 0 * * ?")
 	public void realGps(){
 		initSet();
-		if(!initStart) {
-			gpsPool.execute(new RealTimeRunnalbe(""));
+		GciSyncLog lastTrace = gciVehicleMapper.getLastTrace();
+		String updatetime = "";
+		//如果首次加载,则加载n个小时前的数据,保证全量更新
+		if(lastTrace == null || StringUtils.isNotBlank(lastTrace.getSynctime())){
+			Long time = System.currentTimeMillis()/1000 -  hour * 3600;
+			updatetime = DateUtil.formatUnixTime(String.valueOf(time),YYYY_MM_DD_HH_MM_SS);
 		}
-		else if (gpsList.size() > 0){
-			int size = gpsList.size();
-			int time = size/verhicle_count;
-			for(int i = 0; i < time; i ++){
-				String platenos = gpsList.subList(i*verhicle_count,(i+1)*verhicle_count).stream()
-						.collect(Collectors.joining(","));
-				gpsPool.execute(new RealTimeRunnalbe(platenos));
-			}
-			if (time * verhicle_count < size){
-				String platenoleft = gpsList.subList(time *verhicle_count,size).stream()
-						.collect(Collectors.joining(","));
-				gpsPool.execute(new RealTimeRunnalbe(platenoleft));
-			}
-			changeInitStart();
-		}
+		gpsPool.execute(new RealTimeRunnable("",updatetime));
 	}
 	
-
 	
     /*
      * 初始化GPS设置
@@ -123,66 +109,87 @@ public class RealTaxiMonitor {
 				}
 			}
 		}
-		//从数据库中获取所有的车辆
-		if(gpsList == null){
-			synchronized (this) {
-				if(gpsList== null){
-					gpsList = Collections.synchronizedList(gciVehicleMapper.getAllVehicleList());
-					if (gpsList == null)
-						gpsList = Collections.synchronizedList(new ArrayList<String>());
-				}
-					
-			}
-		}
 	}
     
-	/*
-	 * 修改首次启动标志
+
+	/**
+	 * 
+	 * @Title:RealTaxiMonitor.java
+	 * @Package com.ry.taxi.sync.monitor
+	 * @Description 处理GPS同步线程
+	 * @author zhangdd
+	 * @date 2017年7月20日 上午9:59:36
+	 * @version 
+	 *
+	 * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
 	 */
-	private void changeInitStart(){
-		if (initStart){
-			synchronized (this) {
-				if (initStart){
-					initStart = false;
-				}
-			}
-		}
-	}
-	
-	private class RealTimeRunnalbe implements Runnable{
+	private class RealTimeRunnable implements Runnable{
 		
-		private String platnos;
+		private String platnos; //车辆列表
 		
-		public RealTimeRunnalbe(String platnos){
+		private  String updateTime; //增量更新时间
+		
+		GciSyncLog synLog;//日志记录表
+		
+		public RealTimeRunnable(String platnos, String updateTime){
 			this.platnos = platnos;
+			this.updateTime = updateTime;
+			synLog = new GciSyncLog();
 		}
 
 		@Override
-		public void run() {
-			 List<RealTimeGps> gpsList = getRealGps();
-			 if (gpsList.size() > 0){
-				 
-			 }
+		public void run() {	
+			List<RealTimeGps> realtimeList = null;
+			Long startTime = System.currentTimeMillis();
+			try{	
+				realtimeList = getRealGps();
+				if (realtimeList != null && realtimeList.size() > 0){
+					//批量插入GPS记录表
+					int size = realtimeList.size();
+					int time = size/VERHICLE_COUNT;
+					for(int i = 0; i < time; i ++){
+						gciVehicleMapper.insertBathGps(realtimeList.subList(i*VERHICLE_COUNT,(i+1)*VERHICLE_COUNT));
+					}
+					if (time * VERHICLE_COUNT < size){
+						gciVehicleMapper.insertBathGps(realtimeList.subList(time *VERHICLE_COUNT,size));
+					}
+					synLog.setRefreshcount(size);
+					synLog.setSynctime(realtimeList.get(size-1).getServiceTime());
+				}
+			}catch(Exception e){
+				synLog.setStatus(1);
+				synLog.setErrormsg(e.getMessage());
+			}
+			finally{
+				Long endTime = System.currentTimeMillis();
+				synLog.setRequesttime(DateUtil.formatUnixTime(String.valueOf(startTime/1000),YYYY_MM_DD_HH_MM_SS));
+				synLog.setStatus(0);
+				synLog.setProcesstime(endTime - startTime);
+				gciVehicleMapper.insertTraceLog(synLog);
+				
+				if (realtimeList != null && realtimeList.size() > 0)
+					realtimeList.clear();
+			}
 		}
 		
 		/*
 		 * 获取实时GPS数据
 		 */
 		public List<RealTimeGps> getRealGps(){	
-			String response = HttpClientUtil.sendHttpPost(gpsUrl, platnos, ContentType.APPLICATION_JSON);
+			Map<String, String> paramMap = new HashMap<String, String>();
+			paramMap.put("PlateNoList", platnos);
+			paramMap.put("UpdatTime", updateTime);
+			
+			String response = HttpClientUtil.sendHttpPost(gpsUrl, paramMap, ContentType.APPLICATION_JSON);
 			JSONObject jsonObject = JSONObject.fromObject(response);
 			int status =  jsonObject.getInt(REP_STATUS);
-			String statusText = jsonObject.getString(REP_TEXT);
 			if (status < 200  || status > 299){
-				logger.error("请求GPS数据错误:{}",response);
-				return null;
+				throw new RyTaxiException(status,"请求GPS数据错误:" + response);
 			}
 			JSONArray datas = jsonObject.getJSONArray(REP_DATA);
-			List<RealTimeGps> gpsList = JSONArray.toList(datas, RealTimeGps.class, new JsonConfig());
-			return gpsList;
+			List<RealTimeGps> realtimeList = JSONArray.toList(datas, RealTimeGps.class, new JsonConfig());
+			return realtimeList;
 		}
-		
-		
 	}
 
 }

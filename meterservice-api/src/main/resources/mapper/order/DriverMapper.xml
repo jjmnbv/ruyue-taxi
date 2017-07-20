@@ -27,19 +27,11 @@
 		),
 		pv.plateno
 		) plateno,
-		pd.id,
-		pd.`name` drivername,
-		pd.phone driverphone,
-		pd.jobnum,
-		pd.workstatus,
-		pd.vehicletype drivertype,
-		pd.lng,
-		pd.lat,
-		lv.`name` cartype,
-		pvb.`Name` carbrand,
-		pvc.`name` carvehcline
-		pb.leasescompanyid,
-		pb.belongleasecompany
+		pv.id vehicleid,
+		pv.id vehicleid,
+		pvc.`name` vehclinename,
+		pvb.`Name` vehcbrandname,
+		pd.*
 		FROM
 		pub_driver pd
 		LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
@@ -65,6 +57,7 @@
 </select>
 
 
+
 		<update id="setDriverWorkstatus" parameterType="com.ry.taxi.order.domain.PubDriver">
 				UPDATE pub_driver SET workstatus=#{workstatus} WHERE id = #{id}
 
@@ -76,6 +69,5 @@
 				VALUES(#(outtradeno),#{orderno},#{paymenttype},#{tradeno},#{privatekey},#{operateresult},#{createtime},#{updatetime},#{status})
 		
 		</insert>
-
 
 </mapper>

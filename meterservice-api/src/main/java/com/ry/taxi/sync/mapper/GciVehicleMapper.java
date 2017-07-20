@@ -5,6 +5,9 @@ package com.ry.taxi.sync.mapper;
 
 import java.util.List;
 
+import com.ry.taxi.sync.domain.GciSyncLog;
+import com.ry.taxi.sync.query.RealTimeGps;
+
 
 /**
  * @Title:GciVehicle.java
@@ -17,6 +20,10 @@ import java.util.List;
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
 public interface GciVehicleMapper {
-	List<String> getAllVehicleList();
-    
+	
+	int insertBathGps(List<RealTimeGps> gpslist);
+	
+	GciSyncLog getLastTrace();
+	
+	int insertTraceLog(GciSyncLog log);
 }

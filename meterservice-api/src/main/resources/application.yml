@@ -45,6 +45,6 @@ spring:
           maxRequests: 500
           maxRequestsPerHost: 50    
     thread:
-        corePoolSize: 15
-        maxPoolSize: 100
+        corePoolSize: 1
+        maxPoolSize: 1
         queueSize: 5000

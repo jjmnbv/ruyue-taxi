@@ -92,7 +92,11 @@ public class OpTaxiOrder extends AbstractOrder {
 	 */
     private String departureaddress;
     
-    
+    /**
+     * 实际里程
+     */
+    private double milegae;
+      
 
 	/**
 	 * @return the schedulefee
@@ -291,7 +295,16 @@ public class OpTaxiOrder extends AbstractOrder {
 	public void setDepartureaddress(String departureaddress) {
 		this.departureaddress = departureaddress;
 	}
+
+	public double getMilegae() {
+		return milegae;
+	}
+
+	public void setMilegae(double milegae) {
+		this.milegae = milegae;
+	}
     
+	
 	
 	
 }
