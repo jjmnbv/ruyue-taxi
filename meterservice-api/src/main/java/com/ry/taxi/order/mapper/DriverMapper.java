@@ -23,9 +23,5 @@ public interface DriverMapper {
 	 */
 	PubDriver getDriverByJobNum(String jboNum);
 	
-    /*
-     * 添加司机记录
-     */
-	int insertDriver(DriverTakeParam param);
 
 }

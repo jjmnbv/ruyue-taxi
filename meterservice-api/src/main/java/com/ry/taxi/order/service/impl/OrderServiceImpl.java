@@ -85,10 +85,7 @@ public class OrderServiceImpl implements OrderService {
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertNum());
 		//系统若没有司机信息则添加
 		if(driver == null){
-			int isSucess = driverMapper.insertDriver(param);
-			if (isSucess == 0)
-				return ErrorEnum.e3017.getValue();//获取司机信息失败
-			driver =  driverMapper.getDriverByJobNum(param.getCertNum());
+			return ErrorEnum.e3017.getValue();//获取司机信息失败
 		}
 		taxiOrder.setOrderstatus(OrderState.WAITSTART.state);
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.WAITSTART.state));
