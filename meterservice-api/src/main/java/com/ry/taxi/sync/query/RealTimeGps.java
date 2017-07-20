@@ -95,5 +95,11 @@ public class RealTimeGps {
 	 */
 	@JsonProperty("driverno")
 	private String driverno;
+	
+	/*
+	 * 同步服务时间
+	 */
+	@JsonProperty("ServiceTime")
+	private String serviceTime;
 
 }
