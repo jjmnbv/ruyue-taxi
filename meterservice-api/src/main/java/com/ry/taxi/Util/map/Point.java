@@ -3,7 +3,6 @@
  */
 package com.ry.taxi.Util.map;
 
-import com.ry.taxi.order.request.DriverArrivalParam;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -3,16 +3,33 @@
  */
 package com.ry.taxi.sync.monitor;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import javax.sql.DataSource;
-
+import org.apache.http.entity.ContentType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.ry.taxi.order.web.BaseOrderController;
+import com.ry.taxi.sync.domain.GciVehicle;
+import com.ry.taxi.sync.mapper.GciVehicleMapper;
+import com.ry.taxi.sync.query.RealTimeGps;
+import com.xunxintech.ruyue.coach.io.json.JSONUtil;
+import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 /**
  * @Title:RealTaxiMonitor.java
@@ -34,9 +51,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class RealTaxiMonitor {
 	
-
+	private static Logger logger = LoggerFactory.getLogger(RealTaxiMonitor.class);
+  
 	@Value("${GCI.service.http}")
-	private String GPSHTTP;
+	private String gpsUrl;
 	
 	@Value("${spring.thread.corePoolSize:15}")
 	private  int corePoolSize;
@@ -47,7 +65,22 @@ public class RealTaxiMonitor {
 	@Value("${spring.thread.queueSize:5000}")
 	private  int queueSize;
 	
+	@Autowired
+	private GciVehicleMapper gciVehicleMapper;
+	
 	private static ThreadPoolExecutor gpsPool = null; 
+	
+	private static boolean initStart = true;//首次启动
+	
+	private static final String REP_STATUS = "status";
+	
+	private static final String REP_DATA = "data";
+	
+	private static final String REP_TEXT = "statustext";
+	
+	private static List<String> gpsList ;
+
+	private static final int verhicle_count = 200;
 
 	
 	/*
@@ -55,29 +88,34 @@ public class RealTaxiMonitor {
 	 */
 	@Scheduled(cron="0/15 0 0 * * ?")
 	public void realGps(){
-		initGpsPool();
-		gpsPool.execute(new Runnable(){
-			@Override
-			public void run() {
-		
-				//处理过程
-				
+		initSet();
+		if(!initStart) {
+			gpsPool.execute(new RealTimeRunnalbe(""));
+		}
+		else if (gpsList.size() > 0){
+			int size = gpsList.size();
+			int time = size/verhicle_count;
+			for(int i = 0; i < time; i ++){
+				String platenos = gpsList.subList(i*verhicle_count,(i+1)*verhicle_count).stream()
+						.collect(Collectors.joining(","));
+				gpsPool.execute(new RealTimeRunnalbe(platenos));
 			}
-		});
+			if (time * verhicle_count < size){
+				String platenoleft = gpsList.subList(time *verhicle_count,size).stream()
+						.collect(Collectors.joining(","));
+				gpsPool.execute(new RealTimeRunnalbe(platenoleft));
+			}
+			changeInitStart();
+		}
 	}
 	
-	/*
-	 * 获取实时GPS数据
-	 */
-	public void getRealGps(){
-		
-		
-	}
+
 	
     /*
      * 初始化GPS设置
      */
-	private void initGpsPool(){
+	private void initSet(){
+		//线程池初始化
 		if(gpsPool == null){
 			synchronized (this) {
 				if(gpsPool== null){
@@ -85,6 +123,66 @@ public class RealTaxiMonitor {
 				}
 			}
 		}
+		//从数据库中获取所有的车辆
+		if(gpsList == null){
+			synchronized (this) {
+				if(gpsList== null){
+					gpsList = Collections.synchronizedList(gciVehicleMapper.getAllVehicleList());
+					if (gpsList == null)
+						gpsList = Collections.synchronizedList(new ArrayList<String>());
+				}
+					
+			}
+		}
+	}
+    
+	/*
+	 * 修改首次启动标志
+	 */
+	private void changeInitStart(){
+		if (initStart){
+			synchronized (this) {
+				if (initStart){
+					initStart = false;
+				}
+			}
+		}
+	}
+	
+	private class RealTimeRunnalbe implements Runnable{
+		
+		private String platnos;
+		
+		public RealTimeRunnalbe(String platnos){
+			this.platnos = platnos;
+		}
+
+		@Override
+		public void run() {
+			 List<RealTimeGps> gpsList = getRealGps();
+			 if (gpsList.size() > 0){
+				 
+			 }
+		}
+		
+		/*
+		 * 获取实时GPS数据
+		 */
+		public List<RealTimeGps> getRealGps(){	
+			String response = HttpClientUtil.sendHttpPost(gpsUrl, platnos, ContentType.APPLICATION_JSON);
+			JSONObject jsonObject = JSONObject.fromObject(response);
+			int status =  jsonObject.getInt(REP_STATUS);
+			String statusText = jsonObject.getString(REP_TEXT);
+			if (status < 200  || status > 299){
+				logger.error("请求GPS数据错误:{}",response);
+				return null;
+			}
+			JSONArray datas = jsonObject.getJSONArray(REP_DATA);
+			List<RealTimeGps> gpsList = JSONArray.toList(datas, RealTimeGps.class, new JsonConfig());
+			return gpsList;
+		}
+		
+		
 	}
 
 }
