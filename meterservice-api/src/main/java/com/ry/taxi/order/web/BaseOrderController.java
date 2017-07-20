@@ -225,7 +225,7 @@ public class BaseOrderController {
 	/*
 	 * 起表通知
 	 */
-	public String endCalculation(String jsonParam){
+	public String endCalculation(String jsonParam) throws JsonProcessingException{
 		
 		EndCalculationParam endparam = null;
 		
@@ -241,8 +241,18 @@ public class BaseOrderController {
 			result.setResult(ERROR_RESPONSE);			
 		}
 		
-		return null;
 		
+		int resultinfo = orderService.doEndCalculation(endparam);
+		
+		if(resultinfo > 0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultinfo), ""));
+			result.setResult(ERROR_RESPONSE);
+			return JSONUtil.toJackson(result);
+		}
+		
+		result.setResult(SUCESS_RESPONSE);	
+		return JSONUtil.toJackson(result);
+	
 	}
 	
 	/*

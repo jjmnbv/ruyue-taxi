@@ -148,8 +148,6 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();
 		}
 				
-		//根据司机资格证,查询司机信息
-		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertnum());
 		//解析司机当前地址
 		JSONObject result = AddressUitl.getAddress(param.getLatitude(),param.getLongitude());
 
@@ -157,15 +155,26 @@ public class OrderServiceImpl implements OrderService {
 		if(result.getInt("status") != Retcode.OK.code) {
 			logger.info(result.toString());
 			return ErrorEnum.e1005.getValue();
-		}		
+		}	
+		
+		//判断是否为百度地图坐标,如果不是需要转换
+		double lat = param.getLatitude();
+		double lng = param.getLongitude();
+		if (param.getMapType() != 1 ){
+			Point point = GpsUtil.bd_encrypt(lat, lng);
+			if (point!=null){
+				lat = point.getLat();
+				lng = point.getLng();
+			}
+		}
 		
 		String departurecity = result.getString("city");
 		String departureaddress = result.getString("address");
 		taxiOrder.setOrderstatus(OrderState.START.state);
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrderState.START.state));
 		taxiOrder.setOrdertime(new Date());
-		taxiOrder.setDeparturelat(param.getLatitude());
-		taxiOrder.setDeparturelng(param.getLongitude());
+		taxiOrder.setDeparturelat(lat);
+		taxiOrder.setDeparturelng(lng);
 		taxiOrder.setDeparturecity(departurecity);
 		taxiOrder.setDepartureaddress(departureaddress);
 		
@@ -288,6 +297,41 @@ public class OrderServiceImpl implements OrderService {
 		
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
 		
+		
+		//解析司机当前地址
+		JSONObject result = AddressUitl.getAddress(param.getInputlat(),param.getInputlon());
+
+		//如果地址解析失败,返回失败
+		if(result.getInt("status") != Retcode.OK.code) {
+			logger.info(result.toString());
+			return ErrorEnum.e1005.getValue();
+		}	
+		
+		//判断是否为百度地图坐标,如果不是需要转换
+		double lat = param.getInputlat();
+		double lng = param.getInputlon();
+		if (param.getMaptype() != 1 ){
+			Point point = GpsUtil.bd_encrypt(lat, lng);
+			if (point!=null){
+				lat = point.getLat();
+				lng = point.getLng();
+			}
+		}
+			
+		taxiOrder.setOrderstatus(OrderState.WAITMONEY.state);
+		taxiOrder.setEndcity(result.getString("city"));
+		taxiOrder.setEndaddress(result.getString("address"));
+		taxiOrder.setEndlng(lng);
+		taxiOrder.setEndllat(lat);
+		taxiOrder.setEndtime(DateUtil.string2Date(String.valueOf(param.getOrderendtime())));
+		
+		//更新订单
+		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
+		
+		if(updateResult == 0){
+			return ErrorEnum.e3012.getValue();
+		}
+		sendMessage4Order(taxiOrder,null);
 		return 0;
 	}
 
