@@ -5,6 +5,7 @@ package com.ry.taxi.order.service;
 
 
 
+import com.ry.taxi.order.request.DistanceUploadParam;
 import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
@@ -36,6 +37,8 @@ public interface OrderService {
 	int doStartCalculation(StartCalculationParam param);
 	
 	int doEndCalculation(EndCalculationParam param);
+	
+	int doDistanceUpload(DistanceUploadParam param);
 
 	
 }

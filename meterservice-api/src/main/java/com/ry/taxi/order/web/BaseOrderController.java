@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.base.constant.UrlRequestConstant;
 import com.ry.taxi.base.query.BaseResult;
+import com.ry.taxi.order.request.DistanceUploadParam;
 import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
@@ -71,6 +72,7 @@ public class BaseOrderController {
 			case UrlRequestConstant.CMD_STARTCALCULATION : return startCalculation(jsonParam);//压表
 			case UrlRequestConstant.CMD_ENDCALCULATION : return endCalculation(jsonParam);//起表
 			case UrlRequestConstant.CMD_PAYMENTCONFIRMATION: return paymentConfirmation(jsonParam);//支付确认
+			case UrlRequestConstant.CMD_DISTANCEUPLOAD : return  distanceUpload(jsonParam);//里程回传
 		}
 		BaseResult<String> result = new BaseResult<String>();
 		result.setCmd(cmdName);
@@ -262,6 +264,32 @@ public class BaseOrderController {
 		
 		return null;
 		
+	}
+	
+	/*
+	 * 里程回传
+	 */
+	public String distanceUpload(String jsonParam) throws JsonProcessingException{	
+		DistanceUploadParam distanceParam = null;
+		BaseResult<String> result = new BaseResult<String>();
+		result.setCmd(UrlRequestConstant.CMD_DISTANCEUPLOAD);
+		try {
+			distanceParam = JSONUtil.objectMapper.readValue(jsonParam, DistanceUploadParam.class);
+		} catch (IOException e) {
+			logger.error("里程回传,json参数:{},转换失败:{}",jsonParam,e.getMessage());
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);			
+		}
+		
+		int resuleCode = orderService.doDistanceUpload(distanceParam);
+		if(resuleCode > 0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resuleCode), ""));
+			result.setResult(ERROR_RESPONSE);
+			return JSONUtil.toJackson(result);
+		}
+		
+		result.setResult(SUCESS_RESPONSE);	
+		return JSONUtil.toJackson(result);
 	}
 	
 	

@@ -22,6 +22,7 @@ import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
+import com.ry.taxi.order.request.DistanceUploadParam;
 import com.ry.taxi.order.request.DriverArrivalParam;
 import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
@@ -82,7 +83,13 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();//订单状态不正确
 		//2.根据司机资格证,查询司机信息
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertNum());
-		
+		//系统若没有司机信息则添加
+		if(driver == null){
+			int isSucess = driverMapper.insertDriver(param);
+			if (isSucess == 0)
+				return ErrorEnum.e3017.getValue();//获取司机信息失败
+			driver =  driverMapper.getDriverByJobNum(param.getCertNum());
+		}
 		taxiOrder.setOrderstatus(OrderState.WAITSTART.state);
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.WAITSTART.state));
 		taxiOrder.setOrdertime(new Date());
@@ -154,7 +161,7 @@ public class OrderServiceImpl implements OrderService {
 		//如果地址解析失败,返回失败
 		if(result.getInt("status") != Retcode.OK.code) {
 			logger.info(result.toString());
-			return ErrorEnum.e1005.getValue();
+			return ErrorEnum.e3018.getValue();
 		}	
 		
 		//判断是否为百度地图坐标,如果不是需要转换
@@ -184,8 +191,8 @@ public class OrderServiceImpl implements OrderService {
 		if(updateResult == 0 ){
 			return ErrorEnum.e3015.getValue();//订单状态不正确
 		}
-		if (!sendMessage4Order(taxiOrder,null)){
-			return ErrorEnum.e3016.getValue();//订单状态-消息推送失败
+		if (!sendMessage4Order(taxiOrder,null)){ 
+			logger.error("司机执行订单通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
 		}
 		return 0;
 	}
@@ -220,7 +227,7 @@ public class OrderServiceImpl implements OrderService {
 		//如果地址解析失败,返回失败
 		if(result.getInt("status") != Retcode.OK.code) {
 			logger.info(result.toString());
-			return ErrorEnum.e1005.getValue();
+			return ErrorEnum.e3018.getValue();
 		}		
 		
 		String arrivalcity = result.getString("city");
@@ -237,7 +244,9 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3012.getValue();//订单不存在
-		sendMessage4Order(taxiOrder,null);
+		if (!sendMessage4Order(taxiOrder,null)){ 
+			logger.error("司机到达乘客起点通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
+		}
 		return 0;
 	}
 
@@ -272,9 +281,12 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public int doStartCalculation(StartCalculationParam param) {	
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
-		
+		if (taxiOrder == null)
+			return ErrorEnum.e3012.getValue();//订单不存在
+		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus()))
+			//订单状态不正确
+			return ErrorEnum.e3012.getValue();
 		// 新增 开始服务地址城市  开始服务地址  开始服务地址经度 开始服务地址纬度
-		
 		//判断是否为百度地图坐标,如果不是需要转换
 		double lat = param.getLatitude();
 		double lng = param.getLongitude();
@@ -291,7 +303,7 @@ public class OrderServiceImpl implements OrderService {
 		//如果地址解析失败,返回失败
 		if(result.getInt("status") != Retcode.OK.code) {
 			logger.info(result.toString());
-			return ErrorEnum.e1005.getValue();
+			return ErrorEnum.e3018.getValue();
 		}		
 		
 		String startcity = result.getString("city");
@@ -308,7 +320,9 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3012.getValue();//订单不存在
-		sendMessage4Order(taxiOrder,null);
+		if (!sendMessage4Order(taxiOrder,null)){ 
+			logger.error("压表通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
+		}
 		return 0;
 	}
 
@@ -328,7 +342,7 @@ public class OrderServiceImpl implements OrderService {
 		//如果地址解析失败,返回失败
 		if(result.getInt("status") != Retcode.OK.code) {
 			logger.info(result.toString());
-			return ErrorEnum.e1005.getValue();
+			return ErrorEnum.e3018.getValue();
 		}	
 		
 		//判断是否为百度地图坐标,如果不是需要转换
@@ -355,7 +369,28 @@ public class OrderServiceImpl implements OrderService {
 		if(updateResult == 0){
 			return ErrorEnum.e3012.getValue();
 		}
-		sendMessage4Order(taxiOrder,null);
+		if (!sendMessage4Order(taxiOrder,null)){ 
+			logger.error("起表通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
+		}
+		return 0;
+	}
+
+
+    /**
+     * 里程回传
+     */
+	@Override
+	public int doDistanceUpload(DistanceUploadParam param) {
+		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		if (taxiOrder == null)
+			return ErrorEnum.e3012.getValue();//订单不存在
+		
+		taxiOrder.setMilegae(param.getAccumulatedDistance());
+		//更新订单
+		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
+		if(updateResult == 0){
+			return ErrorEnum.e3012.getValue();
+		}
 		return 0;
 	}
 

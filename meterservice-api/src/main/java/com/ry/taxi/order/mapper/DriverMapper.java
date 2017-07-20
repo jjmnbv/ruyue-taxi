@@ -4,6 +4,7 @@
 package com.ry.taxi.order.mapper;
 
 import com.ry.taxi.order.domain.PubDriver;
+import com.ry.taxi.order.request.DriverTakeParam;
 
 /**
  * @Title:DriverMapper.java
@@ -21,5 +22,10 @@ public interface DriverMapper {
 	 * 根据资格证号查找司机
 	 */
 	PubDriver getDriverByJobNum(String jboNum);
+	
+    /*
+     * 添加司机记录
+     */
+	int insertDriver(DriverTakeParam param);
 
 }

@@ -40,5 +40,7 @@ public class UrlRequestConstant {
 	
 	public static final String CMD_PAYMENTCONFIRMATION = "PaymentConfirmation";//支付确认通知
 	
+	public static final String CMD_DISTANCEUPLOAD = "DistanceUpload";//里程回传
+	
 
 }

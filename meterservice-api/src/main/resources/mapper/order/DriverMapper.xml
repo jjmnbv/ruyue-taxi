@@ -27,19 +27,11 @@
 		),
 		pv.plateno
 		) plateno,
-		pd.id,
-		pd.`name` drivername,
-		pd.phone driverphone,
-		pd.jobnum,
-		pd.workstatus,
-		pd.vehicletype drivertype,
-		pd.lng,
-		pd.lat,
-		lv.`name` cartype,
-		pvb.`Name` carbrand,
-		pvc.`name` carvehcline
-		pb.leasescompanyid,
-		pb.belongleasecompany
+		pv.id vehicleid,
+		pv.id vehicleid,
+		pvc.`name` vehclinename,
+		pvb.`Name` vehcbrandname,
+		pd.*
 		FROM
 		pub_driver pd
 		LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
@@ -63,6 +55,26 @@
 		AND pd.jobnum = #{jobNum}
 		limit 1
 </select>
+
+<insert id="insertDriver" parameterType="com.ry.taxi.order.request.DriverTakeParam">
+	insert into pub_driver(
+		leasescompanyid, jobnum,     name,        phone,    jobstatus,
+		identitytype,    gpsspeed,   gpsdirection,lng,      lat,
+		status,          platformtype, workstatus, gpssource, gpstime	
+	)
+	select lea.id, 	     ve.driverno,  ve.drivername, #{mobile}, '0',
+		   '0',          ve.speed,     ve.direction,  ve.longitude, ve.latitude,
+		   '1',          '0',          '0',           '1',        ve.gpstime
+	from gci_vehicletrace ve 
+	left join le_leasescompany lea on ve.leasescompanyid = lea.id and ve.company = lea.name 
+	where ve.plateno = #{plateNum, jdbcType=VARCHAR}
+	and ve.driverno = #{certNum,  jdbcType=VARCHAR}
+	order by id desc
+	limit 1
+	ON DUPLICATE KEY 
+	UPDATE
+	phone = #{mobile,jdbcType=VARCHAR}
+</insert>
 
 
 

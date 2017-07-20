@@ -128,7 +128,10 @@
 	      	endlng = #{endlng},
 	      </if>
 	      <if test="endllat!=null">
-	      	endllat = #{endllat}
+	      	endllat = #{endllat},
+	      </if>
+	      <if test="mileage!=null">
+	      	mileage = #{mileage}
 	      </if>
 		</trim>
     where orderno = #{orderno}

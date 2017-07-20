@@ -101,6 +101,6 @@ public class ConfigFilter implements HandlerInterceptor {
 		permitList.add(UrlRequestConstant.CMD_STARTCALCULATION);//压表通知
 		permitList.add(UrlRequestConstant.CMD_ENDCALCULATION);//起表通知
 		permitList.add(UrlRequestConstant.CMD_PAYMENTCONFIRMATION);//支付确认通知
-		
+		permitList.add(UrlRequestConstant.CMD_DISTANCEUPLOAD);//里程回传
 	}
 }
