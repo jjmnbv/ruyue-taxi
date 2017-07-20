@@ -3,6 +3,7 @@
  */
 package com.ry.taxi.order.mapper;
 
+import com.ry.taxi.order.domain.Oporderpaymentrecord;
 import com.ry.taxi.order.domain.PubDriver;
 
 /**
@@ -21,5 +22,18 @@ public interface DriverMapper {
 	 * 根据资格证号查找司机
 	 */
 	PubDriver getDriverByJobNum(String jboNum);
+	
+	/**
+	 * 
+	 * @param pubDriver
+	 */
+	int setDriverWorkstatus(PubDriver parame);
+	
+	/**
+	 * 
+	 * @param paame
+	 * @return
+	 */
+	int insertOrder(Oporderpaymentrecord paame);
 
 }

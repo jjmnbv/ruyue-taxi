@@ -65,5 +65,17 @@
 </select>
 
 
+		<update id="setDriverWorkstatus" parameterType="com.ry.taxi.order.domain.PubDriver">
+				UPDATE pub_driver SET workstatus=#{workstatus} WHERE id = #{id}
+
+		</update>
+		
+		
+		<insert id="insertOrder" parameterType="com.ry.taxi.order.domain.Oporderpaymentrecord">
+				INSERT op_taxiorderpaymentrecord (outtradeno,orderno,paymenttype,tradeno,privatekey,operateresult,createtime,updatetime,`status` )
+				VALUES(#(outtradeno),#{orderno},#{paymenttype},#{tradeno},#{privatekey},#{operateresult},#{createtime},#{updatetime},#{status})
+		
+		</insert>
+
 
 </mapper>

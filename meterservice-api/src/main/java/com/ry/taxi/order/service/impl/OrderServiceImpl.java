@@ -3,10 +3,12 @@
  */
 package com.ry.taxi.order.service.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import com.ry.taxi.Util.map.GpsUtil;
 import com.ry.taxi.Util.map.Point;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.order.domain.OpTaxiOrder;
+import com.ry.taxi.order.domain.Oporderpaymentrecord;
 import com.ry.taxi.order.domain.PubDriver;
 import com.ry.taxi.order.mapper.DriverMapper;
 import com.ry.taxi.order.mapper.OpTaxiOrderMapper;
@@ -27,6 +30,7 @@ import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.request.EndCalculationParam;
+import com.ry.taxi.order.request.PaymentConfirmation;
 import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.driver.enums.OrderState;
@@ -35,6 +39,7 @@ import com.szyciov.driver.enums.PayState;
 import com.szyciov.entity.Retcode;
 import com.szyciov.message.TaxiOrderMessage;
 import com.szyciov.passenger.util.MessageUtil;
+import com.szyciov.util.UNID;
 import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 import net.sf.json.JSONObject;
@@ -320,8 +325,7 @@ public class OrderServiceImpl implements OrderService {
 	public int doEndCalculation(EndCalculationParam param) {
 		
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
-		
-		
+				
 		//解析司机当前地址
 		JSONObject result = AddressUitl.getAddress(param.getInputlat(),param.getInputlon());
 
@@ -352,7 +356,55 @@ public class OrderServiceImpl implements OrderService {
 		//更新订单
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		
+		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertnum());
+		
+		driverMapper.setDriverWorkstatus(driver);
+		
 		if(updateResult == 0){
+			return ErrorEnum.e3012.getValue();
+		}
+		sendMessage4Order(taxiOrder,null);
+		return 0;
+	}
+
+
+
+	@Override
+	public int doPaymentConfirmation(PaymentConfirmation param) {
+		
+		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
+		
+		taxiOrder.setOrderstatus(OrderState.SERVICEDONE.state);
+		taxiOrder.setShouldpayamount(param.getTotalpayable());
+		taxiOrder.setActualpayamount(param.getTotalFee());
+		taxiOrder.setOriginalorderamount(param.getTotalpayable());
+		taxiOrder.setPaytype(String.valueOf(param.getTranstype()));
+		taxiOrder.setPaymentmethod("1");
+		taxiOrder.setPaymenttime(new Date());
+		
+		//更新订单
+		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
+		
+		Date date = new Date();
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+		String out_trade_no = format.format(date)+UNID.getUNID();
+
+		//记录订单明细
+		Oporderpaymentrecord pde = new Oporderpaymentrecord();
+		
+		pde.setOuttradeno(out_trade_no);
+		pde.setOrderno(param.getOrdernum());
+		pde.setPaymenttype("");
+		pde.setTradeno(param.getTransId());
+		pde.setPrivatekey("");
+		pde.setOperateresult(0);
+		pde.setCreatetime(new DateTime());
+		pde.setUpdatetime(new DateTime());
+		pde.setStatus(0);
+		
+		int insetinfo = driverMapper.insertOrder(pde);
+
+		if(updateResult == 0 && insetinfo == 0){
 			return ErrorEnum.e3012.getValue();
 		}
 		sendMessage4Order(taxiOrder,null);

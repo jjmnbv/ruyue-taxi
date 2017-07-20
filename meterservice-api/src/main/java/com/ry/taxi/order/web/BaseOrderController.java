@@ -24,6 +24,7 @@ import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.request.EndCalculationParam;
+import com.ry.taxi.order.request.PaymentConfirmation;
 import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
 import com.szyciov.entity.PubDriver;
@@ -258,9 +259,30 @@ public class BaseOrderController {
 	/*
 	 * 支付确认通知
 	 */
-	public String paymentConfirmation(String jsonParam){
+	public String paymentConfirmation(String jsonParam) throws JsonProcessingException{
 		
-		return null;
+		PaymentConfirmation payment = null;
+		
+		BaseResult<String> result = new BaseResult<String>();
+		
+		try {
+			payment = JSONUtil.objectMapper.readValue(jsonParam, PaymentConfirmation.class);
+		} catch (IOException e) {
+			logger.error("支付确认通知,json参数:{},转换失败:{}",jsonParam,e.getMessage());
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setResult(ERROR_RESPONSE);			
+		}
+		
+		int resultinfo = orderService.doPaymentConfirmation(payment);
+		
+		if(resultinfo > 0){
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultinfo), ""));
+			result.setResult(ERROR_RESPONSE);
+			return JSONUtil.toJackson(result);
+		}
+		
+		result.setResult(SUCESS_RESPONSE);	
+		return JSONUtil.toJackson(result);
 		
 	}
 	

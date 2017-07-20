@@ -10,6 +10,7 @@ import com.ry.taxi.order.request.DriverCancelParam;
 import com.ry.taxi.order.request.DriverStartParam;
 import com.ry.taxi.order.request.DriverTakeParam;
 import com.ry.taxi.order.request.EndCalculationParam;
+import com.ry.taxi.order.request.PaymentConfirmation;
 import com.ry.taxi.order.request.StartCalculationParam;
 
 
@@ -36,6 +37,8 @@ public interface OrderService {
 	int doStartCalculation(StartCalculationParam param);
 	
 	int doEndCalculation(EndCalculationParam param);
+	
+	int doPaymentConfirmation(PaymentConfirmation param);
 
 	
 }
