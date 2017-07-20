@@ -3,6 +3,8 @@
  */
 package com.ry.taxi.sync.monitor;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -87,7 +89,7 @@ public class RealTaxiMonitor {
 	@Scheduled(cron="0/15 0 0 * * ?")
 	public void realGps(){
 		initSet();
-		if((!initStart) && verhicleMap != null && verhicleMap.size() > 0){
+		if(!initStart) {
 			gpsPool.execute(new RealTimeRunnalbe(""));
 		}
 		else if (gpsList.size() > 0){
@@ -125,14 +127,11 @@ public class RealTaxiMonitor {
 		if(gpsList == null){
 			synchronized (this) {
 				if(gpsList== null){
-					synchronized (gpsList = Collections) {
-						gciVehicleMapper.getAllVehicleList();
-					}
+					gpsList = Collections.synchronizedList(gciVehicleMapper.getAllVehicleList());
 					if (gpsList == null)
-						synchronized (gpsList = Collections) {
-							new ArrayList<String>();
-						}
+						gpsList = Collections.synchronizedList(new ArrayList<String>());
 				}
+					
 			}
 		}
 	}
@@ -162,7 +161,7 @@ public class RealTaxiMonitor {
 		public void run() {
 			 List<RealTimeGps> gpsList = getRealGps();
 			 if (gpsList.size() > 0){
-
+				 
 			 }
 		}
 		
