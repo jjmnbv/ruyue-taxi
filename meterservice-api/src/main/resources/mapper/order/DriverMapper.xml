@@ -69,5 +69,10 @@
 				VALUES(#(outtradeno),#{orderno},#{paymenttype},#{tradeno},#{privatekey},#{operateresult},#{createtime},#{updatetime},#{status})
 		
 		</insert>
+		
+		
+		<select id="getTaxiOrderno" resultType="com.ry.taxi.order.domain.PubDriver" parameterType="java.lang.String">
+			SELECT * FROM pub_driver WHERE id =#{value}		
+		</select>
 
 </mapper>

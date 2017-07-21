@@ -270,7 +270,27 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();
 		}
 		
+		taxiOrder.setOrderstatus(OrderState.CANCEL.state);
+		taxiOrder.setCanceltime(param.getCanceltime().toDate());
+		taxiOrder.setOrderstatus(OrderState.CANCEL.state);
 		
+			
+		//更新订单
+		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
+		
+		PubDriver driver = driverMapper.getTaxiOrderno(taxiOrder.getDriverid());
+		
+		driver.setWorkstatus("0");
+		
+		//更新司机状态
+		driverMapper.setDriverWorkstatus(driver);
+				
+		if (updateResult == 0){
+			return ErrorEnum.e3012.getValue();//订单不存在
+		}
+		if (!sendMessage4Order(taxiOrder,null)){ 
+			logger.error("司机取消通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
+		}
 		
 		return 0;
 	}
@@ -336,7 +356,14 @@ public class OrderServiceImpl implements OrderService {
 	public int doEndCalculation(EndCalculationParam param) {
 		
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
-				
+		
+		if (taxiOrder == null){
+			return ErrorEnum.e3012.getValue();//订单不存在
+		}
+		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus())){
+			//订单状态不正确
+			return ErrorEnum.e3012.getValue();
+		}			
 		//解析司机当前地址
 		JSONObject result = AddressUitl.getAddress(param.getInputlat(),param.getInputlon());
 
@@ -369,6 +396,9 @@ public class OrderServiceImpl implements OrderService {
 		
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertnum());
 		
+		driver.setWorkstatus("0");
+		
+		//更新司机状态
 		driverMapper.setDriverWorkstatus(driver);
 		
 		if(updateResult == 0){

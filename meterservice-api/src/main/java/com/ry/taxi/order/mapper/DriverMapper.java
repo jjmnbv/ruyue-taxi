@@ -35,6 +35,11 @@ public interface DriverMapper {
 	 * @return
 	 */
 	int insertOrder(Oporderpaymentrecord paame);
+	
+	
 
-
+	/*
+	 * 根据资格证号查找司机
+	 */
+	PubDriver getTaxiOrderno(String id);
 }
