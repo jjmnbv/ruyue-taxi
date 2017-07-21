@@ -26,10 +26,10 @@
 	</update>
 	
 	<update id="updateTaxiOrder" parameterType="com.ry.taxi.order.domain.OpTaxiOrder">
-		update op_taxiorder set
+		update op_taxiorder 
 		<trim prefix="set" suffixOverrides=",">
-		  updatetime=NOW(),
-		  
+		 	updatetime=NOW(),
+				 
 		  <if test="departurecity!=null">
 		  	departurecity=#{departurecity},
 		  </if>
