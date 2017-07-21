@@ -430,8 +430,8 @@ public class OrderServiceImpl implements OrderService {
 		pde.setTradeno(param.getTransId());
 		pde.setPrivatekey("");
 		pde.setOperateresult(0);
-		pde.setCreatetime(new DateTime());
-		pde.setUpdatetime(new DateTime());
+		pde.setCreatetime(new Date());
+		pde.setUpdatetime(new Date());
 		pde.setStatus(0);
 		
 		int insetinfo = driverMapper.insertOrder(pde);
