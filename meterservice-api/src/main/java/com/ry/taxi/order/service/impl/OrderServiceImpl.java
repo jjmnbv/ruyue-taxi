@@ -85,7 +85,7 @@ public class OrderServiceImpl implements OrderService {
 		if (taxiOrder == null)
 			return ErrorEnum.e3012.getValue();//订单不存在
 		else if (!(StringUtils.equals(OrderState.WAITTAKE.state, taxiOrder.getOrderstatus()) || StringUtils.equals(OrderState.MANTICSEND.state, taxiOrder.getOrderstatus())))
-			return ErrorEnum.e3019.getValue();//订单状态不正确
+			return ErrorEnum.e3014.getValue();//订单状态不正确
 		//2.根据司机资格证,查询司机信息
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertNum());
 		//系统若没有司机信
@@ -154,7 +154,7 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();
 		}else if(!(StringUtils.equals(OrderState.WAITSTART.state, taxiOrder.getOrderstatus()))){
 			//订单状态不正确
-			return ErrorEnum.e3012.getValue();
+			return ErrorEnum.e3014.getValue();
 		}
 				
 		//解析司机当前地址
@@ -210,7 +210,7 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();//订单不存在
 		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus()))
 			//订单状态不正确
-			return ErrorEnum.e3012.getValue();
+			return ErrorEnum.e3014.getValue();
 		
 		//判断是否为百度地图坐标,如果不是需要转换
 		double lat = param.getLatitude();
@@ -267,7 +267,7 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();
 		}else if(!(StringUtils.equals(OrderState.WAITSTART.state, taxiOrder.getOrderstatus()))){
 			//订单状态不正确
-			return ErrorEnum.e3012.getValue();
+			return ErrorEnum.e3014.getValue();
 		}
 		
 		taxiOrder.setOrderstatus(OrderState.CANCEL.state);
@@ -307,7 +307,7 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3012.getValue();//订单不存在
 		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus()))
 			//订单状态不正确
-			return ErrorEnum.e3012.getValue();
+			return ErrorEnum.e3014.getValue();
 		// 新增 开始服务地址城市  开始服务地址  开始服务地址经度 开始服务地址纬度
 		//判断是否为百度地图坐标,如果不是需要转换
 		double lat = param.getLatitude();
@@ -362,7 +362,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus())){
 			//订单状态不正确
-			return ErrorEnum.e3012.getValue();
+			return ErrorEnum.e3014.getValue();
 		}			
 		//解析司机当前地址
 		JSONObject result = AddressUitl.getAddress(param.getInputlat(),param.getInputlon());
