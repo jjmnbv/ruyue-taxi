@@ -22,14 +22,14 @@ public class BaseResult<T> {
 	@JsonProperty("Cmd")
 	private String cmd;
 	
-	@JsonProperty("result")
+	@JsonProperty("Result")
 	private Integer result;
 	
 	@JsonProperty("Remark")
 	private String remark;
 	
-	@JsonProperty("data")
-	private T Data;
+	@JsonProperty("Data")
+	private T data;
 
 	public String getCmd() {
 		return cmd;
@@ -56,12 +56,15 @@ public class BaseResult<T> {
 	}
 
 	public T getData() {
-		return Data;
+		return data;
 	}
 
 	public void setData(T data) {
-		Data = data;
+		this.data = data;
 	}
+
+    
+    
 	
 
 }

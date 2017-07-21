@@ -85,10 +85,10 @@ public class OrderServiceImpl implements OrderService {
 		if (taxiOrder == null)
 			return ErrorEnum.e3012.getValue();//订单不存在
 		else if (!(StringUtils.equals(OrderState.WAITTAKE.state, taxiOrder.getOrderstatus()) || StringUtils.equals(OrderState.MANTICSEND.state, taxiOrder.getOrderstatus())))
-			return ErrorEnum.e3012.getValue();//订单状态不正确
+			return ErrorEnum.e3019.getValue();//订单状态不正确
 		//2.根据司机资格证,查询司机信息
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertNum());
-		//系统若没有司机信息则添加
+		//系统若没有司机信
 		if(driver == null){
 			return ErrorEnum.e3017.getValue();//获取司机信息失败
 		}

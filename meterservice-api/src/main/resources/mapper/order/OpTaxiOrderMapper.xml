@@ -5,8 +5,7 @@
 		SELECT
 			oo.*	
 		FROM op_taxiorder oo
-		WHERE  oo.`status` = 1
-		AND oo.thirdOrderno = #{thirdOrderno}
+		WHERE   oo.thirdOrderno = #{thirdOrderno}
 	</select>
 	
 	<update id="updateTakingOrder" parameterType="com.ry.taxi.order.domain.OpTaxiOrder">
@@ -136,5 +135,6 @@
 		</trim>
     where orderno = #{orderno}
 	</update>
+	
 
 </mapper>

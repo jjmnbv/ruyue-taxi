@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ry.taxi.order.mapper.OrderTestMapper">
+	<insert id="insertOpTaxiOrder" parameterType="com.ry.taxi.order.domain.OpTaxiOrder">
+		insert into op_taxiorder(orderno, companyid, userid, passengers, passengerphone, oncity, onaddress, offcity, offaddress, onaddrlng, onaddrlat, offaddrlng, offaddrlat, usetime, tripremark,
+		orderstatus, paymentstatus, reviewstatus, estimatedtime, estimatedmileage, estimatedcost, pricecopy, ordersource, userhidden, status, schedulefee, paymentmethod, ordersortcolumn, undertime,
+		createtime, updatetime, isusenow, meterrange, systemsendovertime, autocanceltime, usetype, ordertype, belongleasecompany,thirdorderno)
+		values(#{orderno}, #{companyid}, #{userid}, #{passengers}, #{passengerphone}, #{oncity}, #{onaddress}, #{offcity}, #{offaddress}, #{onaddrlng}, #{onaddrlat}, #{offaddrlng}, #{offaddrlat},
+		#{usetime}, #{tripremark}, #{orderstatus}, #{paymentstatus}, #{reviewstatus}, #{estimatedtime}, #{estimatedmileage}, #{estimatedcost}, #{pricecopy}, #{ordersource}, #{userhidden}, #{status},
+		#{schedulefee}, #{paymentmethod}, #{ordersortcolumn}, #{undertime}, #{createtime}, #{updatetime}, #{isusenow}, #{meterrange}, #{systemsendovertime}, #{autocanceltime}, #{usetype}, #{ordertype},#{belongleasecompany}
+		,#{thirdorderno})
+	</insert>
+
+</mapper>
