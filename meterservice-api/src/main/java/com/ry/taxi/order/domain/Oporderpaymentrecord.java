@@ -1,6 +1,7 @@
 package com.ry.taxi.order.domain;
 
-import org.joda.time.DateTime;
+
+import java.util.Date;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -44,12 +45,12 @@ public class Oporderpaymentrecord {
 	/**
 	 * 创建时间
 	 */
-	private DateTime createtime;
+	private Date createtime;
 	
 	/**
 	 * 更新时间
 	 */
-	private DateTime updatetime;
+	private Date updatetime;
 	
 	/**
 	 * 数据状态
