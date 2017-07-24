@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
 /**
  * @Title:LogAspect.java

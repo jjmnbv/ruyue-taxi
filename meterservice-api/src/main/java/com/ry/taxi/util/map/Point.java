@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.ry.taxi.Util.map;
+package com.ry.taxi.util.map;
 
 
 import lombok.AllArgsConstructor;

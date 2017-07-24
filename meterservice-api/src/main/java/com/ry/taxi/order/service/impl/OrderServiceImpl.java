@@ -11,13 +11,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ry.taxi.Util.map.AddressUitl;
-import com.ry.taxi.Util.map.GpsUtil;
-import com.ry.taxi.Util.map.Point;
 import com.ry.taxi.base.constant.ErrorEnum;
 import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.domain.Oporderpaymentrecord;
@@ -33,6 +29,9 @@ import com.ry.taxi.order.request.EndCalculationParam;
 import com.ry.taxi.order.request.PaymentConfirmation;
 import com.ry.taxi.order.request.StartCalculationParam;
 import com.ry.taxi.order.service.OrderService;
+import com.ry.taxi.util.map.AddressUitl;
+import com.ry.taxi.util.map.GpsUtil;
+import com.ry.taxi.util.map.Point;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
 import com.szyciov.driver.enums.PayState;
@@ -65,14 +64,6 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired
 	private OpTaxiOrderMapper opTaxiOrderMapper;
-	
-	public static String BAIDU_AK;
-    
-	@Value("${baiduak}")
-	public static void setBAIDU_AK(String baidu_ak) {
-		BAIDU_AK = baidu_ak;
-	}
-	
 	
 	
 	@Transactional
