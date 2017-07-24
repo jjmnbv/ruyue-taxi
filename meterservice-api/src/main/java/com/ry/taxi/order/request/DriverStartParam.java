@@ -52,7 +52,7 @@ public class DriverStartParam {
 	 * 发前往订单候车点时间 yyyy-MM-dd hh:mm:ss
 	 */
 	@JsonProperty("DepartureTime")
-	private DateTime departuretime;
+	private String departuretime;
 	
 	/**
 	 * 经度

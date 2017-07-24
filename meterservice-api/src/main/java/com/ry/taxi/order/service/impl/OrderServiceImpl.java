@@ -66,11 +66,11 @@ public class OrderServiceImpl implements OrderService {
 	private OpTaxiOrderMapper opTaxiOrderMapper;
 	
 	
-	@Transactional
 	@Override
 	public int doTakingOrder(DriverTakeParam param) {
 		//查询订单信息
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		logger.info("doTakingOrder,param:{},order:{}",param, taxiOrder);
 		//1.判断订单状态是否为0-待接单，1-待人工派单,在这些订单状态下才能应邀成功
 		if (taxiOrder == null)
 			return ErrorEnum.e3012.getValue();//订单不存在
@@ -78,6 +78,7 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3014.getValue();//订单状态不正确
 		//2.根据司机资格证,查询司机信息
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertNum());
+		logger.info("doTakingOrder,param:{},driver:{}",param, driver);
 		//系统若没有司机信
 		if(driver == null){
 			return ErrorEnum.e3017.getValue();//获取司机信息失败
@@ -108,23 +109,29 @@ public class OrderServiceImpl implements OrderService {
 	 * 订单状态变更给司机和乘客发送推送
 	 */
 	private boolean sendMessage4Order(OpTaxiOrder order,List<String> phones){
-		String messagetype = null;
-		if(OrderState.WAITSTART.state.equals(order.getOrderstatus()) && phones == null){
-			messagetype = TaxiOrderMessage.TAKEORDER;
-		}else if(!OrderState.WAITSTART.state.equals(order.getOrderstatus()) && phones == null){
-			messagetype = TaxiOrderMessage.TAXI_ORDERHINT;
-		}else{
-			messagetype = TaxiOrderMessage.TAXI_DRIVERMESSAGE;
+		try{
+			String messagetype = null;
+			if(OrderState.WAITSTART.state.equals(order.getOrderstatus()) && phones == null){
+				messagetype = TaxiOrderMessage.TAKEORDER;
+			}else if(!OrderState.WAITSTART.state.equals(order.getOrderstatus()) && phones == null){
+				messagetype = TaxiOrderMessage.TAXI_ORDERHINT;
+			}else{
+				messagetype = TaxiOrderMessage.TAXI_DRIVERMESSAGE;
+			}
+			TaxiOrderMessage om = null;
+			//如果推送手机号为空,表示是抢单推送,推送给相关人
+			if(phones == null){
+				om = new TaxiOrderMessage(order,messagetype);
+				//推送给其他之前推送过抢单消息的司机
+			}else{
+				om = new TaxiOrderMessage(messagetype,phones);
+			}
+			MessageUtil.sendMessage(om);
 		}
-		TaxiOrderMessage om = null;
-		//如果推送手机号为空,表示是抢单推送,推送给相关人
-		if(phones == null){
-			om = new TaxiOrderMessage(order,messagetype);
-			//推送给其他之前推送过抢单消息的司机
-		}else{
-			om = new TaxiOrderMessage(messagetype,phones);
+		catch(Exception e){
+			logger.error("消息推送异常错误:{}",e.getMessage());
+			return false;
 		}
-		MessageUtil.sendMessage(om);
 		return true;
 	}
 	
@@ -133,12 +140,11 @@ public class OrderServiceImpl implements OrderService {
 	 * 司机执行订单通知（预约单）
 	 */
 	@Override
-	@Transactional
 	public int doDriverStart(DriverStartParam param) {
 		
 		//查询订单信息
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
-		
+		logger.info("doDriverStart,param:{},order:{}",param, taxiOrder);
 		if (taxiOrder == null){
 			//订单不存在
 			return ErrorEnum.e3012.getValue();
@@ -171,7 +177,7 @@ public class OrderServiceImpl implements OrderService {
 		String departureaddress = result.getString("address");
 		taxiOrder.setOrderstatus(OrderState.START.state);
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrderState.START.state));
-		taxiOrder.setOrdertime(new Date());
+		taxiOrder.setDeparturetime(DateUtil.string2Date(param.getDeparturetime()));
 		taxiOrder.setDeparturelat(lat);
 		taxiOrder.setDeparturelng(lng);
 		taxiOrder.setDeparturecity(departurecity);
@@ -192,10 +198,10 @@ public class OrderServiceImpl implements OrderService {
 	/**
 	 * 司机到达乘客起点
 	 */
-	@Transactional
 	@Override
 	public int doDriverArrival(DriverArrivalParam param) {
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		logger.info("doDriverArrival,param:{},order:{}",param, taxiOrder);
 		if (taxiOrder == null)
 			return ErrorEnum.e3012.getValue();//订单不存在
 		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus()))
@@ -247,11 +253,11 @@ public class OrderServiceImpl implements OrderService {
 	 * 司机取消通知
 	 */
 	@Override
-	@Transactional
+    @Transactional
 	public int doDriverCancel(DriverCancelParam param) {
 		//查询订单信息
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
-		
+		logger.info("doDriverCancel,param:{},order:{}",param, taxiOrder);
 		if(taxiOrder == null){
 			//订单不存在
 			return ErrorEnum.e3012.getValue();
@@ -269,7 +275,7 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		
 		PubDriver driver = driverMapper.getTaxiOrderno(taxiOrder.getDriverid());
-		
+		logger.info("doDriverCancel,param:{},driver:{}",param, driver);
 		driver.setWorkstatus("0");
 		
 		//更新司机状态
@@ -293,6 +299,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public int doStartCalculation(StartCalculationParam param) {	
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		logger.info("doStartCalculation,param:{},order:{}",param, taxiOrder);
 		if (taxiOrder == null)
 			return ErrorEnum.e3012.getValue();//订单不存在
 		if(OrderState.SERVICEDONE.state.equals(taxiOrder.getOrderstatus()))
@@ -346,7 +353,7 @@ public class OrderServiceImpl implements OrderService {
 	public int doEndCalculation(EndCalculationParam param) {
 		
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
-		
+		logger.info("doEndCalculation,param:{},order:{}",param, taxiOrder);
 		if (taxiOrder == null){
 			return ErrorEnum.e3012.getValue();//订单不存在
 		}
@@ -385,7 +392,7 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertnum());
-		
+		logger.info("doEndCalculation,param:{},driver:{}",param, driver);
 		driver.setWorkstatus("0");
 		
 		//更新司机状态
@@ -407,6 +414,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public int doDistanceUpload(DistanceUploadParam param) {
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrderNum());
+		logger.info("doDistanceUpload,param:{},order:{}",param, taxiOrder);
 		if (taxiOrder == null)
 			return ErrorEnum.e3012.getValue();//订单不存在
 		
@@ -420,12 +428,14 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 
-
+    /**
+     * 支付通知
+     */
 	@Override
 	public int doPaymentConfirmation(PaymentConfirmation param) {
 		
 		OpTaxiOrder taxiOrder = opTaxiOrderMapper.getOpTaxiOrder(param.getOrdernum());
-		
+		logger.info("doPaymentConfirmation,param:{},order:{}",param, taxiOrder);
 		taxiOrder.setOrderstatus(OrderState.SERVICEDONE.state);
 		taxiOrder.setShouldpayamount(param.getTotalpayable());
 		taxiOrder.setActualpayamount(param.getTotalFee());
@@ -459,7 +469,9 @@ public class OrderServiceImpl implements OrderService {
 		if(updateResult == 0 && insetinfo == 0){
 			return ErrorEnum.e3012.getValue();
 		}
-		sendMessage4Order(taxiOrder,null);
+		if (!sendMessage4Order(taxiOrder,null)){ 
+			logger.error("支付通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
+		}
 		return 0;
 	}
 
