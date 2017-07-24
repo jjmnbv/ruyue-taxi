@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ry.taxi.web.BaseWebTest;
 import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
 import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;

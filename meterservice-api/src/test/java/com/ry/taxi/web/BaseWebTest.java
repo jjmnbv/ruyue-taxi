@@ -1,7 +1,5 @@
 package com.ry.taxi.web;
 
-import java.util.Map;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -15,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.xunxintech.ruyue.coach.encryption.EncryptUtil;
 import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
 import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
 
