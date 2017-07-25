@@ -269,14 +269,14 @@ public class OrderServiceImpl implements OrderService {
 		if(taxiOrder == null){
 			//订单不存在
 			return ErrorEnum.e3012.getValue();
-		}else if(!(StringUtils.equals(OrderState.WAITSTART.state, taxiOrder.getOrderstatus()))){
+		}else if((StringUtils.equals(OrderState.SERVICEDONE.state, taxiOrder.getOrderstatus()))){
 			//订单状态不正确
 			return ErrorEnum.e3014.getValue();
 		}
 		
 		taxiOrder.setOrderstatus(OrderState.CANCEL.state);
-		taxiOrder.setCanceltime(param.getCanceltime().toDate());
-		taxiOrder.setOrderstatus(OrderState.CANCEL.state);
+		taxiOrder.setCanceltime(DateUtil.string2Date(param.getCanceltime()));
+		taxiOrder.setCancelparty("2");
 		
 			
 		//更新订单

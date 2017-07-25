@@ -1,5 +1,7 @@
 package com.ry.taxi.web.order;
 
+import java.util.Date;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import com.ry.taxi.web.BaseWebTest;
 import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
 import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 public class DriverCancelTest extends BaseWebTest{
 	
@@ -17,8 +20,8 @@ public class DriverCancelTest extends BaseWebTest{
 	
 	public String takeArgs() throws JSONException{
 		JSONObject jsonparam = new JSONObject();
-		jsonparam.put("OrderNum", "CGT1707211721");
-		jsonparam.put("CancelTime", "2017-07-21 17:30:00");
+		jsonparam.put("OrderNum", "CGT1707251447");
+		jsonparam.put("CancelTime", DateUtil.date2String(new Date()));
 		jsonparam.put("CancelType", 1);
 		
 		return jsonparam.toString();

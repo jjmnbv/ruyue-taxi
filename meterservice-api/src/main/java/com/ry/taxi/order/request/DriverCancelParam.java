@@ -34,7 +34,7 @@ public class DriverCancelParam {
 	 * 订单取消时间 yyyy-MM-dd hh:mm:ss
 	 */
 	@JsonProperty("CancelTime")
-	private DateTime canceltime;
+	private String canceltime;
 	
 	/**
 	 * 1.等候超过30分钟乘客仍未到达

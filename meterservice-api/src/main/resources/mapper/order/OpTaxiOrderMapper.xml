@@ -132,6 +132,9 @@
 	      <if test="mileage!=null">
 	      	mileage = #{mileage}
 	      </if>
+	      <if test="cancelparty!=null">
+	      	cancelparty = #{cancelparty}
+	      </if>
 		</trim>
     where orderno = #{orderno}
 	</update>
