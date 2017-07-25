@@ -29,12 +29,12 @@ public class PubDriver {
 	/**
 	 * 司机姓名
 	 */
-	private String drivername;
+	private String name;
 	
 	/**
 	 * 司机电话
 	 */
-	private String driverphone;	
+	private String phone;	
 	/**
 	 * 车牌号码
 	 */

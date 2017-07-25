@@ -3,6 +3,8 @@
  */
 package com.ry.taxi.web.order;
 
+import java.util.Date;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import com.ry.taxi.web.BaseWebTest;
 import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
 import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 /**
  * @Title:DriverArrivalTest.java
@@ -29,14 +32,14 @@ public class DriverArrivalTest  extends BaseWebTest  {
 	
 	public String takeArgs() throws JSONException{
 		 JSONObject argJson = new JSONObject();
-		 argJson.put("CertNum", "100804");
-		 argJson.put("Mobile", "18620291125");
-		 argJson.put("PlateNum", "4YC46");
-		 argJson.put("OrderNum", "CGT1707211721");
+		 argJson.put("CertNum", "STR334624");
+		 argJson.put("Mobile", "13911111111");
+		 argJson.put("PlateNum", "京A23455");
+		 argJson.put("OrderNum", "CGT1707251004");
 		 argJson.put("Longitude", 113.3490850000);
 		 argJson.put("Latitude", 23.1764890000);
 		 argJson.put("MapType",1);
-		 argJson.put("ArrivalTime", "2017-07-21 17:03:00");
+		 argJson.put("ArrivalTime", DateUtil.date2String(new Date()));
 		 return argJson.toString();
 	}
     

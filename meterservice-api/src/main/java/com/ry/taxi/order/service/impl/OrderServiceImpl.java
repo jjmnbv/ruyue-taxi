@@ -12,9 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ry.taxi.base.constant.ErrorEnum;
+import com.ry.taxi.base.exception.RyTaxiException;
 import com.ry.taxi.order.domain.OpTaxiOrder;
 import com.ry.taxi.order.domain.Oporderpaymentrecord;
 import com.ry.taxi.order.domain.PubDriver;
@@ -65,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OpTaxiOrderMapper opTaxiOrderMapper;
 	
-	
+	@Transactional(propagation=Propagation.REQUIRED)
 	@Override
 	public int doTakingOrder(DriverTakeParam param) {
 		//查询订单信息
@@ -95,11 +97,18 @@ public class OrderServiceImpl implements OrderService {
 		taxiOrder.setVehclinename(driver.getCarvehcline());
 		taxiOrder.setBelongleasecompany(driver.getBelongleasecompany());
 		
+		//更改司机电话
+		if(!StringUtils.equals(driver.getPhone(), param.getMobile())){
+			System.out.println("driver.getId()" + driver.getId());
+			System.out.println("param.getMobile()" + param.getMobile());
+			driverMapper.updateDriverphone(driver.getId(), param.getMobile());
+		}
+		
 		int updateResult = opTaxiOrderMapper.updateTakingOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3015.getValue();//订单状态不正确
 		if (!sendMessage4Order(taxiOrder,null))
-			return ErrorEnum.e3016.getValue();//订单状态-消息推送失败
+			throw new RyTaxiException(ErrorEnum.e3016); //订单状态-消息推送失败
 		return 0;
 	}
 	

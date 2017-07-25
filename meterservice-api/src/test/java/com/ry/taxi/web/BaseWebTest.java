@@ -39,30 +39,5 @@ public class BaseWebTest {
 	protected TestRestTemplate testRest;
 
 	private String  Key = "12345678";
-	
-	public String takeArgs() throws JSONException{
-		 JSONObject argJson = new JSONObject();
-		 argJson.put("CertNum", "123456");
-		 argJson.put("Mobile", "13607428657");
-		 argJson.put("PlateNum", "A30523");
-		 argJson.put("OrderNum", "2017070630000");
-		 argJson.put("ResponseType", 1);
-		 return argJson.toString();
-	}
-
-    /*
-     * 司机应邀通知
-     */
-	@Test
-	public void TakeWebTest() throws JSONException{
-		String  argJson = takeArgs();
-		String sign =  MD5.MD5Encode(DESUtils.encode(Key,  argJson, Key), "utf-8");
-		String url ="/RyTaxi/Management/func?Cmd=DriverTakeOrder&Key=" + Key + "&UserId=CGI"+"&Args={json}"+"&Sign="+sign;
-		
-		HttpEntity<String> request = new HttpEntity<String>(argJson, null);
-		ResponseEntity<String> responseEntity = this.testRest.postForEntity(url, request, String.class,argJson);		
-		String data = responseEntity.getBody();
-        
-	}
 
 }

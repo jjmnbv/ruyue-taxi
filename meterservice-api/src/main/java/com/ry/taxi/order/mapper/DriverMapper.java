@@ -3,6 +3,8 @@
  */
 package com.ry.taxi.order.mapper;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.ry.taxi.order.domain.Oporderpaymentrecord;
 import com.ry.taxi.order.domain.PubDriver;
 
@@ -37,9 +39,15 @@ public interface DriverMapper {
 	int insertOrder(Oporderpaymentrecord paame);
 	
 	
-
 	/*
-	 * 根据资格证号查找司机
+	 * 根据id查找司机
 	 */
 	PubDriver getTaxiOrderno(String id);
+	
+	/*
+	 * 更新司机电话号码
+	 */
+	int updateDriverphone(@Param("id")String id, @Param("phone")String phone);
+	
+	
 }

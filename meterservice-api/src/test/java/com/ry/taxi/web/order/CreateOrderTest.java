@@ -32,12 +32,12 @@ public class CreateOrderTest extends RyMeterServiceApplicationTest  {
 	public void createOpOrder(){
 		OpTaxiOrder order = new OpTaxiOrder();
 		order.setOrderno("CGT" + StringUtil.formatDate(new Date(), "yyMMddHHss"));
-		order.setUserid("477B13B9-1629-4A2A-8896-9307317CF6D8");
+		order.setUserid("0A0B5EDA-3C68-4101-8FDB-77896BB46756");
 		order.setUsetype("1");//因私用车
 		order.setOrdertype("4");//出租车
 		order.setPaymentmethod("1");//线下支付
 		
-		order.setPassengers("乘客-测试号");
+		order.setPassengers("电召接口-测试");
 		order.setPassengerphone("18620291125");
 		
 		order.setOncity("广州市");

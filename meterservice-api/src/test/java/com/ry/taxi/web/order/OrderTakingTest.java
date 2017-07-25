@@ -4,8 +4,6 @@ package com.ry.taxi.web.order;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 
@@ -35,10 +33,10 @@ public class OrderTakingTest extends BaseWebTest {
 	
 	public String takeArgs() throws JSONException{
 		 JSONObject argJson = new JSONObject();
-		 argJson.put("CertNum", "100804");
-		 argJson.put("Mobile", "18620291125");
-		 argJson.put("PlateNum", "4YC46");
-		 argJson.put("OrderNum", "CGT1707211721");
+		 argJson.put("CertNum", "STR334624");
+		 argJson.put("Mobile", "18357121925");
+		 argJson.put("PlateNum", "京A23455");
+		 argJson.put("OrderNum", "CGT1707251038");
 		 argJson.put("ResponseType", 1);
 		 return argJson.toString();
 	}

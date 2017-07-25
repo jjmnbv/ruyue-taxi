@@ -2,13 +2,9 @@ spring:
     cache:
         type: redis
     datasource:
-        url: jdbc:mysql://rm-wz9v15h50ci9vu25yo.mysql.rds.aliyuncs.com:3306/carservice_dev?useUnicode=true&characterEncoding=utf-8
-        username: dbdev
-        password: gtg@0705ROd
-    redis:
-        host: 192.168.81.66
-        password: 
-        port: 6379
+        url: jdbc:mysql://szycwh.f3322.net:3306/carservicedev_v4.0.0?useUnicode=true&characterEncoding=utf-8
+        username: xxdeveloper
+        password: xxkj@2017
 GCI:
     encryption: 2 #地图类型 1高德 2百度
     appid: GCI

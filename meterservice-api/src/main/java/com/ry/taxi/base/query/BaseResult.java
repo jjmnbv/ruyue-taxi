@@ -23,7 +23,7 @@ public class BaseResult<T> {
 	private String cmd;
 	
 	@JsonProperty("Result")
-	private Integer result;
+	private Integer result = 1;
 	
 	@JsonProperty("Remark")
 	private String remark;

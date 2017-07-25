@@ -54,8 +54,6 @@ public class BaseOrderController {
 	
 	public  ThreadLocal<PubDriver> driver = new ThreadLocal<PubDriver>();
 	
-	private static final Integer SUCESS_RESPONSE = 1;
-	
 	private static final Integer ERROR_RESPONSE = 2;
 	
 	
@@ -97,14 +95,19 @@ public class BaseOrderController {
 			result.setResult(ERROR_RESPONSE);
 		    return JSONUtil.toJackson(result);
 		}
-		int resultCode = orderService.doTakingOrder(driverTakeParam);
-		if (resultCode > 0){
-			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultCode), ""));
-			result.setResult(ERROR_RESPONSE);
-			return JSONUtil.toJackson(result);
-			
+		try{
+			int resultCode = orderService.doTakingOrder(driverTakeParam);
+			if (resultCode > 0){
+				result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultCode), ""));
+				result.setResult(ERROR_RESPONSE);
+				return JSONUtil.toJackson(result);
+				
+			}
 		}
-		result.setResult(SUCESS_RESPONSE);	
+		catch(Exception e){
+			result.setRemark(e.getMessage());
+			result.setResult(ERROR_RESPONSE);
+		}
 		return JSONUtil.toJackson(result);
 	}
 	
@@ -116,7 +119,6 @@ public class BaseOrderController {
 		DriverStartParam driverStartParam = null;
 		result.setCmd(UrlRequestConstant.CMD_DRIVERSTARTORDER);
 		
-	
 		try {
 			driverStartParam = JSONUtil.objectMapper.readValue(jsonParam, DriverStartParam.class);
 		} catch (IOException e) {
@@ -134,8 +136,6 @@ public class BaseOrderController {
 			result.setResult(ERROR_RESPONSE);
 			return JSONUtil.toJackson(result);
 		}
-		
-		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 		
 	}
@@ -163,7 +163,6 @@ public class BaseOrderController {
 			return JSONUtil.toJackson(result);
 			
 		}
-		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 		
 	}
@@ -193,7 +192,6 @@ public class BaseOrderController {
 			result.setResult(ERROR_RESPONSE);
 		}
 		
-		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 		
 	}
@@ -221,7 +219,6 @@ public class BaseOrderController {
 			return JSONUtil.toJackson(result);
 			
 		}
-		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 	}
 	
@@ -253,7 +250,6 @@ public class BaseOrderController {
 			return JSONUtil.toJackson(result);
 		}
 		
-		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 	
 	}
@@ -283,7 +279,6 @@ public class BaseOrderController {
 			return JSONUtil.toJackson(result);
 		}
 		
-		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 		
 	}
@@ -310,7 +305,6 @@ public class BaseOrderController {
 			return JSONUtil.toJackson(result);
 		}
 		
-		result.setResult(SUCESS_RESPONSE);	
 		return JSONUtil.toJackson(result);
 	}
 	

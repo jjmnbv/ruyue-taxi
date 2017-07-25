@@ -2,77 +2,82 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ry.taxi.order.mapper.DriverMapper">
     
-<select id="getDriverByJobNum" parameterType="String" resultType="com.ry.taxi.order.domain.PubDriver">
-	SELECT
-		CONCAT(
-		(
+	<select id="getDriverByJobNum" parameterType="String" resultType="com.ry.taxi.order.domain.PubDriver">
 		SELECT
-		pub_dictionary.text
-		FROM
-		pub_dictionary
-		WHERE
-		pub_dictionary.type = '车牌省'
-		AND pub_dictionary.`value` = pv.platenoprovince
-		AND pub_dictionary.`status` = 1
-		),
-		(
-		SELECT
-		pub_dictionary.text
-		FROM
-		pub_dictionary
-		WHERE
-		pub_dictionary.type = '车牌市'
-		AND pub_dictionary.`value` = pv.platenocity
-		AND pub_dictionary.`status` = 1
-		),
-		pv.plateno
-		) plateno,
-		pv.id vehicleid,
-		pv.id vehicleid,
-		pvc.`name` vehclinename,
-		pvb.`Name` vehcbrandname,
-		pd.*
-		FROM
-		pub_driver pd
-		LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
-		AND pdvr.driverId = pd.id
-		LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
-		AND pv.id = pdvr.vehicleId
-		LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
-		AND pvc.Id = pv.vehclineid
-		LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
-		AND pvb.Id = pvc.vehcBrandID
-		LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
-		AND ovvr.vehicleid = pdvr.vehicleId
-		LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
-		AND ov.Id = ovvr.vehiclemodelsid
-		LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
-		AND lvmr.vehclineid = pv.vehclineid
-		LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
-		AND lv.Id = lvmr.vehiclemodelsid
-		WHERE 1=1
-		AND pd.`Status` = 1
-		AND pd.jobnum = #{jobNum}
-		limit 1
-</select>
+			CONCAT(
+			(
+			SELECT
+			pub_dictionary.text
+			FROM
+			pub_dictionary
+			WHERE
+			pub_dictionary.type = '车牌省'
+			AND pub_dictionary.`value` = pv.platenoprovince
+			AND pub_dictionary.`status` = 1
+			),
+			(
+			SELECT
+			pub_dictionary.text
+			FROM
+			pub_dictionary
+			WHERE
+			pub_dictionary.type = '车牌市'
+			AND pub_dictionary.`value` = pv.platenocity
+			AND pub_dictionary.`status` = 1
+			),
+			pv.plateno
+			) plateno,
+			pv.id vehicleid,
+			pv.id vehicleid,
+			pvc.`name` vehclinename,
+			pvb.`Name` vehcbrandname,
+			pd.*
+			FROM
+			pub_driver pd
+			LEFT JOIN pub_driver_vehicle_ref pdvr ON pdvr.`Status` = 1
+			AND pdvr.driverId = pd.id
+			LEFT JOIN pub_vehicle pv ON pv.`Status` = 1
+			AND pv.id = pdvr.vehicleId
+			LEFT JOIN pub_vehcline pvc ON pvc.`Status` = 1
+			AND pvc.Id = pv.vehclineid
+			LEFT JOIN pub_vehcbrand pvb ON pvb.`Status` = 1
+			AND pvb.Id = pvc.vehcBrandID
+			LEFT JOIN op_vehiclemodels_vehicle_ref ovvr ON ovvr.`status` = 1
+			AND ovvr.vehicleid = pdvr.vehicleId
+			LEFT JOIN op_vehiclemodels ov ON ov.`status` = 1
+			AND ov.Id = ovvr.vehiclemodelsid
+			LEFT JOIN le_vehcline_models_ref lvmr ON lvmr.`Status` = 1
+			AND lvmr.vehclineid = pv.vehclineid
+			LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
+			AND lv.Id = lvmr.vehiclemodelsid
+			WHERE 1=1
+			AND pd.`Status` = 1
+			AND pd.jobnum = #{jobNum}
+			limit 1
+	</select>
 
 
 
-		<update id="setDriverWorkstatus" parameterType="com.ry.taxi.order.domain.PubDriver">
-				UPDATE pub_driver SET workstatus=#{workstatus} WHERE id = #{id}
+	<update id="setDriverWorkstatus" parameterType="com.ry.taxi.order.domain.PubDriver">
+			UPDATE pub_driver SET workstatus=#{workstatus} WHERE id = #{id}
 
-		</update>
-		
-		
-		<insert id="insertOrder" parameterType="com.ry.taxi.order.domain.Oporderpaymentrecord">
-				INSERT op_taxiorderpaymentrecord (outtradeno,orderno,paymenttype,tradeno,privatekey,operateresult,createtime,updatetime,`status` )
-				VALUES(#(outtradeno),#{orderno},#{paymenttype},#{tradeno},#{privatekey},#{operateresult},#{createtime},#{updatetime},#{status})
-		
-		</insert>
-		
-		
-		<select id="getTaxiOrderno" resultType="com.ry.taxi.order.domain.PubDriver" parameterType="java.lang.String">
-			SELECT * FROM pub_driver WHERE id =#{value}		
-		</select>
+	</update>
+	
+	
+	<insert id="insertOrder" parameterType="com.ry.taxi.order.domain.Oporderpaymentrecord">
+			INSERT op_taxiorderpaymentrecord (outtradeno,orderno,paymenttype,tradeno,privatekey,operateresult,createtime,updatetime,`status` )
+			VALUES(#(outtradeno),#{orderno},#{paymenttype},#{tradeno},#{privatekey},#{operateresult},#{createtime},#{updatetime},#{status})
+	
+	</insert>
+	
+	
+	<select id="getTaxiOrderno" resultType="com.ry.taxi.order.domain.PubDriver" parameterType="java.lang.String">
+		SELECT * FROM pub_driver WHERE id =#{value}		
+	</select>
+	
+	
+	<update id ="updateDriverphone" >
+		update pub_driver set phone = #{phone} where id = #{id}
+	</update>
 
 </mapper>
