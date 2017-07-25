@@ -36,7 +36,7 @@ public class OrderTakingTest extends BaseWebTest {
 		 argJson.put("CertNum", "STR334624");
 		 argJson.put("Mobile", "18357121925");
 		 argJson.put("PlateNum", "京A23455");
-		 argJson.put("OrderNum", "CGT1707251038");
+		 argJson.put("OrderNum", "CGT1707251423");
 		 argJson.put("ResponseType", 1);
 		 return argJson.toString();
 	}

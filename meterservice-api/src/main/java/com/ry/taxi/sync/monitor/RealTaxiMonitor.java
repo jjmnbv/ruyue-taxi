@@ -89,7 +89,7 @@ public class RealTaxiMonitor {
 		GciSyncLog lastTrace = gciVehicleMapper.getLastTrace();
 		String updatetime = "";
 		//如果首次加载,则加载n个小时前的数据,保证全量更新
-		if(lastTrace == null || StringUtils.isNotBlank(lastTrace.getSynctime())){
+		if(lastTrace == null || !StringUtils.isNotBlank(lastTrace.getSynctime())){
 			Long time = System.currentTimeMillis()/1000 -  hour * 3600;
 			updatetime = DateUtil.formatUnixTime(String.valueOf(time),YYYY_MM_DD_HH_MM_SS);
 		}
@@ -105,6 +105,7 @@ public class RealTaxiMonitor {
 		if(gpsPool == null){
 			synchronized (this) {
 				if(gpsPool== null){
+					logger.info("RealTaxiMonitor.初始化线程池,corePoolSize:{},maxPoolSize:{},queueSize{}",corePoolSize,maxPoolSize,queueSize);
 					gpsPool = new ThreadPoolExecutor(corePoolSize, maxPoolSize, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(queueSize));
 				}
 			}
@@ -127,9 +128,9 @@ public class RealTaxiMonitor {
 		
 		private String platnos; //车辆列表
 		
-		private  String updateTime; //增量更新时间
+		private String updateTime; //增量更新时间
 		
-		GciSyncLog synLog;//日志记录表
+		private GciSyncLog synLog;//日志记录表
 		
 		public RealTimeRunnable(String platnos, String updateTime){
 			this.platnos = platnos;

@@ -101,7 +101,6 @@ public class BaseOrderController {
 				result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultCode), ""));
 				result.setResult(ERROR_RESPONSE);
 				return JSONUtil.toJackson(result);
-				
 			}
 		}
 		catch(Exception e){

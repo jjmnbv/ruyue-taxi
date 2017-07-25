@@ -106,8 +106,8 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTakingOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3015.getValue();//订单状态不正确
-		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone())))
-			throw new RyTaxiException(ErrorEnum.e3016); //订单状态-消息推送失败
+//		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone())))
+//			throw new RyTaxiException(ErrorEnum.e3016); //订单状态-消息推送失败
 		return 0;
 	}
 	
@@ -192,7 +192,7 @@ public class OrderServiceImpl implements OrderService {
 		taxiOrder.setDepartureaddress(departureaddress);
 		
 		//更新订单
-		int updateResult = opTaxiOrderMapper.updateTakingOrder(taxiOrder);
+		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		
 		if(updateResult == 0 ){
 			return ErrorEnum.e3015.getValue();//订单状态不正确
@@ -464,7 +464,7 @@ public class OrderServiceImpl implements OrderService {
 		
 		pde.setOuttradeno(out_trade_no);
 		pde.setOrderno(param.getOrdernum());
-		pde.setPaymenttype("");
+		pde.setPaymenttype(String.valueOf(param.getTranstype()));
 		pde.setTradeno(param.getTransId());
 		pde.setPrivatekey("");
 		pde.setOperateresult(0);

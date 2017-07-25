@@ -1,5 +1,7 @@
 package com.ry.taxi.web.order;
 
+import java.util.Date;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import com.ry.taxi.web.BaseWebTest;
 import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
 import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 public class PaymentConfirmationTest extends BaseWebTest {
 	
@@ -17,7 +20,7 @@ public class PaymentConfirmationTest extends BaseWebTest {
 	 public String takeArgs() throws JSONException{
 		 
 		 JSONObject jsonparame = new JSONObject();
-		 jsonparame.put("OrderNum", "CGT1707211721");
+		 jsonparame.put("OrderNum", "CGT1707251423");
 		 jsonparame.put("TransId", 0);
 		 jsonparame.put("TotalPayable", 4);
 		 jsonparame.put("RewardFeePayable", 0);
@@ -25,7 +28,7 @@ public class PaymentConfirmationTest extends BaseWebTest {
 		 jsonparame.put("TotalFee", 4);
 		 jsonparame.put("RewardFee", 0);
 		 jsonparame.put("KmFee", 4);
-		 jsonparame.put("TransTime", "2017-07-21 17:45:00");
+		 jsonparame.put("TransTime",DateUtil.date2String(new Date()));
 		 jsonparame.put("TransType", 4);
 		 jsonparame.put("TransMode", 0);
 		 

@@ -65,8 +65,14 @@
 	
 	
 	<insert id="insertOrder" parameterType="com.ry.taxi.order.domain.Oporderpaymentrecord">
-			INSERT op_taxiorderpaymentrecord (outtradeno,orderno,paymenttype,tradeno,privatekey,operateresult,createtime,updatetime,`status` )
-			VALUES(#(outtradeno),#{orderno},#{paymenttype},#{tradeno},#{privatekey},#{operateresult},#{createtime},#{updatetime},#{status})
+			INSERT op_taxiorderpaymentrecord (
+				outtradeno,  orderno,  paymenttype,   tradeno,  
+				privatekey,  operateresult,  createtime,  updatetime,  
+				`status` )
+			VALUES(
+				#{outtradeno}, #{orderno}, #{paymenttype}, #{tradeno},
+				#{privatekey}, #{operateresult}, #{createtime},#{updatetime},
+				#{status} )
 	
 	</insert>
 	

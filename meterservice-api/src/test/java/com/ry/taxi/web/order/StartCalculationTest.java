@@ -30,10 +30,10 @@ public class StartCalculationTest extends BaseWebTest {
 	
 	public String takeArgs() throws JSONException{
 		 JSONObject argJson = new JSONObject();
-		 argJson.put("CertNum", "100804");
+		 argJson.put("CertNum", "STR334624");
 		 argJson.put("Mobile", "18620291125");
-		 argJson.put("PlateNum", "4YC46");
-		 argJson.put("OrderNum", "CGT1707211721");
+		 argJson.put("PlateNum", "京A23455");
+		 argJson.put("OrderNum", "CGT1707251423");
 		 argJson.put("Longitude", 113.3490850000);
 		 argJson.put("Latitude", 23.1764890000);
 		 argJson.put("MapType",1);

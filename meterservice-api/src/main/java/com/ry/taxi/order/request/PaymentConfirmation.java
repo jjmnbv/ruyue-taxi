@@ -54,7 +54,7 @@ public class PaymentConfirmation {
 	 * 交易时间
 	 */
 	@JsonProperty("TransTime")
-	private DateTime transtime;
+	private String transtime;
 	
 	/**
 	 * 交易方式,4现金 5羊城通

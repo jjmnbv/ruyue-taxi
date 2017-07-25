@@ -68,6 +68,7 @@ public class ConfigFilter implements HandlerInterceptor {
 	
 		//访问接口过滤
 		if(!permitList.contains(cmd)){
+			ErrorResponse.printErrorMessage(response, cmd, 2, "无效请求");
 			return false;
         }
 		

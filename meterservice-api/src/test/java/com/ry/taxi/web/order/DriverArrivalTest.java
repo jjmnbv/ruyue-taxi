@@ -35,7 +35,7 @@ public class DriverArrivalTest  extends BaseWebTest  {
 		 argJson.put("CertNum", "STR334624");
 		 argJson.put("Mobile", "13911111111");
 		 argJson.put("PlateNum", "京A23455");
-		 argJson.put("OrderNum", "CGT1707251004");
+		 argJson.put("OrderNum", "CGT1707251423");
 		 argJson.put("Longitude", 113.3490850000);
 		 argJson.put("Latitude", 23.1764890000);
 		 argJson.put("MapType",1);

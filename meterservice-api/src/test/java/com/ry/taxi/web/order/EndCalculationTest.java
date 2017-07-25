@@ -1,5 +1,7 @@
 package com.ry.taxi.web.order;
 
+import java.util.Date;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import com.ry.taxi.web.BaseWebTest;
 import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
 import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 public class EndCalculationTest extends BaseWebTest{
 	
@@ -18,18 +21,18 @@ public class EndCalculationTest extends BaseWebTest{
 	public String takeArgs() throws JSONException{
 		
 		JSONObject jsonparame = new JSONObject();
-		jsonparame.put("OrderNum", "CGT1707211721");
-		jsonparame.put("CertNum", "100804");
+		jsonparame.put("OrderNum", "CGT1707251423");
+		jsonparame.put("CertNum", "STR334624");
 		jsonparame.put("Mobile", "18620291125");
-		jsonparame.put("PlateNum", "4YC46");
+		jsonparame.put("PlateNum", "京A23455");
 		jsonparame.put("InputLon", 113.3490850000);
 		jsonparame.put("InputLat", 23.1764890000);
 		jsonparame.put("MapType", 1);
 		jsonparame.put("TransId", 0);
 		jsonparame.put("AmountPayable", 4);
-		jsonparame.put("OrderEndTime", "2017-07-21 17:40:00");
+		jsonparame.put("OrderEndTime", DateUtil.date2String(new Date()));
 				
-		return null;
+		return jsonparame.toString();
 		
 	}
 	

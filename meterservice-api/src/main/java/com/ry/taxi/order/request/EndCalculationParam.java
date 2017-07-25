@@ -77,7 +77,7 @@ public class EndCalculationParam {
 	 * 订单完成时间 yyyy-MM-dd hh:mm:ss
 	 */
 	@JsonProperty("OrderEndTime")
-	private DateTime orderendtime;
+	private String orderendtime;
 
 
 }
