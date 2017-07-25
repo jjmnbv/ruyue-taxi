@@ -33,7 +33,7 @@ public class DriverCancelTest extends BaseWebTest{
 		
 		String argJson = takeArgs();
 		String sign =  MD5.MD5Encode(DESUtils.encode(Key,  argJson, Key), "utf-8");
-		String url ="/RyTaxi/Management/func?Cmd=DriverArrival&Key=" + Key + "&UserId=CGI"+"&Args={json}"+"&Sign="+sign;
+		String url ="/RyTaxi/Management/func?Cmd=DriverCancelOrder&Key=" + Key + "&UserId=CGI"+"&Args={json}"+"&Sign="+sign;
 		
 		HttpEntity<String> request = new HttpEntity<String>(argJson, null);
 		ResponseEntity<String> responseEntity = testRest.postForEntity(url, request, String.class,argJson);		

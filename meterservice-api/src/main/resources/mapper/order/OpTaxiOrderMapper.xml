@@ -130,7 +130,7 @@
 	      	endllat = #{endllat},
 	      </if>
 	      <if test="mileage!=null">
-	      	mileage = #{mileage}
+	      	mileage = #{mileage},
 	      </if>
 	      <if test="cancelparty!=null">
 	      	cancelparty = #{cancelparty}

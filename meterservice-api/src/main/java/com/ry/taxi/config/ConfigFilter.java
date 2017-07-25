@@ -87,7 +87,7 @@ public class ConfigFilter implements HandlerInterceptor {
 				logger.error("check encryption error,cmd:{},key:{},userId:{},args:{},sign:{},error:{}", cmd, key, userId, args, sign);
 			}
 		}
-		
+		ErrorResponse.printErrorMessage(response, cmd, 2, "请求参数不能为空");
 		logger.error("check auth error,cmd:{},key:{},userId:{},args:{},sign:{},error:{}", cmd, key, userId, args, sign);
 		
 		return false;

@@ -273,10 +273,10 @@ public class OrderServiceImpl implements OrderService {
 			//订单状态不正确
 			return ErrorEnum.e3014.getValue();
 		}
-		
+
 		taxiOrder.setOrderstatus(OrderState.CANCEL.state);
 		taxiOrder.setCanceltime(DateUtil.string2Date(param.getCanceltime()));
-		taxiOrder.setCancelparty("2");
+		taxiOrder.setCancelparty("2");//取消方:司机端
 		
 			
 		//更新订单
