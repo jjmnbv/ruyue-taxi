@@ -4,6 +4,7 @@
 package com.ry.taxi.order.service.impl;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -99,15 +100,13 @@ public class OrderServiceImpl implements OrderService {
 		
 		//更改司机电话
 		if(!StringUtils.equals(driver.getPhone(), param.getMobile())){
-			System.out.println("driver.getId()" + driver.getId());
-			System.out.println("param.getMobile()" + param.getMobile());
 			driverMapper.updateDriverphone(driver.getId(), param.getMobile());
 		}
 		
 		int updateResult = opTaxiOrderMapper.updateTakingOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3015.getValue();//订单状态不正确
-		if (!sendMessage4Order(taxiOrder,null))
+		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone())))
 			throw new RyTaxiException(ErrorEnum.e3016); //订单状态-消息推送失败
 		return 0;
 	}
@@ -198,7 +197,7 @@ public class OrderServiceImpl implements OrderService {
 		if(updateResult == 0 ){
 			return ErrorEnum.e3015.getValue();//订单状态不正确
 		}
-		if (!sendMessage4Order(taxiOrder,null)){ 
+		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone()))){ 
 			logger.error("司机执行订单通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
 		}
 		return 0;
@@ -251,7 +250,7 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3012.getValue();//订单不存在
-		if (!sendMessage4Order(taxiOrder,null)){ 
+		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone()))){ 
 			logger.error("司机到达乘客起点通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
 		}
 		return 0;
@@ -293,7 +292,7 @@ public class OrderServiceImpl implements OrderService {
 		if (updateResult == 0){
 			return ErrorEnum.e3012.getValue();//订单不存在
 		}
-		if (!sendMessage4Order(taxiOrder,null)){ 
+		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone()))){ 
 			logger.error("司机取消通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
 		}
 		
@@ -348,7 +347,7 @@ public class OrderServiceImpl implements OrderService {
 		int updateResult = opTaxiOrderMapper.updateTaxiOrder(taxiOrder);
 		if (updateResult == 0)
 			return ErrorEnum.e3012.getValue();//订单不存在
-		if (!sendMessage4Order(taxiOrder,null)){ 
+		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone()))){ 
 			logger.error("压表通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
 		}
 		return 0;
@@ -410,7 +409,7 @@ public class OrderServiceImpl implements OrderService {
 		if(updateResult == 0){
 			return ErrorEnum.e3012.getValue();
 		}
-		if (!sendMessage4Order(taxiOrder,null)){ 
+		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone()))){ 
 			logger.error("起表通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
 		}
 		return 0;
@@ -478,7 +477,7 @@ public class OrderServiceImpl implements OrderService {
 		if(updateResult == 0 && insetinfo == 0){
 			return ErrorEnum.e3012.getValue();
 		}
-		if (!sendMessage4Order(taxiOrder,null)){ 
+		if (!sendMessage4Order(taxiOrder,Arrays.asList(taxiOrder.getPassengerphone()))){ 
 			logger.error("支付通知{},消息推送失败:{}",param,ErrorEnum.e3016.getValue());
 		}
 		return 0;
