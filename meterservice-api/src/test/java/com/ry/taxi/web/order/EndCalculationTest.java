@@ -28,7 +28,7 @@ public class EndCalculationTest extends BaseWebTest{
 		jsonparame.put("InputLon", 113.3490850000);
 		jsonparame.put("InputLat", 23.1764890000);
 		jsonparame.put("MapType", 1);
-		jsonparame.put("TransId", 0);
+		jsonparame.put("TransId", 123456);
 		jsonparame.put("AmountPayable", 4);
 		jsonparame.put("OrderEndTime", DateUtil.date2String(new Date()));
 				
