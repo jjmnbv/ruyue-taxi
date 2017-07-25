@@ -43,10 +43,10 @@ public class StartCalculationTest extends BaseWebTest {
     
 	
     /*
-     * 司机应邀通知
+     * 压表
      */
 	@Test
-	public void OrderTakingTest() throws JSONException{
+	public void StartCalculationTest() throws JSONException{
 		String argJson = takeArgs();
 		String sign =  MD5.MD5Encode(DESUtils.encode(Key,  argJson, Key), "utf-8");
 		String url ="/RyTaxi/Management/func?Cmd=StartCalculation&Key=" + Key + "&UserId=CGI"+"&Args={json}"+"&Sign="+sign;
