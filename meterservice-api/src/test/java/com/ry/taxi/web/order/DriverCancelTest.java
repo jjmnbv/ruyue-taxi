@@ -20,7 +20,7 @@ public class DriverCancelTest extends BaseWebTest{
 	
 	public String takeArgs() throws JSONException{
 		JSONObject jsonparam = new JSONObject();
-		jsonparam.put("OrderNum", "CGT1707251447");
+		jsonparam.put("OrderNum", "CGT1707251731");
 		jsonparam.put("CancelTime", DateUtil.date2String(new Date()));
 		jsonparam.put("CancelType", 1);
 		
@@ -28,6 +28,10 @@ public class DriverCancelTest extends BaseWebTest{
 		
 	}
 	
+	/**
+	 * 取消订单
+	 * @throws JSONException
+	 */
 	@Test
 	public void testDriverCancel() throws JSONException{
 		

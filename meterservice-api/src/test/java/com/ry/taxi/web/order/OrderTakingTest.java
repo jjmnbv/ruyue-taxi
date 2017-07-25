@@ -34,9 +34,9 @@ public class OrderTakingTest extends BaseWebTest {
 	public String takeArgs() throws JSONException{
 		 JSONObject argJson = new JSONObject();
 		 argJson.put("CertNum", "STR334624");
-		 argJson.put("Mobile", "18357121925");
+		 argJson.put("Mobile", "18620291125");
 		 argJson.put("PlateNum", "京A23455");
-		 argJson.put("OrderNum", "CGT1707251447");
+		 argJson.put("OrderNum", "CGT1707251731");
 		 argJson.put("ResponseType", 1);
 		 return argJson.toString();
 	}

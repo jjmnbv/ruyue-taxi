@@ -24,7 +24,7 @@ public class DriverStartTest extends BaseWebTest{
 		jsonParam.put("CertNum", "STR334624");
 		jsonParam.put("Mobile", "18620291125");
 		jsonParam.put("PlateNum", "京A23455");
-		jsonParam.put("OrderNum", "CGT1707251423");
+		jsonParam.put("OrderNum", "CGT1707251731");
 		jsonParam.put("DepartureTime", DateUtil.date2String(new Date()));
 		jsonParam.put("Longitude", 113.3490850000);
 		jsonParam.put("Latitude", 23.1764890000);
