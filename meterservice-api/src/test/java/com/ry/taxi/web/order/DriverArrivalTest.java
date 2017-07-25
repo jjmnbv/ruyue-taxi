@@ -45,10 +45,10 @@ public class DriverArrivalTest  extends BaseWebTest  {
     
 	
     /*
-     * 司机应邀通知
+     * 司机到达乘客上车点
      */
 	@Test
-	public void OrderTakingTest() throws JSONException{
+	public void DriverArrivalTest() throws JSONException{
 		String argJson = takeArgs();
 		String sign =  MD5.MD5Encode(DESUtils.encode(Key,  argJson, Key), "utf-8");
 		String url ="/RyTaxi/Management/func?Cmd=DriverArrival&Key=" + Key + "&UserId=CGI"+"&Args={json}"+"&Sign="+sign;
