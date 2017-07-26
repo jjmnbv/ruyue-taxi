@@ -3,15 +3,20 @@ package com.szyciov.supervision.util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.supervision.api.BaseApi;
+import com.szyciov.supervision.dao.PubSupervisionLogDao;
+import com.szyciov.supervision.entity.PubSupervisionLog;
+import com.szyciov.util.HttpRequest;
 import lombok.Cleanup;
 
 import org.apache.http.Consts;
@@ -27,43 +32,48 @@ import com.szyciov.supervision.TaxiExecption;
 import com.szyciov.supervision.config.CacheHelper;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 网约车接口类
  * Created by 林志伟 on 2017/7/4.
  */
+@Component
 public class GzwycApi {
 
     private static Logger logger = LoggerFactory.getLogger(GzwycApi.class);
 
     private static final String SIGN_TYPE = "MD5";
     private static final String FILE_SUFFIX = ".json";
-    private static final String BINFILE_AUTH = "binfile-auth";
-    private static final String BINFILE_MD5 = "binfile-md5";
-    private static final String BINFILE_GZIP = "binfile-gzip";
-    private static final String BINFILE_REQLEN = "binfile-reqlen";
+    public static final String BINFILE_AUTH = "binfile-auth";
+    public static final String BINFILE_MD5 = "binfile-md5";
+    public static final String BINFILE_GZIP = "binfile-gzip";
+    public static final String BINFILE_REQLEN = "binfile-reqlen";
     private static final String BIN_FILE = "binFile";
     private static final String FILENAME = "filename";
     private static final String GZIP_FALSE = "false";
     private static final String SEPARATOR_UNDERLINE = "_";
     private static char[] commonDigit = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String DATA_P = "yyyyMMddHHmmssSSS";
-
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_P);
 
-    public static HttpContent send(BasicRequest request) throws IOException {
-        HttpContent httpContent = sendMsg(request, false);
+    private @Autowired PubSupervisionLogDao pubSupervisionLogDao;
 
-
+    public   HttpContent send(BasicRequest request) throws IOException {
+        HttpContent httpContent = sendMsg(CacheHelper.getServiceUrl(),request, false);
         return httpContent;
     }
 
-    public static HttpContent token(BasicRequest request) throws IOException {
-        return sendMsg(request, true);
+    public   HttpContent token(BasicRequest request) throws IOException {
+        return sendMsg(CacheHelper.getServiceUrl(),request, true);
     }
 
-    public static HttpContent sendMsg(BasicRequest request, Boolean isToken) throws IOException {
-        HttpPost post = new HttpPost(CacheHelper.getServiceUrl());
+    public   HttpContent sendMsg(String serviceUrl,BasicRequest request, Boolean isToken) throws IOException {
+        HttpPost post = new HttpPost(serviceUrl);
         @Cleanup InputStream in = new ByteArrayInputStream(request.getResult().getBytes(Consts.UTF_8.name()));
         String md5 = hash(in);
         in.reset();
@@ -87,11 +97,39 @@ public class GzwycApi {
         post.setEntity(builder.build());
 
         Map<String, String> headerMap = Arrays.asList(post.getAllHeaders()).stream().collect(Collectors.toMap(Header::getName, Header::getValue));
-//        logger.debug("request params -> headers:{}, fileName:{}", JSONUtil.toJackson(headerMap), fileName);
         HttpContent httpContent=HttpUtil.sendHttpPost(post);
-//        logger.debug("responce content -> content:{}", httpContent);
+
+
+        PubSupervisionLog pubSupervisionLog=new PubSupervisionLog();
+        pubSupervisionLog.setDirect(1);
+        pubSupervisionLog.setRequestHeader(JSONUtil.toJackson(headerMap));
+        pubSupervisionLog.setRequestParam(request.getResult());
+        pubSupervisionLog.setResponceCode(httpContent.getStatus());
+        pubSupervisionLog.setResponceContent(httpContent.getContent());
+        pubSupervisionLog.setInterfaceType(request.getInterfaceType().value()+":"+request.getInterfaceType().description());
+        pubSupervisionLog.setInterfaceCommand(request.getCommand().value()+":"+request.getCommand().description());
+        pubSupervisionLog.setCreatetime(new Date());
+        pubSupervisionLogDao.insert(pubSupervisionLog);
         return httpContent;
     }
+
+    public static HttpContent  checkReceiveData(HttpServletRequest httpServletRequest,String paramStr) throws Exception {
+        InputStream in = null;
+        in = new ByteArrayInputStream(paramStr.getBytes(Consts.UTF_8.name()));
+        String md5 = hash(in);
+        if(!md5.equals(httpServletRequest.getHeader(BINFILE_MD5))){
+            return new HttpContent(999,"md5签名错误:"+md5+"|"+httpServletRequest.getHeader(BINFILE_MD5));
+        }
+        if(!CacheHelper.getCompanyId().equals(httpServletRequest.getHeader(BINFILE_AUTH))){
+            return new HttpContent(999,"平台标识错误！");
+        }
+
+        return  new HttpContent(200,paramStr);
+
+    }
+
+
+
 
     public static String hash(InputStream in) {
         try {

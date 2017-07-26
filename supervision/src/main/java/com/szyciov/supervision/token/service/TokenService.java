@@ -14,6 +14,7 @@ import com.szyciov.supervision.util.Token;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,14 +26,18 @@ public class TokenService {
     //保存token
     private static String ACCESS_TOKEN;
 
-    public static String getToken() throws IOException {
+    @Autowired
+    private GzwycApi gzwycApi;
+
+    public   String getToken() throws IOException {
 
         if(ACCESS_TOKEN!=null){
             return  ACCESS_TOKEN;
         }
         TokenRequest tokenRequest = new TokenRequest(CacheHelper.getCompanyId(), CacheHelper.getKey());
         BasicRequest request = new BasicRequest(JSONUtil.toJackson(tokenRequest), InterfaceType.TOKEN, CommandEnum.ACCESS, RequestType.REQ,null);
-        HttpContent httpContent = GzwycApi.token(request);
+        HttpContent httpContent = gzwycApi.token(request);
+
         if(httpContent.getStatus() != 200){
             logger.error("API_INFO:获取token失败|状态码:{}|返回内容:{}",httpContent.getStatus(),httpContent.getContent());
             return  null;

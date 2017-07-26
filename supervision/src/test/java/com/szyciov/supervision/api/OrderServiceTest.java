@@ -1,7 +1,18 @@
 package com.szyciov.supervision.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.supervision.api.order.*;
+import com.supervision.enums.CommandEnum;
+import com.supervision.enums.InterfaceType;
+import com.szyciov.supervision.enums.RequestType;
+import com.szyciov.supervision.token.service.TokenService;
+import com.szyciov.supervision.util.BasicRequest;
+import com.szyciov.supervision.util.EntityInfoList;
+import com.szyciov.supervision.util.GzwycApi;
+import com.szyciov.supervision.util.HttpContent;
+import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +21,7 @@ import java.util.List;
  * 3.3	营运订单信息数据
  * Created by 林志伟 on 2017/7/14.
  */
-public class OrderService extends ApiServiceTest {
+public class OrderServiceTest extends ApiServiceTest {
     /**
      *3.3.1	订单发起(DDFQ) 实时
      */
@@ -112,21 +123,33 @@ public class OrderService extends ApiServiceTest {
     }
 
     /**
-     * 注：该服务并不是调用监管平台，而是由监管平台调用
+     * 注：该服务并不是调用监管平台，而是由监管平台调用,模拟监管平台的调用
      * 3.3.4	订单补传请求*(DDBCQQ)
      *
      */
-//    @Test
-//    public void testOrderSupplementsRequest(){
-//        List<OrderSupplementsRequest> list=new ArrayList<OrderSupplementsRequest>();
-//        OrderSupplementsRequest orderSupplementsRequest=new OrderSupplementsRequest();
-//        orderSupplementsRequest.setAddress("440100");
-//        orderSupplementsRequest.setOrderId("2017456s4dsd");
-//        orderSupplementsRequest.setOrderTime("20170707121545");
-//
-//        list.add(orderSupplementsRequest);
-//        messageSender.send(list);
-//    }
+    @Autowired GzwycApi gzwycApi;
+
+    @Test
+    public void testOrderSupplementsRequest() throws Exception {
+        List<OrderSupplementsRequest> list=new ArrayList<OrderSupplementsRequest>();
+        OrderSupplementsRequest orderSupplementsRequest=new OrderSupplementsRequest();
+        orderSupplementsRequest.setAddress("440100");
+        orderSupplementsRequest.setOrderId("2017456s4dsd你");
+        orderSupplementsRequest.setOrderTime("20170707121545");
+        list.add(orderSupplementsRequest);
+
+
+        String token = "RY";
+        EntityInfoList infoList = new EntityInfoList(list);
+        String result = JSONUtil.toJackson(infoList);
+        CommandEnum commandEnum = list.get(0).getCommand();
+        InterfaceType interfaceType = list.get(0).getApiType();
+        BasicRequest req = new BasicRequest(result, interfaceType, commandEnum, RequestType.REQ, token);
+        HttpContent httpContent=gzwycApi.sendMsg("http://localhost:8098/api/order/supplements",req,false);
+        System.out.println("响应内容："+httpContent);
+
+
+    }
 
     /**
      * 3.3.5	订单补传*(DDBC) 实时
