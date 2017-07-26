@@ -1,8 +1,5 @@
 server:
-    port: 8080
-    context-path: #/ruyue/
-    cache:
-        type: redis
+    port: 8016
 logging:
     level:
         tk.mybatis: DEBUG
@@ -11,9 +8,6 @@ logging:
 
 spring:
     datasource:
-        name: ruyue
-        # 使用druid数据源
-        #type: com.alibaba.druid.pool.DruidDataSource
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.jdbc.Driver
         filters: stat
@@ -48,3 +42,5 @@ spring:
         corePoolSize: 1
         maxPoolSize: 1
         queueSize: 5000
+    profiles:  
+     active: dev 
