@@ -54,7 +54,7 @@ if (!version.contains("SNAPSHOT")){
 }
 
 springBoot {
-    mainClass = "com.ry.taxi.RyTaxiMeterServiceApplication"
+    mainClass = "com.ry.taxi.RyMeterServiceApplication"
 }
 
 repositories {
