@@ -1,6 +1,4 @@
 spring:
-    cache:
-        type: redis
     datasource:
         url: jdbc:mysql://szycwh.f3322.net:3306/carservicedev_test_v4.0.0?useUnicode=true&characterEncoding=utf-8
         username: xxdeveloper
