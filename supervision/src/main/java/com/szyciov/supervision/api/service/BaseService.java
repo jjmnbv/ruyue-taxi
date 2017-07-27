@@ -110,7 +110,6 @@ public class BaseService {
         }
         return list;
     }
-
     /**
      * 是否再次发送
      * @param list

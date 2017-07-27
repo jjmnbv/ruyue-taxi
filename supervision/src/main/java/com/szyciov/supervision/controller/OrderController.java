@@ -78,6 +78,11 @@ public class OrderController {
         return  httpContent.getContent();
     }
 
+    @GetMapping("/test")
+    public String test(){
+        return  "test";
+    }
+
     /**
      * 获取请求头信息
      * @param httpServletRequest

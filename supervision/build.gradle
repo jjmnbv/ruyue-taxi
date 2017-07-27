@@ -110,9 +110,13 @@ dependencies {
     compile 'org.projectlombok:lombok:1.16.16'
 
 
-    compile 'com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'
+    compile ('com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'){
+        exclude module: 'slf4j-api'
+        exclude module: 'slf4j-log4j12'
+        exclude group : 'org.springframework.security'
+    }
     compile 'org.codehaus.janino:janino:3.0.7'
-    
+
 }
 
 configurations.all {
