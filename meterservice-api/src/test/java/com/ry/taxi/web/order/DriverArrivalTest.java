@@ -4,7 +4,10 @@
 package com.ry.taxi.web.order;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.http.entity.ContentType;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -27,8 +30,6 @@ import com.xunxintech.ruyue.coach.io.date.DateUtil;
  * @Copyrigth  版权所有 (C) 2017 广州讯心信息科技有限公司.
  */
 public class DriverArrivalTest  extends BaseWebTest  {
-	
-	private String  Key = "12345678";
 	
 	public String takeArgs() throws JSONException{
 		 JSONObject argJson = new JSONObject();

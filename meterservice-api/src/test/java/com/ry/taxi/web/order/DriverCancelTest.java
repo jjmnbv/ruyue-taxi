@@ -15,9 +15,6 @@ import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 public class DriverCancelTest extends BaseWebTest{
 	
-	
-	private String  Key = "12345678";
-	
 	public String takeArgs() throws JSONException{
 		JSONObject jsonparam = new JSONObject();
 		jsonparam.put("OrderNum", "CGT1707251731");

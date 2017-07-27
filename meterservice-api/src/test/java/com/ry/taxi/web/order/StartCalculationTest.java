@@ -25,8 +25,6 @@ import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
  */
 public class StartCalculationTest extends BaseWebTest {
 	
-
-	private String  Key = "12345678";
 	
 	public String takeArgs() throws JSONException{
 		 JSONObject argJson = new JSONObject();

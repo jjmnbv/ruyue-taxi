@@ -14,9 +14,7 @@ import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
 import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
 public class DriverStartTest extends BaseWebTest{
-	
-	private String  Key = "12345678";
-	
+		
 	
 	public String takeArgs() throws JSONException{
 		

@@ -1,6 +1,7 @@
 package com.ry.taxi.web;
 
 
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,11 @@ public class BaseWebTest {
 	@Autowired
 	protected TestRestTemplate testRest;
 
-	private String  Key = "12345678";
+	protected  String  Key = "12345678";
+	
+	@Test
+	public void test(){
+		//不可删除
+	}
 
 }

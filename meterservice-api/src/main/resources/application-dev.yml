@@ -9,7 +9,8 @@ GCI:
     service: 
         host: 127.0.0.1
         port: 1223
-        http: https:${GCI.service.host}:${GCI.service.port}/Chuzu/api/v1/Jkdd/gettaximonitorgpsreal?appid=${GCI.appid}&encryption=${GCI.encryption}
+        http: 
+        #https:${GCI.service.host}:${GCI.service.port}/Chuzu/api/v1/Jkdd/gettaximonitorgpsreal?appid=${GCI.appid}&encryption=${GCI.encryption}
 
 DES:
   iv: 12345678

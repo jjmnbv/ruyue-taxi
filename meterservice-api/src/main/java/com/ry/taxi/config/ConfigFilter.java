@@ -82,9 +82,12 @@ public class ConfigFilter implements HandlerInterceptor {
 				else
 				{  
 					ErrorResponse.printErrorMessage(response, cmd, 2, "sign签名校验不通过");
+					return false;
 				}
 			} catch (Exception e) {
 				logger.error("check encryption error,cmd:{},key:{},userId:{},args:{},sign:{},error:{}", cmd, key, userId, args, sign);
+				ErrorResponse.printErrorMessage(response, cmd, 2, "请求异常");
+				return false;
 			}
 		}
 		ErrorResponse.printErrorMessage(response, cmd, 2, "请求参数不能为空");

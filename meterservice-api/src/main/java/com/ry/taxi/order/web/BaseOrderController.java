@@ -187,7 +187,7 @@ public class BaseOrderController {
 		int resultinfo = orderService.doDriverCancel(drivercancel);
 		
 		if(resultinfo>0){
-			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(ErrorEnum.e1005.getValue()), ""));
+			result.setRemark(PropertiesUtil.getStringByKey(String.valueOf(resultinfo), ""));
 			result.setResult(ERROR_RESPONSE);
 		}
 		

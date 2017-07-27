@@ -23,6 +23,7 @@ import com.ry.taxi.base.exception.RyTaxiException;
 import com.ry.taxi.sync.domain.GciSyncLog;
 import com.ry.taxi.sync.mapper.GciVehicleMapper;
 import com.ry.taxi.sync.query.RealTimeGps;
+import com.szyciov.util.StringUtil;
 import com.xunxintech.ruyue.coach.io.date.DateUtil;
 import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 
@@ -85,6 +86,8 @@ public class RealTaxiMonitor {
 	 */
 	@Scheduled(cron="0/15 0 0 * * ?")
 	public void realGps(){
+		if (StringUtils.isBlank(gpsUrl))
+			return ;
 		initSet();
 		GciSyncLog lastTrace = gciVehicleMapper.getLastTrace();
 		String updatetime = "";
