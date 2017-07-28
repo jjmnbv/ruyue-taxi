@@ -1,0 +1,882 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="2.9" jmeter="3.0 r1743807">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="电召接口测试" enabled="true">
+      <stringProp name="TestPlan.comments">1.需要在jemter的\lib\ext\路径下放入以下jar包
+ry-coach-common-io-1.1.39-SNAPSHOT.jar
+ry-coach-common-encryption-1.0.5-SNAPSHOT.jar
+2.需要在测试计划-&gt;add directory or jar to classpath增加jar路径
+3.测试下单时,先使用juni单元测试类createordertest下单,再进行jemeter操作</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="用户定义的变量" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="Key" elementType="Argument">
+            <stringProp name="Argument.name">Key</stringProp>
+            <stringProp name="Argument.value">12345678</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="UserId" elementType="Argument">
+            <stringProp name="Argument.name">UserId</stringProp>
+            <stringProp name="Argument.value">GCI</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="url" elementType="Argument">
+            <stringProp name="Argument.name">url</stringProp>
+            <stringProp name="Argument.value">120.76.199.119</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="port" elementType="Argument">
+            <stringProp name="Argument.name">port</stringProp>
+            <stringProp name="Argument.value">8016</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="IvCode" elementType="Argument">
+            <stringProp name="Argument.name">IvCode</stringProp>
+            <stringProp name="Argument.value">12345678</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="charset" elementType="Argument">
+            <stringProp name="Argument.name">charset</stringProp>
+            <stringProp name="Argument.value">utf-8</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="orderno" elementType="Argument">
+            <stringProp name="Argument.name">orderno</stringProp>
+            <stringProp name="Argument.value">CGT1707271704</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath">D:\openSource\apache-jmeter-3.0\lib\ext\ry-coach-common-io-1.1.39-SNAPSHOT.jar,D:\openSource\apache-jmeter-3.0\lib\ext\json-lib-2.4-jdk15.jar,D:\openSource\apache-jmeter-3.0\lib\ext\ry-coach-common-encryption-1.0.5-SNAPSHOT.jar,D:\openSource\apache-jmeter-3.0\lib\ext\commons-lang3-3.4.jar</stringProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="meterservice-api" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="循环控制器" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <longProp name="ThreadGroup.start_time">1500884979000</longProp>
+        <longProp name="ThreadGroup.end_time">1500884979000</longProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.1 司机应邀通知" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=DriverTakeOrder&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;).append(&quot;\&quot;CertNum\&quot;:&quot;).append(&quot;\&quot;STR334624\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Mobile\&quot;:&quot;).append(&quot;\&quot;18620291125\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;PlateNum\&quot;:&quot;).append(&quot;\&quot;A23455\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;ResponseType\&quot;:&quot;).append(&quot;\&quot;1\&quot;&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.2 .司机执行订单通知（预约单）" enabled="false">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=DriverStartOrder&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
+
+String time = DateUtil.date2String(new Date());
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;).append(&quot;\&quot;CertNum\&quot;:&quot;).append(&quot;\&quot;STR334624\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Mobile\&quot;:&quot;).append(&quot;\&quot;18620291125\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;PlateNum\&quot;:&quot;).append(&quot;\&quot;A23455\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;DepartureTime\&quot;:&quot;).append(&quot;\&quot;&quot;).append(time).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Longitude\&quot;:&quot;).append(&quot;113.3490850000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Latitude\&quot;:&quot;).append(&quot;23.1764890000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;MapType\&quot;:&quot;).append(&quot;1&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.3.司机到达乘客起点通知" enabled="false">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=DriverArrival&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
+
+String time = DateUtil.date2String(new Date());
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;).append(&quot;\&quot;CertNum\&quot;:&quot;).append(&quot;\&quot;STR334624\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Mobile\&quot;:&quot;).append(&quot;\&quot;18620291125\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;PlateNum\&quot;:&quot;).append(&quot;\&quot;A23455\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Longitude\&quot;:&quot;).append(&quot;113.3490850000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Latitude\&quot;:&quot;).append(&quot;23.1764890000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;MapType\&quot;:&quot;).append(&quot;1&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;ArrivalTime\&quot;:&quot;).append(&quot;\&quot;&quot;).append(time).append(&quot;\&quot;&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.4.司机取消通知" enabled="false">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=DriverCancelOrder&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
+
+String time = DateUtil.date2String(new Date());
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;CancelTime\&quot;:&quot;).append(&quot;\&quot;&quot;).append(time).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;CancelType\&quot;:&quot;).append(&quot;1&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.5.压表通知" enabled="false">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=StartCalculation&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
+
+String time = DateUtil.date2String(new Date());
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;).append(&quot;\&quot;CertNum\&quot;:&quot;).append(&quot;\&quot;STR334624\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Mobile\&quot;:&quot;).append(&quot;\&quot;18620291125\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;PlateNum\&quot;:&quot;).append(&quot;\&quot;A23455\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Longitude\&quot;:&quot;).append(&quot;113.3490850000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Latitude\&quot;:&quot;).append(&quot;23.1764890000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;MapType\&quot;:&quot;).append(&quot;1&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;PassengerGetOnTime\&quot;:&quot;).append(&quot;\&quot;&quot;).append(time).append(&quot;\&quot;&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.6.起表通知" enabled="false">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=EndCalculation&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
+
+String time = DateUtil.date2String(new Date());
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;).append(&quot;\&quot;CertNum\&quot;:&quot;).append(&quot;\&quot;STR334624\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;Mobile\&quot;:&quot;).append(&quot;\&quot;18620291125\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;PlateNum\&quot;:&quot;).append(&quot;\&quot;A23455\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;InputLon\&quot;:&quot;).append(&quot;113.3490850000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;InputLat\&quot;:&quot;).append(&quot;23.1764890000&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;MapType\&quot;:&quot;).append(&quot;1&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TransId\&quot;:&quot;).append(&quot;\&quot;m123456789\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;AmountPayable\&quot;:&quot;).append(&quot;33.30&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;OrderEndTime\&quot;:&quot;).append(&quot;\&quot;&quot;).append(time).append(&quot;\&quot;&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.7.支付确认通知" enabled="false">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=PaymentConfirmation&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
+
+String time = DateUtil.date2String(new Date());
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TransId\&quot;:&quot;).append(&quot;\&quot;m123456789\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TotalPayable\&quot;:&quot;).append(&quot;33.30&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;RewardFeePayable\&quot;:&quot;).append(&quot;0&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;KmFeePayable\&quot;:&quot;).append(&quot;33.30&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TotalFee\&quot;:&quot;).append(&quot;33.30&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;RewardFee\&quot;:&quot;).append(&quot;0&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;KmFee\&quot;:&quot;).append(&quot;33.30&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TransTime\&quot;:&quot;).append(&quot;\&quot;&quot;).append(time).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TransType\&quot;:&quot;).append(&quot;4&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TransMode\&quot;:&quot;).append(&quot;0&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.8.里程回传" enabled="false">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${param}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${url}</stringProp>
+          <stringProp name="HTTPSampler.port">${port}</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">utf-8</stringProp>
+          <stringProp name="HTTPSampler.path">/RyTaxi/Management/func?Cmd=DistanceUpload&amp;Key=${Key}&amp;UserId=${UserId}&amp;Args=${Args}&amp;Sign=${Sign}</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+          <boolProp name="HTTPSampler.monitor">false</boolProp>
+          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP信息头管理器" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="察看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">false</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <time>true</time>
+                <latency>true</latency>
+                <timestamp>true</timestamp>
+                <success>true</success>
+                <label>true</label>
+                <code>true</code>
+                <message>true</message>
+                <threadName>true</threadName>
+                <dataType>true</dataType>
+                <encoding>false</encoding>
+                <assertions>true</assertions>
+                <subresults>true</subresults>
+                <responseData>false</responseData>
+                <samplerData>false</samplerData>
+                <xml>false</xml>
+                <fieldNames>true</fieldNames>
+                <responseHeaders>false</responseHeaders>
+                <requestHeaders>false</requestHeaders>
+                <responseDataOnError>false</responseDataOnError>
+                <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+                <assertionsResultsToSave>0</assertionsResultsToSave>
+                <bytes>true</bytes>
+                <threadCounts>true</threadCounts>
+                <idleTime>true</idleTime>
+              </value>
+            </objProp>
+            <stringProp name="filename"></stringProp>
+          </ResultCollector>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="set Param" enabled="true">
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="script">import com.xunxintech.ruyue.coach.encryption.algorithm.DESUtils;
+import com.xunxintech.ruyue.coach.encryption.algorithm.MD5;
+import com.xunxintech.ruyue.coach.io.date.DateUtil;
+
+String time = DateUtil.date2String(new Date());
+
+StringBuilder args = new StringBuilder(&quot;&quot;);
+args.append(&quot;{&quot;);
+args.append(&quot;\&quot;OrderNum\&quot;:&quot;).append(&quot;\&quot;&quot;).append(vars.get(&quot;orderno&quot;)).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TransId\&quot;:&quot;).append(&quot;\&quot;m123456789\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;TransTime\&quot;:&quot;).append(&quot;\&quot;&quot;).append(time).append(&quot;\&quot;&quot;).append(&quot;,&quot;);
+args.append(&quot;\&quot;AccumulatedDistance\&quot;:&quot;).append(&quot;10.33&quot;).append(&quot;}&quot;);
+
+String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
+        .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
+	 
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+vars.put(&quot;Args&quot;, param);
+vars.put(&quot;Sign&quot;,sign);
+vars.put(&quot;param&quot;,args.toString());
+</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
