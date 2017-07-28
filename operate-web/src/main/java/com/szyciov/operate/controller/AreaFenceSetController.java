@@ -6,7 +6,6 @@ import com.szyciov.op.entity.CityTreeNode;
 import com.szyciov.op.entity.OpUser;
 import com.szyciov.op.param.*;
 import com.szyciov.util.*;
-import net.sf.json.JSONArray;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -76,7 +75,6 @@ public class AreaFenceSetController extends BaseController {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/AreaFenceSet/UpdateFenceStatus", method = RequestMethod.POST)
     @ResponseBody
     public Map<String, Object> updateFenceStatus(@RequestBody SetAreaFenceParam setAreaFenceParam, HttpServletRequest request,
@@ -120,7 +118,6 @@ public class AreaFenceSetController extends BaseController {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/AreaFenceSet/GetCity", method = RequestMethod.POST)
     @ResponseBody
     public List<CityTreeNode> getAllCity(String id, String afsId, HttpServletRequest request,
@@ -171,7 +168,6 @@ public class AreaFenceSetController extends BaseController {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/AreaFenceSet/GetAllowCity")
     @ResponseBody
     public List<CityTreeNode> getAllowCity(HttpServletRequest request) throws IOException {
@@ -224,7 +220,6 @@ public class AreaFenceSetController extends BaseController {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/AreaFenceSet/GetById")
     @ResponseBody
     public QueryAreaFence getById(@RequestParam String id, HttpServletRequest request, HttpServletResponse response)
@@ -257,7 +252,6 @@ public class AreaFenceSetController extends BaseController {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/AreaFenceSet/Update")
     @ResponseBody
     public Map<String, Object> update(@RequestBody SetAreaFenceParam setAreaFenceParam, HttpServletRequest request,
@@ -284,7 +278,6 @@ public class AreaFenceSetController extends BaseController {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/AreaFenceSet/Add")
     @ResponseBody
     public Map<String, Object> add(@RequestBody SetAreaFenceParam setAreaFenceParam, HttpServletRequest request,
@@ -311,7 +304,6 @@ public class AreaFenceSetController extends BaseController {
      * @return
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     @RequestMapping(value = "/AreaFenceSet/Delete")
     @ResponseBody
     public Map<String, Object> delete(@RequestBody Map<String, String> map, HttpServletRequest request,
@@ -411,29 +403,15 @@ public class AreaFenceSetController extends BaseController {
     @RequestMapping("/AreaFenceSet/getVehcList")
     @SuppressWarnings("unchecked")
     public PageBean getVehcList(@RequestBody QueryVehcAndEqpParam queryParam, HttpServletRequest request) {
-        QueryControlledEqpParam param = new QueryControlledEqpParam();
-        param.setFenceType(2);
-        param.setApikey(vmsApikey);
-        param.setFenceId(queryParam.getFenceId());
-        Map<String, Object> mapControlledEqp = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/SystemSet/QueryControlledEqp?"
-                        + ReflectClassField.getMoreFieldsValue(param),
-                HttpMethod.GET, null, param, Map.class);
-
-        JSONArray jsonArray = JSONArray.fromObject(mapControlledEqp.get("controlledEqp"));
-        List<Map<String, Object>> listControlledEqp = JSONUtil.parseJSON2Map(jsonArray);
-        List<String> eqpIdList = new ArrayList<>();
-        for (Map<String, Object> map : listControlledEqp) {
-            eqpIdList.add(map.get("eid").toString());
-        }
-
         PageBean pageBean = new PageBean();
         queryParam.setApikey(vmsApikey);
-        queryParam.setEqpIdList(eqpIdList);
 
-        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Common/QueryVehcAndEqpJson",
-                HttpMethod.POST, null, queryParam, Map.class);
-
+        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(
+                vmsApiUrl + "/Common/QueryVehcAndEqp?"
+                        + ReflectClassField.getMoreFieldsValue(queryParam),
+                HttpMethod.GET, null, queryParam, Map.class);
         List<QueryVehcAndEqp> list = (List<QueryVehcAndEqp>) map.get("vhecEqpList");
+
         pageBean.setsEcho(queryParam.getsEcho());
         int i = (int) map.get("iTotalRecords");
         pageBean.setiTotalDisplayRecords(i);
@@ -477,10 +455,10 @@ public class AreaFenceSetController extends BaseController {
     @SuppressWarnings("unchecked")
     public Map<String, Object> removeEqp(@RequestBody QueryControlledEqpParam queryParam, HttpServletRequest request) {
 
-        queryParam.setApikey(vmsApikey);
         OpUser loginOpUser = getLoginOpUser(request);
         queryParam.setOperateId(loginOpUser.getId());
         queryParam.setOperateStaff(loginOpUser.getNickname());
+        queryParam.setApikey(vmsApikey);
 
         Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/SystemSet/DelDistributionEqp",
                 HttpMethod.POST, null, queryParam, Map.class);

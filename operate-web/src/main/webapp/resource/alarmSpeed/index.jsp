@@ -141,7 +141,7 @@
     <div class="row">
         <div class="col-12">
             <table
-                    class="table table-bordered table-striped table-hover"
+                    class="table table-bordered table-condensed table-striped table-hover"
                     cellspacing="0" id="dtGrid" width="100%"></table>
         </div>
     </div>

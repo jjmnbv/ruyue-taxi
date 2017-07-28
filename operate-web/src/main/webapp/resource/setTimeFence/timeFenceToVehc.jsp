@@ -11,7 +11,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>分配车辆</title>
+    <title>系统设置 时间栅栏设置</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -65,9 +65,6 @@
     }
     #btnBind{
         margin-right: 10px;
-    }
-    .form-horizontal .control-label{
-        text-align: right;
     }
 </style>
 
@@ -146,7 +143,7 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <table class="table table-bordered  table-striped table-hover"
+                                        <table class="table table-bordered table-condensed table-striped table-hover"
                                                id="dtGrid"></table>
                                     </div>
                                 </div>
@@ -229,7 +226,7 @@
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                <table class="table table-bordered  table-striped table-hover" id="dtGrid2"></table>
+                                <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid2"></table>
                             </div>
                         </div>
                     </div>

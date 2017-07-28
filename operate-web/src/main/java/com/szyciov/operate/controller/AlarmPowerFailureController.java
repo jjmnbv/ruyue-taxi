@@ -12,8 +12,6 @@ import net.sf.json.JSONArray;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -38,7 +36,6 @@ import java.util.*;
 @Controller
 @RequestMapping("/AlarmPowerFailure")
 public class AlarmPowerFailureController extends BaseController {
-
 	private TemplateHelper templateHelper = new TemplateHelper();
 	private String baseApiUrl = SystemConfig.getSystemProperty("vmsBaseApiUrl");
 	private String vmsApiUrl = SystemConfig.getSystemProperty("vmsApiUrl");
@@ -75,11 +72,9 @@ public class AlarmPowerFailureController extends BaseController {
 		List<TextAndValue> listDictionary = TextValueUtil.convert(dictionary);
 		qaueryOutageParam.setOrganizationId(
 				(!listDictionary.isEmpty() && listDictionary.size() > 0) ? listDictionary.get(0).getValue() : "");
-
 		Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(
 				vmsApiUrl + "/Monitor/QueryOutage?" + ReflectClassField.getMoreFieldsValue(qaueryOutageParam),
 				HttpMethod.GET, usertoken, null, Map.class);
-
 		List<QueryOutage> list = (List<QueryOutage>) map.get("outage");
 		pageBean.setsEcho(qaueryOutageParam.getsEcho());
 		int i = (int) map.get("iTotalRecords");
@@ -253,8 +248,8 @@ public class AlarmPowerFailureController extends BaseController {
 		title.put("plate", "车牌");
 		headerList.add("车牌");
 
-		title.put("imei", "IMEI");
-		headerList.add("IMEI");
+		title.put("imei", "设备IMEI");
+		headerList.add("设备IMEI");
 		title.put("department", "服务车企");
 		headerList.add("服务车企");
 		title.put("alarmTime", "报警时间");
@@ -276,39 +271,6 @@ public class AlarmPowerFailureController extends BaseController {
 
 		return title;
 	}
-
-	@RequestMapping("/toPowerFailureDetail/{id}")
-	public String toPowerFailureDetail(@PathVariable("id")String id, HttpServletRequest request, Model model){
-		QueryOutageParam param = new QueryOutageParam();
-
-		param.setId(id);
-		param.setApikey(vmsApikey);
-
-		Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Monitor/QueryOutage?" +
-						ReflectClassField.getMoreFieldsValue(param), HttpMethod.GET, null, param, Map.class);
-
-		JSONArray jsonArray = JSONArray.fromObject(map.get("outage"));
-		List<Map<String, Object>> list = JSONUtil.parseJSON2Map(jsonArray);
-		QueryOutage queryOutage = new QueryOutage();
-		for (Map<String, Object> m : list) {
-			queryOutage.setPlate(m.get("plate").toString());
-			queryOutage.setImei(m.get("imei").toString());
-			queryOutage.setDepartment(m.get("department").toString());
-			queryOutage.setAlarmTime(m.get("alarmTime").toString());
-			queryOutage.setProcessingTime(m.get("processingTime").toString());
-			queryOutage.setAlarmAddress(m.get("alarmAddress").toString());
-			queryOutage.setProcessingPeople(m.get("processingPeople").toString());
-			queryOutage.setRemarks(m.get("remarks").toString());
-			queryOutage.setPlate(m.get("plate").toString());
-			queryOutage.setReasonText(m.get("reasonText").toString());
-			queryOutage.setEqpId(m.get("eqpId").toString());
-			queryOutage.setDepartmentId(m.get("departmentId").toString());
-		}
-
-		model.addAttribute("queryOutage",queryOutage);
-		return "resource/alarmPowerFailure/powerFailureDetail";
-	}
-
 
 	/**
 	 * 获取usertoken的通用方法 app端用户主要是用户请求中传递usertoken web端用户主要是从session中获取

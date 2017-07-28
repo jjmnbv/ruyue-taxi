@@ -26,8 +26,6 @@ import java.math.BigDecimal;
 
 public class QueryTimeViolation {
 
-    private String id;
-
     /**
      * 车牌
      */
@@ -62,53 +60,6 @@ public class QueryTimeViolation {
      * 违规里程
      */
     private BigDecimal illegalMileage;
-
-    /**
-     * 行程ID
-     */
-    private String trackId;
-
-    /**
-     * 行程状态
-     */
-    private String trackStatus;
-
-    /**
-     * 设备id
-     */
-    private String eqpId;
-
-    public String getEqpId() {
-        return eqpId;
-    }
-
-    public void setEqpId(String eqpId) {
-        this.eqpId = eqpId;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getTrackStatus() {
-        return trackStatus;
-    }
-
-    public void setTrackStatus(String trackStatus) {
-        this.trackStatus = trackStatus;
-    }
-
-    public String getTrackId() {
-        return trackId;
-    }
-
-    public void setTrackId(String trackId) {
-        this.trackId = trackId;
-    }
 
     //操作
     public String cz;

@@ -129,6 +129,7 @@ function reset(){
 	$("#starttime").val(date.format('yyyy-MM-dd'));
 	$("#ordertypeOne").val("");
 	$("#ordertypeOne").attr("data-value","")
+	var aaa = $("#ordertypeOne").val("");
 	var conditionArr = [
 	            		{ "name": "starttime", "value": $("#starttime").val() },
 	            		{ "name": "endtime", "value": $("#endtime").val() },

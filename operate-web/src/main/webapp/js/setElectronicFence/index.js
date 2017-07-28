@@ -48,15 +48,12 @@ function onDel(id) {
                 contentType: 'application/json; charset=utf-8',
                 async: false,
                 success: function (data) {
-                    if (data.status == 0) {
-                        toastr.success("删除成功", "提示信息");
-                        dtGrid._fnReDraw();
-
-                    } else {
-                        var message = data.msg == null ? status
-                            : status.msg;
-                        toastr.error(message, "提示");
-                    }
+                    toastr.success("删除成功", "提示信息");
+                    dtGrid._fnReDraw();
+                },
+                error: function (xhr, status, error) {
+                    showerror(xhr.responseText);
+                    return;
                 }
             });
         }
@@ -87,16 +84,16 @@ function initGrid() {
                 "render": function (data, type, row) {
                     var html = '';
                     if (true) {
-                        html += '<a href=" ' + basePath + 'SetElectronicFence/electronicFenceToVehc/' + row.electronicFenceId + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/distributionCar.png" />分配车辆</a>';
+                        html += '<a href=" ' + basePath + ' /SetElectronicFence/electronicFenceToVehc/' + row.electronicFenceId + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/distributionCar.png" />分配车辆</a>';
                     }
                     if (true) {
-                        html += '&nbsp;<a  href=" ' + basePath + 'SetElectronicFence/toAddOrUpdate/' + row.electronicFenceId + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/edit.png" />修改</a>';
+                        html += '&nbsp;<a  href=" ' + basePath + ' /SetElectronicFence/toAddOrUpdate/' + row.electronicFenceId + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/edit.png" />修改</a>';
                     }
                     if (true) {
-                        html += '&nbsp;<a  class="SSbtn red" href="javascript:void(0)" id="btnDel" onclick=onDel(' + '"' + row.electronicFenceId + '"' + ') ><i class="fa fa-trash-o"></i> 删除</a>';
+                        html += '&nbsp;<a  class="btn  btn-xs red" href="javascript:void(0)" id="btnDel" onclick=onDel(' + '"' + row.electronicFenceId + '"' + ') ><i class="fa fa-trash-o"></i> 删除</a>';
                     }
 
-                    return html += '&nbsp;<a  href=" ' + basePath + 'SetElectronicFence/electronicFenceInfo/' + row.electronicFenceId + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />详情</a>';
+                    return html += '&nbsp;<a target="_blank" href=" ' + basePath + ' SetElectronicFence/electronicFenceInfo/' + row.electronicFenceId + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />详情</a>';
                 }
             },
 

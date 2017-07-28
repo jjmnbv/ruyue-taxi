@@ -11,7 +11,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>时间栅栏设置 </title>
+    <title>系统设置 </title>
     <base href="<%=basePath%>">
 
 <!-- 公用CSS -->
@@ -77,7 +77,7 @@
         </div>
         <div class="row">
             <div class="col-12">
-                <table class="table table-bordered  table-striped table-hover" id="dtGrid"></table>
+                <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid"></table>
             </div>
         </div>
     </div>

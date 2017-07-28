@@ -11,7 +11,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>电子围栏设置</title>
+    <title>系统设置 电子围栏设置</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -54,7 +54,7 @@
 </head>
 <body style="overflow:hidden;">
 <div class="crumbs">
-    <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 电子围栏设置
+    <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 电子栅栏设置
     <a class="btn btn-primary  blue pull-right" id="btnInsert " style="margin-top: -6px;"
        href="<%=basePath%>SetElectronicFence/toAddOrUpdate/0"><img src="img/trafficflux/icon/add.png"/>新增</a>
 
@@ -83,7 +83,7 @@
         </div>
         <div class="row">
             <div class="col-12">
-                <table class="table table-bordered  table-striped table-hover" id="dtGrid"></table>
+                <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid"></table>
             </div>
         </div>
     </div>

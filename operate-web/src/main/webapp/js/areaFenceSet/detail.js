@@ -13,9 +13,6 @@ $(function () {
         ];
         dtGrid.fnSearch(oData);
     });
-    $("#btnCancel").click(function () {
-        location.href = basePath + "AreaFenceSet/Index";
-    });
     initGrid();
 });
 //初始化栅栏信息界面，如果id>0代表修改，否则代码<img src="~/Content/assets/img/icon/add.png" />新增

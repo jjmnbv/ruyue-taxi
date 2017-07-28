@@ -14,9 +14,6 @@ $(function () {
         ];
         dtGrid.fnSearch(oData);
     });
-    $("#btnCancel").click(function () {
-        location.href = basePath + "SetTimeFence/Index";
-    })
     onSetMonitorPeriod();
     initGrid();
 });

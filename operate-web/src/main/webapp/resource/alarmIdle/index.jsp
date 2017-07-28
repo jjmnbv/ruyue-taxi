@@ -120,6 +120,7 @@
             </div>
 
 
+
         </div>
 
         <div class="row">
@@ -144,7 +145,7 @@
         <div class="row">
             <div class="col-12">
                 <table
-                        class="table table-bordered  table-striped table-hover"
+                        class="table table-bordered table-condensed table-striped table-hover"
                         cellspacing="0" id="dtGrid" width="100%"></table>
             </div>
         </div>
@@ -168,7 +169,7 @@
                             <label class="control-label col-md-3">核查结果<span style="color: red" class="required">*</span></label>
                             <div class="col-md-8">
                                 <!-- <select class="form-control " id="selResult" style="width:100%" required="required"></select> -->
-                                <select name="oilCharge" id="oilCharge" class="form-control required">
+                                <select name="oilCharge" id="oilCharge" class="form-control">
                                     <option value="">请选择</option>
                                     <c:forEach items="${resultList}" var="item">
                                         <option value="${item.Value}">${item.Text}</option>
@@ -187,20 +188,18 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="control-label col-md-3"> 核实人电话 <span
-                                     style="color: red">*</span></label>
+                            <label class="control-label col-md-3"> 核实人电话 </label>
                             <div class="col-md-8">
                                 <input name="verifyPersonTel" title="请输入正确格式的手机号"
-                                       class="form-control" id="verifyPersonTel"
-                                       placeholder="手机号格式：13714563657" minlength="11" pattern="1[358][0-9]{9}"
-                                       maxlength="11" required="required">
+                                       class="form-control" id="verifyPersonTel" type="text"
+                                       placeholder="手机号格式：13714563657" maxlength="11" pattern="1[358][0-9]{9}">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="control-label col-md-3"> 核实人车企 </label>
                             <div class="col-md-8">
 
-                                <select id="selVDepartment">
+                                <select id="company">
                                     <option value="">全部</option>
                                     <c:forEach items="${opUserCompany }" var="state">
                                         <option value="${state.value }">${state.text }</option>
@@ -219,7 +218,7 @@
                         </div>
                         <div class="form-group">
                             <label class="control-label col-md-3"> 怠速原因<span
-                                    class="required" style="color: red">*</span>
+                                    class="required">*</span>
                             </label>
                             <div class="col-md-8">
 												<textarea name="idleReason" class="form-control"
@@ -248,9 +247,6 @@
 
 </html>
 <script type="text/javascript" src="content/js/jquery.js"></script>
-<script type="text/javascript" src="content/plugins/jquery-validate/js/jquery.validate.js"></script>
-<script type="text/javascript" src="content/plugins/jquery-validate/js/additional-methods.js"></script>
-<script type="text/javascript" src="content/plugins/jquery-validate/js/jquery.validation.default.js"></script>
 <script type="text/javascript" src="content/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
 <script type="text/javascript" src="content/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="content/js/common.js"></script>
@@ -258,6 +254,7 @@
 <script type="text/javascript" src="content/plugins/data-tables/js/dataTables.bootstrap.js"></script>
 <script type="text/javascript" src="content/plugins/data-tables/js/dataTables.fnSearch.js"></script>
 <script type="text/javascript" src="content/plugins/data-tables/js/dataTables.fixedColumns.js"></script>
+<script type="text/javascript" src="content/plugins/jquery-validate/js/jquery.validate.js"></script>
 <script type="text/javascript" src="content/plugins/toastr/toastr.min.js"></script>
 <script type="text/javascript" src="js/basecommon.js"></script>
 <script type="text/javascript" src="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.js"></script>

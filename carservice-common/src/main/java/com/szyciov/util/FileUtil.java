@@ -5,13 +5,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.szyciov.entity.Retcode;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -83,12 +84,6 @@ public class FileUtil {
 				String fileinputname = it.next();
 				MultipartFile tagfile = files.get(fileinputname);
 				String filename = tagfile.getOriginalFilename();
-				//判断文件后缀
-				if(!isValidImageFile(filename)&&!isValidExcelFile(filename)){
-					result.put("status", Retcode.FAILED.code);
-					result.put("message","上传文件后缀不合法");
-					return result;
-				}
 				InputStreamBody body = new InputStreamBody(tagfile.getInputStream(), filename);
 				FormBodyPart form = new FormBodyPart(filename, body);
 				reqEntity.addPart(form);
@@ -114,7 +109,7 @@ public class FileUtil {
 		}
 		return result;
 	}
-
+	
 	/**
 	 * 通过流上传文件
 	 * @param in 文件的输入流
@@ -127,12 +122,7 @@ public class FileUtil {
 		HttpPost httppost = new HttpPost(SystemConfig.getSystemProperty("carserviceApiUrl")+"/FileUtil/UploadFile");
 //		HttpPost httppost = new HttpPost("http://10.10.10.100:8002/carservice-api/FileUtil/UploadFile");
 		MultipartEntity reqEntity = new MultipartEntity();
-		//判断文件后缀
-		if(!isValidImageFile(filename)&&!isValidExcelFile(filename)){
-			result.put("status", Retcode.FAILED.code);
-			result.put("message","上传文件后缀不合法");
-			return result;
-		}
+		
 		InputStreamBody body = new InputStreamBody(in, filename);
 		FormBodyPart form = new FormBodyPart(filename, body);
 		reqEntity.addPart(form);
@@ -199,69 +189,4 @@ public class FileUtil {
 		}
 		return;
 	}
-
-	/**
-	 * 合法的图片后缀
-	 */
-	private static List<String> IMAGES_POSTFIX = new ArrayList<String>();
-
-	/**
-	 * 合法的excel后缀
-	 */
-	private static List<String> EXCELS_POSTFIX = new ArrayList<String>();
-
-	static {
-		//初始化合法的图片后缀
-		IMAGES_POSTFIX.add("png");
-		IMAGES_POSTFIX.add("img");
-		IMAGES_POSTFIX.add("jpeg");
-		IMAGES_POSTFIX.add("jpg");
-		IMAGES_POSTFIX.add("jpe");
-		IMAGES_POSTFIX.add("gif");
-		IMAGES_POSTFIX.add("tga");
-		IMAGES_POSTFIX.add("wmf");
-		IMAGES_POSTFIX.add("bmp");
-		//初始化合法的excel后缀
-		EXCELS_POSTFIX.add("xls");
-		EXCELS_POSTFIX.add("xlsx");
-	}
-
-	/**
-	 * 是否是合法的图片文件
-	 * @return
-	 */
-	public static boolean isValidImageFile(String filename){
-		if(StringUtils.isBlank(filename)){
-			return false;
-		}
-		int index = filename.lastIndexOf(".");
-		if(index<=0||index>=filename.length()-1){
-			return false;
-		}
-		String postfix = filename.substring(index+1);
-		if(!IMAGES_POSTFIX.contains(postfix.toLowerCase())){
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * 是否是合法的图片文件
-	 * @return
-	 */
-	public static boolean isValidExcelFile(String filename){
-		if(StringUtils.isBlank(filename)){
-			return false;
-		}
-		int index = filename.lastIndexOf(".");
-		if(index<=0||index>=filename.length()-1){
-			return false;
-		}
-		String postfix = filename.substring(index+1);
-		if(!EXCELS_POSTFIX.contains(postfix.toLowerCase())){
-			return false;
-		}
-		return true;
-	}
-
 }

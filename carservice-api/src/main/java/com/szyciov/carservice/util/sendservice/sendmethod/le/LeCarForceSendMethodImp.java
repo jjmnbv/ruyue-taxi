@@ -279,7 +279,8 @@ public class LeCarForceSendMethodImp implements SendMethodHelper {
 				//当前范围内司机
 				List<PubDriver> drivers = new ArrayList<>();
 				drivers = getDriversInBound(rule, orderinfo, alreadySendDrivers, sow, rangeInfo, levelList);
-				optimalSortDriver(drivers,orderinfo,sow);
+				//对需要静默推送的司机进行排序
+				optimalSortDriver(drivers, orderinfo,sow);
 				//过滤本轮能推送的司机
 				List<PubDriver> currentCanPushDrivers = new ArrayList<>();
 				for(PubDriver d : drivers) {

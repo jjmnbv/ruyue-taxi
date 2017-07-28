@@ -1,5 +1,6 @@
 package com.szyciov.util;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -166,6 +167,25 @@ public class JedisUtil {
             val = jedis.rpop(key);
         }catch (Exception e){
             logger.error("redis rpop 失败---key:{}",key,e);
+        }finally {
+            jedis.close();
+        }
+        return val;
+    }
+
+
+    /**
+     * 返回哈希表 key 中，所有的域和值。
+     * @param key
+     * @return
+     */
+    public static Map<String, String> hgetAll(String key){
+        Jedis jedis = RedisUtil.getJedis();
+        Map<String, String> val = null;
+        try{
+            val = jedis.hgetAll(key);
+        }catch (Exception e){
+            logger.error("redis rpoplpush 失败---key:{}",key,e);
         }finally {
             jedis.close();
         }

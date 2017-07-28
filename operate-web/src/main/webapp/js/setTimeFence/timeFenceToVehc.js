@@ -106,7 +106,7 @@ function initGrid() {
                 "bSearchable": false,
                 "bStorable": false,
                 "render": function (data, type, row) {
-                    return '&nbsp;<a  class="SSbtn red" href="javascript:void(0)" id="btnDel" onclick=onDel(\'' + row.id + '\',\'' + fenceId + '\',\'' + row.eid + '\') ><i class="fa fa-trash-o"></i> 删除</a>';
+                    return '&nbsp;<a  class="btn  btn-xs red" href="javascript:void(0)" id="btnDel" onclick=onDel(\'' + row.id + '\',\'' + fenceId + '\',\'' + row.eid + '\') ><i class="fa fa-trash-o"></i> 删除</a>';
                 }
             }
         ]
@@ -237,6 +237,7 @@ function onAddVehc(E_id) {
                 setTimeout(function () {
                     dtGrid2._fnReDraw();
                     dtGrid._fnReDraw();
+                    $('#mdTimeFenceToVehc').modal('hide');
                 }, 500);
                 return;
 

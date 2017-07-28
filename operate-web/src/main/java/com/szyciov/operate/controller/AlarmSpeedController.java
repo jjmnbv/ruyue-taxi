@@ -4,15 +4,13 @@ import com.szyciov.entity.Dictionary;
 import com.szyciov.entity.Excel;
 import com.szyciov.entity.TextAndValue;
 import com.szyciov.op.entity.QueryOverspeed;
-import com.szyciov.op.param.*;
+import com.szyciov.op.param.QueryOverspeedParam;
 import com.szyciov.operate.util.TextValueUtil;
 import com.szyciov.util.*;
 import net.sf.json.JSONArray;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -23,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -237,8 +234,8 @@ public class AlarmSpeedController extends BaseController {
 
         title.put("plate", "车牌");
         headerList.add("车牌");
-        title.put("imei", "IMEI");
-        headerList.add("IMEI");
+        title.put("imei", "设备IMEI");
+        headerList.add("设备IMEI");
         title.put("department", "服务车企");
         headerList.add("服务车企");
         title.put("overspeedTime", "超速时长");
@@ -254,141 +251,6 @@ public class AlarmSpeedController extends BaseController {
 
 
         return title;
-    }
-
-    /**
-     * 跳转行程详情
-     *
-     * @param eqpId
-     * @param trackId
-     * @param trackStatus
-     * @param model
-     * @return
-     */
-    @RequestMapping("/selectTrack/{eqpId}/{trackId}/{trackStatus}")
-    public String selectTrack(@PathVariable("eqpId") String eqpId, @PathVariable("trackId") String trackId,
-                              @PathVariable("trackStatus") String trackStatus, Model model, HttpServletRequest request) {
-        String url = "";
-        if (trackStatus != null && trackStatus.equals("1")) {
-            QueryTrackDetailParam queryParam = new QueryTrackDetailParam();
-
-            queryParam.setTrackId(trackId);
-            queryParam.setApikey(apikey);
-            QueryTrackDetail trackDetail = getTrackDetail(queryParam, request);
-            QueryAlarmTimesCount alarmTimesCount = getAlarmTimesCount(trackId,apikey,request);
-            model.addAttribute("trackDetail", trackDetail);
-            model.addAttribute("alarmTimesCount",alarmTimesCount);
-            url =  "resource/trackInfo/currentVehcTrack";
-        } else {
-            QueryTrackDetailParam queryParam = new QueryTrackDetailParam();
-            queryParam.setTrackId(trackId);
-            queryParam.setApikey(apikey);
-            QueryTrackDetail trackDetail = getTrackDetail(queryParam, request);
-            QueryAlarmTimesCount alarmTimesCount = getAlarmTimesCount(trackId,apikey,request);
-            model.addAttribute("trackDetail", trackDetail);
-            model.addAttribute("alarmTimesCount",alarmTimesCount);
-            url =  "resource/trackInfo/historyVehcTrack";
-        }
-        model.addAttribute("trackStatus",trackStatus);
-        model.addAttribute("eqpId",eqpId);
-        model.addAttribute("trackId",trackId);
-        return url;
-
-    }
-
-
-    /**
-     * 获取行程数据
-     * @param queryParam
-     * @param request
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public QueryTrackDetail getTrackDetail(QueryTrackDetailParam queryParam, HttpServletRequest request) {
-
-        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(
-                vmsApiUrl + "/Monitor/QueryTrackDetails?" + ReflectClassField.getMoreFieldsValue(queryParam),
-                HttpMethod.GET, null, queryParam, Map.class);
-        JSONArray trackInfo = JSONArray.fromObject(map.get("trackInfo"));
-        List<Map<String, Object>> list = JSONUtil.parseJSON2Map(trackInfo);
-        QueryTrackDetail trackDetail = new QueryTrackDetail();
-
-        for (Map<String, Object> m : list) {
-            trackDetail.setPlate(m.get("plate").toString());
-            trackDetail.setImei(m.get("imei").toString());
-            trackDetail.setTrackMileage(new BigDecimal(m.get("trackMileage").toString()));
-            trackDetail.setMaxSpeed(new BigDecimal(m.get("maxSpeed").toString()));
-            trackDetail.setStrokeFuel(new BigDecimal(m.get("strokeFuel").toString()));
-            trackDetail.setAvgTrackSpeed(new BigDecimal(m.get("avgTrackSpeed").toString()));
-            trackDetail.setTrackStartTime(m.get("trackStartTime").toString());
-            trackDetail.setStrokeEndTime(m.get("strokeEndTime").toString());
-            trackDetail.setStartLongitude(new BigDecimal(m.get("startLongitude").toString()));
-            trackDetail.setStartLatitude(new BigDecimal(m.get("startLatitude").toString()));
-            trackDetail.setTrackStartAddress(m.get("trackStartAddress").toString());
-            trackDetail.setEndLongitude(new BigDecimal(m.get("endLongitude").toString()));
-            trackDetail.setEndLatitude(new BigDecimal(m.get("endLatitude").toString()));
-            trackDetail.setEndAddress(m.get("endAddress").toString());
-            trackDetail.setTotalTimeText(m.get("totalTimeText").toString());
-            trackDetail.setFuelConsumption(new BigDecimal(m.get("fuelConsumption").toString()));
-            trackDetail.setCumulativeOil(Integer.parseInt(m.get("cumulativeOil").toString()));
-            trackDetail.setIdleTimeText(m.get("idleTimeText").toString());
-            trackDetail.setMileage0020(new BigDecimal(m.get("mileage0020").toString()));
-            trackDetail.setMileage2040(new BigDecimal(m.get("mileage2040").toString()));
-            trackDetail.setMileage4060(new BigDecimal(m.get("mileage4060").toString()));
-            trackDetail.setMileage6090(new BigDecimal(m.get("mileage6090").toString()));
-            trackDetail.setMileage90120(new BigDecimal(m.get("mileage90120").toString()));
-            trackDetail.setMileage120(new BigDecimal(m.get("mileage120").toString()));
-            trackDetail.setIdleFuel(new BigDecimal(m.get("idleFuel").toString()));
-            trackDetail.setRunTimeText(m.get("runTimeText").toString());
-            trackDetail.setDepartmentName(m.get("departmentName").toString());
-            trackDetail.setSpeedingCount(Integer.parseInt(m.get("speedingCount").toString()));
-            trackDetail.setIdlingCount(Integer.parseInt(m.get("idlingCount").toString()));
-            trackDetail.setCollisionCount(Integer.parseInt(m.get("collisionCount").toString()));
-            trackDetail.setPowerfailureCount(Integer.parseInt(m.get("powerfailureCount").toString()));
-            trackDetail.setWatertempCount(Integer.parseInt(m.get("watertempCount").toString()));
-            trackDetail.setWorkStatusText(m.get("workStatusText").toString());
-            trackDetail.setRotation(new BigDecimal(m.get("rotation").toString()));
-            trackDetail.setSpeed(new BigDecimal(m.get("speed").toString()));
-            trackDetail.setTemperatrue(new BigDecimal(m.get("temperatrue").toString()));
-            trackDetail.setVoltage(new BigDecimal(m.get("voltage").toString()));
-            trackDetail.setTotalMileage(new BigDecimal(m.get("totalMileage").toString()));
-            trackDetail.setFaultCode(m.get("faultCode").toString());
-            trackDetail.setUpdateTime(m.get("updateTime").toString());
-
-
-        }
-        return trackDetail;
-    }
-
-    /**
-     * 报警次数
-     * @param trackId
-     * @param apikey
-     * @param request
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public QueryAlarmTimesCount getAlarmTimesCount(String trackId,String apikey,HttpServletRequest request){
-        CommonParam param = new CommonParam();
-        param.setId(trackId);
-        param.setApikey(apikey);
-        Map<String, Object> map = new HashMap<>();
-        try {
-            map= templateHelper.dealRequestWithFullUrlToken(
-                    vmsApiUrl + "/Monitor/AlarmTimesCount?" + ReflectClassField.getMoreFieldsValue(param), HttpMethod.GET, null,
-                    param, Map.class);
-        }catch (Exception e){
-            System.out.println(e.getMessage());
-        }
-        JSONArray trackInfo = JSONArray.fromObject(map.get("alarmTimesCount"));
-        List<Map<String, Object>> list = JSONUtil.parseJSON2Map(trackInfo);
-        QueryAlarmTimesCount alarmTimesCount = new QueryAlarmTimesCount();
-        for (Map<String, Object> m : list) {
-            alarmTimesCount.setAlarmAccelerateTimes(Integer.parseInt(m.get("alarmAccelerateTimes").toString()));
-            alarmTimesCount.setAlarmDecelerateTimes(Integer.parseInt(m.get("alarmDecelerateTimes").toString()));
-            alarmTimesCount.setAlarmSharpTurnTimes(Integer.parseInt(m.get("alarmSharpTurnTimes").toString()));
-        }
-        return alarmTimesCount;
     }
 
 }

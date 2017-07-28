@@ -24,8 +24,6 @@ package com.szyciov.op.param;
  */
 
 public class QueryFatigueDrivingParam extends BasePageParam{
-
-    private String id;
     
     /** 车牌 */
     private String plate;
@@ -55,13 +53,6 @@ public class QueryFatigueDrivingParam extends BasePageParam{
      */
     private String organizationId;
 
-     public String getId() {
-         return id;
-     }
-
-     public void setId(String id) {
-         this.id = id;
-     }
 
      public String getPlate() {
          return plate;

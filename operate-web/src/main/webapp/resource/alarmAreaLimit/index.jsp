@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>区域栅栏</title>
+    <title>驾驶行为 | 栅栏</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -78,7 +78,7 @@
 </div>
 
 <div class="content">
-    <!-- 查询  -->
+<!-- 查询  -->
     <div class="form-horizontal">
         <div class="row">
 
@@ -101,7 +101,7 @@
                     <label class="control-label col-4">开始时间起</label>
                     <div class="col-8">
                         <input type="text" class="form-control  datetimepicker"
-                               name="startTime" id="startTime" readonly="readonly"/>
+                               name="startTime" id="startTime" readonly="readonly" />
                     </div>
                 </div>
             </div>
@@ -111,7 +111,7 @@
                     <label class="control-label col-4"> 开始时间止 </label>
                     <div class="col-8">
                         <input type="text" class="form-control  datetimepicker"
-                               name="endTime" id="endTime" readonly="readonly"/>
+                               name="endTime" id="endTime" readonly="readonly" />
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
                     <label class="control-label col-4">车牌</label>
                     <div class="col-8">
                         <input type="text" class="form-control" name="plate"
-                               id="plate"/>
+                               id="plate" />
                     </div>
                 </div>
             </div>
@@ -134,7 +134,7 @@
                     <label class="control-label col-4">IMEI</label>
                     <div class="col-8">
                         <input type="text" class="form-control" name="imei"
-                               id="imei"/>
+                               id="imei" />
                     </div>
                 </div>
             </div>
@@ -156,24 +156,25 @@
 
         </div>
 
-        <div class="row">
+        <div  class="row">
 
             <div class="col-4">
                 <div class="form-group">
-                <label class="control-label col-4 ">越界</label>
-                <div class="col-8">
-                    <select class="form-control" id="outOfBounds" name="outOfBounds">
-                        <option value="">请选择</option>
-                        <c:forEach items="${outOfBounds }" var="bound">
-                            <option value="${bound.Value }">${bound.Text }</option>
-                        </c:forEach>
-                    </select>
-                </div>
+                    <label class="control-label col-4 ">越界</label>
+                    <div class="col-8">
+                        <select class="form-control" id="outOfBounds" name="outOfBounds">
+                            <option value="">请选择</option>
+                            <c:forEach items="${outOfBounds }" var="bound">
+                                <option value="${bound.Value }">${bound.Text }</option>
+                            </c:forEach>
+
+                        </select>
+                    </div>
                 </div>
             </div>
 
             <div class="col-8">
-                <div class="pull-right" style="margin-top: 7px;">
+                <div class="pull-right">
                     <button type="button" class="btn btn-default blue "
                             id="btnSearch">
                         <img src="img/trafficflux/icon/seacrch.png" alt=""/>查询
@@ -182,6 +183,7 @@
                             id="btnClear" onclick="onClear() ">
                         <img src="img/trafficflux/icon/refresh.png" alt=""/>重置
                     </button>
+
                 </div>
             </div>
 
@@ -189,11 +191,12 @@
 
         <div class="row">
             <div class="col-12">
-                <table class="table table-bordered  table-striped table-hover" id="dtGrid"></table>
+                <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid"></table>
             </div>
         </div>
 
     </div>
+
 
 
 </div>

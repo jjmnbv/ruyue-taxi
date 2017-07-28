@@ -666,9 +666,9 @@ public class StringUtil {
 	}
 	
 	public static void main(String[] args) throws ParseException {
-		String startTime = "07:00";
-		String endTime = "07:00";
-		Date usetime = parseDate("2017-05-22 07:00:17", TIME_WITH_MINUTE);
+		String startTime = "22:00";
+		String endTime = "05:50";
+		Date usetime = parseDate("2017-05-22 05:50:17", TIME_WITH_MINUTE);
 		String content = "开始时间@isNight夜间服务时段";
 		System.out.println(usetime);
 		System.out.println(content.replace("@isNight", isTimeInBound(startTime, endTime, usetime) ? "在" : "不在"));

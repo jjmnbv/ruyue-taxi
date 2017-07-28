@@ -67,7 +67,7 @@ function initGrid() {
         sAjaxSource: "AlarmTimeLimit/queryAlarmTimeLimitList",
         columns: [
             {"mDataProp": "plate", "sTitle": "车牌"},
-            {"mDataProp": "department", "sTitle": "服务车企"},
+            {"mDataProp": "department", "sTitle": "所属部门"},
             {"mDataProp": "startTime", "sTitle": "开始时间"},
             {"mDataProp": "endTime", "sTitle": "结束时间"},
             {"mDataProp": "lengthOfViolation", "sTitle": "违规时长"},
@@ -81,9 +81,8 @@ function initGrid() {
                 "bStorable": false,
                 "sWidth": 200,
                 "render": function (data, type, row) {
-                    return '<a  href=' + basePath + 'AlarmTimeLimit/toTravelTrack/'+ row.id + '/'+ row.trackId + ' class="btn default btn-xs blue"><img src="img/trafficflux/icon/moveTrack.png" alt=""/>行驶轨迹</a>'
-                        + '&nbsp;<a target="_blank" href='+ basePath + 'AlarmSpeed/selectTrack/' + row.eqpId + '/' + row.trackId + '/' + row.trackStatus + '  class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>'
-                        ;
+                    return '<a target="_blank"   href="/AlarmTimeLimit/TravelTrack/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/moveTrack.png" alt=""/>行驶轨迹</a>'
+                        + '&nbsp;<a target="_blank"   href="/AlarmTimeLimit/SelectTrack/' + row.id + '/' + row.id + '/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>';
                 }
             }
         ]

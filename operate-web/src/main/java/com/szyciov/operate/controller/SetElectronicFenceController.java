@@ -4,7 +4,6 @@ import com.szyciov.entity.Dictionary;
 import com.szyciov.op.entity.OpUser;
 import com.szyciov.op.param.*;
 import com.szyciov.util.*;
-import net.sf.json.JSONArray;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,7 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -229,30 +227,13 @@ public class SetElectronicFenceController extends BaseController {
     @RequestMapping("/getVehcList")
     @SuppressWarnings("unchecked")
     public PageBean getVehcList(@RequestBody QueryVehcAndEqpParam queryParam) {
-
-        QueryControlledEqpParam param = new QueryControlledEqpParam();
-        param.setFenceType(3);
-        param.setApikey(vmsApikey);
-        param.setFenceId(queryParam.getFenceId());
-        Map<String, Object> mapControlledEqp = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/SystemSet/QueryControlledEqp?"
-                        + ReflectClassField.getMoreFieldsValue(param),
-                HttpMethod.GET, null, param, Map.class);
-
-        JSONArray jsonArray = JSONArray.fromObject(mapControlledEqp.get("controlledEqp"));
-        List<Map<String, Object>> listControlledEqp = JSONUtil.parseJSON2Map(jsonArray);
-        List<String> eqpIdList = new ArrayList<>();
-        for (Map<String, Object> map : listControlledEqp) {
-            eqpIdList.add(map.get("eid").toString());
-        }
-
         PageBean pageBean = new PageBean();
         queryParam.setApikey(vmsApikey);
-        queryParam.setEqpIdList(eqpIdList);
-
-        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Common/QueryVehcAndEqpJson",
-                HttpMethod.POST, null, queryParam, Map.class);
-
+        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Common/QueryVehcAndEqp?"
+                        + ReflectClassField.getMoreFieldsValue(queryParam),
+                HttpMethod.GET, null, queryParam, Map.class);
         List<QueryVehcAndEqp> list = (List<QueryVehcAndEqp>) map.get("vhecEqpList");
+
         pageBean.setsEcho(queryParam.getsEcho());
         int i = (int) map.get("iTotalRecords");
         pageBean.setiTotalDisplayRecords(i);

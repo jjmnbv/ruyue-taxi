@@ -6,11 +6,8 @@ import com.szyciov.op.param.QueryTimeViolation;
 import com.szyciov.op.param.QueryTimeViolationParam;
 import com.szyciov.operate.util.TextValueUtil;
 import com.szyciov.util.*;
-import net.sf.json.JSONArray;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -19,7 +16,6 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -82,39 +78,6 @@ public class AlarmTimeLimitController extends BaseController{
 		pageBean.setiTotalDisplayRecords(i);
 		pageBean.setAaData(list);
 		return pageBean;
-	}
-
-	@RequestMapping("/AlarmTimeLimit/toTravelTrack/{id}/{trackId}")
-	@SuppressWarnings("unchecked")
-	public String toTravelTrack(@PathVariable("id") String id , @PathVariable("trackId") String trackId,
-								HttpServletRequest request, Model model){
-		QueryTimeViolationParam param = new QueryTimeViolationParam();
-		param.setId(id);
-
-		//调用接口
-		Map<String,Object>	map=templateHelper.dealRequestWithFullUrlToken(vmsApiUrl+"/Monitor/QueryTimeViolation?apikey="+vmsApikey+"&"
-				+ReflectClassField.getMoreFieldsValue(param),HttpMethod.GET, null, param, Map.class);
-
-		//转换接口数据
-		JSONArray jsonArray = JSONArray.fromObject(map.get("timeViolation"));
-		List<Map<String, Object>> list = JSONUtil.parseJSON2Map(jsonArray);
-		QueryTimeViolation timeViolation = new QueryTimeViolation();
-		for (Map<String, Object> m : list) {
-			timeViolation.setPlate(m.get("plate").toString());
-			timeViolation.setImei(m.get("imei").toString());
-			timeViolation.setDepartment(m.get("department").toString());
-			timeViolation.setStartTime(m.get("startTime").toString());
-			timeViolation.setEndTime(m.get("endTime").toString());
-			timeViolation.setLengthOfViolation(m.get("lengthOfViolation").toString());
-			timeViolation.setIllegalMileage(new BigDecimal(m.get("illegalMileage").toString()));
-			timeViolation.setTrackStatus(m.get("trackStatus").toString());
-			timeViolation.setEqpId(m.get("eqpId").toString());
-		}
-
-		model.addAttribute("timeViolation",timeViolation);
-		model.addAttribute("trackId",trackId);
-
-		return "resource/alarmTimeLimit/timeTravelTrack";
 	}
 
 }

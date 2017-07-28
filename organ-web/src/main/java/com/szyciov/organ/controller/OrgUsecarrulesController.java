@@ -258,17 +258,19 @@ public class OrgUsecarrulesController extends BaseController {
 		return templateHelper.dealRequestWithToken("/OrgUsecarrules/CheckRulesUpdate/{name}", HttpMethod.GET, userToken, null,
 				int.class,name);
 	}
+	
 	private static String stringFilter(String str){  
-	    String result = "";
-	    try {
-	    	str = str.replaceAll("\\\\", "");  
-			String regEx = "[`~!@#$%^&*()+=|{}'.:;'\\[\\]<>/?~@#￥%……&*]";//+号表示空格  
-			Pattern p = Pattern.compile(regEx);  
-			Matcher m = p.matcher(str);  
-			result = m.replaceAll("").trim();  
-		} catch (Exception e) {
-			logger.error("stringFilter,str="+str,e);  
-		}
-	   return result;  
+		    String result = "";
+		    try {
+		    	str = str.replaceAll("\\\\", "");  
+				String regEx = "[`~!@#$%^&*()+=|{}'.:;'\\[\\]<>/?~@#￥%……&*]";//+号表示空格  
+				Pattern p = Pattern.compile(regEx);  
+				Matcher m = p.matcher(str);  
+				result = m.replaceAll("").trim();  
+			} catch (Exception e) {
+				logger.error("stringFilter,str="+str,e);  
+			}
+		   return result;  
 	}
+	
 }

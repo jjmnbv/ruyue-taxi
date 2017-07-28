@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width" />
-<title>电子围栏</title>
+<title>基础数据 | 电子围栏</title>
 <base href="<%=basePath%>">    
 <style type="text/css">
 .paging_bootstrap_full_number{float: right;}
@@ -65,7 +65,7 @@ var basePath = "<%=basePath%>";
 </head>
 <body style="overflow:hidden;">
 <div class="crumbs">
-	<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 电子围栏
+	<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 时间栅栏
 </div>
 
 <div class="content">
@@ -143,7 +143,7 @@ var basePath = "<%=basePath%>";
 	    </div>
 	    <div class="row">
 	        <div class="col-12">
-	            <div class="pull-right">
+	            <div class="form-group   pull-right">
 					<button type="button" class="btn btn-default blue "
 							id="btnSearch">
 						<img src="img/trafficflux/icon/seacrch.png" alt=""/>查询
@@ -159,7 +159,7 @@ var basePath = "<%=basePath%>";
 	
 	<div class="row">
 	    <div class="col-12">
-	        <table class="table table-bordered  table-striped table-hover" cellspacing="0" id="dtGrid" width="100%"></table>
+	        <table class="table table-bordered table-condensed table-striped table-hover" cellspacing="0" id="dtGrid" width="100%"></table>
 	    </div>
 	</div>
     <!-- 尾部 -->

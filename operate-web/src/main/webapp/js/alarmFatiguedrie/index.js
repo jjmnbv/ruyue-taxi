@@ -134,19 +134,6 @@ function initGrid() {
             {"mDataProp": "alarmTime", "sTitle": "报警时间"},
             {"mDataProp": "timeoutTime", "sTitle": "超时时长"},
             {"mDataProp": "alarmLocation", "sTitle": "报警地点"},
-            {
-                //自定义操作列
-                "mDataProp": "cz",
-                "sClass": "center",
-                "sTitle": "详细信息",
-                "bSearchable": false,
-                "bStorable": false,
-                "sWidth": 200,
-                "render": function (data, type, row) {
-                    return '<a href='+ basePath + 'AlarmFatiguedrie/toFatigueDetail/' + row.id + '  class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>'
-                        ;
-                }
-            },
         ],
 
         fnRowCallback: function (nRow, aData, iDisplayIndex) {

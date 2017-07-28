@@ -11,7 +11,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>分配车辆详情</title>
+    <title>系统设置 电子围栏设置</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -60,9 +60,6 @@
     .form-horizontal .control-label {
         text-align: left;
     }
-    .form-horizontal .control-label{
-        text-align: right;
-    }
 </style>
 
 
@@ -100,10 +97,9 @@
 </head>
 <div class="crumbs">
     <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
-    <a href="<%=basePath%>SetElectronicFence/Index">电子围栏设置 ></a>分配车辆详情
-    <button type="button" id="btnCancel" class="btn blue btn pull-right"><i class="fa fa-reply"
-                                                                            style="width:auto;"></i>返回
-    </button>
+    <a href="<%=basePath%>SetElectronicFence/Index">电子栅栏设置 ></a>分配车辆详情
+    <a id="btnCancel" class="btn blue btn-md pull-right" onclick="window.opener = null; window.open('', '_self'); window.close();return" href="javascript:self.close()">
+        <img src="img/trafficflux/icon/shutdown.png" />关闭</a>
 </div>
 <div class="content">
     <input type="hidden" id="id" name="id" value="${id}">
@@ -165,7 +161,7 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <table class="table table-bordered  table-striped table-hover"
+                                        <table class="table table-bordered table-condensed table-striped table-hover"
                                                id="dtGrid"></table>
                                     </div>
                                 </div>

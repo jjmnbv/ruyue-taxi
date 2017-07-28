@@ -392,10 +392,10 @@ function initSelect2Active(){
     		disableForm("form",false);
     	} else {
 	    	disableForm("form",true);
-    	} 
-    	$("#userid").valid();
+    	}
         $("#passengers").select2("val", "");
         $("#passengerphone").select2("val", "");
+    	$("#userid").valid();
     });
     
     $("#passengers,#passengerphone").on("change",function(){

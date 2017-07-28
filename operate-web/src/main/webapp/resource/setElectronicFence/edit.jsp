@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>围栏管理</title>
+    <title>系统设置 | 电子围栏设置</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -96,19 +96,13 @@
         margin-left: 5px;
         margin-right: 5px;
     }
-    #btnCancel1{
-        margin-top: -6px;
-    }
 
 </style>
 
 </head>
 <div class="crumbs">
     <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
-    <a href="<%=basePath%>SetElectronicFence/Index">电子围栏设置 ></a>围栏管理
-    <button type="button" id="btnCancel1" class="btn blue btn pull-right"><i class="fa fa-reply"
-                                                                            style="width:auto;"></i>返回
-    </button>
+    <a href="<%=basePath%>SetElectronicFence/Index">电子栅栏设置 ></a>电子栅栏管理
 </div>
 
 <div class="content">
@@ -130,7 +124,7 @@
                     <div class="form-body">
                         <div class="row margin-top-10">
                             <div class="form-group">
-                                <label class="control-label ">围栏名称<span class="required" style="color: red">*</span></label>
+                                <label class="control-label ">围栏名称<span class="required">*</span></label>
                             </div>
                         </div>
                         <div class="row margin-top-10">
@@ -141,7 +135,7 @@
                         </div>
                         <div class="row margin-top-10">
                             <div class="form-group">
-                                <label class="control-label">报警类型 <span class="required" style="color: red">*</span></label>
+                                <label class="control-label">报警类型 <span class="required">*</span></label>
                             </div>
                         </div>
                         <div class="row margin-top-10">
@@ -217,14 +211,6 @@
 <script type="text/javascript" src="content/plugins/bmap/DrawingManager.js"></script>
 <script type="text/javascript" src="js/setElectronicFence/edit.js"></script>
 <script type="text/javascript" src="js/setElectronicFence/directiontranslate.js"></script>
-<script>
-    $(function () {
-        $("#btnCancel1").click(function () {
-            location.href = "AreaFenceSet/Index";
-        })
-    })
-
-</script>
 <script>
     var basePath = "<%=basePath%>";
 </script>

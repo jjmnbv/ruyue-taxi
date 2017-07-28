@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>栅栏管理</title>
+    <title>基础数据 | 维护司机档案信息</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -83,16 +83,12 @@
         width: 80px;
         font-size: 12px;
     }
-    #btnCancel1{
-        margin-top: -6px;
-    }
 </style>
 
 </head>
 <div class="crumbs">
     <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a>>
-    <a href="<%=basePath%>SetTimeFence/Index">时间栅栏设置</a>> 栅栏管理
-    <button type="button" id="btnCancel1" class="btn blue btn-md pull-right"><i class="fa fa-reply" style="width:auto;"></i>返回</button>
+    <a href="<%=basePath%>SetTimeFence/Index">时间栅栏设置</a>> 时间栅栏管理
 </div>
 
 
@@ -105,7 +101,7 @@
             <div class="portlet box blue">
                 <div class="portlet-title">
                     <div class="caption">
-                        <i class="fa fa-reorder"></i>栅栏管理
+                        <i class="fa fa-reorder"></i>时间栅栏设置
                     </div>
                 </div>
                 <div class="portlet-body form">
@@ -204,14 +200,6 @@
 <script type="text/javascript" src="content/plugins/ion.rangeslider/js/ion-rangeSlider/ion.rangeSlider.js"></script>
 <script type="text/javascript" src="content/js/loading.js"></script>
 <script type="text/javascript" src="js/setTimeFence/edit.js"></script>
-<script>
-    $(function () {
-        $("#btnCancel1").click(function () {
-            location.href = "SetTimeFence/Index";
-        })
-    })
-
-</script>
 <script>
    var basePath="<%=basePath%>";
 </script>

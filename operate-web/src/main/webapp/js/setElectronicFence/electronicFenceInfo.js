@@ -13,9 +13,6 @@ $(function () {
         ];
         dtGrid.fnSearch(oData);
     });
-    $("#btnCancel").click(function () {
-        location.href = basePath + "SetElectronicFence/Index";
-    });
     initGrid();
 
 });
@@ -68,9 +65,12 @@ function initGrid() {
             {"name": "fenceId", "value": id}
         ],
         columns: [
+            {"mDataProp": "id", "sTitle": "栅栏ID"},
             {"mDataProp": "plate", "sTitle": "车牌"},
+            {"mDataProp": "eid", "sTitle": "设备Id"},
             {"mDataProp": "imei", "sTitle": "设备IMEI"},
             {"mDataProp": "operateTime", "sTitle": "添加时间"},
+            {"mDataProp": "operateId", "sTitle": "添加人ID"},
             {"mDataProp": "operateStaff", "sTitle": "添加人"}
 
         ]

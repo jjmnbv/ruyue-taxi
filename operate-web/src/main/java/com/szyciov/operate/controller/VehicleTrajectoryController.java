@@ -211,7 +211,6 @@ public class VehicleTrajectoryController extends BaseController {
 		List<Dictionary> dictionary = getOpUserCompany(request, userToken, false);
 		// 转换字典值
 		List<TextAndValue> listDictionary = TextValueUtil.convert(dictionary);
-		queryTrajectoryByEqpParam.setApikey(vmsApikey);
 		queryTrajectoryByEqpParam.setOrganizationId(
 				(!listDictionary.isEmpty() && listDictionary.size() > 0) ? listDictionary.get(0).getValue() : "");
 		// 行程轨迹

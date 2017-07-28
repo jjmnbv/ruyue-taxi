@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>安全报警 | 温度趋势</title>
+    <title>基础数据 | 温度趋势</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -56,111 +56,97 @@
     .asterisk:after {
         padding: 0;
     }
-
-    #btnCancel {
-        margin-top: -6px;
-    }
 </style>
 
 
 </head>
-<body>
+<body style="overflow:hidden;">
 <div class="crumbs">
     <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a>
     <a href="<%=basePath%>AlarmWaterTemp/Index">>水温报警</a> >温度趋势详情
-    <button type="button" id="btnCancel" class="btn blue btn-md pull-right">
-        <i class="fa fa-reply" style="width:auto;"></i>返回
-    </button>
 </div>
 <!-- 头部 -->
 <div class="content">
-    <input type="hidden" id="id" value="${id }"/>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="portlet box blue">
-                <div class="portlet-title">
-                    <div class="caption">
-                        <i class="fa fa-reorder"></i>温度报警详情
+    <form class="form-horizontal" role="form">
+        <input type="hidden" id="id" value="${id }"/>
+        <div class="portlet box blue">
+            <div class="portlet-title">
+                <div class="caption">
+                    <i class="fa fa-reorder"></i>温度报警详情
+                </div>
+            </div>
+        </div>
+        <div class="form-body">
+            <h3 class="form-section">车辆信息</h3>
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label class="control-label col-4">车牌：</label>
+                        <div class="col-8">
+                            <p class="form-control-static" id="plate">
+
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!--/span-->
+
+                <!--/span-->
+                <div class="col-4">
+                    <div class="form-group">
+                        <label class="control-label col-4">所属车企：</label>
+                        <div class="col-8">
+                            <p class="form-control-static" id="department">
+
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!--/span-->
+                <div class="col-4">
+                    <div class="form-group">
+                        <label class="control-label col-4">报警时间：</label>
+                        <div class="col-8">
+                            <p class="form-control-static" id="alarmTime">
+
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="portlet-body form">
-                <form class="form-horizontal" role="form">
-                    <div class="form-body">
-                        <h3 class="form-section">车辆信息</h3>
-                        <div class="row">
-                            <div class="col-4">
-                                <div class="form-group">
-                                    <label class="control-label col-4">车牌：</label>
-                                    <div class="col-8">
-                                        <p class="form-control-static" id="plate">
 
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <!--/span-->
+            <div class="row">
 
-                            <!--/span-->
-                            <div class="col-4">
-                                <div class="form-group">
-                                    <label class="control-label col-4">所属车企：</label>
-                                    <div class="col-8">
-                                        <p class="form-control-static" id="department">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label class="control-label col-4">解除时间：</label>
+                        <div class="col-8">
+                            <p class="form-control-static" id="releaseTime">
 
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <!--/span-->
-                            <div class="col-4">
-                                <div class="form-group">
-                                    <label class="control-label col-4">报警时间：</label>
-                                    <div class="col-8">
-                                        <p class="form-control-static" id="alarmTime">
-
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-4">
-                                <div class="form-group">
-                                    <label class="control-label col-4">解除时间：</label>
-                                    <div class="col-8">
-                                        <p class="form-control-static" id="releaseTime">
-
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-4">
-                                <div class="form-group">
-                                    <label class="control-label col-4">最高温度：</label>
-                                    <div class="col-8">
-                                        <p class="form-control-static" id="maxTemp"></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!--/row-->
-                        <h3 class="form-section">水温趋势</h3>
-                        <div id="placeholder" style="min-height:300px" class="chart">
+                            </p>
                         </div>
                     </div>
-                </form>
-                <!-- END FORM-->
+                </div>
+
+                <div class="col-4">
+                    <div class="form-group">
+                        <label class="control-label col-4">最高温度：</label>
+                        <div class="col-8">
+                            <p class="form-control-static" id="maxTemp"></p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+
+            <!--/row-->
+            <h3 class="form-section">水温趋势</h3>
+            <div id="placeholder" style="min-height:300px" class="chart">
+            </div>
         </div>
-    </div>
+    </form>
+
 </div>
 <!-- 尾部 -->
 </body>

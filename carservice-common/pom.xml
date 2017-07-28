@@ -425,12 +425,6 @@
 		    <artifactId>velocity</artifactId>
 		    <version>1.7</version>
 		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>1.16.16</version>
-			<scope>compile</scope>
-		</dependency>
 		
 		
 		<!-- 极光推送 -->

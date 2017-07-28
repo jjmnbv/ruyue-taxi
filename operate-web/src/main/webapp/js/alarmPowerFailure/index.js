@@ -115,18 +115,16 @@ function initGrid() {
                 //自定义操作列
                 "mDataProp": "id",
                 "sClass": "center",
-                "sWidth": 160,
+                "sWidth": 100,
                 "sTitle": "操作",
                 "bSearchable": false,
                 "bStorable": false,
                 "render": function (data, type, row) {
                     var html = '';
                     if (row.processingState == '已处理' || row.processingState == '已恢复') {
-                        html += '<button  class="btn default btn-xs" disabled=disabled><img src="img/trafficflux/icon/alarmProcessing_ga.png" />处理</button> '
-                            + '&nbsp;<a  href='+ basePath + 'AlarmPowerFailure/toPowerFailureDetail/' + row.id + ' class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />查看详情</a>';
+                        html += '<button  class="btn default btn-xs" disabled=disabled><img src="img/trafficflux/icon/alarmProcessing_ga.png" />处理</button> ';
                     } else {
-                        html += '<button  class="btn default btn-xs blue " onclick=onHandle("' + row.id + '") ><img src="img/trafficflux/icon/alarmProcessing.png" />处理</button>'
-                            + '&nbsp;<a  href='+ basePath + 'AlarmPowerFailure/toPowerFailureDetail/' + row.id + ' class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />查看详情</a>';
+                        html += '<button  class="btn default btn-xs blue " onclick=onHandle("' + row.id + '") ><img src="img/trafficflux/icon/alarmProcessing.png" />处理</button>';
                     }
                     return html;
                 }

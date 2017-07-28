@@ -202,7 +202,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 				if(!validateForm()){
 					return;
 				}
-                $("#password").val(encodepwd($("#password").val()));
+				$("#password").val(encodepwd($("#password").val()));
 				form.submit();
 		    }
 		}); 

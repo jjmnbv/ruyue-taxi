@@ -4,8 +4,6 @@ import com.szyciov.entity.Dictionary;
 import com.szyciov.entity.Excel;
 import com.szyciov.entity.TextAndValue;
 import com.szyciov.op.entity.QueryFatigueDriving;
-import com.szyciov.op.param.CommonParam;
-import com.szyciov.op.param.QueryFatigueDetail;
 import com.szyciov.op.param.QueryFatigueDrivingParam;
 import com.szyciov.operate.util.TextValueUtil;
 import com.szyciov.util.*;
@@ -13,8 +11,6 @@ import net.sf.json.JSONArray;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -146,14 +142,6 @@ public class AlarmFatiguedrieController extends BaseController {
                     }
                 }
 
-                if ("imei".equals(key)) {
-                    if (StringUtils.isBlank(data)) {
-                        dataList.add("");
-                    } else {
-                        dataList.add(data);
-                    }
-                }
-
                 if ("department".equals(key)) {
                     if (StringUtils.isBlank(data)) {
                         dataList.add("");
@@ -225,8 +213,6 @@ public class AlarmFatiguedrieController extends BaseController {
 
         title.put("plate", "车牌");
         headerList.add("车牌");
-        title.put("imei", "IMEI");
-        headerList.add("IMEI");
         title.put("department", "服务车企");
         headerList.add("服务车企");
         title.put("alarmType", "报警类型");
@@ -240,58 +226,6 @@ public class AlarmFatiguedrieController extends BaseController {
 
 
         return title;
-    }
-
-    /**
-     * 疲劳驾驶详情
-     * @param id
-     * @param request
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    @RequestMapping("/AlarmFatiguedrie/toFatigueDetail/{id}")
-    public String toFatigueDetail(@PathVariable("id")String id, HttpServletRequest request, Model model){
-
-        QueryFatigueDrivingParam param = new QueryFatigueDrivingParam();
-        param.setId(id);
-        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Monitor/QueryFatigueDriving?apikey=" + apikey + "&"
-                + ReflectClassField.getMoreFieldsValue(param), HttpMethod.GET, null, null, Map.class);
-
-        JSONArray jsonArray = JSONArray.fromObject(map.get("fatigueDriving"));
-        List<Map<String, Object>> list = JSONUtil.parseJSON2Map(jsonArray);
-        QueryFatigueDriving queryFatigueDriving = new QueryFatigueDriving();
-
-        for (Map<String, Object> m : list) {
-            queryFatigueDriving.setPlate(m.get("plate").toString());
-            queryFatigueDriving.setImei(m.get("imei").toString());
-            queryFatigueDriving.setDepartment(m.get("department").toString());
-            queryFatigueDriving.setAlarmType(m.get("alarmType").toString());
-            queryFatigueDriving.setAlarmTime(m.get("alarmTime").toString());
-            queryFatigueDriving.setTimeoutTime(m.get("timeoutTime").toString());
-            queryFatigueDriving.setAlarmLocation(m.get("alarmLocation").toString());
-        }
-
-        model.addAttribute("queryFatigueDriving",queryFatigueDriving);
-        model.addAttribute("id",id);
-        return "resource/alarmFatiguedrie/fatigueDetail";
-    }
-
-    @SuppressWarnings("unchecked")
-    @RequestMapping("/AlarmFatiguedrie/getFatigueDetail")
-    @ResponseBody
-    public PageBean getFatigueDetail(CommonParam param, HttpServletRequest request){
-        PageBean pageBean = new PageBean();
-
-        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Monitor/QueryFatigueDetail?apikey=" + apikey + "&"
-                + ReflectClassField.getMoreFieldsValue(param), HttpMethod.GET, null, null, Map.class);
-
-        List<QueryFatigueDetail> list = (List<QueryFatigueDetail>) map.get("queryFatigueDetails");
-        int i = (int) map.get("countFatigueDetail");
-        pageBean.setsEcho(param.getsEcho());
-        pageBean.setiTotalRecords(i);
-        pageBean.setiTotalDisplayRecords(i);
-        pageBean.setAaData(list);
-        return pageBean;
     }
 
 

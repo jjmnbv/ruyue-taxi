@@ -13,8 +13,6 @@ import net.sf.json.JSONArray;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -291,8 +289,8 @@ public class AlarmIdleController extends BaseController {
 
         title.put("plate", "车牌");
         headerList.add("车牌");
-        title.put("imei", "IMEI");
-        headerList.add("IMEI");
+        title.put("imei", "设备IMEI");
+        headerList.add("设备IMEI");
         title.put("department", "服务车企");
         headerList.add("服务车企");
         title.put("idleTime", "怠速时长");
@@ -311,38 +309,6 @@ public class AlarmIdleController extends BaseController {
         return title;
     }
 
-    @RequestMapping("/toAlarmIdleDetail/{id}")
-    @SuppressWarnings("unchecked")
-    public String toAlarmIdleDetail(@PathVariable("id")String id, Model model){
-        QueryIdleParam param = new QueryIdleParam();
-        param.setId(id);
-        param.setApikey(apikey);
-        //调用接口查询
-        Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Monitor/QueryIdle?"
-                + ReflectClassField.getMoreFieldsValue(param), HttpMethod.GET, null, param, Map.class);
 
-        //转换接口数据
-        JSONArray jsonArray =JSONArray.fromObject(map.get("idle"));
-        List<Map<String, Object>> list = JSONUtil.parseJSON2Map(jsonArray);
-        QueryIdle queryIdle = new QueryIdle();
-        for (Map<String, Object> m : list) {
-            queryIdle.setPlate(m.get("plate").toString());
-            queryIdle.setImei(m.get("imei").toString());
-            queryIdle.setDepartment(m.get("department").toString());
-            queryIdle.setIdleTime(m.get("idleTime").toString());
-            queryIdle.setStartTime(m.get("startTime").toString());
-            queryIdle.setEndTime(m.get("endTime").toString());
-            queryIdle.setLocation(m.get("location").toString());
-            queryIdle.setTimeRange(m.get("timeRange").toString());
-            queryIdle.setOilCharge(m.get("oilCharge").toString());
-            queryIdle.setPhone(m.get("phone").toString());
-            queryIdle.setOperateTime(m.get("operateTime").toString());
-            queryIdle.setPerson(m.get("person").toString());
-            queryIdle.setReason(m.get("reason").toString());
-
-        }
-        model.addAttribute("queryIdle",queryIdle);
-        return "resource/alarmIdle/alarmIdleDetail";
-    }
 }
 

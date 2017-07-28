@@ -1,9 +1,6 @@
 $(function () {
     getVehcList();//绑定界面数据
 //            initTempTrend();
-    $("#btnCancel").click(function () {
-        location.href = basePath + "AlarmWaterTemp/Index";
-    })
 });
 
 //获取车辆列表
@@ -97,10 +94,9 @@ function showTooltip(x, y, contents) {
         position: 'absolute',
         display: 'none',
         top: y + 5,
-        left: x - 40 ,
+        left: x + 5,
         border: '1px solid #fdd',
         padding: '2px',
-        width : '80px',
         'background-color': '#fee',
         'font-size': '12px',
         opacity: 0.80

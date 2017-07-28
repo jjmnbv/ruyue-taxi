@@ -26,11 +26,7 @@ public class QueryIdle {
     
     /** 怠速ID */
     private String id;
-
-    private String trackId;
-
-    private String trackStatus;
-
+    
     /** 车牌 */
     
     private String plate;
@@ -58,60 +54,7 @@ public class QueryIdle {
     /** 核查结果 */
     private String oilCharge;
 
-    /** 核查人电话 */
-    private String phone;
-
-    /** 核查时间 */
-    private String operateTime;
-
-    /** 核查人 */
-    private String person;
-
-    /** 核查原因 */
-    private String reason;
-
-    private String eqpId;
-
-    public String getEqpId() {
-        return eqpId;
-    }
-
-    public void setEqpId(String eqpId) {
-        this.eqpId = eqpId;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getOperateTime() {
-        return operateTime;
-    }
-
-    public void setOperateTime(String operateTime) {
-        this.operateTime = operateTime;
-    }
-
-    public String getPerson() {
-        return person;
-    }
-
-    public void setPerson(String person) {
-        this.person = person;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
-
+    
     /**
      * @return 返回 id
      */
@@ -129,22 +72,7 @@ public class QueryIdle {
         this.id = id;
     }
 
-    public String getTrackId() {
-        return trackId;
-    }
-
-    public void setTrackId(String trackId) {
-        this.trackId = trackId;
-    }
-
-    public String getTrackStatus() {
-        return trackStatus;
-    }
-
-    public void setTrackStatus(String trackStatus) {
-        this.trackStatus = trackStatus;
-    }
-
+    
     /**
      * @return 返回 plate
      */

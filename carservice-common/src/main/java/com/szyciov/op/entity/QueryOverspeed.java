@@ -26,12 +26,7 @@ public class QueryOverspeed {
     
     /** 超速ID */
     private String id;
-
-    /**行程ID*/
-    private String trackId;
-
-    /**行程状态*/
-    private String trackStatus;
+    
     /** 车牌 */
     private String plate;
     
@@ -56,32 +51,7 @@ public class QueryOverspeed {
     /** 地址 */
     private String address;
 
-    private String eqpId;
-
-    public String getEqpId() {
-        return eqpId;
-    }
-
-    public void setEqpId(String eqpId) {
-        this.eqpId = eqpId;
-    }
-
-    public String getTrackId() {
-        return trackId;
-    }
-
-    public void setTrackId(String trackId) {
-        this.trackId = trackId;
-    }
-
-    public String getTrackStatus() {
-        return trackStatus;
-    }
-
-    public void setTrackStatus(String trackStatus) {
-        this.trackStatus = trackStatus;
-    }
-
+    
     /**
      * @return 返回 id
      */

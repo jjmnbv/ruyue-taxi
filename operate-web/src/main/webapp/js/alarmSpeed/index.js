@@ -80,30 +80,14 @@ function initGrid() {
         bProcessing: true,
         sAjaxSource: "AlarmSpeed/getAlarmSpeedByPage",
         columns: [
-            {"mDataProp": "plate","sClass": "center", "sTitle": "车牌"},
+            {"mDataProp": "plate", "sTitle": "车牌"},
             {"mDataProp": "imei", "sTitle": "IMEI"},
-            {"mDataProp": "department",sClass: "center", "sTitle": "服务车企"},
+            {"mDataProp": "department", "sTitle": "服务车企"},
             {"mDataProp": "startTime", "sTitle": "开始时间"},
             {"mDataProp": "endTime", "sTitle": "结束时间"},
             {"mDataProp": "overspeedTime", "sTitle": "超速时长"},
             {"mDataProp": "overspeed", "sTitle": "超速里程(km)"},
             {"mDataProp": "address", "sTitle": "地址"},
-            {
-                //自定义操作列
-                "mDataProp": "id",
-                "sClass": "center",
-                "sTitle": "操作",
-                "bSearchable": false,
-                "bStorable": false,
-                "mRender": function (data, type, row) {
-                    var html = '';
-                    if (true) {
-                        html += '<a target="_blank" href='+ basePath + 'AlarmSpeed/selectTrack/' + row.eqpId + '/' + row.trackId + '/' + row.trackStatus + '  class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>';
-                    }
-
-                    return html;
-                }
-            }
         ],
         fnRowCallback: function (nRow, aData, iDisplayIndex) {
             // $('td:eq(0)', nRow).html("<a data-toggle='abstractpopover' data-plates='" + aData.plate + "' rel='popover' data-placement='top' onmouseover='getAbstractByPlates(&#39;" + aData.plate + "&#39;)'>" + aData.plate + "</a>");

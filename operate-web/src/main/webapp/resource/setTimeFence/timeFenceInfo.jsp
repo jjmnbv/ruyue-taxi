@@ -11,7 +11,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>分配车辆详情</title>
+    <title>系统设置 时间栅栏设置</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -91,9 +91,6 @@
     #btnCancel{
         margin-top: -6px;
     }
-    .form-horizontal .control-label{
-        text-align: right;
-    }
 </style>
 
 
@@ -101,7 +98,8 @@
 <div class="crumbs">
     <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
     <a href="<%=basePath%>SetTimeFence/Index">时间栅栏设置 ></a> 分配车辆详情
-    <button type="button" id="btnCancel" class="btn blue btn-md pull-right"><i class="fa fa-reply" style="width:auto;"></i>返回</button>
+    <a id="btnCancel" class="btn blue btn-md pull-right" onclick="window.opener = null; window.open('', '_self'); window.close();return" href="javascript:self.close()">
+        <img src="img/trafficflux/icon/shutdown.png" />关闭</a>
 
 </div>
 <!-- 头部 -->
@@ -173,7 +171,7 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <table class="table table-bordered  table-striped table-hover"
+                                        <table class="table table-bordered table-condensed table-striped table-hover"
                                                id="dtGrid"></table>
                                     </div>
                                 </div>

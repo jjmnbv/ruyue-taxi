@@ -29,7 +29,7 @@ public class DbInfoUtil {
 	/**
 	 * 数据库名
 	 */
-	public static String database = "carservicedev_v3.0.0";
+	public static String database = "carservicedev";
 	/**
 	 * 数据库IP
 	 */
@@ -53,7 +53,7 @@ public class DbInfoUtil {
 	/**
 	 * 数据库表名
 	 */
-	public static String table = "pe_useraccount";
+	public static String table = "pub_drivernews";
 	/**
 	 * 生成的类名(如不指定则使用表名自动大小写转换);
 	 */
@@ -61,15 +61,15 @@ public class DbInfoUtil {
 	/**
 	 * 实体类包名
 	 */
-	public static String packageName = "com.szyciov.op.entity";
+	public static String packageName = "com.szyciov.entity";
 	/**
 	 * 作者名字
 	 */
-	public static String authorName = "Efy Shu";
+	public static String authorName = "Efy";
 	/**
 	 * 类描述
 	 */
-	public static String description = "个人用户钱包类";
+	public static String description = "司机第三方交易记录实体类";
 	/**
 	 * 是否覆盖已存在文件(默认false)
 	 */

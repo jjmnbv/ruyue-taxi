@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>分配车辆</title>
+    <title>基础数据 | 分配车辆</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -59,9 +59,6 @@
         }
         #btnBind{
             margin-right: 10px;
-        }
-        .form-horizontal .control-label{
-            text-align: right;
         }
     </style>
 
@@ -126,7 +123,7 @@
                                 <div class="col-8">
                                     <div class="form-group">
                                         <input type="hidden" id="txtFLAG1" name="txtFLAG"/>
-                                        <label class="control-label col-4">允许运行城市<a id="btnSelRole" style="color:darkorchid"
+                                        <label class="control-label col-4">允许运行城市<a id="btnSelRole"
                                                                                     onclick="onIniCity()">(按树形查看)</a>：</label>
 
                                         <div class="col-8">
@@ -138,7 +135,7 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <table class="table table-bordered  table-striped table-hover"
+                                        <table class="table table-bordered table-condensed table-striped table-hover"
                                                id="dtGrid"></table>
                                     </div>
                                 </div>
@@ -247,7 +244,7 @@
                         </div>
 
 
-                        <table class="table table-bordered  table-striped table-hover"
+                        <table class="table table-bordered table-condensed table-striped table-hover"
                                id="dtGridForMd" aria-describedby="sample_1_info"></table>
                     </div>
                 </form>
@@ -275,7 +272,6 @@
 <script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.core-3.5.js"></script>
 <script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.excheck-3.5.js"></script>
 <script type="text/javascript" src="content/plugins/bootbox/bootbox.min.js"></script>
-<script type="text/javascript" src="content/js/loading.js"></script>
 
 <script type="text/javascript" src="js/areaFenceSet/areafenabstract.js"></script>
 <script type="text/javascript" src="js/areaFenceSet/areaFenceToVehc.js"></script>

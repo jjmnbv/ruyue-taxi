@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>栅栏详情</title>
+    <title>基础数据 | 栅栏详情</title>
     <base href="<%=basePath%>">
     <style type="text/css">
         .paging_bootstrap_full_number {
@@ -85,18 +85,15 @@
     #btnCancel{
         margin-top: -6px;
     }
-    .form-horizontal .control-label{
-        text-align: right;
-    }
 
 </style>
 </head>
 <div class="crumbs">
     <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页 ></a>
     <a href="<%=basePath%>AreaFenceSet/Index">区域栅栏管理 ></a> 栅栏详情
-    <button type="button" id="btnCancel" class="btn blue btn pull-right"><i class="fa fa-reply"
-                                                                            style="width:auto;"></i>返回
-    </button>
+    <a id="btnCancel" class="btn blue btn pull-right"
+       onclick="window.opener = null; window.open('', '_self'); window.close();return" href="javascript:self.close()">
+        <img src="img/trafficflux/icon/shutdown.png"/>关闭</a>
 
 </div>
 <!-- 头部 -->
@@ -147,7 +144,7 @@
                                 </div>
                                 <div class="col-8">
                                     <div class="form-group">
-                                        <label class="control-label col-4">允许运行城市<a id="btnSelRole" style="color:darkorchid"
+                                        <label class="control-label col-4">允许运行城市<a id="btnSelRole"
                                                                                        onclick="onIniCity()">(按树形查看)</a>：</label>
 
                                         <div class="col-8">
@@ -159,7 +156,7 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                        <table class="table table-bordered  table-striped table-hover"
+                                        <table class="table table-bordered table-condensed table-striped table-hover"
                                                id="dtGrid"></table>
                                     </div>
                                 </div>
@@ -216,6 +213,3 @@
 <script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.excheck-3.5.js"></script>
 
 <script type="text/javascript" src="js/areaFenceSet/detail.js?v=1.6"></script>
-<script>
-    var basePath = "<%=basePath%>";
-</script>

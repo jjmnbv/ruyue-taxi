@@ -93,8 +93,26 @@ public enum RedisKeyEnum {
     SMS_PASSENGER_REGISTER("SMS_PASSENGER_REGISTER_","注册短信验证码"),
 	/**********************乘客端验证码验证信息end*************************/
 
-	
-	/**********************司机端验证码验证信息start*************************/
+
+    /**********************抵用券相关start***************************/
+
+    /**
+     * Map类型
+     * COUPON_RULE_租赁公司ID_规则对象(数字)_派发类别(数字)
+     */
+    COUPON_RULE("COUPON_RULE_","抵用券规则"),
+
+    /**
+     * Map类型
+     * COUPON_ACTIVY_规则ID
+     */
+    COUPON_ACTIVY("COUPON_ACTIVY_","抵用券活动"),
+
+    /**********************抵用券相关end*************************/
+
+
+
+    /**********************司机端验证码验证信息start*************************/
 	SMS_DRIVER_LOGIN_ERRORTIMES("SMS_DRIVER_LOGIN_ERRORTIMES_","登录验证码失败次数"),
 	SMS_DRIVER_LOGIN("SMS_DRIVER_LOGIN_","登录短信验证码");
 	/**********************司机端验证码验证信息end*************************/

@@ -36,6 +36,7 @@ import com.szyciov.param.SendOrderDriverQueryParam;
 import com.szyciov.util.AppMessageUtil;
 import com.szyciov.util.BaiduUtil;
 import com.szyciov.util.GsonUtil;
+import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PushObjFactory;
 import com.szyciov.util.SMMessageUtil;
 import com.szyciov.util.SMSTempPropertyConfigurer;
@@ -805,7 +806,7 @@ public class OpForceSendMethodImp extends AbstractSendMethod  {
 		takecashinfo.put("applytime", 0);
 		message.setOrderinfo(orderJson);
 		message.setTakecashinfo(takecashinfo);
-		
+
 		setDriverMessage(message,orderinfo,drivers,grabEndTime);
 		String[] m = new String[]{orderinfo.getOrderno(),drivers.size()+""};
 		SendLogMessage.saveDriverMessage(logger,this.getClass(),m);

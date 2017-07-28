@@ -370,7 +370,6 @@
 		and (ref.vehiclemodelsid = op_vehiclemodels.id or op_vehiclemodels.id = op_vehcline_models_ref.vehiclemodelsid)
 		WHERE pub_driver.status = 1
 		and pub_driver.jobstatus =0
-
 		<if test="userid != null and userid != ''">
 			AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
 		</if>
@@ -459,7 +458,6 @@
 		</if>
 		WHERE pub_driver.status = 1
 		and pub_driver.jobstatus =0
-
 		<if test="userid != null and userid != ''">
 			AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
 		</if>

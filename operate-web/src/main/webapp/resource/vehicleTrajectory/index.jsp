@@ -356,9 +356,8 @@
 			    </div>
 			</div>
 		</div>
-
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
+		<script type="text/javascript" src="js/vehicleTrajectory/index.js??ver=<%=Math.random()%>"></script>
+		<script type="text/javascript" src="js/vehicleTrajectory/directiontranslate.js"></script>
 	</body>
 </html>
-<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
-<script type="text/javascript" src="js/vehicleTrajectory/directiontranslate.js"></script>
-<script type="text/javascript" src="js/vehicleTrajectory/index.js??ver=<%=Math.random()%>"></script>

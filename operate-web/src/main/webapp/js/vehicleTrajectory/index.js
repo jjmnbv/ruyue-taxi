@@ -1,25 +1,24 @@
 var map,
-    gc = new BMap.Geocoder(),
-    marker1,
-    timer,//定时器
-    index = 0, //记录播放到第几个point
-    bluepoints = [],
-    followChk, playBtn, pauseBtn, resetBtn, speedChoiceBtn,//控制按钮
-    bluegps;
+	gc = new BMap.Geocoder(),
+	 marker1,
+	 timer,//定时器
+	 index = 0, //记录播放到第几个point
+	 bluepoints = [],
+	 followChk, playBtn, pauseBtn, resetBtn, speedChoiceBtn,//控制按钮
+	 bluegps;
 var timerclick = null;
 var exportButton;//导出
 var trajectoryAll = null;//行程轨迹
 $(function () {
-    $.fn.modal.Constructor.prototype.enforceFocus = function () {
-    };
+    $.fn.modal.Constructor.prototype.enforceFocus = function () { };
     bindControl();
     bindMap();  //绑定地图行驶轨迹
     /**
      * 数据回显
      */
-    if (null != echoeqpId && echoeqpId != "" && echoeqpId != undefined) {
-        $("#selPlates").val(echoVehcId + "," + echoeqpId);
-        $("#s2id_selPlates .select2-chosen").text(echoplate + '|' + echoImei);
+    if (null != echoeqpId && echoeqpId !="" && echoeqpId!=undefined) {
+        $("#selPlates").val( echoVehcId +","+echoeqpId);
+        $("#s2id_selPlates .select2-chosen").text(echoplate+'|'+echoImei);
         $("#txtStartDate").val(echostartTime + ' 00:00');
         $("#txtEndDate").val(echoendTime + ' 23:59');
         $("#btnSearch").click();
@@ -32,27 +31,27 @@ $(function () {
     });
     //播放按钮的鼠标移入移出事件
     $("#play").mouseover(function () {
-        $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_set.png');
+        $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_set.png');
     }).mouseout(function () {
-        $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_def.png');
+        $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_def.png');
     });
     //暂停按钮的鼠标移入移出事件
     $("#pause").mouseover(function () {
-        $("#pauseImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_stop_set.png');
+        $("#pauseImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_stop_set.png');
     }).mouseout(function () {
-        $("#pauseImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_stop_def.png');
+        $("#pauseImg").attr('src',basePath +'img/trafficflux/vehcTrack/btn_stop_def.png');
     });
     //重置按钮的鼠标移入移出事件
     $("#reset").mouseover(function () {
-        $("#resetImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_chong_set.png');
+        $("#resetImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_chong_set.png');
     }).mouseout(function () {
-        $("#resetImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_chong_def.png');
+        $("#resetImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_chong_def.png');
     });
     //重置按钮的鼠标移入移出事件
     $("#speedChoice").mouseover(function () {
-        $("#speedChoiceImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_speed_set.png');
+        $("#speedChoiceImg").attr('src',basePath +'img/trafficflux/vehcTrack/btn_speed_set.png');
     }).mouseout(function () {
-        $("#speedChoiceImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_speed_def.png');
+        $("#speedChoiceImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_speed_def.png');
     });
     var frmmodal = $("#frmmodal");
     var erroralert = $('.alert-danger', frmmodal);
@@ -86,11 +85,11 @@ function bindControl() {
         }
     });
     //绑定日期控件
-    $('.searchDate').datetimepicker({
+	$('.searchDate').datetimepicker({
         format: "yyyy-mm-dd hh:ii", //选择日期后，文本框显示的日期格式
         language: 'zh-CN',
         weekStart: 1,
-        todayBtn: 1,
+        todayBtn:  1,
         autoclose: 1,
         todayHighlight: 1,
         startView: 2,
@@ -100,59 +99,59 @@ function bindControl() {
         minuteStep: 10
     });
 
-    $("#selPlates").select2({
-        placeholder: "车牌",
-        minimumInputLength: 1,
-        allowClear: true,
-        ajax: {
-            url: 'Location/getVehclineByQuery',
-            dataType: 'json',
-            data: function (term, page) {
-                return {
-                    plate: term,
-                    apikey: apikey
-                };
-            },
-            results: function (data, page) {
-                var eqpList = [];
-                if (data != null) {
-                    for (var i = 0; i < data.vhecEqpList.length; i++) {
-                        var person = new Object();
-                        person.id = data.vhecEqpList[i].vehcId + "," + data.vhecEqpList[i].eqpId;
-                        person.text = data.vhecEqpList[i].plate + "|" + data.vhecEqpList[i].imei;
-                        eqpList.push(person);
-                    }
-                }
-                return {results: eqpList};
-            }
-        }
-    });
-
+	$("#selPlates").select2({
+		placeholder : "车牌",
+		minimumInputLength : 1,
+		allowClear : true,
+		ajax : {
+			url : 'Location/getVehclineByQuery',
+			dataType : 'json',
+			data : function(term, page) {
+				return {
+					plate : term,
+					apikey:apikey
+				};
+			},
+			results: function (data, page) {
+				var eqpList=[];
+				if(data!=null){
+					for(var i=0;i<data.vhecEqpList.length;i++){
+						var person=new Object(); 
+						person.id=data.vhecEqpList[i].vehcId + "," + data.vhecEqpList[i].eqpId;
+						person.text=data.vhecEqpList[i].plate +"|"+data.vhecEqpList[i].imei;
+						eqpList.push(person);
+					}
+				}
+                return { results: eqpList };
+              }
+		}
+	});
+    
     $("#mdselPlates").select2({
         placeholder: "车牌",
         minimumInputLength: 3,
         aysnc: false,
         allowClear: true,
         ajax: {
-            url: 'VehicleTrajectory/getVehclineByQuery',
-            dataType: 'json',
-            data: function (term, page) {
-                return {
-                    plate: term,
-                    apikey: apikey
-                };
-            },
-            results: function (data, page) {
-                var eqpList = [];
-                if (data != null) {
-                    for (var i = 0; i < data.vhecEqpList.length; i++) {
-                        var person = new Object();
-                        person.id = data.vhecEqpList[i].vehcId + "," + data.vhecEqpList[i].eqpId;
-                        person.text = data.vhecEqpList[i].plate + "|" + data.vhecEqpList[i].imei;
-                        eqpList.push(person);
-                    }
-                }
-                return {results: eqpList};
+        	url : 'VehicleTrajectory/getVehclineByQuery',
+			dataType : 'json',
+			data : function(term, page) {
+				return {
+					plate : term,
+					apikey:apikey
+				};
+			},
+			results: function (data, page) {
+				var eqpList=[];
+				if(data!=null){
+					for(var i=0;i<data.vhecEqpList.length;i++){
+						var person=new Object(); 
+						person.id=data.vhecEqpList[i].vehcId + "," + data.vhecEqpList[i].eqpId;
+						person.text=data.vhecEqpList[i].plate +"|"+data.vhecEqpList[i].imei;
+						eqpList.push(person);
+					}
+				}
+                return { results: eqpList };
             }
         }
     });
@@ -176,16 +175,16 @@ function bindControl() {
 //弹出 导出界面
 function ExportData() {
     var plates = $("#s2id_selPlates .select2-chosen").text();
-    var strs = new Array();
+    var strs= new Array();
     var id = $("#selPlates").select2("val");
     var strs = id.split(",");
     var vehcId = strs[0];
     var eqpId = strs[1];
     var startTime = $("#txtStartDate").val();
     var endTime = $("#txtEndDate").val();
-
-    if (null != vehcId && vehcId != "" && vehcId != "undefined") {
-        $("#mdselPlates").val(vehcId + "," + eqpId);
+    
+    if ( null != vehcId && vehcId !="" && vehcId !="undefined") {
+        $("#mdselPlates").val(vehcId + ","+eqpId);
         $("#s2id_mdselPlates .select2-chosen").text(plates);
     }
     if (startTime != null) {
@@ -235,20 +234,20 @@ function getTrackList() {
         toastr.warning("请选择车牌", "提示信息");
         return;
     }
-    var flag = getValidateTime(startTime, endTime);
+    var flag=getValidateTime(startTime,endTime);
     if (flag == false) {
         return;
     }
     map.clearOverlays();
-    getTrajectoryByEqp(eqpId, startTime, endTime)
+    getTrajectoryByEqp(eqpId,startTime,endTime)
 }
 
 //查询轨迹
-function getTrajectoryByEqp(eqpId, startTime, endTime) {
-    $.ajax({
-        url: basePath + 'VehicleTrajectory/getTrajectoryByEqp',
+function getTrajectoryByEqp(eqpId,startTime,endTime){
+	$.ajax({
+    	url: basePath + 'VehicleTrajectory/getTrajectoryByEqp',
         cache: false,
-        data: {apikey: apikey, eqpId: eqpId, startTime: startTime, endTime: endTime, returnResult: 2, processOption: 2},
+        data: { apikey: apikey,eqpId: eqpId, startTime: startTime, endTime: endTime,returnResult:2,processOption:2 },
         type: 'GET',
         dataType: 'JSON',
         success: function (data) {
@@ -257,173 +256,165 @@ function getTrajectoryByEqp(eqpId, startTime, endTime) {
                 return;
             }
             else {
-                bluepoints = [];
-                map.clearOverlays();
-                if (data.trajectory != null && data.trajectory.vehcTrajectory != null && data.trajectory.vehcTrajectory != undefined && data.trajectory.vehcTrajectory.length > 0) {
-                    bluegps = data.trajectory.vehcTrajectory;
-                    //开始点
-                    var point = new BMap.Point(bluegps[0].longitude, bluegps[0].latitude);
-                    setTimeout(function () {
-                        map.panTo(point);
-                    }, 1500);
-                    var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/gpsStart.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
-                    var markerStart = new BMap.Marker(point, {icon: icon});
-                    map.addOverlay(markerStart);
-                    markerStart.setTop(true, 99999);
-                    gc.getLocation(point, function (rs) {
-                        $("#startPoint").text(rs.address);
-                    });
-                    for (var j = 0; j < bluegps.length; j++) {
-                        var point = new BMap.Point(bluegps[j].longitude, bluegps[j].latitude);
-                        bluepoints.push(point);
+                    bluepoints = [];
+                    map.clearOverlays();
+                    if (data.trajectory !=null && data.trajectory.vehcTrajectory !=null && data.trajectory.vehcTrajectory !=undefined && data.trajectory.vehcTrajectory.length > 0) {
+                        bluegps = data.trajectory.vehcTrajectory;
+                        //开始点
+                        var point = new BMap.Point(bluegps[0].longitude, bluegps[0].latitude);
+                        setTimeout(function () {
+                            map.panTo(point);
+                        }, 1500);
+                        var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/gpsStart.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
+                        var markerStart = new BMap.Marker(point, { icon: icon });
+                        map.addOverlay(markerStart);
+                        markerStart.setTop(true, 99999);
+                        gc.getLocation(point, function (rs) { $("#startPoint").text(rs.address); });
+                        for (var j = 0; j < bluegps.length; j++) {
+                            var point = new BMap.Point(bluegps[j].longitude, bluegps[j].latitude);
+                            bluepoints.push(point);
+                        }
+                        if (bluepoints.length > 0) {
+                            var bluepolyline = new BMap.Polyline(bluepoints, { strokeColor: "blue", strokeWeight: 4, strokeOpacity: 0.5 });
+                            map.addOverlay(bluepolyline);
+                        }
+                        //结束点
+                        if (bluegps.length > 1) {
+                            var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/gpsEnd.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
+                            var endPoint = new BMap.Point(bluegps[bluegps.length - 1].longitude, bluegps[bluegps.length - 1].latitude);
+                            var markerEnd = new BMap.Marker(endPoint, { icon: icon });
+                            map.addOverlay(markerEnd);
+                            markerEnd.setTop(true, 99999);
+                            gc.getLocation(endPoint, function (rs) { $("#endPoint").text(rs.address); });
+                           // $("#PointList").show();
+                        }
+                        
+                        followChk = document.getElementById("follow");
+                        playBtn = document.getElementById("play");
+                        pauseBtn = document.getElementById("pause");
+                        resetBtn = document.getElementById("reset");
+                        speedChoiceBtn = document.getElementById("speedChoice");
+                        //点亮操作按钮
+                        playBtn.disabled = false;
+                        $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_def.png');
+                        $("#speedChoiceImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_speed_def.png');
+                        var iconSize = new BMap.Size(32, 32);
+                        car = new BMap.Marker(bluepoints[0], { icon: icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_01.png', iconSize) });
+                        map.addOverlay(car);
+                        car.setTop(true, 99999);
+                    }else {
+                        toastr.success("当前查询条件没有轨迹信息", "提示信息");
+                        return;
                     }
-                    if (bluepoints.length > 0) {
-                        var bluepolyline = new BMap.Polyline(bluepoints, {
-                            strokeColor: "blue",
-                            strokeWeight: 4,
-                            strokeOpacity: 0.5
-                        });
-                        map.addOverlay(bluepolyline);
-                    }
-                    //结束点
-                    if (bluegps.length > 1) {
-                        var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/gpsEnd.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
-                        var endPoint = new BMap.Point(bluegps[bluegps.length - 1].longitude, bluegps[bluegps.length - 1].latitude);
-                        var markerEnd = new BMap.Marker(endPoint, {icon: icon});
-                        map.addOverlay(markerEnd);
-                        markerEnd.setTop(true, 99999);
-                        gc.getLocation(endPoint, function (rs) {
-                            $("#endPoint").text(rs.address);
-                        });
-                        // $("#PointList").show();
-                    }
-
-                    followChk = document.getElementById("follow");
-                    playBtn = document.getElementById("play");
-                    pauseBtn = document.getElementById("pause");
-                    resetBtn = document.getElementById("reset");
-                    speedChoiceBtn = document.getElementById("speedChoice");
-                    //点亮操作按钮
-                    playBtn.disabled = false;
-                    $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_def.png');
-                    $("#speedChoiceImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_speed_def.png');
-                    var iconSize = new BMap.Size(32, 32);
-                    car = new BMap.Marker(bluepoints[0], {icon: icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_01.png', iconSize)});
-                    map.addOverlay(car);
-                    car.setTop(true, 99999);
-                } else {
-                    toastr.success("当前查询条件没有轨迹信息", "提示信息");
-                    return;
-                }
-                //提醒类型(1_超速;2_怠速;3_疲劳驾驶;4_急加速;5_急减速;6_急转弯;7_断电;8_水温;9_拖吊;10_低电压;11_区域栅栏;12_时间栅栏;13_电子围栏)
-                if (data.trajectory.alarmList != null && data.trajectory.alarmList != undefined && data.trajectory.alarmList.length > 0) {
-                    alarmList = data.trajectory.alarmList;
-                    var speedpoints = [];
-                    var timepoints = [];
-                    for (var k = 0; k < alarmList.length; k++) {
-                        if (alarmList[k].alarmType == 1) {//画超速的线
-                            speedpoints.push(new BMap.Point(alarmList[k].longitude, alarmList[k].latitude));
-                            if (k == 0) {
-                                var pointstart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
-                                var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/car-dragracestart.png", new BMap.Size(__seticon.dragracestart, __seticon.dragracestart));
-                                var speedStart = new BMap.Marker(pointstart, {icon: icon});
-                                map.addOverlay(speedStart);
-                            }
-                        }
-                        if (alarmList[k].alarmType == 2) {
-                            var idling = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
-                            var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/car-idling.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
-                            var mark7 = new BMap.Marker(idling, {icon: icon});
-                            map.addOverlay(mark7);
-                            var content = "<div><p>  怠速报警  </p>";
-                            content += "<p>开始时间：" + alarmList[k].startTime + "</p>";
-                            content += "<p>结束时间：" + alarmList[k].endTime + "</p>";
-                            content += "<p>怠速时长：" + DateMinus(alarmList[k].startTime, alarmList[k].endTime) + "</p>";
-                            content += "<p>耗油：" + alarmList[k].fuel + "</p>";
-                            //content += "<p>位置：" + alarmList[k].VS_ADDRESS + "</p></div>";
-                            mark7.addEventListener("click", openInfo1.bind(null, content));
-                        }
-                        if (alarmList[k].alarmType == 4) {
-                            var acceleratestart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
-                            var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/car-accelerate.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
-                            var mark4 = new BMap.Marker(acceleratestart, {icon: icon});
-                            map.addOverlay(mark4);
-                            var content = "<div><p>  急加速报警  </p>";
-                            content += "<p>时间：" + alarmList[k].startTime + "</p>";
-                            content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
-                            //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
-                            mark4.addEventListener("click", openInfo1.bind(null, content));
-                        }
-                        if (alarmList[k].alarmType == 5) {
-                            var deceleratestart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
-                            var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/car-decelerate.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
-                            var mark5 = new BMap.Marker(deceleratestart, {icon: icon});
-                            map.addOverlay(mark5);
-                            var content = "<div><p>  急减速报警  </p>";
-                            content += "<p>时间：" + alarmList[k].startTime + "</p>";
-                            content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
-                            //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
-                            mark5.addEventListener("click", openInfo1.bind(null, content));
-                        }
-                        if (alarmList[k].alarmType == 6) {
-                            var sharpTurn = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
-                            var icon = new BMap.Icon("img/trafficflux/trajectory/car-turn.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
-                            var mark8 = new BMap.Marker(sharpTurn, {icon: icon});
-                            map.addOverlay(mark8);
-                            var content = "<div><p>  急转弯报警  </p>";
-                            content += "<div><p>报警时间：" + alarmList[k].startTime + "</p>";
-                            content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
-                            //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
-                            mark8.addEventListener("click", openInfo1.bind(null, content));
-                        }
-                        if (alarmList[k].alarmType == 7) {
-                            var powerFailure = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
-                            var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/car-power-failure.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
-                            var mark6 = new BMap.Marker(powerFailure, {icon: icon});
-                            map.addOverlay(mark6);
-                            var content = "<div><p>  断电报警  </p>";
-                            content += "<p>时间：" + alarmList[k].startTime + "</p>";
-                            content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
-                            //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
-                            mark6.addEventListener("click", openInfo1.bind(null, content));
-                        }
-                        if (alarmList[k].alarmType == 12) {
-                            timepoints.push(new BMap.Point(alarmList[k].longitude, alarmList[k].latitude));
-                            if (k == 0) {
-                                var pointstart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
-                                var icon = new BMap.Icon(basePath + "img/trafficflux/trajectory/car-dragracestart.png", new BMap.Size(__seticon.dragracestart, __seticon.dragracestart));
-                                var timeStart = new BMap.Marker(pointstart, {icon: icon});
-                                map.addOverlay(timeStart);
-                            }
-                        }
-                    }
-                    if (speedpoints.length > 0) {
-                        var speedpolyline = new BMap.Polyline(speedpoints, {strokeColor: "#FF6100", strokeWeight: 4});
-                        map.addOverlay(speedpolyline);
-                    }
-                    if (timepoints.length > 0) {
-                        var timepolyline = new BMap.Polyline(timepoints, {strokeColor: "#FF6100", strokeWeight: 4});
-                        map.addOverlay(timepolyline);
-                    }
-                    followChk = document.getElementById("follow");
-                    playBtn = document.getElementById("play");
-                    pauseBtn = document.getElementById("pause");
-                    resetBtn = document.getElementById("reset");
-                    speedChoiceBtn = document.getElementById("speedChoice");
-                    //点亮操作按钮
-                    playBtn.disabled = false;
-                    $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_def.png');
-                    $("#speedChoiceImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_speed_def.png');
+                    //提醒类型(1_超速;2_怠速;3_疲劳驾驶;4_急加速;5_急减速;6_急转弯;7_断电;8_水温;9_拖吊;10_低电压;11_区域栅栏;12_时间栅栏;13_电子围栏)
+                     if (data.trajectory.alarmList !=null && data.trajectory.alarmList !=undefined && data.trajectory.alarmList.length > 0) {
+                     	alarmList = data.trajectory.alarmList;
+                         var speedpoints = [];
+                         var timepoints = [];
+                         for (var k = 0; k < alarmList.length; k++) {
+                         	if (alarmList[k].alarmType==1) {//画超速的线
+                         		speedpoints.push(new BMap.Point(alarmList[k].longitude, alarmList[k].latitude));
+                                 if (k == 0) {
+                                     var pointstart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
+                                     var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/car-dragracestart.png", new BMap.Size(__seticon.dragracestart, __seticon.dragracestart));
+                                     var speedStart = new BMap.Marker(pointstart, { icon: icon });
+                                     map.addOverlay(speedStart);
+                                 }
+                         	}
+                         	if (alarmList[k].alarmType == 2) {
+                                 var idling = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
+                                 var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/car-idling.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
+                                 var mark7 = new BMap.Marker(idling, { icon: icon });
+                                 map.addOverlay(mark7);
+                                 var content = "<div><p>  怠速报警  </p>";
+                                 content += "<p>开始时间：" + alarmList[k].startTime + "</p>";
+                                 content += "<p>结束时间：" + alarmList[k].endTime + "</p>";
+                                 content += "<p>怠速时长：" + DateMinus(alarmList[k].startTime,alarmList[k].endTime) + "</p>";
+                                 content += "<p>耗油：" + alarmList[k].fuel + "</p>";
+                                 //content += "<p>位置：" + alarmList[k].VS_ADDRESS + "</p></div>";
+                                 mark7.addEventListener("click", openInfo1.bind(null, content));
+                             }
+                         	if (alarmList[k].alarmType == 4) {
+                                 var acceleratestart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
+                                 var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/car-accelerate.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
+                                 var mark4 = new BMap.Marker(acceleratestart, { icon: icon });
+                                 map.addOverlay(mark4);
+                                 var content = "<div><p>  急加速报警  </p>";
+                                 content += "<p>时间：" + alarmList[k].startTime + "</p>";
+                                 content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
+                                 //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
+                                 mark4.addEventListener("click", openInfo1.bind(null, content));
+                             }
+                             if (alarmList[k].alarmType == 5) {
+                                 var deceleratestart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
+                                 var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/car-decelerate.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
+                                 var mark5 = new BMap.Marker(deceleratestart, { icon: icon });
+                                 map.addOverlay(mark5);
+                                 var content = "<div><p>  急减速报警  </p>";
+                                 content += "<p>时间：" + alarmList[k].startTime + "</p>";
+                                 content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
+                                 //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
+                                 mark5.addEventListener("click", openInfo1.bind(null, content));
+                             }
+                             if (alarmList[k].alarmType == 6) {
+                                 var sharpTurn = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
+                                 var icon = new BMap.Icon("img/trafficflux/trajectory/car-turn.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
+                                 var mark8 = new BMap.Marker(sharpTurn, { icon: icon });
+                                 map.addOverlay(mark8);
+                                 var content = "<div><p>  急转弯报警  </p>";
+                                 content += "<div><p>报警时间：" + alarmList[k].startTime + "</p>";
+                                 content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
+                                 //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
+                                 mark8.addEventListener("click", openInfo1.bind(null, content));
+                             }
+                             if (alarmList[k].alarmType == 7) {
+                                 var powerFailure = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
+                                 var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/car-power-failure.png", new BMap.Size(__seticon.vehctrackheight, __seticon.vehctrackwidth));
+                                 var mark6 = new BMap.Marker(powerFailure, { icon: icon });
+                                 map.addOverlay(mark6);
+                                 var content = "<div><p>  断电报警  </p>";
+                                 content += "<p>时间：" + alarmList[k].startTime + "</p>";
+                                 content += "<p>速度：" + alarmList[k].speed + " km/h</p>";
+                                 //content += "<p>位置：" + alarmList[i].VS_ADDRESS + "</p></div>";
+                                 mark6.addEventListener("click", openInfo1.bind(null, content));
+                             }
+                         	if (alarmList[k].alarmType==12) {
+                         		timepoints.push(new BMap.Point(alarmList[k].longitude, alarmList[k].latitude));
+                                 if (k == 0) {
+                                     var pointstart = new BMap.Point(alarmList[k].longitude, alarmList[k].latitude);
+                                     var icon = new BMap.Icon(basePath +"img/trafficflux/trajectory/car-dragracestart.png", new BMap.Size(__seticon.dragracestart, __seticon.dragracestart));
+                                     var timeStart = new BMap.Marker(pointstart, { icon: icon });
+                                     map.addOverlay(timeStart);
+                                 }
+                         	}
+                         }
+                         if (speedpoints.length > 0) {
+                             var speedpolyline = new BMap.Polyline(speedpoints, { strokeColor: "#FF6100", strokeWeight: 4 });
+                             map.addOverlay(speedpolyline);
+                         }
+                         if (timepoints.length > 0) {
+                             var timepolyline = new BMap.Polyline(timepoints, { strokeColor: "#FF6100", strokeWeight: 4 });
+                             map.addOverlay(timepolyline);
+                         }
+                         followChk = document.getElementById("follow");
+                         playBtn = document.getElementById("play");
+                         pauseBtn = document.getElementById("pause");
+                         resetBtn = document.getElementById("reset");
+                         speedChoiceBtn = document.getElementById("speedChoice");
+                         //点亮操作按钮
+                         playBtn.disabled = false;
+                         $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_def.png');
+                         $("#speedChoiceImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_speed_def.png');
 //                         var iconSize = new BMap.Size(32, 32);
 //                         car = new BMap.Marker(bluepoints[0], { icon: icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_01.png', iconSize) });
 //                         map.addOverlay(car);
 //                         car.setTop(true, 99999);
-
-                } else {
-                    //toastr.success("当前行程没有报警信息", "提示信息");
-                    return;
-                }
-            }
+                        
+                     }else {
+                         //toastr.success("当前行程没有报警信息", "提示信息");
+                         return;
+                     }
+            	}
         },
         error: function (xhr, status, error) {
             return;
@@ -436,7 +427,7 @@ function getTrajectoryByEqp(eqpId, startTime, endTime) {
 
 //导出行程信息
 function exportVehcTrack() {
-    var strs = new Array();
+    var strs= new Array();
     var id = $("#selPlates").select2("val");
     var strs = id.split(",");
     var vehcId = strs[0];
@@ -461,10 +452,10 @@ function exportVehcTrack() {
         toastr.warning("开始时间必须小于结束时间", "提示信息");
         return;
     }
-
-    window.location.href = basePath
-        + "VehicleTrajectory/ExportTrackRecord?apikey=" + apikey + "&eqpId="
-        + eqpId + "&startTime=" + startTime + "&endTime=" + endTime;
+    
+    window.location.href =basePath
+	+ "VehicleTrajectory/ExportTrackRecord?apikey=" + apikey + "&eqpId="
+	+ eqpId + "&startTime=" + startTime + "&endTime=" + endTime;
 }
 
 //导出历史轨迹
@@ -472,7 +463,7 @@ function exportHistoryGps() {
     // var eqpId = $("#mdselPlates").select2("val");
     var startTime = $("#txtStartTime").val();
     var endTime = $("#txtEndTime").val();
-    var strs = new Array();
+    var strs= new Array();
     var id = $("#mdselPlates").select2("val");
     var strs = id.split(",");
     var vehcId = strs[0];
@@ -486,17 +477,17 @@ function exportHistoryGps() {
         return;
     }
     if (endTime == "" || endTime == null || endTime == undefined) {
-        toastr.warning("请选择结束时间", "提示信息");
-        return;
+    	toastr.warning("请选择结束时间", "提示信息");       
+    	return;
     }
     if (startTime > endTime) {
-        toastr.warning("开始时间必须小于结束时间", "提示信息");
+       toastr.warning("开始时间必须小于结束时间", "提示信息");
         return;
     }
-
-    window.location.href = basePath
-        + "VehicleTrajectory/ExportTrajectory?apikey=" + apikey + "&eqpId="
-        + eqpId + "&vehcId=" + vehcId + "&startTime=" + startTime + "&endTime=" + endTime;
+    
+    window.location.href =basePath
+	+ "VehicleTrajectory/ExportTrajectory?apikey=" + apikey + "&eqpId="
+	+ eqpId + "&vehcId=" +vehcId + "&startTime=" + startTime + "&endTime=" + endTime ;
 }
 
 /*********************************************************************轨迹回放*************************************************************/
@@ -512,17 +503,17 @@ var opts = {
 }
 
 
-function DateMinus(startTime, endTime) {
-    var start = new Date(startTime.replace(/-/g, "/"));
-    var end = new Date(endTime.replace(/-/g, "/"));
-    var days = end.getTime() - start.getTime();
-    return ConvertSecond(days / 1000);
+function DateMinus(startTime,endTime){ 
+	var start = new Date(startTime.replace(/-/g, "/")); 
+	var end = new Date(endTime.replace(/-/g, "/"));
+	var days = end.getTime() - start.getTime(); 
+	return  ConvertSecond(days/1000);
 }
 
 function ConvertSecond(value) {
-    if (null == value || value == undefined || value == "") {
-        return "";
-    }
+	if(null == value || value == undefined || value==""){
+		return "";
+	}
     var theTime = parseInt(value);// 秒
     var theTime1 = 0;// 分
     var theTime2 = 0;// 小时
@@ -537,12 +528,8 @@ function ConvertSecond(value) {
         }
     }
     var result = "" + parseInt(theTime) + "秒";
-    if (theTime1 > 0) {
-        result = "" + parseInt(theTime1) + "分" + result;
-    }
-    if (theTime2 > 0) {
-        result = "" + parseInt(theTime2) + "时" + result;
-    }
+    if (theTime1 > 0) { result = "" + parseInt(theTime1) + "分" + result; }
+    if (theTime2 > 0) { result = "" + parseInt(theTime2) + "时" + result; }
     return result;
 }
 
@@ -550,7 +537,7 @@ function ConvertSecond(value) {
 function getValidateTime(fromTime, toTime) {
     var flag = true;
     if (fromTime == null || fromTime == "" || fromTime == "undefined"
-        || toTime == null || toTime == "" || toTime == "undefined") {
+       || toTime == null || toTime == "" || toTime == "undefined") {
         flag = false;
         toastr.warning("'开始时间、结束时间不能为空'，请确认!");
         return flag;
@@ -575,10 +562,11 @@ function getValidateTime(fromTime, toTime) {
 }
 
 //验证三个月以内时间范围
-function getValidateTimeTree(startTime, endTime) {
+function getValidateTimeTree(startTime,endTime)
+{            
     var flag = true;
     if (startTime == null || startTime == "" || startTime == "undefined"
-        || endTime == null || endTime == "" || endTime == "undefined") {
+       || endTime == null || endTime == "" || endTime == "undefined") {
         flag = false;
         toastr.warning("'开始时间、结束时间不能为空'，请确认!");
         return flag;
@@ -594,7 +582,7 @@ function getValidateTimeTree(startTime, endTime) {
         var endTime = new Date(endTime.replace("-", "/").replace("-", "/"));
         var year = endTime.getYear() - startTime.getYear();
         var month = endTime.getMonth() - startTime.getMonth();
-        if (year > 0 || month > 2) {
+        if (year >0 || month > 2) {
             flag = false;
             toastr.warning("此功能只能导出3个月以内的数据，请确认!");
             return flag;
@@ -607,13 +595,13 @@ function getValidateTimeTree(startTime, endTime) {
 //播放
 function play() {
     playBtn.disabled = true;
-    $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_no.png');
+    $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_no.png');
 
     pauseBtn.disabled = false;
-    $("#pauseImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_stop_def.png');
+    $("#pauseImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_stop_def.png');
 
     resetBtn.disabled = false;
-    $("#resetImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_chong_def.png');
+    $("#resetImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_chong_def.png');
 
     $("#hList").show()
     $("#map_canvas").css("height", "400px");
@@ -626,44 +614,44 @@ function play() {
         var iconSize = new BMap.Size(32, 32);
         if (data.direction != null && data.direction != undefined) {
             //if (data.direction >= 337.5 || data.direction < 22.5) {
-            gpsdrct = data.direction;
-            if (data.direction == "向北") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_05.png', iconSize);
+        	gpsdrct = data.direction;
+            if (data.direction =="向北") {
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_05.png', iconSize);
             }
             //else if (data.direction >= 22.5 && data.direction < 67.5) {
             else if (data.direction == "东北") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_04.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_04.png', iconSize);
             }
             //else if (data.direction >= 67.5 && data.direction < 112.5) {
             else if (data.direction == "向东") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_03.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_03.png', iconSize);
             }
             //else if (data.direction >= 112.5 && data.direction < 157.5) {
             else if (data.direction == "东南") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_02.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_02.png', iconSize);
             }
             //else if (data.direction >= 157.5 && data.direction < 202.5) {
             else if (data.direction == "向南") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_01.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_01.png', iconSize);
             }
             //else if (data.direction >= 202.5 && data.direction < 247.5) {
             else if (data.direction == "西南") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_08.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_08.png', iconSize);
             }
             //else if (data.direction >= 247.5 && data.direction < 292.5) {
             else if (data.direction == "向西") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_07.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_07.png', iconSize);
             }
             //else if (data.direction >= 292.5 && data.direction < 337.5) {
             else if (data.direction == "西北") {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_06.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_06.png', iconSize);
             }
             car.setIcon(icon);
         }
         car.setZIndex(0);
         car.setPosition(point);
         index++;
-
+        
         var html = "<tr id='row_" + index + "' ondblclick='tableSelectRow(" + index + ")' onclick='tableClickRow(" + index + ")'>"; // 2016/9/28 增加点击事件
         //var html = "<tr id='row_" + index + "' ondblclick='tableSelectRow(" + index + ")'>";
         html += "<td style='width:80px'>" + index + "</td>";
@@ -672,9 +660,7 @@ function play() {
         html += "<td style='width:160px' id='column_" + index + "_4'>" + data.speed + "</td>";
         html += "<td id='column_" + index + "_5'>" + data.longitude + "</td>";
         html += "<td id='column_" + index + "_6'>" + data.latitude + "</td>";
-        gc.getLocation(point, function (rs) {
-            $("#txtAddress").val(rs.address);
-        });
+        gc.getLocation(point, function (rs) { $("#txtAddress").val(rs.address); });
         html += "<td id='column_" + index + "_7'>" + $("#txtAddress").val() + "</td>";
         html += "</tr>";
         $("#trackList").after(html);
@@ -692,9 +678,9 @@ function play() {
             index = 0;
             toastr.success("轨迹回放完成", "提示信息");
             playBtn.disabled = false;
-            $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_def.png');
+            $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_def.png');
             resetBtn.disabled = false;
-            $("#resetImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_chong_def.png');
+            $("#resetImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_chong_def.png');
             //pauseBtn.disabled = true;
             //$("#pauseImg").attr('src', basePath +'Content/img/trafficflux/vehcTrack/btn_stop_no.png');
             map.panTo(point);
@@ -704,15 +690,15 @@ function play() {
 //暂停
 function pause() {
     playBtn.disabled = false;
-    $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_def.png');
+    $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_def.png');
 
-    $("#speedChoiceImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_speed_def.png');
+    $("#speedChoiceImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_speed_def.png');
 
     pauseBtn.disabled = true;
-    $("#pauseImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_stop_no.png');
+    $("#pauseImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_stop_no.png');
 
     resetBtn.disabled = false;
-    $("#resetImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_chong_def.png');
+    $("#resetImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_chong_def.png');
 
     if (timer) {
         window.clearTimeout(timer);
@@ -722,13 +708,13 @@ function pause() {
 function reset() {
 
     resetBtn.disabled = true;
-    $("#resetImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_chong_no.png');
+    $("#resetImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_chong_no.png');
 
     playBtn.disabled = false;
-    $("#playImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_bofang_def.png');
+    $("#playImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_bofang_def.png');
 
     pauseBtn.disabled = true;
-    $("#pauseImg").attr('src', basePath + 'img/trafficflux/vehcTrack/btn_stop_no.png');
+    $("#pauseImg").attr('src', basePath +'img/trafficflux/vehcTrack/btn_stop_no.png');
 
     if (timer) {
         window.clearTimeout(timer);
@@ -781,7 +767,7 @@ function openInfo(contentObj, e) {
 //表格双击事件
 function tableSelectRow(rowno) {
     clearTimeout(timerclick);
-    for (var i = (rowno + 1); i <= index; i++) {
+    for (var i = (rowno + 1) ; i <= index ; i++) {
         var id = "row_" + i;
         $("#" + id).remove();
     }
@@ -795,35 +781,35 @@ function tableSelectRow(rowno) {
         var iconSize = new BMap.Size(32, 32);
         if (data.direction != null && data.direction != undefined) {
             if (data.direction >= 337.5 || data.direction < 22.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_05.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_05.png', iconSize);
                 gpsdrct = "向北";
             }
             else if (data.direction >= 22.5 && data.direction < 67.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_04.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_04.png', iconSize);
                 gpsdrct = "东北";
             }
             else if (data.direction >= 67.5 && data.direction < 112.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_03.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_03.png', iconSize);
                 gpsdrct = "向东";
             }
             else if (data.direction >= 112.5 && data.direction < 157.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_02.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_02.png', iconSize);
                 gpsdrct = "东南";
             }
             else if (data.direction >= 157.5 && data.direction < 202.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_01.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_01.png', iconSize);
                 gpsdrct = "向南";
             }
             else if (data.direction >= 202.5 && data.direction < 247.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_08.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_08.png', iconSize);
                 gpsdrct = "西南";
             }
             else if (data.direction >= 247.5 && data.direction < 292.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_07.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_07.png', iconSize);
                 gpsdrct = "向西";
             }
             else if (data.direction >= 292.5 && data.direction < 337.5) {
-                icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/car-icon_06.png', iconSize);
+                icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/car-icon_06.png', iconSize);
                 gpsdrct = "西北";
             }
             car.setIcon(icon);
@@ -851,15 +837,15 @@ function tableClickRow(rowno) {
             var pointC = new BMap.Point(long, lat);
             var iconSize = new BMap.Size(24, 29);
             //图标
-            marker1 = new BMap.Marker(pointC, {icon: icon = new BMap.Icon(basePath + 'img/trafficflux/trajectory/offline_car.png', iconSize)});  // 创建标注
-            map.addOverlay(marker1);
-
+            marker1 = new BMap.Marker(pointC,{ icon: icon = new BMap.Icon(basePath +'img/trafficflux/trajectory/offline_car.png', iconSize) });  // 创建标注
+        	map.addOverlay(marker1); 
+           
             var content = "<div style='line-height:14px;'><p style='text-align:left '><span style='width:100px;'>车牌：</span>" + $("#s2id_selPlates .select2-chosen").text() + "</p>";
             content += "<p  style='text-align:left '><span style='width:100px;'>方向：</span>" + gpsdrct + "</p>";
             content += "<p  style='text-align:left '><span style='width:100px;'>速度(km/h)：</span>" + gpsSpeed + "</p>";
             content += "<p  style='text-align:left '><span style='width:100px;'>GPS时间：</span>" + time + "</p>";
             content += "<p  style='text-align:left '><span style='width:100px;'>位置：</span>" + address + "</p></div>";
-            var contentObj = {content: content};
+            var contentObj = { content: content };
             var contentStr = contentObj.content;
             map.panTo(pointC);
             var infoWindow = new BMap.InfoWindow(contentStr, opts);  // 创建信息窗口对象
@@ -871,7 +857,7 @@ function tableClickRow(rowno) {
     }, 300);
 }
 //时间校验
-Date.prototype.format = function (fmt) {
+Date.prototype.format = function (fmt) { 
     var o = {
         "M+": this.getMonth() + 1, //月份 
         "d+": this.getDate(), //日 
@@ -886,27 +872,28 @@ Date.prototype.format = function (fmt) {
         if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
     return fmt;
 }
-var _Date = function () {
+var _Date=function(){
     return {
         //两个日期相减的天数
-        getDays: function (day1, day2) {
+        getDays: function (day1, day2)
+        {
             var arrDate, objDate1, objDate2, intDays;
             objDate1 = new Date();
             objDate2 = new Date();
 
             arrDate = day1.split("-");
             objDate1.setFullYear(arrDate[0], arrDate[1], arrDate[2]);
-
+            
             arrDate = day2.split("-");
             objDate2.setFullYear(arrDate[0], arrDate[1], arrDate[2]);
 
             intDays = parseInt(Math.abs(objDate2 - objDate1) / 1000 / 60 / 60 / 24);
-            return intDays + 1;
+            return intDays+1;
         },
         getDaysq: function (startDate, endDate) {
 
-            var mmSec = ((new Date(endDate).getTime() - ((new Date(startDate)).getTime()))); //得到时间戳相减 得到以毫秒为单位的差
-            return (mmSec / 3600000 / 24) + 1; //单位转换为天并返回
+            var mmSec = ((new Date(endDate).getTime() -((new Date( startDate)).getTime()))); //得到时间戳相减 得到以毫秒为单位的差    
+            return (mmSec / 3600000 / 24)+1; //单位转换为天并返回    
         }
     }
 }();

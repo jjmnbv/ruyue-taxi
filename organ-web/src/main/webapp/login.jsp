@@ -194,7 +194,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 				if(!validateForm()){
 					return;
 				}
-                $("#password").val(encodepwd($("#password").val()));
+				$("#password").val(encodepwd($("#password").val()));
 				form.submit();
 		    }
 		});
@@ -285,7 +285,6 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
   	*字母，特殊符号，数字
   	*/
   	function checkstr(str1){
-  		debugger;
   		if(/\d+/.test(str1)){
   		if(/[a-zA-Z]+/.test(str1)){
   		if(/[\.@#\$%\^&\*\(\)\[\]\\?\\\/\|\-~`\+\=\,\r\n\:\'\"]+/.test(str1)){

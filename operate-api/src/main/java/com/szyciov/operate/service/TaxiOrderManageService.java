@@ -1,5 +1,14 @@
 package com.szyciov.operate.service;
 
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import com.szyciov.driver.entity.OrderInfoMessage;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
@@ -42,14 +51,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 @Service("TaxiOrderManageService")
 public class TaxiOrderManageService {

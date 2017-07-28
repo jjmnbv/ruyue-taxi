@@ -71,16 +71,16 @@ function initGrid() {
                 "render": function (data, type, row) {
                     var html = '';
                     if (true) {
-                        html += '<a href=" ' + basePath + 'AreaFenceSet/AreaFenceToVehc/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/distributionCar.png" />分配车辆</a>';
+                        html += '<a href=" ' + basePath + ' AreaFenceSet/AreaFenceToVehc/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/distributionCar.png" />分配车辆</a>';
                     }
                     if (true) {
-                        html += '&nbsp;<a  href=" ' + basePath + 'AreaFenceSet/AreaFenceSetEdit/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/edit.png" />修改</a>';
+                        html += '&nbsp;<a  href=" ' + basePath + ' AreaFenceSet/AreaFenceSetEdit/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/edit.png" />修改</a>';
                     }
                     if (true) {
-                        html += '&nbsp;<a  class="SSbtn red" href="javascript:void(0)" id="btnDel" onclick=onDel(' + '"' + row.id + '"' + ') ><i class="fa fa-trash-o"></i> 删除</a>';
+                        html += '&nbsp;<a  class="btn  btn-xs red" href="javascript:void(0)" id="btnDel" onclick=onDel(' + '"' + row.id + '"' + ') ><i class="fa fa-trash-o"></i> 删除</a>';
                     }
 
-                    return html += '&nbsp;<a  href=" ' + basePath + 'AreaFenceSet/AreaFenceSetInfo/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />详情</a>';
+                    return html += '&nbsp;<a target="_blank" href=" ' + basePath + 'AreaFenceSet/AreaFenceSetInfo/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />详情</a>';
                 }
             },
 

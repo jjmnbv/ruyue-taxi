@@ -1,5 +1,13 @@
 package com.szyciov.operate.dao;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import com.szyciov.op.entity.PubDriver;
+import org.springframework.stereotype.Repository;
+
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxiOrderReview;
@@ -8,14 +16,8 @@ import com.szyciov.op.entity.OpTaxiordercomment;
 import com.szyciov.op.entity.OpTaxisendrecord;
 import com.szyciov.op.entity.OpTaxivehiclechanges;
 import com.szyciov.op.entity.PeUserRefund;
-import com.szyciov.op.entity.PubDriver;
 import com.szyciov.operate.mapper.TaxiOrderManageMapper;
 import com.szyciov.param.OrdercommentQueryParam;
-import org.springframework.stereotype.Repository;
-
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
 
 @Repository("TaxiOrderManageDao")
 public class TaxiOrderManageDao {
@@ -178,7 +180,7 @@ public class TaxiOrderManageDao {
 		mapper.orderReject(object);
 	}
 
-	public PubDriver getPubDriverById(String driverid) {
+    public PubDriver getPubDriverById(String driverid) {
         return mapper.getPubDriverById(driverid);
     }
 	

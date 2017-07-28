@@ -61,7 +61,7 @@ function initGrid() {
         sAjaxSource: "AlarmLowVoltage/getAlarmPowerFailureByPage",
         columns: [
             {"mDataProp": "imei", "sTitle": "IMEI"},
-            {"mDataProp": "department", "sTitle": "服务车企"},
+            {"mDataProp": "department", "sTitle": "所属部门"},
             {"mDataProp": "alarmTime", "sTitle": "报警时间"},
             {"mDataProp": "releaseTime", "sTitle": "解除时间 "},
             {"mDataProp": "voltage", "sTitle": "电压(V)"},

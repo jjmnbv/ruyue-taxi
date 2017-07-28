@@ -59,7 +59,7 @@ function initGrid() {
         sAjaxSource: "AlarmWaterTemp/queryAlarmWaterTempList",
         columns: [
             {"mDataProp": "plate", "sTitle": "车牌"},
-            {"mDataProp": "department", "sTitle": "服务车企"},
+            {"mDataProp": "department", "sTitle": "所属部门"},
             {"mDataProp": "alarmTime", "sTitle": "报警时间"},
             {"mDataProp": "releaseTime", "sTitle": "解除时间"},
             {"mDataProp": "maxWaterTemp", "sTitle": "最高水温°C"},
@@ -73,8 +73,7 @@ function initGrid() {
                 "bStorable": false,
                 "sWidth": 200,
                 "render": function (data, type, row) {
-                    return '<a  href="AlarmWaterTemp/TempTrend/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/waterTemp.png" />水温趋势</a>'
-                        + '&nbsp;<a target="_blank" href='+ basePath + 'AlarmSpeed/selectTrack/' + row.eqpId + '/' + row.trackId + '/' + row.trackStatus + '  class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>'
+                    return '<a target="_blank" href="AlarmWaterTemp/TempTrend/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/waterTemp.png" />水温趋势</a>' ;
                 }
             },
 

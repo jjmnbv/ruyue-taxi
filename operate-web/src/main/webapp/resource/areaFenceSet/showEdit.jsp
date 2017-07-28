@@ -57,18 +57,12 @@
             width: auto;
         }
 
-        #btnCancel1{
-            margin-top: -6px;
-        }
-
     </style>
-
 </head>
 <body>
 <div class="crumbs">
     <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
     <a href="<%=basePath%>AreaFenceSet/Index">区域栅栏设置</a>> 区域栅栏管理
-    <button type="button" id="btnCancel1" class="btn blue btn-md pull-right"><i class="fa fa-reply" style="width:auto;"></i>返回</button>
 </div>
 <div class="content">
 
@@ -167,14 +161,6 @@
 <script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.excheck-3.5.js"></script>
 <script type="text/javascript" src="content/js/loading.js"></script>
 <script type="text/javascript" src="js/areaFenceSet/showEdit.js?v=1.6"></script>
-<script>
-    $(function () {
-        $("#btnCancel1").click(function () {
-            location.href = "AreaFenceSet/Index";
-        })
-    })
-
-</script>
 
 <script type="text/javascript">
     var basePath = "<%=basePath%>";

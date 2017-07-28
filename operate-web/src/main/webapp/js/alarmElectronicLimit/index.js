@@ -91,7 +91,7 @@ function initGrid() {
         sAjaxSource: "AlarmElectronicLimit/queryAlarmElectronicLimitList",
         columns: [
             {"mDataProp": "plate", "sTitle": "车牌"},
-            {"mDataProp": "department", "sTitle": "服务车企"},
+            {"mDataProp": "department", "sTitle": "所属部门"},
             {"mDataProp": "fenceName", "sTitle": "电子围栏名称"},
             {"mDataProp": "startTime", "sTitle": "开始时间"},
             {"mDataProp": "endTime", "sTitle": "结束时间"},
@@ -99,20 +99,20 @@ function initGrid() {
             {"mDataProp": "endOfViolation", "sTitle": "结束地址"},
             {"mDataProp": "lengthOfViolation", "sTitle": "违规时长"},
             {"mDataProp": "illegalMileage", "sTitle": "违规里程(km)"},
-            {
-                //自定义操作列
-                "mDataProp": "cz",
-                "sClass": "center",
-                "sTitle": "详细信息",
-                "bSearchable": false,
-                "bStorable": false,
-                "sWidth": 200,
-                "render": function (data, type, row) {
-                    return '<a  href=' + '/AlarmElectronicLimit/AreaTravelTrack/' + row.id + '/' + row.trackId + ' class="btn default btn-xs blue"><img src="img/trafficflux/icon/moveTrack.png" alt=""/>行驶轨迹</a>'
-                        + '&nbsp;<a target="_blank" href=' + basePath + 'AlarmSpeed/selectTrack/' + row.eqpId + '/' + row.trackId + '/' + row.trackStatus + '  class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>'
-                        ;
-                }
-            },
+            // {
+            //     //自定义操作列
+            //     "mDataProp": "cz",
+            //     "sClass": "center",
+            //     "sTitle": "详细信息",
+            //     "bSearchable": false,
+            //     "bStorable": false,
+            //     "sWidth": 200,
+            //     "render": function (data, type, row) {
+            //         return '<a target="_blank"   href="/AlarmAreaLimit/AreaTravelTrack/' + row.id + '" class="btn default btn-xs blue"><img src="Content/img/icon/moveTrack.png" alt=""/>行驶轨迹</a>'
+            //             + '&nbsp;<a target="_blank"   href="/AlarmAreaLimit/SelectTrack/' + row.id + '/' + row.id + '/' + row.VT_STATUS + '" class="btn default btn-xs blue"><img src="Content/img/icon/travelInfo.png" alt=""/>查看行程</a>'
+            //             ;
+            //     }
+            // },
 
         ], "fnRowCallback": function (nRow, aData, iDisplayIndex) {
             $('td:eq(0)', nRow).html("<a data-toggle='abstractpopover' data-plates='" + aData.plate + "' rel='popover' data-placement='top' onmouseover='getAbstractByPlates(&#39;" + aData.plate + "&#39;)'>" + aData.plate + "</a>");

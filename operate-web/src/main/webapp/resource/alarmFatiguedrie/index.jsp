@@ -98,7 +98,6 @@
             </div>
 
             <div class="row ">
-
                 <div class="col-4">
                     <div class="form-group">
                         <label class="control-label col-4">车牌</label>
@@ -168,7 +167,7 @@
 
     <div class="row">
         <div class="col-12">
-            <table class="table table-bordered  table-striped table-hover" cellspacing="0" id="dtGrid"
+            <table class="table table-bordered table-condensed table-striped table-hover" cellspacing="0" id="dtGrid"
                    width="100%"></table>
         </div>
     </div>

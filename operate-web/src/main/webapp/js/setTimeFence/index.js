@@ -36,8 +36,12 @@ function onDel(id) {
                 async: false,
                 success: function (data) {
                     if (data.status == 0) {
-                        toastr.success("删除成功", "提示信息");
-                        dtGrid._fnReDraw();
+                        var message = data.msg == null ? data
+                            : data.msg;
+                        toastr.options.onHidden = function () {
+                            window.location.href = basePath + "SetTimeFence/Index";
+                        }
+                        toastr.success(message, "提示");
 
                     } else {
                         var message = data.msg == null ? status
@@ -97,16 +101,16 @@ function initGrid() {
                 "render": function (data, type, row) {
                     var html = '';
                     if (true) {
-                        html += '<a href=" ' + basePath + '/SetTimeFence/timeFenceToVehc/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/distributionCar.png" />分配车辆</a>';
+                        html += '<a href=" ' + basePath + ' /SetTimeFence/timeFenceToVehc/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/distributionCar.png" />分配车辆</a>';
                     }
                     if (true) {
-                        html += '&nbsp;<a  href=" ' + basePath + '/SetTimeFence/toAddOrUpdate/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/edit.png" />修改</a>';
+                        html += '&nbsp;<a  href=" ' + basePath + ' /SetTimeFence/toAddOrUpdate/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/edit.png" />修改</a>';
                     }
                     if (true) {
-                        html += '&nbsp;<a  class="SSbtn red" href="javascript:void(0)" id="btnDel" onclick=onDel(' + '"' + row.id + '"' + ') ><i class="fa fa-trash-o"></i> 删除</a>';
+                        html += '&nbsp;<a  class="btn  btn-xs red" href="javascript:void(0)" id="btnDel" onclick=onDel(' + '"' + row.id + '"' + ') ><i class="fa fa-trash-o"></i> 删除</a>';
                     }
 
-                    return html += '&nbsp;<a  href=" ' + basePath + '/SetTimeFence/timeFenceSetInfo/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />详情</a>';
+                    return html += '&nbsp;<a target="_blank" href=" ' + basePath + ' /SetTimeFence/timeFenceSetInfo/' + row.id + '" class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" />详情</a>';
                 }
             },
 

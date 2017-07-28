@@ -103,13 +103,8 @@ function initGrid() {
                 "bStorable": false,
                 "mRender": function (data, type, row) {
                     var html = '';
-                    if (row.oilCharge == null || row.oilCharge == "") {
-                        html += '<button  class="btn  btn-xs blue"   onclick=onCheck("' + row.id + '") ><img src="img/trafficflux/icon/verification.png"/>核查</button>'
-                        + '&nbsp;<a target="_blank" href='+ basePath + 'AlarmSpeed/selectTrack/' + row.eqpId + '/' + row.trackId + '/' + row.trackStatus + '  class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>';
-                    }
-                    else {
-                        html += '<a  href= ' + basePath + 'AlarmIdle/toAlarmIdleDetail/' + row.id  +' class="btn default btn-xs blue"><img src="img/trafficflux/icon/operaRecords.png"/>记录</a>'
-                            +  '&nbsp;<a target="_blank" href='+ basePath + 'AlarmSpeed/selectTrack/' + row.eqpId + '/' + row.trackId + '/' + row.trackStatus + '  class="btn default btn-xs blue"><img src="img/trafficflux/icon/travelInfo.png" alt=""/>查看行程</a>';
+                    if (true) {
+                        html += '<button  class="btn  btn-xs blue"   onclick=onCheck("' + row.id + '") ><img src="img/trafficflux/icon/verification.png"/>核查</button>';
                     }
 
                     return html;

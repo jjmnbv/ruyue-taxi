@@ -67,7 +67,7 @@ function initGrid() {
                 "bSearchable": false,
                 "bStorable": false,
                 "render": function (data, type, row) {
-                    return '&nbsp;<a  class="SSbtn red" href="javascript:void(0)" id="btnDel" onclick=onDel(\'' + row.id + '\',\'' + v_id + '\',\'' + row.eid + '\') ><i class="fa fa-trash-o"></i> 删除</a>';
+                    return '&nbsp;<a  class="btn  btn-xs red" href="javascript:void(0)" id="btnDel" onclick=onDel(\'' + row.id + '\',\'' + v_id + '\',\'' + row.eid + '\') ><i class="fa fa-trash-o"></i> 删除</a>';
                 }
             }
         ]
@@ -148,9 +148,6 @@ function initGridForMd() {
         bServerSide: true,
         bRetrieve: true,
         bAutoWidth: true,
-        userQueryParam: [
-            {"name": "fenceId", "value": v_id}
-        ],
         columns: [
             {"mDataProp": "imei", "sTitle": "设备IMEI"},
             {"mDataProp": "plate", "sTitle": "车牌"},
@@ -196,6 +193,7 @@ function onAddVehc(E_id) {
                 setTimeout(function () {
                     dtGrid2._fnReDraw();
                     dtGrid._fnReDraw();
+                    $('#mdAreaFenceToVehc').modal('hide');
                 }, 500);
                 return;
 

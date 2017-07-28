@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width"/>
-    <title>时间栅栏</title>
+    <title>基础数据 | 时间栅栏</title>
     <base href="<%=basePath%>">
 
 </head>
@@ -165,7 +165,7 @@
 
     <div class="row">
         <div class="col-12">
-            <table class="table table-bordered  table-striped table-hover" id="dtGrid"></table>
+            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid"></table>
         </div>
     </div>
 
