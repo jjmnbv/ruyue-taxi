@@ -33,7 +33,7 @@ ry-coach-common-encryption-1.0.5-SNAPSHOT.jar
           </elementProp>
           <elementProp name="IvCode" elementType="Argument">
             <stringProp name="Argument.name">IvCode</stringProp>
-            <stringProp name="Argument.value">12345678</stringProp>
+            <stringProp name="Argument.value">xxkj0912</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="charset" elementType="Argument">
@@ -43,7 +43,7 @@ ry-coach-common-encryption-1.0.5-SNAPSHOT.jar
           </elementProp>
           <elementProp name="orderno" elementType="Argument">
             <stringProp name="Argument.name">orderno</stringProp>
-            <stringProp name="Argument.value">CGT1707271704</stringProp>
+            <stringProp name="Argument.value">CGT1707281651</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
@@ -66,7 +66,7 @@ ry-coach-common-encryption-1.0.5-SNAPSHOT.jar
         <stringProp name="ThreadGroup.delay"></stringProp>
       </ThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.1 司机应邀通知" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.1 司机应邀通知" enabled="false">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -154,7 +154,7 @@ args.append(&quot;\&quot;ResponseType\&quot;:&quot;).append(&quot;\&quot;1\&quot
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(), vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
@@ -222,7 +222,7 @@ args.append(&quot;\&quot;MapType\&quot;:&quot;).append(&quot;1&quot;).append(&qu
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
@@ -359,7 +359,7 @@ args.append(&quot;\&quot;ArrivalTime\&quot;:&quot;).append(&quot;\&quot;&quot;).
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
@@ -367,7 +367,7 @@ vars.put(&quot;param&quot;,args.toString());
           </BeanShellPreProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.4.司机取消通知" enabled="false">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="2.4.司机取消通知" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments">
@@ -457,7 +457,7 @@ args.append(&quot;\&quot;CancelType\&quot;:&quot;).append(&quot;1&quot;).append(
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
@@ -559,7 +559,7 @@ args.append(&quot;\&quot;PassengerGetOnTime\&quot;:&quot;).append(&quot;\&quot;&
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
@@ -663,7 +663,7 @@ args.append(&quot;\&quot;OrderEndTime\&quot;:&quot;).append(&quot;\&quot;&quot;)
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
@@ -769,7 +769,7 @@ args.append(&quot;\&quot;TransMode\&quot;:&quot;).append(&quot;0&quot;).append(&
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
@@ -868,7 +868,7 @@ args.append(&quot;\&quot;AccumulatedDistance\&quot;:&quot;).append(&quot;10.33&q
 String param = args.toString().replace(&quot;\&quot;&quot;, &quot;%22&quot;)  
         .replace(&quot;{&quot;, &quot;%7b&quot;).replace(&quot;}&quot;, &quot;%7d&quot;);   //特殊字符进行转义  
 	 
-String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),&quot;12345678&quot;), &quot;utf-8&quot;);
+String sign = MD5.MD5Encode(DESUtils.encode(&quot;12345678&quot;, args.toString(),vars.get(&quot;IvCode&quot;)), &quot;utf-8&quot;);
 vars.put(&quot;Args&quot;, param);
 vars.put(&quot;Sign&quot;,sign);
 vars.put(&quot;param&quot;,args.toString());
