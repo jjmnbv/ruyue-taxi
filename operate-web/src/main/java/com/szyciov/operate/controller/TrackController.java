@@ -124,7 +124,7 @@ public class TrackController extends BaseController {
 
 		int i = (int) map.get("iTotalRecords");
 		pageBean.setiTotalDisplayRecords(i);
-		pageBean.setiTotalRecords(list.size());
+		pageBean.setiTotalRecords(i);
 
 		return pageBean;
 	}
@@ -191,13 +191,18 @@ public class TrackController extends BaseController {
 		Integer relationType = Integer.parseInt(request.getParameter("relationType"));
 		String departmentId = request.getParameter("departmentId");
 		String keyword = request.getParameter("keyword");
-
+		List<Dictionary> dictionary = getOpUserCompany(request, userToken, false);
+		// 转换字典值
+		List<TextAndValue> listDictionary = TextValueUtil.convert(dictionary);
 		QueryTrackDataParam queryParam = new QueryTrackDataParam();
 		queryParam.setApikey(apikey);
 		queryParam.setRelationType(relationType);
 		queryParam.setDepartmentId(departmentId);
 		queryParam.setKeyword(keyword);
-
+		queryParam.setiDisplayLength(Integer.MAX_VALUE);
+		queryParam.setOrganizationId(
+				(!listDictionary.isEmpty() && listDictionary.size() > 0) ? listDictionary.get(0).getValue() : "");
+	
 		Excel excel = trackService.exportExcel(queryParam, userToken);
 		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyyMMddHHmmss");
 		String title = "行程数据" + "(" + sdfDate.format(new Date()) + ")" + ".xls";
@@ -279,7 +284,7 @@ public class TrackController extends BaseController {
 		int i = 0;
 		if (list != null && list.size() != 0) {
 			i = (int) map.get("iTotalRecords");
-			pageBean.setiTotalRecords(list.size());
+			pageBean.setiTotalRecords(i);
 			pageBean.setAaData(list);
 		} else {
 			pageBean.setiTotalRecords(i);
@@ -355,9 +360,11 @@ public class TrackController extends BaseController {
 		if (request.getParameter("trackId") != null && !request.getParameter("trackId").equals("")) {
 			trackId = request.getParameter("trackId");
 		}
+		String imei= request.getParameter("imei");
 		String eqpId = request.getParameter("eqpId");
 		model.put("trackId", trackId);
 		model.put("eqpId", eqpId);
+		model.put("imei", imei);
 		ModelAndView mv = new ModelAndView("resource/track/trackRecordDetail", model);
 		return mv;
 	}

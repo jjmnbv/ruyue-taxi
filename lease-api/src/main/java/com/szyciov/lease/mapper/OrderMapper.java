@@ -93,4 +93,10 @@ public interface OrderMapper {
 	public List<PubCityAddr> getOrgUserPriBusCity(Map<String, Object> param);
 
 	List<GetFreeDriverResponse> getManualSelectDriver(GetFreeDriverRequest model);
+
+    List<Map<String,Object>> getOrganUsers(Map<String, Object> param);
+
+	List<Map<String,Object>> getOrgans(Map<String, Object> param);
+
+    Map<String,Object> getRUYUE(Map<String, Object> param);
 }

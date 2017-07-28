@@ -64,6 +64,11 @@ public class LoginParam {
 	 * 设备唯一id
 	 */
 	private String uuid;
+
+	/**
+	 * 接口版本
+	 */
+	private String vversion;
 	
 	/**
 	 * app的版本号
@@ -164,5 +169,13 @@ public class LoginParam {
 
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
+	}
+
+	public String getVversion() {
+		return vversion;
+	}
+
+	public void setVversion(String vversion) {
+		this.vversion = vversion;
 	}
 }

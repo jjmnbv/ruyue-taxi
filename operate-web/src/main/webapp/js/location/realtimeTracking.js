@@ -13,61 +13,41 @@ var dtGridAreaFenceSet;
 var dtGridElectronFenceSet;
 var setTimeoutId = 0;
 var seconds = 0;
-var apikey="EFLc9FVyIHUWE4xKYFETDeF";
 
 $(function () {
     $.fn.modal.Constructor.prototype.enforceFocus = function () { };
     bindControl();//绑定控件
     bindMap();  //绑定地图行驶轨迹
-//    if ("@ViewBag.vehcId") {
-//        $("#selPlates").val("@ViewBag.vehcId");
-//        $("#s2id_selPlates .select2-chosen").text("@ViewBag.plates");
-//        $("#spVehcCount").html(1)
-//        $.ajax({
-//            url: "@Url.Action("GetCurrentVehcList", "VehcLocation")",
-//            cache: false,
-//            data: { vehcId: "@ViewBag.vehcId" },
-//            success: function (data) {
-//                vehcList = data;
-//                if (vehcList == null || vehcList == undefined || vehcList.length == 0) {
-//                    toastr.success("当前查询条件没有车辆信息", "提示信息");
-//                    return;
-//                }
-//                //绑定车辆列表
-//                bindVehcList();
-//            },
-//            error: function (xhr, status, error) {
-//                showerror(xhr.responseText);
-//            },
-//            complete: function (xhr, ts) {
-//                _loading.hide();
-//            }
-//        });
-//    }
-
+    /**
+     * 数据回显
+     */
+    if (null != echoeqpId && echoeqpId !="" && echoeqpId!=undefined) {
+        $("#selPlates").val(echoeqpId);
+        $("#s2id_selPlates .select2-chosen").text(echoplate+'|'+echoimei);
+        $("#btnSearch").click();
+    }
 });
 
 function bindControl() {
-    $("#btnSearch").click(function () {
+	$("#btnSearch").click(function () {
+    	  //检查车辆是否在实时追踪
+        var isbool = true;
+        $("[name='vehccheckbox'][checked]").each(function () {
+            if ($("#selPlates").val() == $(this).val()) {
+                toastr.warning("车辆已在实时追踪列表中", "提示信息");
+                isbool = false;
+                return;
+            }
+        })
         if ($("#selPlates").val() == null || $("#selPlates").val() == "" || $("#selPlates").val() == undefined) {
             toastr.warning("请选择车辆", "提示信息");
             return;
         }
-        //检查车辆是否在实时追踪
-        var isbool = true;
-        $("[name='vehccheckbox'][checked]").each(function () {
-            if ($("#selPlates").val() == $(this).val()) {
-
-                toastr.warning("车辆已在实时追踪列表中", "提示信息");
-                isbool = false;
-                return false;
-            }
-        })
-
-        if (isbool == true) {
-            $.ajax({
+        if (isbool) {
+        	 $.ajax({
                 url: "Location/QueryLocation",
                 cache: false,
+                async: false,
                 data : {
         			apikey : apikey,
         			processOption : 2,//纠偏选项  1_不纠偏;2_百度纠偏;默认不纠偏
@@ -80,8 +60,6 @@ function bindControl() {
                         toastr.success("当前车辆未安装设备或设备未激活", "提示信息");
                         return;
                     }
-                    //绑定车辆列表
-                    
                     bindVehcList();
                 },
                 error: function (xhr, status, error) {
@@ -93,7 +71,6 @@ function bindControl() {
             });
         }
     });
-
 	$("#selPlates").select2({
 		placeholder : "车牌",
 		minimumInputLength : 1,
@@ -127,27 +104,22 @@ function bindControl() {
               }
 		}
 	});
-
 }
 
 $('.modal').on('hidden.bs.modal', function (e) {
     setTimeout(work, 1000);
 })
-
 $('.modal').on('show.bs.modal', function (e) {
     clearInterval(setTimeoutId);
 })
 
 //添加车辆列表
 function bindVehcList() {
-    
     if (vehcList == null || vehcList == undefined) {
         return;
     }
-
     var html = "";
     for (var i = 0; i < vehcList.length; i++) {
-    	
         if (i == vehcList.length - 1) {
             html += "<li id='li_" + vehcList[i].imei + "' class=\"last-line\"><div class=\"vehc-icon\">";
         }
@@ -170,22 +142,17 @@ function bindVehcList() {
         html += "<p><span class=\"vehc-title-sp\">IMEI："+ vehcList[i].imei + "</span></p>";
 		html += "<span class=\"vehc-title-sp\">" + vehcList[i].plate + "</span>";
 		html += "<span class=\"vehc-status\">" + status + "</span>";
-		
-        /*html += "<span class=\"vehc-title-sp\">" + vehcList[i].plate + "</span>";
-        html += "<span class=\"vehc-status\">" + status + "</span>";*/
         html += "<input  type='checkbox' name='vehccheckbox'checked='checked' style='display:none;' value=\"" + vehcList[i].eqpId + "\"/>";
         html += "<span class=\"btn btn-xs deleteVehc\" style='color: #333;float:right' data-vehc='" + vehcList[i].imei + "'><i class='fa fa-trash-o'></i>删除</span></div> </li>";
     }
 
     $(".vehc-list").append(html);
-
     //删除
     $(".deleteVehc").on("click", function () {
         $(this).closest("li").remove();
         var vehcId = $(this).attr("data-vehc");
         removeMarker(vehcId);
         deletePoint(vehcId);
-
         vehcList = [];
         $("[name='vehccheckbox'][checked]").each(function () {
         	var person=new Object(); 
@@ -195,28 +162,26 @@ function bindVehcList() {
         	person.relationType=1;
             vehcList.push(person);
         })
-
-        //列表为空清除地图标签
-        if (vehcList.length <= 0) {
-            toastr.warning("请选择车辆", "提示信息");
-        }
-
+    //列表为空清除地图标签
+    if (vehcList.length <= 0) {
+        toastr.warning("请选择车辆", "提示信息");
+    }
         $("#spVehcCount").html(vehcList.length);
-    });
+   });
     //车辆平移
     $(".vehc-list li").on("click", function () {
         $(".vehc-list li").css("background-color", "");
         $(this).css("background-color", "#e9e9e9");
         var long = $(this).find(".longitude").val();
         var lat = $(this).find(".latitude").val();
-        prevPoint = new BMap.Point(long, lat);
-
+	      if(long >0 && lat>0){
+	        prevPoint = new BMap.Point(long, lat);
+	      }
         //两秒后，地图平移到上车地点
-        if (prevPoint != null) {
+        if (null != prevPoint  ) {
             setTimeout(function () { map.panTo(prevPoint); }, 1000);
         }
     });
-
     initWork();//定时更新
     bindVehcStatus();
 }
@@ -282,7 +247,6 @@ function bindCurrentTrackGps(trackId,eqpId) {
 
     $.ajax({
     	url : 'Location/getTrajectoryByTrack',
-        //url: "@Url.Action("GetCurrentTrackGps", "VehcLocation")",
         cache: false,
         data: { trackId: trackId, eqpId: eqpId, apikey : apikey, processOption : 2, returnResult:1 },
         success: function (data) {
@@ -304,22 +268,23 @@ function bindGps(eqpId, gpsList) {
         return;
     }
     if (gpsList.length > 0) {
-        var point = new BMap.Point(gpsList[0].longitudeOffSet, gpsList[0].latitudeOffSet);
-        var icon = new BMap.Icon(basePath +"img/trafficflux/gpsStart.png", new BMap.Size(29, 35));
-        var marker = new BMap.Marker(point, { icon: icon });
-        marker.setTitle(eqpId);//标记唯一值
-        markerArr.push(marker);//将marker放进数组
-        map.addOverlay(marker);
-
+    	if(gpsList[0].longitude >0 && gpsList[0].latitude >0){
+    		 var point = new BMap.Point(gpsList[0].longitude, gpsList[0].latitude);
+    	     var icon = new BMap.Icon(basePath +"img/trafficflux/gpsStart.png", new BMap.Size(29, 35));
+    	     var marker = new BMap.Marker(point, { icon: icon });
+    	     marker.setTitle(eqpId);//标记唯一值
+    	     markerArr.push(marker);//将marker放进数组
+    	     map.addOverlay(marker);
+    	}
     }
 
     if (gpsList.length > 1) {
-        prevPoint = new BMap.Point(gpsList[gpsList.length - 1].longitudeOffSet, gpsList[gpsList.length - 1].latitudeOffSet);
+        prevPoint = new BMap.Point(gpsList[gpsList.length - 1].longitude, gpsList[gpsList.length - 1].latitude);
     }
 
     var points = [];
     for (var i = 0; i < gpsList.length; i++) {
-        var point = new BMap.Point(gpsList[i].longitudeOffSet, gpsList[i].latitudeOffSet);
+        var point = new BMap.Point(gpsList[i].longitude, gpsList[i].latitude);
         points.push(point);
     }
     var polyline = new BMap.Polyline(points, { strokeColor: "blue", strokeWeight: 6, strokeOpacity: 0.5 });
@@ -375,7 +340,6 @@ function bindVehcStatus() {
     	eqpIdList += $(this).val()+",";
     	count++;
     })
-
     //列表为空清除地图标签
     if (eqpIdList == "") {
         toastr.warning("请选择车辆", "提示信息");
@@ -398,7 +362,6 @@ function bindVehcStatus() {
     $.ajax({
         type: 'post',
         url: basePath + 'Location/QueryEqpLocation',
-        //url: "@Url.Action("GetVehcStatusList", "VehcLocation")",
         cache: false,
         data: {eqpIdList : JSON.stringify(param)},
         success: function (data) {
@@ -460,7 +423,7 @@ function bindVehcStatus() {
                 updateVehcStatus(eqpLocation[i]);
                 var vehc2Id = $("#selPlates").val();
 
-                if (eqpLocation[i].imei == vehc2Id) {
+                if (eqpLocation[i].eqpId == vehc2Id) {
                     setTimeout(function () { map.panTo(point) }, 1000);//三秒后平移到轨迹开始位置
                 }
 
@@ -484,7 +447,7 @@ function bindVehcStatus() {
 }
 var opts = {
     width: 350,     // 信息窗口宽度
-    //height: 155,     // 信息窗口高度
+    height: 200,     // 信息窗口高度
     enableMessage: false,
     offset: new BMap.Size(0, -20)
 }
@@ -516,99 +479,72 @@ function updateVehcStatus(data) {
 
 //对应不同的Marker创建不同的InfoWindow
 function createInfoWindow(data, point) {
-    
     var iw = new BMap.InfoWindow("", opts);
     gc.getLocation(point, function (rs) {
-
-        //转换数值方向为方位
-//        if (data.VS_GPSDRCT != null && data.VS_GPSDRCT != undefined) {
-//            if (data.VS_GPSDRCT >= 337.5 || data.VS_GPSDRCT < 22.5) {
-//                gpsdrct = "向北";
-//            }
-//            else if (data.VS_GPSDRCT >= 22.5 && data.VS_GPSDRCT < 67.5) {
-//                gpsdrct = "东北";
-//            }
-//            else if (data.VS_GPSDRCT >= 67.5 && data.VS_GPSDRCT < 112.5) {
-//                gpsdrct = "向东";
-//            }
-//            else if (data.VS_GPSDRCT >= 112.5 && data.VS_GPSDRCT < 157.5) {
-//                gpsdrct = "东南";
-//            }
-//            else if (data.VS_GPSDRCT >= 157.5 && data.VS_GPSDRCT < 202.5) {
-//                gpsdrct = "向南";
-//            }
-//            else if (data.VS_GPSDRCT >= 202.5 && data.VS_GPSDRCT < 247.5) {
-//                gpsdrct = "西南";
-//            }
-//            else if (data.VS_GPSDRCT >= 247.5 && data.VS_GPSDRCT < 292.5) {
-//                gpsdrct = "向西";
-//            }
-//            else if (data.VS_GPSDRCT >= 292.5 && data.VS_GPSDRCT < 337.5) {
-//                gpsdrct = "西北";
-//            }
-//        }
-
-        //设置地图弹出框内容
-        var status = "";
-        var content = "<p style='font-weight:bold;text-align:left '>车牌：" + data.plate + "</p>";
-        content += "<p style='font-weight:bold;text-align:left '>车企： " + data.department + "</p>";
-        if (data.workStatus == "在线") {
-            status = "运行";
-            content += "<p>状态：" + data.workStatus + "&nbsp;&nbsp;&nbsp;&nbsp;" + data.longTime + " <span style=' float:right; _position:relative;'>车速 ： " + data.speed + " km/h  &nbsp;&nbsp;&nbsp;</span></p>";
-            content += "<p>行程开始：" + data.startTime.substring(0,19) + "<span style=' float:right; _position:relative;'>航向：" + data.direction + " &nbsp;&nbsp;&nbsp;</span></p>";
-            
-            if(data.totalMileage == null){
-            	data.totalMileage=0;
-            }
-            if(data.cumulativeOil == null){
-            	data.cumulativeOil=0;
-            }
-            
-            content += "<p>里程：" + data.totalMileage + "km&nbsp;&nbsp;&nbsp;耗油：" + data.cumulativeOil + "L</p>";
-            if (rs.address == null || rs.address == undefined) {
-                content += "<p>位置：未解析地址</p></div>";
-            }
-            else {
-                content += "<p>位置：" + rs.address + "</p>";
-            }
-        } else {
-
-            status = "停止";
-            content += "<p>状态：" + data.workStatus + "</p>";
-            content += "<p>最后更新时间：" + data.locTime + "</p>";
-            content += "<p>位置：" + rs.address + "</p>";
+    //设置地图弹出框内容
+    var status = "";
+    var content = "<p style='font-weight:bold;text-align:left '>车牌：" + data.plate + "</p>";
+    content += "<p style='font-weight:bold;text-align:left '>车企： " + data.department + "</p>";
+    if (data.workStatus == "在线") {
+        status = "运行";
+        content += "<p>状态：" + status + "&nbsp;&nbsp;&nbsp;&nbsp;<span style=' float:right; _position:relative;'>车速 ： " + data.speed + " km/h  &nbsp;&nbsp;&nbsp;</span></p>";
+        content += "<p>行程开始：" + data.startTime.substring(0,19) + "<span style=' float:right; _position:relative;'>航向：" + data.direction + " &nbsp;&nbsp;&nbsp;</span></p>";
+        
+        if(data.totalMileage == null){
+        	data.totalMileage=0;
         }
-
-        if (data.Flag != "" && data.Flag != null) {
-            content += "<p style='float:left;margin-left:90px;margin-top:10px;'>";
-//            content += "<a target='_blank' href='" +basePath + "Vehc/showDetail?id=" + data.imei + "' class='btn default btn-xs blue'> <img src='"+basePath +"img/trafficflux/vehcCommon/returnCar.png' /> 车辆档案</a>";
-           content += "&nbsp;&nbsp;<a class='btn  btn-xs blue' href='" +basePath + "/VehicleTrajectory/Index/" + data.imei + "' ><img src='"+basePath +"img/trafficflux/vehcCommon/refresh.png' /> 车辆轨迹</a>";
-            content += "</p>";
-
-            content += "<div class='btn-group dropup' style='float:right;width:100px;margin-right:-5px;position:relative;margin-top:10px;' id='dDiv'>";
-            content += "<button type='button' class='btn default btn-xs blue' onclick='showUlList()' style='height:20px;margin-top:1px;'><img src='"+basePath +"img/trafficflux/vehcCommon/icon_zhanlan.png' />栅栏设置</button>";
-            content += "<button type='button' class='btn default btn-xs blue dropdown-toggle' data-toggle='dropdown' onclick='showUlList()' style='height:20px;margin-top:1px;'><i class='fa fa-angle-down'></i></button>";
-            content += "<ul class='dropdown-menu pull-right' role='menu' style='list-style:none;margin:0px;padding:0px;width:50px;margin-right:10px;' class='ListStyle'>";
-            if (data.Flag.indexOf("1") > -1) {
-                content += "<li><a href='javascript:void(0)' class='btn btn-xs blue' onclick=showTimeModel('" + data.plate + "','" + data.imei + "')><img src='"+basePath +"img/trafficflux/vehcCommon/icon_clock_def.png' /> 时间栅栏 </a></li>";
-            }
-            if (data.Flag.indexOf("2") > -1) {
-                content += "<li><a href='javascript:void(0)' class='btn btn-xs blue' onclick=showAreaModel('" + data.plate + "','" + data.imei + "')><img src='"+basePath +"img/trafficflux/vehcCommon/icon_quyu.png' /> 区域栅栏 </a></li>";
-            }
-            if (data.Flag.indexOf("3") > -1) {
-                content += "<li><a href='javascript:void(0)' class='btn btn-xs blue' onclick=showElectronModel('" + data.plate + "','" + data.imei + "')><img src='"+basePath +"img/trafficflux/vehcCommon/icon_dianzi.png' /> 电子栅栏 </a></li>";
-            }
-            content += "</ul></div>";
+        if(data.cumulativeOil == null){
+        	data.cumulativeOil=0;
+        }
+        
+        content += "<p>里程：" + data.totalMileage + "km&nbsp;&nbsp;&nbsp;耗油：" + data.cumulativeOil + "L</p>";
+        if (rs.address == null || rs.address == undefined) {
+            content += "<p>位置：未解析地址</p></div>";
         }
         else {
-            content += "<p style='float:right;margin-top:10px;'>";
-          //content += "<a target='_blank' href='" +basePath + "Vehc/showDetail?id=" + data.imei + "' class='btn default btn-xs blue'> <img src='"+basePath +"img/trafficflux/vehcCommon/returnCar.png' /> 车辆档案</a>";
-            content += "&nbsp;&nbsp;<a class='btn  btn-xs blue' href='" +basePath + "/VehicleTrajectory/Index/" + data.imei +"' ><img src='"+basePath +"img/trafficflux/vehcCommon/refresh.png' /> 车辆轨迹</a>";
-            content += "</p>";
+            content += "<p>位置：" + rs.address + "</p>";
         }
+    } else if(data.workStatus == "离线") {
 
-        iw.setContent(content);
-    });
+        status = "离线";
+        content += "<p>状态：" + status + "</p>";
+        content += "<p>最后更新时间：" + data.locTime + "</p>";
+        content += "<p>位置：" + rs.address + "</p>";
+    }else{
+    	 status = "停止";
+         content += "<p>状态：" + status + "</p>";
+         content += "<p>最后更新时间：" + data.locTime + "</p>";
+         content += "<p>位置：" + rs.address + "</p>";
+    }
+    if (data.Flag != "" && data.Flag != null) {
+        content += "<p style='float:left;margin-left:90px;margin-top:10px;'>";
+//            content += "<a target='_blank' href='" +basePath + "Vehc/showDetail?id=" + data.imei + "' class='btn default btn-xs blue'> <img src='"+basePath +"img/trafficflux/vehcCommon/returnCar.png' /> 车辆档案</a>";
+       content += "&nbsp;&nbsp;<a class='btn  btn-xs blue' href='" +basePath + "VehicleTrajectory/Index/" + data.imei + "' ><img src='"+basePath +"img/trafficflux/vehcCommon/refresh.png' /> 车辆轨迹</a>";
+        content += "</p>";
+
+        content += "<div class='btn-group dropup' style='float:right;width:100px;margin-right:-5px;position:relative;margin-top:10px;' id='dDiv'>";
+        content += "<button type='button' class='btn default btn-xs blue' onclick='showUlList()' style='height:20px;margin-top:1px;'><img src='"+basePath +"img/trafficflux/vehcCommon/icon_zhanlan.png' />栅栏设置</button>";
+        content += "<button type='button' class='btn default btn-xs blue dropdown-toggle' data-toggle='dropdown' onclick='showUlList()' style='height:20px;margin-top:1px;'><i class='fa fa-angle-down'></i></button>";
+        content += "<ul class='dropdown-menu pull-right' role='menu' style='list-style:none;margin:0px;padding:0px;width:50px;margin-right:10px;' class='ListStyle'>";
+        if (data.Flag.indexOf("1") > -1) {
+            content += "<li><a href='javascript:void(0)' class='btn btn-xs blue' onclick=showTimeModel('" + data.plate + "','" + data.imei + "')><img src='"+basePath +"img/trafficflux/vehcCommon/icon_clock_def.png' /> 时间栅栏 </a></li>";
+        }
+        if (data.Flag.indexOf("2") > -1) {
+            content += "<li><a href='javascript:void(0)' class='btn btn-xs blue' onclick=showAreaModel('" + data.plate + "','" + data.imei + "')><img src='"+basePath +"img/trafficflux/vehcCommon/icon_quyu.png' /> 区域栅栏 </a></li>";
+        }
+        if (data.Flag.indexOf("3") > -1) {
+            content += "<li><a href='javascript:void(0)' class='btn btn-xs blue' onclick=showElectronModel('" + data.plate + "','" + data.imei + "')><img src='"+basePath +"img/trafficflux/vehcCommon/icon_dianzi.png' /> 电子栅栏 </a></li>";
+        }
+        content += "</ul></div>";
+    }
+    else {
+        content += "<p style='float:right;margin-top:10px;'>";
+      //content += "<a target='_blank' href='" +basePath + "Vehc/showDetail?id=" + data.imei + "' class='btn default btn-xs blue'> <img src='"+basePath +"img/trafficflux/vehcCommon/returnCar.png' /> 车辆档案</a>";
+        content += "&nbsp;&nbsp;<a class='btn  btn-xs blue' href='" +basePath + "/VehicleTrajectory/Index/" + data.imei +"' ><img src='"+basePath +"img/trafficflux/vehcCommon/refresh.png' /> 车辆轨迹</a>";
+        content += "</p>";
+    }
+    iw.setContent(content);
+   });
     return iw;
 }
 
@@ -629,7 +565,6 @@ function showUlList() {
 
 //删除Marker标志
 function removeMarker(name) {
-
     for (var i = 0; i < markerArr.length; i++) {
         if (markerArr[i].getTitle() == name) {
             map.removeOverlay(markerArr[i]);

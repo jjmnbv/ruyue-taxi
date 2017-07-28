@@ -129,4 +129,8 @@ public class DictionaryDao {
 	public Map<String,Object> getZKInfo(Map<String, Object> params) {
 		return mapper.getZKInfo(params);
 	}
+
+	public Map<String,Object> getYYFJF(Map<String, Object> params) {
+		return mapper.getYYFJF(params);
+	}
 }

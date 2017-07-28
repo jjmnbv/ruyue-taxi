@@ -60,14 +60,14 @@
 		  	<div class="row">
 		  	<div class="col-5" style="text-align: left;">
 		  		<label>新密码<em class="asterisk"></em></label>
-            	<input id="password" name="password" type="password" width="200px" placeholder="6到16位字母、符号和数字组成" maxlength="16" style="width:54%;" autocomplete="off"><br>
+            	<input id="password" name="password" type="password" width="200px" placeholder="8到16位字母、符号和数字组成" maxlength="16" style="width:54%;" autocomplete="off"><br>
 		  	</div>
 		  	</div>
 		  	
 		  	<div class="row">
 			  	<div class="col-5" style="text-align: left;">
 			  		<label>重复新密码<em class="asterisk"></em></label>
-	            	<input id="password2" type="password" name="password2" width="200px" placeholder="6到16位字母、符号和数字组成" maxlength="16" style="width:54%;" autocomplete="off"><br>
+	            	<input id="password2" type="password" name="password2" width="200px" placeholder="8到16位字母、符号和数字组成" maxlength="16" style="width:54%;" autocomplete="off"><br>
 			  	</div>
 		  	</div>
 		  </div>

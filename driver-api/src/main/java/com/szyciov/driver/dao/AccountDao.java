@@ -192,6 +192,15 @@ public class AccountDao {
 	}
 	
 	/**
+	 * 更新司机心跳
+	 * @param driver
+	 * @see {@link PubDriver}
+	 */
+	public void updateHeartBeat(PubDriver driver){
+		mapper.updateHeartBeat(driver);
+	}
+	
+	/**
 	 * 获取司机钱包账户
 	 * @param driver
 	 * @see {@link PubDriver}

@@ -96,14 +96,14 @@ function validateForm() {
 	$("#editForm").validate({
 		rules: {
 			account: {required: true,minlength:3,maxlength: 20,NkN:true},
-			userpassword:{required: true,minlength:6,maxlength: 16},
+			userpassword:{required: true,minlength:8,maxlength: 16,checkPassword:true},
 			nickname:{required: true,maxlength: 20},
 			telphone:{required: true,minlength:11,maxlength:11,phon:true},
 			email:{email:true}
 		},
 		messages: {
 			account: {required: "请填写正确的账号",minlength:"最小长度不能少于3个字符", maxlength: "最大长度不能超过20个字符",NkN:"只允许输入数字，字母，下划线"},
-			userpassword: {required: "请输入正确长度的密码",minlength:"最小长度不能少于6个字符", maxlength: "最大长度不能超过16个字符"},
+			userpassword: {required: "请输入正确长度的密码",minlength:"最小长度不能少于8个字符", maxlength: "最大长度不能超过16个字符",checkPassword:"必须为字母、数字和符号(!@#%&$()*+)组成"},
 			nickname:{required: "请输入姓名",maxlength: "最大长度不能超过20个字符"},
 			telphone:{required: "请输入正确的号码",minlength:"请输入正确的号码",maxlength:"请输入正确的号码",phon:"请输入正确的号码"},
 			email:{email:"请输入正确的邮箱格式"}
@@ -160,6 +160,14 @@ jQuery.validator.addMethod("phon", function(value, element){
 	var myreg = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1})|(14[0-9]{1})|(17[0-9]){1})+\d{8})$/;
 	return this.optional(element) || (length == 11 && myreg.test(value));
 }, "请输入正确的号码");
+
+/**
+ * 校验密码,密码必须为8到16位数字字母符号组合，!@#%&$()*+ 0-9A-Za-z
+ */
+$.validator.addMethod("checkPassword", function(value, element, param) {
+    var reg=/(?=.*[a-z])(?=.*\d)(?=.*[!@#%&$()*+])[a-z\d!@#%&$()*+]{8,16}/i;
+    return this.optional(element) || reg.test(value);
+}, "密码格式不正确");
 
 /**
  * 新增

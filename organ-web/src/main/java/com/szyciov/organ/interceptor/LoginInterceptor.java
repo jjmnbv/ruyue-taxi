@@ -1,22 +1,20 @@
 package com.szyciov.organ.interceptor;
 
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
+import com.szyciov.util.AuthorityManager;
+import com.szyciov.util.CommonUtils;
+import com.szyciov.util.Constants;
+import com.szyciov.util.SystemConfig;
+import com.szyciov.util.UserTokenManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.szyciov.util.AuthorityManager;
-import com.szyciov.util.CommonUtils;
-import com.szyciov.util.Constants;
-import com.szyciov.util.SystemConfig;
-import com.szyciov.util.UserTokenManager;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.util.Map;
 
 public class LoginInterceptor implements HandlerInterceptor {
 	private static final String REDIRECT_PAGE = "/login.jsp";
@@ -45,6 +43,12 @@ public class LoginInterceptor implements HandlerInterceptor {
 		if (StringUtils.contains(path, "Login")||StringUtils.contains(path, "GetImgCode")) {
 			return true;
 		}
+
+        //白名单过滤出来
+        Map<String, String> operation = CommonUtils.getOperationByURL(request.getRequestURI());
+        if(CommonUtils.checkWhiteList(operation.get("controller") + "/" + operation.get("action"),SystemConfig.getSystemProperty("webIgnoreFeatureUrl"))){
+            return true;
+        }
 
 		//没有session
 		HttpSession session = request.getSession(false);
@@ -86,7 +90,6 @@ public class LoginInterceptor implements HandlerInterceptor {
 			return false;
 		}
 
-		Map<String, String> operation = CommonUtils.getOperationByURL(request.getRequestURI());
 		if (!authorityManager.ValidateUserFeatureAuthority(operation, userName)) {
 			response.sendRedirect(request.getContextPath() + REDIRECT_PAGE);
 			logger.info("权限校验失败:后台获取没有权限！");

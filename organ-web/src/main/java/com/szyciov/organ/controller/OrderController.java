@@ -1,22 +1,5 @@
 package com.szyciov.organ.controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
-
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.lease.param.GetCarTypesParam;
 import com.szyciov.org.entity.OrgMostContact;
@@ -27,8 +10,22 @@ import com.szyciov.organ.service.OrderService;
 import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.util.TemplateHelper;
 import com.szyciov.util.WebExceptionHandle;
-
 import net.sf.json.JSONObject;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName OrderController 
@@ -229,7 +226,7 @@ public class OrderController extends WebExceptionHandle {
 		JSONObject result = os.cancelOrder(orderno, ordertype);
 		return checkResult(result);
 	}
-	
+
 	/**
 	 * 获取机构用户常用联系人列表
 	 * 
@@ -322,6 +319,24 @@ public class OrderController extends WebExceptionHandle {
 		JSONObject result =  os.getOrgOrderCost(param);
 		return checkResult(result);
 	}
+
+    /**
+     * 获取机构订单费用(第三方接口)
+     * @param param
+     * @param request
+     * @return
+     */
+	@ResponseBody
+    @RequestMapping(value = "ThirdOrder/GetOrgOrderCost")
+	public JSONObject getThirdOrgOrderCost(@RequestBody OrderCostParam param, HttpServletRequest request) {
+        String userToken = getUserToken(request);
+        Map<String, Object> company = os.getRuyueCompany(userToken);
+        if(null != company && !company.isEmpty()) {
+            param.setCompanyid(company.get("id").toString());
+        }
+        param.setHasunit(false);
+        return os.getOrgOrderCost(param);
+    }
 
 	/**
 	 * 获取机构车型

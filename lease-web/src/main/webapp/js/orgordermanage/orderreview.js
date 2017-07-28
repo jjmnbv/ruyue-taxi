@@ -124,7 +124,7 @@ function initReviewTable(order) {
 	var timecost = order.timecost; //时间补贴费用
 	var cost = order.cost;
 	
-	$("#ddje").text(cost); //订单金额
+	$("#ddje").text(order.orderamount); //订单金额
 	$("#cyje").text(0); //差异金额
 	$("#fwlc").text(mileage); //服务里程
 	$("#fwsc").text(times); //服务时长

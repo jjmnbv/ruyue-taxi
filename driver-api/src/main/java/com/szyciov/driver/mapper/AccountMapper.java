@@ -164,6 +164,13 @@ public interface AccountMapper {
 	 * @param driver
 	 */
 	void updateLocation(PubDriver driver);
+	
+	/**
+	 * 更新司机心跳
+	 * @param driver
+	 */
+	void updateHeartBeat(PubDriver driver);
+	
 	/**
 	 * 保存坐标轨迹
 	 * @param drivertrack

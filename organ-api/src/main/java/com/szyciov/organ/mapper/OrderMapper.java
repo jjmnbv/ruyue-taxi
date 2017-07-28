@@ -3,11 +3,6 @@
  */
 package com.szyciov.organ.mapper;
 
-import java.util.List;
-import java.util.Map;
-
-import org.apache.ibatis.annotations.Param;
-
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.entity.LeVehiclemodels;
@@ -20,6 +15,10 @@ import com.szyciov.org.entity.OrgOrder;
 import com.szyciov.org.entity.OrgUser;
 import com.szyciov.org.param.BaseOrgParam;
 import com.szyciov.org.param.OrgUserParam;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName OrderMapper
@@ -49,5 +48,7 @@ public interface OrderMapper {
 	public OrgOrganCompanyRef getOrgBalance(OrderCostParam param);
 	
 	public List<PubCityAddr> getOrgUserPubBusCity(Map<String, Object> param);
+
+    public Map<String, Object> getRuyueCompany();
 	
 }

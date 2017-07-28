@@ -132,6 +132,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 			if(!validateForm()){
 				return;
 			}
+			$("#password").val(encodepwd($("#password").val()));
 			form.submit();
 		});
 		
@@ -193,6 +194,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 				if(!validateForm()){
 					return;
 				}
+                $("#password").val(encodepwd($("#password").val()));
 				form.submit();
 		    }
 		});
@@ -230,6 +232,8 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
     			$("#login_hint").html(passwordval);
   	    	$("#login_hint").show();
     			return false;
+    		}if(passwordval){
+    			checkstr(password);
     		}else if(passwordval){
     			clearHint();
     		}
@@ -254,7 +258,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
   		}
   		return true;
   	}
-  	
+
   	function clearHint(){
   		usernameval=null;
     	passwordval=null;
@@ -277,7 +281,25 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
   	function closeWindow() {
   		$("#window").hide();
   	}
-  	
+  	/**
+  	*字母，特殊符号，数字
+  	*/
+  	function checkstr(str1){
+  		debugger;
+  		if(/\d+/.test(str1)){
+  		if(/[a-zA-Z]+/.test(str1)){
+  		if(/[\.@#\$%\^&\*\(\)\[\]\\?\\\/\|\-~`\+\=\,\r\n\:\'\"]+/.test(str1)){
+  		return true;
+  		}
+  		$("#login_hint").html("密码必须由数字，字母，特殊符号组成");
+  		return false;
+  		}
+  		$("#login_hint").html("密码必须由数字，字母，特殊符号组成");
+  		return false;
+  		}
+  		$("#login_hint").html("密码必须由数字，字母，特殊符号组成");
+  		return false;
+  		}
 </script>
 </body>
 </html>

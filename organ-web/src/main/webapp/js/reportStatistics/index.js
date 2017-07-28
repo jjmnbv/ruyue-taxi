@@ -128,7 +128,7 @@ function reset(){
 //	 date.setDate(1);
 	$("#starttime").val(date.format('yyyy-MM-dd'));
 	$("#ordertypeOne").val("");
-	$("#ordertypeOne").attr("data-value")
+	$("#ordertypeOne").attr("data-value","")
 	var conditionArr = [
 	            		{ "name": "starttime", "value": $("#starttime").val() },
 	            		{ "name": "endtime", "value": $("#endtime").val() },
@@ -142,6 +142,7 @@ function reset1(){
 //	 date.setDate(1);
 	$("#starttime1").val(date.format('yyyy-MM-dd'));
 	$("#ordertypeTow").val("");
+	$("#ordertypeTow").attr("data-value","")
 	var conditionArr = [
 	            		{ "name": "starttime", "value": $("#starttime1").val() },
 	            		{ "name": "endtime", "value": $("#endtime1").val() },

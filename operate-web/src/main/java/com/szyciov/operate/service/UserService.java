@@ -77,6 +77,8 @@ public class UserService {
 					return new ModelAndView("login", model);
 				}
 			}
+			//用过之后清除验证码
+			request.getSession().removeAttribute("code");
 			if (StringUtils.isBlank(userName) || StringUtils.isBlank(password)) {
 				//如果已登录，不需要再继续返回登录页
 				usertoken = (String) request.getSession().getAttribute(Constants.REQUEST_USER_TOKEN);
@@ -141,6 +143,7 @@ public class UserService {
 				return new ModelAndView("login", model);
 			}
 		}catch(Exception e){
+			logger.error("运管端用户登录异常：", e);
 			model.put("message", "登录失败！");
 			logininfo.put("loginstatus", "1");
 			String message = e.getMessage()==null?"":(e.getMessage().length()<=3800?e.getMessage():e.getMessage().substring(0,3800));
@@ -149,7 +152,9 @@ public class UserService {
 		}finally {
 			try{
 				addUserLoginLog(logininfo,usertoken);
-			}catch(Exception e){}
+			}catch(Exception e){
+				logger.error("运管端用户登录日志记录异常：", e);
+			}
 			
 		}
 	}
@@ -208,7 +213,7 @@ public class UserService {
 		if (null == encodedPassword) {
 			return false;
 		}
-		return PasswordEncoder.matches(rawPassword, encodedPassword);
+		return PasswordEncoder.matches_PWD(rawPassword, encodedPassword);
 	}
 
 	public String getPasswordByName(String loginName) {

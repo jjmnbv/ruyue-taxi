@@ -191,7 +191,11 @@ public enum Retcode {
 	/**
 	 * 用车时间比当前时间早
 	 */
-	BEFORENOWTIME(2020,"用车时间失效，请重新选择");
+	BEFORENOWTIME(2020,"用车时间失效，请重新选择"),
+    /**
+     * 用车时间比当前时间早
+     */
+    MANUAL_DRIVER_OFFLINE(2021,"您指派的司机已下线，请重新选择");
 
 	
 	

@@ -70,7 +70,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 				</div>
 				<div class="inp_box inp_box_1">
 					<input type="text" style="display:none;"/>
-					<input type="password" autocomplete="off" name="password" id="password" value="" placeholder="请输入密码"/>
+					<input type="password" autocomplete="off" name="password" id="password" value="" placeholder="请输入密码"/>
 				</div>
 				<div class="code">
 					<div class="inp_box">
@@ -87,7 +87,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 				</label>
 			</div>
 			<div class="login_bottom" id="loginbtn">
-				登录
+				登录
 			</div>
 		</div>
 	</div>
@@ -143,6 +143,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 			if(!validateForm()){
 				return;
 			}
+            $("#password").val(encodepwd($("#password").val()));
 			form.submit();
 		});
 		$("#imgcode").html("<img style='margin-top:2px' src='"+temphref+"User/GetImgCode?t="+Math.random()+"'>");
@@ -201,6 +202,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 				if(!validateForm()){
 					return;
 				}
+                $("#password").val(encodepwd($("#password").val()));
 				form.submit();
 		    }
 		}); 

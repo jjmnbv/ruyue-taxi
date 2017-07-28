@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -554,12 +555,14 @@ public class StringUtil {
 	 *	<p>①实际里程指乘客上车地到下车地实际行驶的距离；
 	 *	<p>②夜间征收时段，按【订单开始时间计收】，也即 订单开始时间 在夜间征收时段内，则收取夜间费；
 	 *	<p>③费用预估时，夜间费不计入行程费用的预估。
-	 *	<p>③费用预估时，夜间费不计入行程费用的预估。
 	 *	@param oc               计费副本
 	 *	@param startTime   订单开始时间(没有传null或空)
 	 *	@param estimated  是否预估(true-预估 false-非预估)
+	 * @param isusenow   是否即刻订单(即刻预约使用不同计费规则)
 	 */
-	public static OrderCost countCost(OrderCost oc,Date startTime,boolean estimated){
+	public static OrderCost countCost(OrderCost oc,Date startTime,boolean estimated,boolean isusenow){
+		//预约订单起步价要加上预约附加费(只有预估时加,实时费用应该用计费副本,计费副本已经加过了)
+		if(!isusenow && estimated) oc.setStartprice(oc.getStartprice() + oc.getReversefee());
 		//预估费用计算方式
 		if(estimated){
 			//如果预估里程小于回空里程,不收空驶费
@@ -601,6 +604,17 @@ public class StringUtil {
 		return oc;
 	}
 
+	/**
+	 * 兼容原有
+	 * @param oc
+	 * @param startTime
+	 * @param estimated
+	 * @return
+	 */
+	public static OrderCost countCost(OrderCost oc,Date startTime,boolean estimated){
+		return countCost(oc,startTime,estimated,false);
+	}
+	
     /**
      * 对计算价格取整
      * @param orderCost
@@ -622,10 +636,39 @@ public class StringUtil {
 //		return (T)GsonUtil.fromJson(json, clazz);
 	}
 	
+	/**
+	 * 判断字符串是否为空
+	 * @param str
+	 * @return
+	 */
+	public static boolean isEmpty(String str){
+		return str == null || str.trim().isEmpty();
+	}
+	
+	/**
+	 * 判断list是否为空
+	 * @param list
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	public static boolean isEmpty(List list){
+		return list == null || list.isEmpty();
+	}
+	
+	/**
+	 * 判断map是否为空
+	 * @param map
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	public static boolean isEmpty(Map map){
+		return map == null || map.isEmpty();
+	}
+	
 	public static void main(String[] args) throws ParseException {
-		String startTime = "22:00";
-		String endTime = "05:50";
-		Date usetime = parseDate("2017-05-22 05:50:17", TIME_WITH_MINUTE);
+		String startTime = "07:00";
+		String endTime = "07:00";
+		Date usetime = parseDate("2017-05-22 07:00:17", TIME_WITH_MINUTE);
 		String content = "开始时间@isNight夜间服务时段";
 		System.out.println(usetime);
 		System.out.println(content.replace("@isNight", isTimeInBound(startTime, endTime, usetime) ? "在" : "不在"));

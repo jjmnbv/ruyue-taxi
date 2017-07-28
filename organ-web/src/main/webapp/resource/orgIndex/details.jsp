@@ -22,7 +22,7 @@
   <script type="text/javascript" src="content/js/jquery.js"></script>
   <script type="text/javascript" src="content/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
   <script type="text/javascript" src="content/js/common.js"></script>
-  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+  <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 </head>
 <body>
 <%-- <div class="header">
@@ -181,7 +181,7 @@
 	            <c:if test="${orgOrderDetails.orderStatusShow == '服务中'}">
 	            	<tr>
 	                    <td class="t">实时费用</td>
-	                    <td><span class="bigred">${orgOrderDetails.orderamount}</span><span class="font-blue" style="cursor:pointer;">费用说明</span> </td>
+	                    <td><span class="bigred">${orderCost.cost}</span><span class="font-blue" style="cursor:pointer;">费用说明</span> </td>
 	                    <td class="t"></td>
 	                    <td></td>
                 	</tr>
@@ -212,13 +212,13 @@
 	            </c:if>
             </table>
             <c:if test="${orgOrderDetails.orderStatusShow == '服务中'}">
-	             <div class="trail" data-value = "xingcheng" style="cursor:pointer;">查看车辆位置>></div>	
+	             <div class="trail" data-value = "xingcheng" style="cursor:pointer;width:16%;">查看车辆位置>></div>	
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">
-            	 <div class="trail" data-value = "xingcheng" style="cursor:pointer;">查看行程轨迹>></div>
+            	 <div class="trail" data-value = "xingcheng" style="cursor:pointer;width:16%;">查看行程轨迹>></div>
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '已支付'}">
-            	 <div class="trail" data-value = "xingcheng" style="cursor:pointer;">查看行程轨迹>></div>
+            	 <div class="trail" data-value = "xingcheng" style="cursor:pointer;width:16%;">查看行程轨迹>></div>
             </c:if>
         </div>
     </div>
@@ -243,11 +243,11 @@
             	<br><br> 
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">
-            	<span style="margin-left:50px;font-size: 18px;">车费总计 </span><span class="bigred" style="margin-left: 50px;">${orderCost.cost}</span>
+            	<span style="margin-left:50px;font-size: 18px;">车费总计 </span><span class="bigred" style="margin-left: 50px;">${orgOrderDetails.orderamount}</span>
             	<br><br> 
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '已支付'}">
-            	<span style="margin-left:50px;font-size: 18px;">车费总计 </span><span class="bigred" style="margin-left: 50px;">${orderCost.cost}</span>
+            	<span style="margin-left:50px;font-size: 18px;">车费总计 </span><span class="bigred" style="margin-left: 50px;">${orgOrderDetails.orderamount}</span>
             	<br><br> 
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '已取消'}">

@@ -3,16 +3,6 @@
  */
 package com.szyciov.organ.controller;
 
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.lease.param.GetCarTypesParam;
 import com.szyciov.org.entity.OrgMostContact;
@@ -21,8 +11,15 @@ import com.szyciov.org.param.BaseOrgParam;
 import com.szyciov.org.param.OrgUserParam;
 import com.szyciov.organ.service.OrderService;
 import com.szyciov.util.ApiExceptionHandle;
-
 import net.sf.json.JSONObject;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * @ClassName OrderController 
@@ -203,5 +200,15 @@ public class OrderController extends ApiExceptionHandle {
 		releaseResource(os);
 		return checkResult(result);
 	}
+
+    /**
+     * 获取如约租赁公司
+     * @return
+     */
+	@RequestMapping(value = "api/Order/GetRuyueCompany")
+    @ResponseBody
+	public Map<String, Object> getRuyueCompany() {
+        return os.getRuyueCompany();
+    }
 	
 }

@@ -284,7 +284,8 @@ public class UserService {
 		}
 		String userid = GUIDGenerator.newGUID();
 		userinfo.put("userid", userid);
-		String password = UNID.getUNID(null, 6);
+//		String password = UNID.getUNID(null, 6);
+		String password = UNID.getPwdDefStr();
 		userinfo.put("srcpassword", password);
 		userinfo.put("password", PasswordEncoder.encode(password));
 		//添加员工

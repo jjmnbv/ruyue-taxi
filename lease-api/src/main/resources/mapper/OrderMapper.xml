@@ -458,7 +458,7 @@
 	
 	<select id="getFavUserCount" resultType="int" parameterType="Select2Param">
 		select count(*) from (SELECT
-			fav.*,CONCAT(fav.name,fav.phone) namephone 
+			fav.*,CONCAT(fav.name,fav.phone) namephone
 		FROM
 		(
 			(
@@ -491,7 +491,7 @@
 				 	ou.`status` = 1
 					AND ou.account = #{userid}
 			)
-		) fav 
+		) fav
 		<if test="sSearch != null and sSearch != ''">
 		WHERE (fav.phone like '%${sSearch}%' OR fav.name like '%${sSearch}%')
 		</if>
@@ -500,7 +500,7 @@
 	
 	<select id="getFavUser" resultType="FavUser" parameterType="Select2Param">
 		SELECT
-			fav.*,CONCAT(fav.name,fav.phone) namephone 
+			fav.*,CONCAT(fav.name,fav.phone) namephone
 		FROM
 		(
 			(
@@ -603,7 +603,7 @@
 				AND
 					ou.account = (select account from org_user where id = #{userid})
 			)
-		) fav 
+		) fav
 		<if test="sSearch != null and sSearch != ''">
 		WHERE
 			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
@@ -1016,7 +1016,9 @@
 			d.phone,
 			d.workstatus workStatus,
 			concat(dicp.`text`, dicc.`text`, v.plateno)  plateNo,
-			vm.name vehicleModelName
+			vm.name vehicleModelName,
+            dicb.text belongleasecompany,
+            dicb.id belongleasecompanyId
 		from pub_driver d
 		inner join pub_driver_vehicle_ref vr on d.id=vr.driverid
 		inner join pub_vehicle v on v.id=vr.vehicleid
@@ -1024,6 +1026,7 @@
 		inner join le_vehiclemodels vm on vm.id=vmr.vehiclemodelsid
 		inner join pub_dictionary dicp on v.platenoprovince=dicp.value
 		inner join pub_dictionary dicc on v.platenocity=dicc.value
+        inner join pub_dictionary dicb on dicb.id=d.belongleasecompany
 		where 1=1
 			and d.Status=1
 			and vr.status=1
@@ -1034,6 +1037,8 @@
 			and dicc.status=1
             and d.workstatus=0
             and d.jobstatus=0
+            and dicb.type = '租赁公司'
+            and dicb.status='1'
 			and d.leasescompanyid=#{leasesCompanyId}
         <if test='null != phone and "" != phone'>
             and instr(d.phone, #{phone}) > 0
@@ -1053,4 +1058,69 @@
             and instr(t.plateNo, #{plateNo}) > 0
         </if>
     </select>
+
+	<!--获取如约的信息-->
+	<select id="getRUYUE" resultType="Map" parameterType="Map">
+		select * from le_leasescompany where le_leasescompany.platformtype='1' and le_leasescompany.status=1 ORDER BY createtime LIMIT 0,1
+	</select>
+
+	<!--获取如约的机构列表-->
+	<select id="getOrgans" parameterType="Map" resultType="Map">
+		SELECT
+			id as id,
+			fullname as name
+		FROM
+			org_organ
+		WHERE
+			org_organ.status = 1
+		AND org_organ.customertype = '0'
+		AND org_organ.id in (
+			SELECT
+				org_organ_company_ref.organid
+			FROM
+				org_organ_company_ref
+			WHERE
+				org_organ_company_ref.status = 1
+			AND (
+				org_organ_company_ref.mainaccount = '0'
+				OR org_organ_company_ref.bindstate = '1'
+			)
+			AND org_organ_company_ref.companyid in (
+				#{companyid}
+			)
+		)
+	</select>
+
+	<!--查询机构下的员工-->
+	<select id="getOrganUsers" resultType="Map" parameterType="Map">
+		SELECT
+			id as id,
+			account as phone,
+			org_user.nickname as name
+		FROM
+			org_user
+		WHERE
+			org_user.status = 1
+		AND org_user.usertype = '0'
+		AND org_user.organid in (
+			SELECT
+				organ.id
+			FROM
+				org_organ organ
+			WHERE
+				organ.status = 1
+			AND organ.creditcode = (
+				SELECT
+					org_organ.creditcode
+				FROM
+					org_organ
+				WHERE
+					org_organ.status = 1
+				AND org_organ.id = #{organid}
+			)
+			AND organ.customertype != 1
+		)
+		ORDER BY
+			createtime desc
+	</select>
 </mapper>

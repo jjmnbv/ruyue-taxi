@@ -202,7 +202,9 @@ toastr.options = {
  */
 function renderGrid(gridObj) {
 	var params = {
+        fnRowCallback: gridObj.fnRowCallback ? gridObj.fnRowCallback : false,
 		bProcessing: gridObj.bProcessing ? gridObj.bProcessing : false,
+        bRetrieve: gridObj.bRetrieve ? gridObj.bRetrieve : false,
 		bServerSide: gridObj.bServerSide ? gridObj.bServerSide : true,
 		lengthChange: gridObj.hasOwnProperty("lengthChange") ? gridObj.lengthChange : false,
 		userQueryParam: gridObj.userQueryParam ? gridObj.userQueryParam : null,
@@ -245,7 +247,7 @@ function renderGrid(gridObj) {
         	if(gridObj.userQueryParam != null) {
 	        	aoData = aoData.concat(gridObj.userQueryParam);
         	}
-        	
+
 			$.ajax({
 	        	url: gridObj.sAjaxSource,
 	            data: JSON.stringify(convertFormToJson(aoData)),
@@ -255,14 +257,14 @@ function renderGrid(gridObj) {
 	            cache: false,
 	            success: function(result) {
 	            	fnCallback(result);
-	            	
+
 	            	if(gridObj.userHandle) {
 	            		gridObj.userHandle(oSettings, result);
 	            	}
 	            	// $('[data-toggle="tooltip"]').tooltip();
 	            },
 	            error: function(msg) {
-	            	
+
 	            }
 			})
 		}

@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
 
@@ -54,11 +55,18 @@ public class UserService {
 	
 	public Map<String, String> createUser(OpUser OpUser) {
 		Map<String,String> res = new HashMap<String,String>();
+		String reg = "^(?![0-9]+$)(?![a-z]+$)(?![!@#%&$()*+]+$)[a-z0-9!@#%&$()*+]{8,16}$";  
 		if(getByLoginName(OpUser.getAccount())!=null){
 			res.put("status", "fail");
 			res.put("message", "账号已存在");
 			return res;
 		}
+		if(!Pattern.compile(reg, Pattern.CASE_INSENSITIVE).matcher(OpUser.getUserpassword()).matches()){
+			res.put("status", "fail");
+			res.put("message", "密码必须由8到16位字母、数字和符号(!@#%&$()*+)组成");
+			return res;
+		}
+		
 		OpUser.setId(GUIDGenerator.newGUID());
 		encodePwd(OpUser);
 		dao.createUser(OpUser);
@@ -71,12 +79,44 @@ public class UserService {
 		Map<String,Object> res = new HashMap<String,Object>();
 		String password = param.get("password");
 		String oldpassword = param.get("oldpassword");
+		String password2=param.get("password2");
 		String oldpassworden = PasswordEncoder.encode(oldpassword);
 		String loginname = param.get("loginname");
 		String userid = param.get("userid");
 		String email = param.get("email");
+		String reg = "^(?![0-9]+$)(?![a-z]+$)(?![!@#%&$()*+]+$)[a-z0-9!@#%&$()*+]{8,16}$";  
 		OpUser user = getById(userid);
 		OpUser o = getById(userid);
+		
+		if(StringUtils.isBlank(password)||StringUtils.isBlank(oldpassword)||StringUtils.isBlank(password2)){
+			res.put("status", "error");
+			if(StringUtils.isBlank(oldpassword))
+			    res.put("message", "原密码不可为空");
+			if(StringUtils.isBlank(password))
+				res.put("message", "新密码不可为空");
+			if(StringUtils.isBlank(password))
+				res.put("message", "请重新输入新密码");
+			return res;
+		}
+		
+		if(!Pattern.compile(reg, Pattern.CASE_INSENSITIVE).matcher(password).matches()){
+			res.put("status", "error");
+			res.put("message", "密码必须为8到16位字母、数字和符号(!@#%&$()*+)组成");
+			return res;
+		}
+         if(password.equals(oldpassword)){
+        	 res.put("status", "error");
+ 			 res.put("message", "新密码不可与原密码相同");
+ 			 return res;
+		}
+		
+		if(!password.equals(password2)){
+			res.put("status", "error");
+			res.put("message", "两次密码输入不一致");
+			return res;
+		}
+		
+		
 		if(user==null||StringUtils.isBlank(user.getUserpassword())||!StringUtils.equals(user.getUserpassword(), oldpassworden)){
 			
 //			int count = 0;
@@ -158,6 +198,14 @@ public class UserService {
 
 	public Map<String, String> updateUser(OpUser OpUser) {
 		Map<String,String> res = new HashMap<String,String>();
+		String reg = "^(?![0-9]+$)(?![a-z]+$)(?![!@#%&$()*+]+$)[a-z0-9!@#%&$()*+]{8,16}$";  
+		
+		if(!Pattern.compile(reg, Pattern.CASE_INSENSITIVE).matcher(OpUser.getUserpassword()).matches()){
+			res.put("status", "fail");
+			res.put("message", "密码必须为8到16位字母、数字和符号(!@#%&$()*+)组成");
+			return res;
+		}
+		
 		String userid = OpUser.getId();
 		OpUser dbuser = getById(userid);
 		if(!dbuser.getUserpassword().equals(OpUser.getUserpassword())){

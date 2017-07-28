@@ -1,9 +1,12 @@
+<%@page import="com.szyciov.util.SystemConfig"%>
 <%@ page contentType="text/html; charset=UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
+	String vmsApiUrl = SystemConfig.getSystemProperty("vmsApiUrl");	
+	String apikey = SystemConfig.getSystemProperty("vmsApikey");	
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -45,13 +48,11 @@
 		<script type="text/javascript" src="content/js/jquery.combotree.js"></script>
 		<script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.core-3.5.js"></script>
 		<script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.excheck-3.5.js"></script>
-		<script type="text/javascript"  src="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.js"></script>
-		<script type="text/javascript" src="content/plugins/bootstrap-datepicker/bootstrap-datepicker.zh-CN.js" charset="UTF-8"></script>
+		<script type="text/javascript" src="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.js"></script>
+		<script type="text/javascript" src="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.zh-CN.js" charset="UTF-8"></script>
 		<script type="text/javascript"  src="content/plugins/ion.rangeslider/js/ion-rangeSlider/ion.rangeSlider.js"></script>
 		<script type="text/javascript" src="js/basecommon.js"></script>
 		<script type="text/javascript" src="content/js/trafficflux/date.js"></script>
-		
-		
 		<style type="text/css">
 			.form select{width:68%;}
 			.select2-container .select2-choice{height:30px;}
@@ -64,12 +65,15 @@
 			  width: $(window).width();
 			  margin: 0 auto;
 			}
-				.green_a{
+			.green_a{
 			background:#1E93EE;}
 			.orange{
 			background:#1E93EE;}
 			.blue{
 			background:#1E93EE;
+			}
+			.grey_q {
+    			background: #1E93EE;
 			}
 			.margin-top-20{
 				margin-top:10px;
@@ -80,31 +84,34 @@
 			.col-2 {
 		    margin-top: 5px;
 		    }
+		    .form-horizontal .control-label{
+		    	padding-top :10px;
+		    }
 		</style>
+		<script type="text/javascript">
+			var basePath = "<%=basePath%>";
+			var vmsApiUrl = "<%=vmsApiUrl%>";
+			var apikey="<%=apikey%>";
+		</script>
 	</head>
 	<body >
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
-		
 		<div class="crumbs">
-			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
-			<a href="<%=basePath%>Track/Index">行程数据 > </a>行程记录
-
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >行程记录
 		</div>
 		<div class="page-content-wrapper">
             <div class="content">
                 <div class="page-content-body">
                     <!-- 写具体业务代码 -->
-                    
-						<input type="hidden" id="eqpId" name="eqpId" value="${eqpId}">
-	                	<input type="hidden" id="imei" name="imei" value="${imei}">
-	                	<input type="hidden" id="plate" name="plate" value="${plate}">
-	                	
+					<input type="hidden" id="eqpId" name="eqpId" value="${eqpId}">
+                	<input type="hidden" id="imei" name="imei" value="${imei}">
+                	<input type="hidden" id="plate" name="plate" value="${plate}">
 					<div class="form-horizontal">
-					    <div class="row">
+					    <div class="row col-12">
 					        <div class="col-4">
 					            <div class="form-group">
 					                <label class="control-label col-4">
-					                    车牌
+					                    	车牌
 					                </label>
 					                <div class="col-8">
 					                    <input type="hidden" style="width:100%" id="selPlates" />
@@ -118,7 +125,7 @@
 					                    <div class="input-group">
 					                        <input type="text" style="width: 100%;" class=" searchDate" name="txtStartDate" id="txtStartDate"  />
 					                        <span class="input-group-addon">
-					                            至
+					                            	至
 					                        </span>
 					                        <input type="text" style="width: 100%;" class="searchDate" name="txtEndDate" id="txtEndDate" />
 					                    </div>
@@ -131,10 +138,8 @@
 					                <button type="button" class="Mbtn orange" id="btnExport"><img src="img/trafficflux/icon/export.png"/>导出</button>
 					            </div>
 					        </div>
-					
 					    </div>
 					</div>
-					
 					<div class="row">
 					    <div class="col-12">
 					        <div class="portlet box blue">
@@ -144,7 +149,7 @@
 					                </div>
 					            </div>
 					            <div class="portlet-body">
-					                <div class="row margin-top-20">
+					                <div class="row ">
 					                    <div class="col-3">
 					                        <div class="dashboard-stat blue">
 					                            <div class="visual">
@@ -155,7 +160,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc">
-					                                    行程数(次)
+					                                    	行程数(次)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -170,7 +175,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc">
-					                                    里程(km)
+					                                    	里程(km)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -185,7 +190,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc">
-					                                    日均里程(km/天)
+					                                   	 日均里程(km/天)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -200,7 +205,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc">
-					                                    耗油量(L)
+					                                    	耗油量(L)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -217,7 +222,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc">
-					                                    运行时间(h)
+					                                    	运行时间(h)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -232,7 +237,7 @@
 					                                    00:00:00
 					                                </div>
 					                                <div class="desc">
-					                                    怠速时长(h:m:s)
+					                                    	怠速时长(h:m:s)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -247,7 +252,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc">
-					                                    油耗(L/100km)
+					                                   	 油耗(L/100km)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -262,7 +267,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc">
-					                                    怠速耗油量(L)
+					                                    	怠速耗油量(L)
 					                                </div>
 					                            </div>
 					                        </div>
@@ -272,20 +277,14 @@
 					        </div>
 					    </div>
 					</div>
-					
 					<div class="row">
 					    <div class="col-12">
-					        <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid"></table>
+					        <table class="table table-striped table-bordered" id="dtGrid"></table>
 					    </div>
 					</div>
                 </div>
             </div>
         </div>
-		
-		
 	</body>
 	<script type="text/javascript" src="js/track/trackRecord.js?v=1.6"></script>
-	<script type="text/javascript">
-		var basePath = "<%=basePath%>";
-	</script>
 </html>

@@ -169,6 +169,11 @@ public class OrderManageQueryParam extends LeBaseQueryParam{
      */
 	private String belongleasecompany;
 
+    /**
+     * 账号对应服务车企权限
+     */
+    private String queryTmpBelongleasecompany;
+
     public String getBelongleasecompany() {
         return belongleasecompany;
     }
@@ -552,5 +557,12 @@ public class OrderManageQueryParam extends LeBaseQueryParam{
 	public void setVehicleid(String vehicleid) {
 		this.vehicleid = vehicleid;
 	}
-	
+
+    public String getQueryTmpBelongleasecompany() {
+        return queryTmpBelongleasecompany;
+    }
+
+    public void setQueryTmpBelongleasecompany(String queryTmpBelongleasecompany) {
+        this.queryTmpBelongleasecompany = queryTmpBelongleasecompany;
+    }
 }

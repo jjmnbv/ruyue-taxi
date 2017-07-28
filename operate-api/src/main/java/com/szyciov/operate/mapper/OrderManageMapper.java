@@ -114,5 +114,7 @@ public interface OrderManageMapper {
 	void orderReject(OpOrder object);
 	
 	PubDriver getPubDriver(@Param("id") String id);
+
+    void updatePubDriverLeisure(String driverid);
 	
 }

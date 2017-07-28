@@ -38,7 +38,7 @@ String ak = SystemConfig.getSystemProperty("yingyan_ak");
 		</div>
 		<div class="popup_content">
 			<!--百度地图容器 -->
- 			<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=ak %>"></script>
+ 			<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=ak %>&s=1"></script>
 			<label style="width: 10%;margin-left: 10px;">搜索地址</label>
 			<input type="text" style="width: 90%;height:30px;border: 1px solid #dbdbdb;margin-left: 10px;padding-left:5px;border-radius:5px;" placeholder="详细地址" name="keyword" id="suggest"/>
  	  		<div style="width:100%;height:300px;border:#ccc solid 1px;margin-top:10px" id="dituContent"></div>

@@ -23,7 +23,7 @@
   <script type="text/javascript" src="content/js/jquery.js"></script>
   <script type="text/javascript" src="content/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
   <script type="text/javascript" src="content/js/common.js"></script>
-  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+  <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
   <script type="text/javascript" src="content/plugins/toastr/toastr.min.js"></script>
   <script type="text/javascript" src="js/basecommon.js"></script>
 </head>
@@ -203,13 +203,13 @@ textarea{width:100%;resize:none;border:1px solid #e4e4e4;border-radius:3px;paddi
 	            </c:if>
             </table>
             <c:if test="${orgOrderDetails.orderStatusShow == '服务中'}">
-	             <div class="trail" data-value = "cheliang">查看车辆位置>></div>	
+	             <div class="trail" data-value = "cheliang" style="width:16%;">查看车辆位置>></div>	
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">
-            	 <div class="trail" data-value = "xingcheng">查看行程轨迹>></div>
+            	 <div class="trail" data-value = "xingcheng" style="width:16%;">查看行程轨迹>></div>
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '已支付'}">
-            	 <div class="trail" data-value = "xingcheng">查看行程轨迹>></div>
+            	 <div class="trail" data-value = "xingcheng" style="width:16%;">查看行程轨迹>></div>
             </c:if>
            
         </div>

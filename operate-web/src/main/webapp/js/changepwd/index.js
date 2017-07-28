@@ -19,14 +19,14 @@ function method() {
 function validateForm() {
 	$("#editForm").validate({
 	rules: {
-		oldpassword: {required: true,minlength:6,maxlength: 16},
-		password:{required: true,minlength:6,maxlength: 16},
-		password2:{required: true,minlength:6,maxlength: 16,equalTo:"#password"}
+		oldpassword: {required: true,maxlength: 16},
+		password:{required: true,minlength:8,maxlength: 16,checkPassword:true},
+		password2:{required: true,minlength:8,maxlength: 16,equalTo:"#password"}
 	},
 	messages: {
-		oldpassword: {required: "请输入正确长度的密码",minlength:"最小长度不能少于6个字符", maxlength: "最大长度不能超过16个字符"},
-		password: {required: "请输入正确长度的密码",minlength:"最小长度不能少于6个字符", maxlength: "最大长度不能超过16个字符"},
-		password2:{required: "请输入正确长度的密码",minlength:"最小长度不能少于6个字符", maxlength: "最大长度不能超过16个字符",equalTo:"两次输入的新密码不一致"}
+		oldpassword: {required: "请输入正确长度的密码", maxlength: "最大长度不能超过16个字符"},
+		password: {required: "请输入正确长度的密码",minlength:"最小长度不能少于8个字符", maxlength: "最大长度不能超过16个字符",checkPassword:"密码必须由8到16位字母、数字和符号(!@#%&$()*+)组成"},
+		password2:{required: "请输入正确长度的密码",minlength:"最小长度不能少于8个字符", maxlength: "最大长度不能超过16个字符",equalTo:"两次输入的新密码不一致"}
 		}
 	});
 }
@@ -89,3 +89,11 @@ function save() {
   		}
   	});
 }
+
+/**
+ * 校验密码,密码必须为8到16位数字字母符号组合，!@#%&$()*+ 0-9A-Za-z
+ */
+$.validator.addMethod("checkPassword", function(value, element, param) {
+    var reg=/(?=.*[a-z])(?=.*\d)(?=.*[!@#%&$()*+])[a-z\d!@#%&$()*+]{8,16}/i;
+    return this.optional(element) || reg.test(value);
+}, "密码格式不正确");

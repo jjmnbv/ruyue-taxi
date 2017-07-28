@@ -1,11 +1,14 @@
 package com.szyciov.lease.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.szyciov.entity.Retcode;
+import org.apache.commons.collections.map.HashedMap;
 import com.szyciov.lease.dto.request.GetFreeDriverRequest;
 import com.szyciov.dto.PagingResponse;
 import org.springframework.stereotype.Controller;
@@ -346,4 +349,57 @@ public class OrderController extends ApiExceptionHandle {
         PagingResponse result =  os.getManualSelectDriver(model);
         return result;
     }
+
+	/**
+	 * 查询如约的机构列表
+	 * @param param
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "api/Order/GetOrgans")
+	public Map<String,Object> getOrgans(@RequestBody Map<String, Object> param) {
+		try{
+			return os.getOrgans(param);
+		}catch (Exception e){
+			Map<String,Object> res = new HashMap<String,Object>();
+			res.put("status", Retcode.EXCEPTION.code);
+			res.put("message",Retcode.EXCEPTION.msg);
+			return res;
+		}
+	}
+
+    /**
+     * 查询如约的机构列表
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = "api/Order/GetCompanyidByruyue")
+    public Map<String,Object> getCompanyidByruyue() {
+        try{
+            return os.getCompanyidByruyue();
+        }catch (Exception e){
+            Map<String,Object> res = new HashMap<String,Object>();
+            res.put("status", Retcode.EXCEPTION.code);
+            res.put("message",Retcode.EXCEPTION.msg);
+            return res;
+        }
+    }
+
+	/**
+	 * 查询机构的用户列表
+	 * @param param
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "api/Order/GetOrganUsers")
+	public Map<String,Object> getOrganUsers(@RequestBody Map<String, Object> param) {
+		try{
+			return os.getOrganUsers(param);
+		}catch (Exception e){
+			Map<String,Object> res = new HashMap<String,Object>();
+			res.put("status", Retcode.EXCEPTION.code);
+			res.put("message",Retcode.EXCEPTION.msg);
+			return res;
+		}
+	}
 }

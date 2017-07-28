@@ -135,7 +135,7 @@
 						ORDER BY aa.text
 	</select>
 	<select id="getAllOrganid" resultType="Map" parameterType="OrderExportEntity">
-			select id , fullname  text from org_organ where 1=1
+			select id , fullname  text from org_organ where 1=1 and  status = '1'
 						<if test="organid != null and organid != '' ">
 								and 
 								fullname

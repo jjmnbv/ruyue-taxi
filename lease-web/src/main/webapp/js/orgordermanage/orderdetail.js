@@ -206,7 +206,11 @@ function renderPageByOrder(order) {
 		//航班号
 		$("#hbh").text(order.fltno);
 		//起飞时间
-		$("#jlsj").text(timeStamp2String(order.falltime));
+        if(null == order.falltime) {
+            $("#jlsj").text("");
+        } else {
+            $("#jlsj").text(timeStamp2String(order.falltime));
+        }
 	}
 	//订单状态
 	$("#ddzt").text(orderstatus);

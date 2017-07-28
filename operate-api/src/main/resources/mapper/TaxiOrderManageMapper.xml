@@ -835,6 +835,9 @@
 			<if test='null != canceltime and "" != canceltime'>
 				, canceltime = #{canceltime}
 			</if>
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
+                , belongleasecompany = #{belongleasecompany}
+            </if>
 		where
 			orderno = #{orderno}
 	</update>
@@ -1136,5 +1139,10 @@
 	<update id="orderReject" parameterType="OpTaxiOrder">
 		update op_taxiorder set updatetime = now(), reviewstatus = #{reviewstatus} where orderno = #{orderno}
 	</update>
+
+    <!-- 根据司机id查询司机详情 -->
+    <select id="getPubDriverById" parameterType="string" resultType="PubDriver">
+        select * from pub_driver where id = #{driverid} and status = 1
+    </select>
 	
 </mapper>

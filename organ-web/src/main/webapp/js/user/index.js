@@ -460,7 +460,7 @@ function initEvent(){
 	});
 	
 	$("#file").change(function() {
-		changeOptions();
+		changeOptions(this);
 	});
 	
 	//导入成功关闭
@@ -474,94 +474,91 @@ function initEvent(){
 /**
  * 文件改变之后的处理
  */
-function changeOptions(){
-	if(!$("#file").val()){
-		return ;
-	}
-	var formData = new FormData($("#import_form")[0]);
-	var url = "User/GetFileSize";
-	$.ajax({
-		type:"post",
-		url:url,
-		cache:false,
-		data: formData,  
-    async: true,  
-    contentType: false,  
-    processData: false,  
-    success: function (returndata) {
-    	if(returndata.status=="success"){
-    		var sizekb = returndata.size;
-    		if(sizekb>5*1024*1024){
-    			toastr.warning("选择的文件大于5m,请重新选择", "提示");
-    			$("#file").val("");
-    			$("#xuanze_value").html("");
-    		}else{
-    			var file_value = $("#file").val();
-    			if(file_value&&file_value.lastIndexOf("\\")>0&&file_value.lastIndexOf("\\")+1<file_value.length){
-    				$("#xuanze_value").html(file_value.substring(file_value.lastIndexOf("\\")+1));
-    			}else{
-    				$("#xuanze_value").html(file_value);
-    			}
-    		}
-    	}
-    },  
-    error: function (returndata) {
-    	
-    }
-   });
-}
-
-///****************ie9下获取文件大小通过后台有兼容问题************************/
-//var isIE = /msie/i.test(navigator.userAgent) && !window.opera; 
-//function changeOptions(target) {
-//	var fileSize = 0; 
-//	var filetypes =[".xls",".xlsx"]; 
-//	var filepath = target.value; 
-//	var filemaxsize = 1024*5;//5M 
-//	if(filepath){
-//		var isnext = false; 
-//		var fileend = filepath.substring(filepath.indexOf(".")); 
-//		if(filetypes && filetypes.length>0){ 
-//			for(var i =0; i<filetypes.length;i++){ 
-//				if(filetypes[i]==fileend){ 
-//					isnext = true; 
-//					break; 
-//				}
-//			} 
-//		}
-//		if(!isnext){
-//			toastr.warning("不接受此文件类型！", "提示"); 
-//			target.value ="";
-//			$("#xuanze_value").html("");
-//			return false; 
-//		}
-//	}else{ 
-//		return false; 
-//	} 
-//	if (isIE && !target.files){
-//		var filePath = target.value; 
-//		var fileSystem = new ActiveXObject("Scripting.FileSystemObject"); 
-//		if(!fileSystem.FileExists(filePath)){
-//			$("#xuanze_value").html("");
-//			return false; 
-//		}
-//		var file = fileSystem.GetFile (filePath); 
-//		fileSize = file.Size; 
-//	} else {
-//		fileSize = target.files[0].size; 
-//	}
-//	var size = fileSize / 1024; 
-//	if(size>filemaxsize){
-//		toastr.warning("选择的文件大于5m,请重新选择", "提示");
-//		target.value ="";
-//		$("#xuanze_value").html("");
-//		return false; 
-//	}
-//	$("#xuanze_value").html($("#file").val());
-//} 
+// function changeOptions(){
+// 	if(!$("#file").val()){
+// 		return ;
+// 	}
+// 	var formData = new FormData($("#import_form")[0]);
+// 	var url = "User/GetFileSize";
+// 	$.ajax({
+// 		type:"post",
+// 		url:url,
+// 		cache:false,
+// 		data: formData,
+//     async: true,
+//     contentType: false,
+//     processData: false,
+//     success: function (returndata) {
+//     	if(returndata.status=="success"){
+//     		var sizekb = returndata.size;
+//     		if(sizekb>5*1024*1024){
+//     			toastr.warning("选择的文件大于5m,请重新选择", "提示");
+//     			$("#file").val("");
+//     			$("#xuanze_value").html("");
+//     		}else{
+//     			var file_value = $("#file").val();
+//     			if(file_value&&file_value.lastIndexOf("\\")>0&&file_value.lastIndexOf("\\")+1<file_value.length){
+//     				$("#xuanze_value").html(file_value.substring(file_value.lastIndexOf("\\")+1));
+//     			}else{
+//     				$("#xuanze_value").html(file_value);
+//     			}
+//     		}
+//     	}
+//     },
+//     error: function (returndata) {
 //
-///****************************************/
+//     }
+//    });
+// }
 
+/****************ie9下获取文件大小通过后台有兼容问题************************/
+var isIE = /msie/i.test(navigator.userAgent) && !window.opera;
+function changeOptions(target) {
+	var fileSize = 0;
+	var filetypes =[".xls",".xlsx"];
+	var filepath = target.value;
+	var filemaxsize = 1024*5;//5M
+	if(filepath){
+		var isnext = false;
+		var fileend = filepath.substring(filepath.indexOf("."));
+		if(filetypes && filetypes.length>0){
+			for(var i =0; i<filetypes.length;i++){
+				if(filetypes[i]==fileend){
+					isnext = true;
+					break;
+				}
+			}
+		}
+		if(!isnext){
+			toastr.warning("不接受此文件类型！", "提示");
+			target.value ="";
+			$("#xuanze_value").html("");
+			return false;
+		}
+	}else{
+		return false;
+	}
+	if (isIE && !target.files){
+		var filePath = target.value;
+		var fileSystem = new ActiveXObject("Scripting.FileSystemObject");
+		if(!fileSystem.FileExists(filePath)){
+			$("#xuanze_value").html("");
+			return false;
+		}
+		var file = fileSystem.GetFile (filePath);
+		fileSize = file.Size;
+	} else {
+		fileSize = target.files[0].size;
+	}
+	var size = fileSize / 1024;
+	if(size>filemaxsize){
+		toastr.warning("选择的文件大于5m,请重新选择", "提示");
+		target.value ="";
+		$("#xuanze_value").html("");
+		return false;
+	}
+	$("#xuanze_value").html($("#file").val());
+}
 
 
 /**

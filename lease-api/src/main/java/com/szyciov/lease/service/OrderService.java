@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -454,5 +455,48 @@ public class OrderService {
 		}
 		return sb.toString();
 	}
-	
+
+	/**
+	 * 获取如约的机构列表
+	 * @param param
+	 * @return
+	 */
+	public Map<String,Object> getOrgans(Map<String, Object> param) {
+		Map<String,Object> res = new HashMap<String,Object>();
+		res.put("status",Retcode.OK.code);
+		res.put("message",Retcode.OK.msg);
+		Map<String,Object> ruyueinfo = dao.getRUYUE(param);
+		if(ruyueinfo!=null){
+            param.put("companyid",ruyueinfo.get("id"));
+        }
+		res.put("organs",dao.getOrgans(param));
+		return res;
+	}
+
+	public Map<String,Object> getCompanyidByruyue(){
+        Map<String,Object> res = new HashMap<String,Object>();
+        Map<String,Object> ruyueinfo = dao.getRUYUE(new HashedMap());
+        if(ruyueinfo!=null){
+            res.put("companyid", ruyueinfo.get("id"));
+        }else{
+            res.put("companyid", "");
+        }
+
+        return res;
+    }
+
+
+	/**
+	 * 获取机构的用户列表
+	 * @param param
+	 * @return
+	 */
+    public Map<String,Object> getOrganUsers(Map<String, Object> param) {
+    	Map<String,Object> res = new HashMap<String,Object>();
+    	res.put("status",Retcode.OK.code);
+    	res.put("message",Retcode.OK.msg);
+    	res.put("users",dao.getOrganUsers(param));
+    	return res;
+    }
+
 }

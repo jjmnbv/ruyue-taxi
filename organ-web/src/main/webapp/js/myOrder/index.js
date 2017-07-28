@@ -82,7 +82,7 @@
 		$("table > tbody > tr").live('click',function () {
 			//alert( $(this).find("td:first").text());
 			if ($(this).find("td").length > 1) {
-				window.location.href = base+"MyOrder/Details?id=" + $(this).find("td:first").text();
+				window.location.href = base+"MyOrder/Details?id=" + $(this).find("td:first").text()+"&date="+new Date();
 			}
 	    });
 	}

@@ -75,7 +75,14 @@
 	<body class="ordermanage_css_body">
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs">
-			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrderManage/OrderIndex">网约车订单</a> > <span id="manuTitle">人工派单</span>
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
+            <c:if test="${empty tmp}">
+                <a class="breadcrumb" href="OrderManage/OrderIndex">网约车订单</a>
+            </c:if>
+            <c:if test="${not empty tmp}">
+                <a class="breadcrumb" href="TmpOrderManage/CurrentOrderIndex">网约车订单</a>
+            </c:if>
+            > <span id="manuTitle">人工派单</span>
             <c:choose>
                 <c:when test="${ordertype == 1}">
                     <button class="SSbtn blue back" target="iframe" onclick="javascript:window.location.href='Order/Index'">返回</button>
@@ -91,6 +98,7 @@
                 </c:otherwise>
             </c:choose>
 		</div>
+        <input type="hidden" id="tmp" value="${tmp}">
 		<div class="content">
 			<div class="col-7" style="padding-top: 30px;">
 				<div class="row ordermanage_css_row_2">
@@ -188,7 +196,7 @@
 	        </div>
 		</div>
 		
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 		<script type="text/javascript" src="js/ordermanage/manualsendorder.js"></script>
 		<script type="text/javascript">
 			var orderObj = {

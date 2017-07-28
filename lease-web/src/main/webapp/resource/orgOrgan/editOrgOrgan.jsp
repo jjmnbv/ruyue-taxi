@@ -90,7 +90,7 @@
 				<div class="col-4">
 					<label>机构全称<em class="asterisk"></em></label>
 					<input id="id" name="id" value="${orgOrgan.id}" type="hidden"/>
-					<input type="text" placeholder="机构全称" name="fullName" id="fullName" value="${orgOrgan.fullName}" maxlength="20">
+					<input type="text" placeholder="机构全称" name="fullName" id="fullName" value="${orgOrgan.fullName}" maxlength="20" onkeyup="value=value.replace(/[ -~]/g,'')" onkeydown="if(event.keyCode==13)event.keyCode=9" >
 				</div>
 				<div class="col-4">
 					<label>机构简称<em class="asterisk"></em></label>
@@ -374,7 +374,7 @@
 	
 	<!-- 百度地图弹窗 start-->
 	<div class="pop_box" id="map">
-	  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+	  <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 	  <div class="tip_box_c">
 	        <div class="row form">
 	            <div class="col-12"><label style="min-width:6%; width:auto;padding-right:10px;">搜索地址</label><input type="text" style="max-width:94%;width:89%;" placeholder="详细地址" name="keyword" id="suggest"/></div>

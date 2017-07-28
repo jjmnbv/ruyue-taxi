@@ -1,46 +1,33 @@
 package com.szyciov.operate.controller;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
+import com.szyciov.entity.Dictionary;
+import com.szyciov.entity.Excel;
+import com.szyciov.entity.TextAndValue;
+import com.szyciov.op.param.HandleOutageParam;
+import com.szyciov.op.param.QueryOutage;
+import com.szyciov.op.param.QueryOutageParam;
+import com.szyciov.operate.util.TextValueUtil;
+import com.szyciov.util.*;
+import net.sf.json.JSONArray;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.szyciov.entity.Dictionary;
-import com.szyciov.entity.Excel;
-import com.szyciov.entity.TextAndValue;
-import com.szyciov.op.param.HandleOutageParam;
-import com.szyciov.op.param.QueryIdleParam;
-import com.szyciov.op.param.QueryOutage;
-import com.szyciov.op.param.QueryOutageParam;
-import com.szyciov.operate.util.TextValueUtil;
-import com.szyciov.util.BaseController;
-import com.szyciov.util.Constants;
-import com.szyciov.util.ExcelExport;
-import com.szyciov.util.JSONUtil;
-import com.szyciov.util.PageBean;
-import com.szyciov.util.ReflectClassField;
-import com.szyciov.util.SystemConfig;
-import com.szyciov.util.TemplateHelper;
-
-import net.sf.json.JSONArray;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * 驾驶行为断电处理
@@ -51,6 +38,7 @@ import net.sf.json.JSONArray;
 @Controller
 @RequestMapping("/AlarmPowerFailure")
 public class AlarmPowerFailureController extends BaseController {
+
 	private TemplateHelper templateHelper = new TemplateHelper();
 	private String baseApiUrl = SystemConfig.getSystemProperty("vmsBaseApiUrl");
 	private String vmsApiUrl = SystemConfig.getSystemProperty("vmsApiUrl");
@@ -82,19 +70,21 @@ public class AlarmPowerFailureController extends BaseController {
 		qaueryOutageParam.setApikey(vmsApikey);
 		PageBean pageBean = new PageBean();
 		String usertoken = getUserToken(request);
-		List<Dictionary> dictionary = getOpUserCompany(request, usertoken, true);
+		List<Dictionary> dictionary = getOpUserCompany(request, usertoken, false);
 		// 转换字典值
 		List<TextAndValue> listDictionary = TextValueUtil.convert(dictionary);
 		qaueryOutageParam.setOrganizationId(
 				(!listDictionary.isEmpty() && listDictionary.size() > 0) ? listDictionary.get(0).getValue() : "");
+
 		Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(
 				vmsApiUrl + "/Monitor/QueryOutage?" + ReflectClassField.getMoreFieldsValue(qaueryOutageParam),
 				HttpMethod.GET, usertoken, null, Map.class);
+
 		List<QueryOutage> list = (List<QueryOutage>) map.get("outage");
 		pageBean.setsEcho(qaueryOutageParam.getsEcho());
 		int i = (int) map.get("iTotalRecords");
 		pageBean.setiTotalDisplayRecords(i);
-		pageBean.setiTotalRecords(list.size());
+		pageBean.setiTotalRecords(i);
 		pageBean.setAaData(list);
 
 		return pageBean;
@@ -125,7 +115,7 @@ public class AlarmPowerFailureController extends BaseController {
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/Export")
 	@ResponseBody
-	public void export(QueryIdleParam queryIdleParam, HttpServletRequest request, HttpServletResponse response,
+	public void export(QueryOutageParam queryIdleParam, HttpServletRequest request, HttpServletResponse response,
 			HttpSession session) throws IOException {
 		response.setContentType("text/html;charset=utf-8");
 		String fileName = "";
@@ -141,6 +131,13 @@ public class AlarmPowerFailureController extends BaseController {
 		queryIdleParam.setApikey(vmsApikey);
 		queryIdleParam.setiDisplayStart(0);
 		queryIdleParam.setiDisplayLength(9999);
+		String usertoken = getUserToken(request);
+		List<Dictionary> dictionary = getOpUserCompany(request, usertoken, false);
+		// 转换字典值
+		List<TextAndValue> listDictionary = TextValueUtil.convert(dictionary);
+		queryIdleParam.setOrganizationId(
+				(!listDictionary.isEmpty() && listDictionary.size() > 0) ? listDictionary.get(0).getValue() : "");
+
 		Map<String, Object> trackRecordMap = templateHelper.dealRequestWithFullUrlToken(
 				vmsApiUrl + "/Monitor/QueryOutage?" + ReflectClassField.getMoreFieldsValue(queryIdleParam),
 				HttpMethod.GET, userToken, null, Map.class);
@@ -256,10 +253,10 @@ public class AlarmPowerFailureController extends BaseController {
 		title.put("plate", "车牌");
 		headerList.add("车牌");
 
-		title.put("imei", "车辆IMEI");
-		headerList.add("车辆IMEI");
-		title.put("department", "车辆所属");
-		headerList.add("车辆所属");
+		title.put("imei", "IMEI");
+		headerList.add("IMEI");
+		title.put("department", "服务车企");
+		headerList.add("服务车企");
 		title.put("alarmTime", "报警时间");
 		headerList.add("报警时间");
 		title.put("processingTime", "处理时间");
@@ -269,8 +266,8 @@ public class AlarmPowerFailureController extends BaseController {
 		title.put("processingState", "处理状态");
 		headerList.add("处理状态");
 
-		title.put("processingPeopleId", "处理人ID");
-		headerList.add("处理人ID");
+		// title.put("processingPeopleId", "处理人ID");
+		// headerList.add("处理人ID");
 
 		title.put("processingPeople", "处理人");
 		headerList.add("处理人");
@@ -279,6 +276,39 @@ public class AlarmPowerFailureController extends BaseController {
 
 		return title;
 	}
+
+	@RequestMapping("/toPowerFailureDetail/{id}")
+	public String toPowerFailureDetail(@PathVariable("id")String id, HttpServletRequest request, Model model){
+		QueryOutageParam param = new QueryOutageParam();
+
+		param.setId(id);
+		param.setApikey(vmsApikey);
+
+		Map<String, Object> map = templateHelper.dealRequestWithFullUrlToken(vmsApiUrl + "/Monitor/QueryOutage?" +
+						ReflectClassField.getMoreFieldsValue(param), HttpMethod.GET, null, param, Map.class);
+
+		JSONArray jsonArray = JSONArray.fromObject(map.get("outage"));
+		List<Map<String, Object>> list = JSONUtil.parseJSON2Map(jsonArray);
+		QueryOutage queryOutage = new QueryOutage();
+		for (Map<String, Object> m : list) {
+			queryOutage.setPlate(m.get("plate").toString());
+			queryOutage.setImei(m.get("imei").toString());
+			queryOutage.setDepartment(m.get("department").toString());
+			queryOutage.setAlarmTime(m.get("alarmTime").toString());
+			queryOutage.setProcessingTime(m.get("processingTime").toString());
+			queryOutage.setAlarmAddress(m.get("alarmAddress").toString());
+			queryOutage.setProcessingPeople(m.get("processingPeople").toString());
+			queryOutage.setRemarks(m.get("remarks").toString());
+			queryOutage.setPlate(m.get("plate").toString());
+			queryOutage.setReasonText(m.get("reasonText").toString());
+			queryOutage.setEqpId(m.get("eqpId").toString());
+			queryOutage.setDepartmentId(m.get("departmentId").toString());
+		}
+
+		model.addAttribute("queryOutage",queryOutage);
+		return "resource/alarmPowerFailure/powerFailureDetail";
+	}
+
 
 	/**
 	 * 获取usertoken的通用方法 app端用户主要是用户请求中传递usertoken web端用户主要是从session中获取

@@ -24,6 +24,8 @@ package com.szyciov.op.param;
  */
 
 public class QueryOutageParam extends BasePageParam{
+
+    private String id;
     
     /** 车牌 */
     private String plate;
@@ -43,11 +45,24 @@ public class QueryOutageParam extends BasePageParam{
     /** 处理状态 */
     private Integer processingState;
     
-    private String organizationId;
-    
-    public String getOrganizationId() {
+    /**
+	 * 用户 所属单位ID
+	 */
+	private String organizationId;
+
+
+     public String getId() {
+         return id;
+     }
+
+     public void setId(String id) {
+         this.id = id;
+     }
+
+     public String getOrganizationId() {
 		return organizationId;
 	}
+
 
 	public void setOrganizationId(String organizationId) {
 		this.organizationId = organizationId;

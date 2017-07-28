@@ -75,9 +75,17 @@
 	<body class="ordermanage_css_body">
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs">
-			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrderManage/PersonOrderIndex">个人订单</a> > <span id="manuTitle">人工派单</span>
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
+            <c:if test="${empty tmp}">
+                <a class="breadcrumb" href="OrderManage/PersonOrderIndex">个人订单</a>
+            </c:if>
+            <c:if test="${not empty tmp}">
+                <a class="breadcrumb" href="TmpOrderManage/PersonCurrentOrderIndex">机构订单</a>
+            </c:if>
+            > <span id="manuTitle">人工派单</span>
 			<button class="SSbtn blue back" onclick="window.history.go(-1);">返回</button>
 		</div>
+        <input type="hidden" id="tmp" value="${tmp}">
 		<div class="content">
 			<div class="col-7" style="padding-top: 30px;">
 				<div class="row ordermanage_css_row_2">
@@ -174,7 +182,7 @@
 	        </div>
 		</div>
 		
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 		<script type="text/javascript" src="js/personordermanage/manualsendorder.js"></script>
 		<script type="text/javascript">
 			var orderObj = {

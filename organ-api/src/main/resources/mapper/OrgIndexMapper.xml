@@ -979,4 +979,114 @@
 		)
 		AND organ.customertype!=1
 	</select>
+	<!-- 机构服务中接口 -->
+	<select id="getServiceOrder" resultType="OrgOrder" parameterType="map">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					(@rownum := @rownum + 1) AS indexnum,
+					m.*
+				FROM
+					(
+						SELECT
+							org_order.orderno,
+							org_order.companyid,
+							org_user.nickname,
+							org_user.account,
+							CONCAT(org_user.nickname," ",org_user.account) AS userMessage,
+							le_leasescompany.shortname AS companyName,
+							org_order.ordertype,
+							org_order.usetime,
+							org_order.orderstatus,
+							org_order.paymentstatus,
+							org_order.reviewstatus,
+							org_order.paymethod,
+							org_order.orderamount
+						FROM
+							org_order,
+							org_user,
+							le_leasescompany,
+							(SELECT @rownum := 0) r
+						WHERE
+							org_order.`status` = 1
+						AND le_leasescompany.`Status` = 1
+						AND org_order.userid = org_user.id
+						AND org_order.usetype = '0'
+						AND org_order.paymethod = '2'
+						AND org_order.companyid = le_leasescompany.id
+						AND org_order.organid in (
+							SELECT
+								organ.id
+							FROM
+								org_organ organ
+							WHERE
+								organ. STATUS = 1
+							AND organ.creditcode = (
+								SELECT
+									org_organ.creditcode
+								FROM
+									org_organ
+								WHERE
+									org_organ. STATUS = 1
+								AND org_organ.id = #{organId}
+							)
+							AND organ.customertype!=1
+						)
+						AND org_order.paymethod = '2'
+						<if test="usertype == '0' or usertype == 0">
+						AND org_user.id IN 
+						(SELECT
+							org_user.id
+						FROM
+							org_user
+						WHERE
+							org_user. STATUS = 1
+						AND org_user.dpetid IN (
+							SELECT
+								org_dept.id
+							FROM
+								org_dept
+							WHERE
+								org_dept. STATUS = 1
+							AND org_dept.resid LIKE CONCAT(
+								(
+									SELECT
+										org_dept.resid
+									FROM
+										org_user,
+										org_roleuser,
+										org_dept
+									WHERE
+										org_user.id = #{userId}
+									AND org_user. STATUS = 1
+									AND org_roleuser. STATUS = 1
+									AND org_roleuser.userid = org_user.id
+									AND org_roleuser.roleid IN ('002', '004')
+									AND org_dept. STATUS = 1
+									AND org_dept.id = org_user.dpetid
+								),
+								'%'
+							)
+						)
+						UNION
+							SELECT
+								org_user.id
+							FROM
+								org_user
+							WHERE
+								org_user.id = #{userId})
+						
+						</if>
+					) m
+					where 1=1
+					AND m.orderstatus in ('2', '3', '4', '5', '6')
+					ORDER BY m.usetime DESC
+			) t
+			WHERE
+			<![CDATA[
+			t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+			]]>
+	</select>
 </mapper>

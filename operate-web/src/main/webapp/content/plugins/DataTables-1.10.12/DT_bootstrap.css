@@ -1,0 +1,62 @@
+/*2016/9/12 修改Datatable的样式*/
+table.dataTable thead th,
+table.dataTable thead td {
+    padding: 8px 18px;
+    border-bottom: 1px solid #ddd;
+}
+
+table.dataTable tbody tr.selected {
+    background-color: #e9e9e9 !important;
+}
+
+table.dataTable tbody th,
+table.dataTable tbody td {
+    padding: 6px 10px;
+}
+
+table.dataTable.order-column tbody tr.selected > .sorting_1,
+table.dataTable.order-column tbody tr.selected > .sorting_2,
+table.dataTable.order-column tbody tr.selected > .sorting_3, table.dataTable.display tbody tr.selected > .sorting_1,
+table.dataTable.display tbody tr.selected > .sorting_2,
+table.dataTable.display tbody tr.selected > .sorting_3 {
+    background-color: #e9e9e9 !important;
+}
+
+table.dataTable.display tbody tr.even.selected > .sorting_1, table.dataTable.order-column.stripe tbody tr.even.selected > .sorting_1 {
+    background-color: #e9e9e9 !important;
+}
+
+.dataTables_wrapper.no-footer .dataTables_scrollBody {
+    border-bottom: 1px solid #ddd;
+}
+
+/*表格 标题*/
+/*table.dataTable thead th{
+    border: 1px solid #ddd;
+}*/
+
+/*数据为空时 显示样式*/
+table.dataTable th.dt-center,
+table.dataTable td.dt-center,
+table.dataTable td.dataTables_empty {
+    text-align: center;
+}
+
+.dataTables_processing {
+    z-index: 9999;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 180px !important;
+    height: 40px !important;
+    margin-left: -90px !important;
+    padding: 10px 0 10px 0 !important;
+    text-align: center !important;
+    color: #333 !important;
+    font-size: 13px !important;
+    background-color: #ddd !important;
+}
+
+table.dataTable.no-footer {
+    border-bottom: 1px solid #ddd;
+}

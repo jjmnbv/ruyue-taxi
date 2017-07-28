@@ -62,8 +62,17 @@ public class OrgOrder extends AbstractOrder {
 	public String phone;//司机电话
 	public String plateno;//车牌号
     private String manualDriver; // 手动选择司机 0: 否    1:是
+    private String usetimeShow;
+    
+    public String getUsetimeShow() {
+		return usetimeShow;
+	}
 
-    public String getManualDriver() {
+	public void setUsetimeShow(String usetimeShow) {
+		this.usetimeShow = usetimeShow;
+	}
+
+	public String getManualDriver() {
         return manualDriver;
     }
 

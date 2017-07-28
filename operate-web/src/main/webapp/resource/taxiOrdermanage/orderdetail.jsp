@@ -329,7 +329,7 @@
 				orderno: "<%=request.getParameter("orderno")%>"
 			};
 		</script>
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 		<script type="text/javascript" src="js/taxiOrdermanage/orderdetail.js"></script>
 	</body>
 </html>

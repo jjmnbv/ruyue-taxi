@@ -369,8 +369,10 @@
 			#{status}
 		)
 	</insert>
-	<!-- All Delete -->
-<!-- 	<delete id="delMostContact" parameterType="OrgMostContact"> -->
-<!-- 		DELETE FROM org_mostcontact WHERE org_mostcontact.`status` = 1 AND id=#{id} AND userid=#{userid} -->
-<!-- 	</delete> -->
+
+    <!-- 获取如约租赁公司 -->
+    <select id="getRuyueCompany" resultType="map">
+        select * from le_leasescompany where le_leasescompany.platformtype = '1' and le_leasescompany.status = 1 order by createtime limit 0,1
+    </select>
+
 </mapper>

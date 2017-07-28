@@ -591,6 +591,17 @@ function initElement() {
 	initAddressActive();
 	initVtypeActive();
 	initPayMethodActive();
+	initTimeEvent();
+	
+}
+
+/**
+ * 更改时间时获取预估费用
+ */
+function initTimeEvent(){
+	$("#useTime").change(function(){
+		getCost();
+	});
 }
 
 /**
@@ -1071,6 +1082,7 @@ function getCost() {
 	var data = {
 		cartype : $("#carType").val(),
 		companyid : $("#companyId").attr("data-value"),
+		usetime:$("#useTime").val(),
 		city : $("#onCity").val(),
 		ordertype : $("#ordertype").val(),
 		rulestype : '1',
@@ -1161,6 +1173,13 @@ function createOrder() {
 		url : "Order/CreateOrgOrder",
 		data : JSON.stringify(data),
 		dataType : "json",
+	    beforeSend: function () {
+	        // 禁用按钮防止重复提交
+	    	$(".start_btn").unbind();
+	    },
+	    complete: function () {
+	    	$(".start_btn").click(createOrder);
+	    },
 		success : function(data) {
 			if (data.status == 0) {
 				window.location.href = document.getElementsByTagName("base")[0].getAttribute("href") + "Order/Success/" + data.orderno;

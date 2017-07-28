@@ -3,16 +3,6 @@
  */
 package com.szyciov.organ.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
-
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.entity.CancelParty;
@@ -33,9 +23,16 @@ import com.szyciov.organ.dao.OrderDao;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName OrderService 
@@ -281,5 +278,9 @@ public class OrderService {
 		json.put("cities", list);
 		return json;
 	}
+
+    public Map<String, Object> getRuyueCompany() {
+        return dao.getRuyueCompany();
+    }
 	
 }

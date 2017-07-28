@@ -162,7 +162,7 @@ public class MyOrderController extends BaseController {
 			Map<String, String> orgOrderDetails = new HashMap<>();
 	//		{"orderno":"B674A989-7D81-4308-B18A-C693B45DCA2D","cost":"10.0元","mileage":"0.0公里","startprice":"10.0元","rangeprice":"2.0元/公里","timeprice":"3.0元/分钟","rangecost":"0.0元","timecost":"0.0元","times":"0分钟","status":0,"message":"请求成功,无异常"}
 			orgOrderDetails.put("orderno", json.getString("orderno"));
-			orgOrderDetails.put("cost", json.getString("cost"));
+			orgOrderDetails.put("cost", json.getString("cost").substring(0,json.getString("cost").length()-1));
 			orgOrderDetails.put("mileage", json.getString("mileage"));
 			orgOrderDetails.put("startprice", json.getString("startprice"));
 			orgOrderDetails.put("rangeprice", json.getString("rangeprice"));
@@ -246,7 +246,11 @@ public class MyOrderController extends BaseController {
 			}
 		}else{
 			orgOrderDetails.put("orderno", json.getString("orderno"));
-			orgOrderDetails.put("cost", json.getString("cost"));
+			if(orgOrderDetails1.getOrderstatus().equals(OrderState.INSERVICE.state)){
+				orgOrderDetails.put("cost", json.getString("cost"));
+			}else{
+				orgOrderDetails.put("cost", changeDouble(Double.valueOf(orgOrderDetails1.getOrderamount()))+"元");
+			}
 			orgOrderDetails.put("mileage", json.getString("mileage"));
 			orgOrderDetails.put("startprice", json.getString("startprice"));
 			orgOrderDetails.put("rangeprice", json.getString("rangeprice"));

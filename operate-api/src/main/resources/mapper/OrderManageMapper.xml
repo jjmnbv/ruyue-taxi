@@ -42,7 +42,7 @@
 			op_order.orderno, op_order.ordertype, op_order.userid, pe_user.nickname, pe_user.account, op_order.passengers, op_order.passengerphone,
 			date_format(op_order.undertime, '%Y/%m/%d %H:%i') undertime,
 			date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,
-			op_order.pushnumber,
+			op_order.pushnumber, op_order.orderstatus,
 			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.oncity) oncity,
 			op_order.oncity, op_order.onaddress,
 			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.offcity) offcity,
@@ -50,7 +50,7 @@
 		from
 			op_order left join pe_user on op_order.userid = pe_user.id
 		where
-			op_order.status = 1 and op_order.orderstatus = "1"
+			op_order.status = 1 and op_order.orderstatus in ("0", "1")
 			<if test='null != orderNo and "" != orderNo'>
 				and op_order.orderno like concat('%', #{orderNo}, '%')
 			</if>
@@ -74,7 +74,7 @@
 		from
 			op_order
 		where
-			op_order.status = 1 and op_order.orderstatus = "1"
+			op_order.status = 1 and op_order.orderstatus in ("0", "1")
 			<if test='null != orderNo and "" != orderNo'>
 				and op_order.orderno like concat('%', #{orderNo}, '%')
 			</if>
@@ -743,6 +743,9 @@
 		<if test='null != city and "" != city'>
 			and city = #{city}
 		</if>
+        <if test='null != useType'>
+            and usetype = #{useType}
+        </if>
 	</select>
 	
 	<!-- 分页查询司机信息 -->
@@ -782,6 +785,9 @@
 		<if test="models == 0">
 			and op_vehiclemodels.id = #{orderSelectedmodel}
 		</if>
+        <if test='null != queryTmpBelongleasecompany and "" != queryTmpBelongleasecompany'>
+            and pub_driver.belongleasecompany = #{queryTmpBelongleasecompany}
+        </if>
 		and pub_driver.lng &gt; 0 and pub_driver.lat &gt; 0
 		and pub_driver.vehicletype = "0"
 		and op_vehiclemodels.id in (
@@ -1182,5 +1188,10 @@
 	<update id="orderReject" parameterType="OpOrder">
 		update op_order set updatetime = now(), reviewstatus = #{reviewstatus} where orderno = #{orderno}
 	</update>
+
+    <!-- 修改司机状态为空闲 -->
+    <update id="updatePubDriverLeisure" parameterType="string">
+        update pub_driver set workstatus = "0", updatetime = now() where id = #{driverid}
+    </update>
 	
 </mapper>

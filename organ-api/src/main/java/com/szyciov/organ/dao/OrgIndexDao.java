@@ -52,4 +52,8 @@ public class OrgIndexDao {
 	public Map<String, Object> getOrgOrderByOrderno(String orderno) {
 		return mapper.getOrgOrderByOrderno(orderno);
 	}
+	
+	public List<OrgOrder> getServiceOrder(Map<String, Object> map){
+		return mapper.getServiceOrder(map);
+	};
 }

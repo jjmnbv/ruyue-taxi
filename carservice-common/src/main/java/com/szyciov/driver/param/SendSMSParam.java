@@ -26,7 +26,11 @@ public class SendSMSParam extends BaseParam {
 	 */
 	private String usertype;
 	
-	
+	/**
+	 * 获取验证码次数校验标识
+	 */
+	@SzycValid(rules={"checkSendCodeTimes"})
+	private boolean sendCodeTimesSign;
 	
 	/**  
 	 * 获取用户类型(0-机构用户，1-个人用户，2-司机，3-租赁，4-机构端)  
@@ -77,4 +81,21 @@ public class SendSMSParam extends BaseParam {
 	public void setMobile(String mobile) {
 		this.mobile = mobile;
 	}
+
+	/**  
+	 * 获取获取验证码次数校验标识  
+	 * @return sendCodeTimesSign 获取验证码次数校验标识  
+	 */
+	public boolean isSendCodeTimesSign() {
+		return sendCodeTimesSign;
+	}
+	
+	/**  
+	 * 设置获取验证码次数校验标识  
+	 * @param sendCodeTimesSign 获取验证码次数校验标识  
+	 */
+	public void setSendCodeTimesSign(boolean sendCodeTimesSign) {
+		this.sendCodeTimesSign = sendCodeTimesSign;
+	}
+	
 }

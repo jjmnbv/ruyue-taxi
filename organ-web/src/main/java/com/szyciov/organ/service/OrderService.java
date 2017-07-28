@@ -1,12 +1,5 @@
 package com.szyciov.organ.service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
-
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.entity.CancelParty;
@@ -23,8 +16,13 @@ import com.szyciov.param.OrderApiParam;
 import com.szyciov.util.StringUtil;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
-
 import net.sf.json.JSONObject;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName OrderService 
@@ -259,4 +257,9 @@ public class OrderService {
 	public JSONObject getOrgUserPubBusCity(Map<String, Object> param, String userToken) {
 		return templateHelper.dealRequestWithToken("/Order/GetOrgUserPubBusCity", HttpMethod.POST, userToken, param, JSONObject.class);
 	}
+
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getRuyueCompany(String userToken) {
+        return templateHelper.dealRequestWithToken("/Order/GetRuyueCompany", HttpMethod.POST, userToken, null, Map.class);
+    }
 }

@@ -308,8 +308,13 @@ function changeDriver() {
 			var message = result.message == null ? result : result.message;
 			if (result.status == "success") {
 				$("#manualSendOrderFormDiv").hide();
+                var tmp = $("#tmp").val();
+                var url = $("#baseUrl").val() + "OrderManage/CurrentOrderIndex";
+                if(null != tmp && "tmp" == tmp) {
+                    url = $("#baseUrl").val() + "TmpOrderManage/CurrentOrderIndex";
+                }
             	toastr.options.onHidden = function() {
-            		window.location.href = $("#baseUrl").val() + "OrderManage/CurrentOrderIndex";
+            		window.location.href = url;
             	}
             	toastr.success(message, "提示");
 			} else {

@@ -27,6 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.entity.Excel;
 import com.szyciov.entity.OrderCost;
+import com.szyciov.entity.Retcode;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.org.entity.OrgOrder;
@@ -41,6 +42,7 @@ import com.szyciov.util.StringUtil;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Controller
@@ -98,7 +100,7 @@ public class OrgIndexController extends BaseController {
 		ocp.setOrderno(request.getParameter("id"));
 		ocp.setUsetype(orgOrderDetails1.getUsetype());
 		ocp.setOrdertype(orgOrderDetails1.getOrdertype());
-		if(orgOrderDetails1.getOrderstatus().equals("0") || orgOrderDetails1.getOrderstatus().equals("1") || orgOrderDetails1.getOrderstatus().equals("2") || orgOrderDetails1.getOrderstatus().equals("3") || orgOrderDetails1.getOrderstatus().equals("4") || orgOrderDetails1.getOrderstatus().equals("8")){
+		if(orgOrderDetails1.getOrderstatus().equals("0") || orgOrderDetails1.getOrderstatus().equals("1") || orgOrderDetails1.getOrderstatus().equals("2") || orgOrderDetails1.getOrderstatus().equals("3") || orgOrderDetails1.getOrderstatus().equals("4") || orgOrderDetails1.getOrderstatus().equals("5") || orgOrderDetails1.getOrderstatus().equals("8")){
 			String pricecopy = orgOrderDetails1.getPricecopy();
 			JSONObject json = JSONObject.fromObject(pricecopy);
 			OrderCost oc = StringUtil.parseJSONToBean(json.toString(), OrderCost.class);
@@ -154,7 +156,7 @@ public class OrgIndexController extends BaseController {
 			Map<String, String> orgOrderDetails = new HashMap<>();
 	//		{"orderno":"B674A989-7D81-4308-B18A-C693B45DCA2D","cost":"10.0元","mileage":"0.0公里","startprice":"10.0元","rangeprice":"2.0元/公里","timeprice":"3.0元/分钟","rangecost":"0.0元","timecost":"0.0元","times":"0分钟","status":0,"message":"请求成功,无异常"}
 			orgOrderDetails.put("orderno", json.getString("orderno"));
-			orgOrderDetails.put("cost", json.getString("cost"));
+			orgOrderDetails.put("cost", json.getString("cost").substring(0,json.getString("cost").length()-1));
 			orgOrderDetails.put("mileage", json.getString("mileage"));
 			orgOrderDetails.put("startprice", json.getString("startprice"));
 			orgOrderDetails.put("rangeprice", json.getString("rangeprice").substring(0, json.getString("rangeprice").length()-3));
@@ -874,5 +876,47 @@ public class OrgIndexController extends BaseController {
 //		calendar.setTimeInMillis(now);
 //		return formatter.format(calendar.getTime());
 		return formatter.format(d);
+	}
+	
+	@RequestMapping("OrgIndex/GetServiceOrder")
+	@ResponseBody
+	public JSONObject getServiceOrder(HttpServletRequest request,HttpServletResponse response,@RequestParam String userId,@RequestParam String organId,
+			@RequestParam String usertype){
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+//		String userId = "3D5B0245-87F3-46AD-B062-61D6F8B89CE5";
+//		String organId = "F9FD2C47-CEF5-4AE0-93C5-A07BDEA4E4A8";
+//		String usertype = "1";
+		OrgOrderQueryParam orgOrderQueryParam = new OrgOrderQueryParam();
+		orgOrderQueryParam.setKey(organId);
+		orgOrderQueryParam.setUserid(userId);
+		orgOrderQueryParam.setUsertype(usertype);
+		if(request.getParameter("iDisplayStart") != null && !request.getParameter("iDisplayStart").equals("")){
+			orgOrderQueryParam.setiDisplayStart(Integer.valueOf(request.getParameter("iDisplayStart")));
+		}else{
+			orgOrderQueryParam.setiDisplayStart(0);
+		}
+		if(request.getParameter("iDisplayLength") != null && !request.getParameter("iDisplayLength").equals("")){
+			orgOrderQueryParam.setiDisplayLength(Integer.valueOf(request.getParameter("iDisplayLength")));
+		}else{
+			orgOrderQueryParam.setiDisplayLength(10);
+		}
+		response.setContentType("text/html;charset=utf-8");
+		JSONArray json = new JSONArray();
+		JSONObject jo = new JSONObject();
+		try {
+			json = templateHelper.dealRequestWithToken("/OrgIndex/GetServiceOrder", HttpMethod.POST, userToken,orgOrderQueryParam,
+					JSONArray.class);
+			jo.put("data", json);
+		} catch (Exception e) {
+			jo.put("status", Retcode.EXCEPTION.code);
+			jo.put("message", Retcode.EXCEPTION.msg);
+			json.add(jo);
+		}
+		if(jo.get("status") == null && jo.get("message") == null){
+			jo.put("status", Retcode.OK.code);
+			jo.put("message", Retcode.OK.msg);
+			json.add(jo);
+		}
+		return jo;
 	}
 }

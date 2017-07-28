@@ -19,6 +19,11 @@ public class Constants {
 	public static final String REQUEST_USER_TOKEN = "userToken";
 	public static final String REQUEST_AUTH_SAME = "authSame";
 
+    /**
+     * 司机到上车点速度(km/h)
+     */
+    public static final int SPEED = 30;
+
 	@SuppressWarnings("serial")
 	public static final Map<String, String> authMap = new HashMap<String, String>() {
 		{

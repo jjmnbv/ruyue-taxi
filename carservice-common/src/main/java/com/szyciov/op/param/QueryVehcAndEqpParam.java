@@ -14,6 +14,8 @@ package com.szyciov.op.param;
 
 import com.szyciov.param.QueryParam;
 
+import java.util.List;
+
 /**
  * 查询车辆及设备IMEI参数对象 <功能详细描述>
  * 
@@ -47,6 +49,32 @@ public class QueryVehcAndEqpParam extends QueryParam {
 	 * 登录账户所属 机构ID
 	 */
 	private String organizationId;
+	/**
+	 * 栅栏ID
+	 */
+	private String fenceId;
+
+	/**
+	 * 设备ID集合
+	 */
+	private List<String> eqpIdList;
+
+	public List<String> getEqpIdList() {
+		return eqpIdList;
+	}
+
+	public void setEqpIdList(List<String> eqpIdList) {
+		this.eqpIdList = eqpIdList;
+	}
+
+	public String getFenceId() {
+		return fenceId;
+	}
+
+	public void setFenceId(String fenceId) {
+		this.fenceId = fenceId;
+	}
+
 	/**
 	 * @return 返回 plate
 	 */

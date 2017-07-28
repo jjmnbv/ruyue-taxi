@@ -447,9 +447,8 @@
 	
 	<!-- All Update -->
 	<update id="updatePubDriver" parameterType="PubDriver">
-		INSERT INTO `pub_driver`(`id`) 
-		VALUES(#{id})
-		ON DUPLICATE KEY UPDATE 
+		UPDATE  `pub_driver`
+		SET
 			leasescompanyid=#{leasescompanyid},
 			jobnum=#{jobnum},
 			name=#{name},
@@ -491,6 +490,15 @@
 			wdpwdchangestate=#{wdpwdchangestate},
 			heartbeattime=#{heartbeattime},
 			registrationid=#{registrationid}
+		WHERE
+			id=#{id}
+	</update>
+	
+	<update id="updateHeartBeat" parameterType="PubDriver">
+		INSERT INTO `pub_driver`(`id`) 
+		VALUES(#{id}) 
+		ON DUPLICATE KEY UPDATE 
+			heartbeattime=#{heartbeattime}
 	</update>
 	
 	<update id="updateLocation" parameterType="PubDriver">

@@ -5,6 +5,31 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style type="text/css">
             * { margin:0; padding:0;}
+            @media screen and (min-width:240px) {
+                html, body{
+                    font-size:9px;
+                }
+            }
+            @media screen and (min-width:320px) {
+                html, body{
+                    font-size:12px;
+                }
+            }
+            @media screen and (min-width:480px) {
+                html, body{
+                    font-size:18px;
+                }
+            }
+            @media screen and (min-width:640px) {
+                html, body{
+                    font-size:24px;
+                }
+            }
+            @media screen and (min-width:960px) {
+                html, body{
+                    font-size:36px;
+                }
+            }
             table {
                 border-collapse: collapse;
                 border-spacing:10px;
@@ -39,9 +64,6 @@
                 text-align:center;
                 height:35px;
             }
-            span{
-                margin-left: 11px;
-            }
         </style>
     </head>
     <body style="background:#f0f0f0;height:100%;">
@@ -74,11 +96,8 @@
                     <td class="midtd">标准里程</td>
                     <td class="midtd">${rule.standardrange}公里</td>
                 </tr>
-                <tr>
-                    <td class="midtd">空驶费率</td>
-                    <td class="midtd">${rule.emptytravelrate}%</td>
-                </tr>
             </table>
+           #* <div style="color: red;">*预约用车会增加附加费用${rule.yyfjf}元，本公司保留最终解释权。</div>*#
         </div>
         <div style="position:absolute;bottom:5px;height:50px;left:5px;right:5px;">
             <span>

@@ -198,6 +198,15 @@
 	background-image: url('../../img/index/btn_xitongshezhi_press.png')
 }
 
+.xingchengshuju{
+	background-image: url('../../img/index/btn_xingchengshuju_def.png')
+}
+
+.current .xingchengshuju ,.on .xingchengshuju {
+	background-image: url('../../img/index/btn_xingchengshuju_press.png')
+}
+
+
 /* .zhanghaoguanli {
 	background-image: url('../../img/index/btn_zhanghaoguanli_def.png')
 }
@@ -259,7 +268,6 @@
 .submenu .on .fuwujiankong {
 	background-image: url('../../img/index/btn_fuwujiankong_press.png')
 }
-
 
 
 /*

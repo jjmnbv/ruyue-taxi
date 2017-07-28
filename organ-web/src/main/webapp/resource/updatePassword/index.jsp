@@ -40,10 +40,10 @@
 					<input type="text" name="" id="passwordOld" onfocus="this.type='password'" value="" placeholder="原密码" onkeyup="checkSubmit();" maxlength="16" autocomplete="off"/>
 				</div>
  			<div class="con_inp">
- 				<input type="text" name="" id="passwordNew" onfocus="this.type='password'" value="" placeholder="6-16位字母、符号和数字组成"  onkeyup="checkSubmit();" maxlength="16" autocomplete="off"/>
+ 				<input type="text" name="" id="passwordNew" onfocus="this.type='password'" value="" placeholder="8-16位字母、符号和数字组成"  onkeyup="checkSubmit();" maxlength="16" autocomplete="off"/>
  			</div>
  			<div class="con_inp">
- 				<input type="text" name="" id="passwordNew1" onfocus="this.type='password'" value="" placeholder="6-16位字母、符号和数字组成"  onkeyup="checkSubmit();" maxlength="16" autocomplete="off"/>
+ 				<input type="text" name="" id="passwordNew1" onfocus="this.type='password'" value="" placeholder="8-16位字母、符号和数字组成"  onkeyup="checkSubmit();" maxlength="16" autocomplete="off"/>
  			</div>
  			<div class="con_inp con_sub con_sub_pre" id="submitRed">提交</div>
 			</form>

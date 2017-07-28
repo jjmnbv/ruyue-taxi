@@ -182,7 +182,7 @@ public class TaxiIndexFuncService extends BaseService{
 			return errorResult.get();
 		}
 		driver.get().setHeartbeattime(new Date());
-		accdao.updatePubDriver(driver.get());
+		accdao.updateHeartBeat(driver.get());
 		JSONObject result = new JSONObject();
 
 		return result;

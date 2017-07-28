@@ -144,4 +144,17 @@ iframe{border:0px;min-width: 790px;width:100%;min-height:560px;}
  .zhanghaoguanli {background-image: url('../img/zhanghaoguanli.png')}
  .submenu.on .zhanghaoguanli {background-image: url('../img/zhanghaoguanli_pre.png')}
  
+ .cheliangweizhi {background-image: url('../img/cheliangweizhi.png')}
+ .submenu.on .cheliangweizhi {background-image: url('../img/cheliangweizhi_pre.png')}
+ .shishizhuizong {background-image: url('../img/shishizhuizong.png')}
+ .submenu.on .shishizhuizong {background-image: url('../img/shishizhuizong_pre.png')}
+ .cheliangguiji {background-image: url('../img/cheliangguiji.png')}
+ .submenu.on .cheliangguiji {background-image: url('../img/cheliangguiji_pre.png')}
+ .xingchengshujul {background-image: url('../img/xingchengshuju.png')}
+ .submenu.on .xingchengshujul {background-image: url('../img/xingchengshuju_pre.png')}
+ .xingchengjilu {background-image: url('../img/xingchengjilu.png')}
+ .submenu.on .xingchengjilu {background-image: url('../img/xingchengjilu_pre.png')}
+ .duandianbaojing {background-image: url('../img/duandianbaojing.png')}
+ .submenu.on .duandianbaojing {background-image: url('../img/duandianbaojing_pre.png')}
+ 
  

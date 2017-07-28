@@ -1,5 +1,10 @@
 	function query(){
 		var queryCompany = $("#queryCompany").val();
+		var pattern = new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？% \\\\ _ \\- + ’ 《》\"]");     
+        if(pattern.test(queryCompany)){  
+        	toastr.success("不能输入特殊字符", "提示");
+        	return;
+	    }
 		window.location.href=base+"OrgUsecarrules/Index?queryCompany="+queryCompany+"&search=search";
 	}
 	function edit(ruleName){

@@ -1,5 +1,6 @@
 package com.szyciov.util;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -32,6 +33,15 @@ public class PasswordEncoder {
 			return false;
 		}
 		String password = encode(rawPassword);
+		return password.contentEquals(encodedPassword);
+	}
+
+	public static boolean matches_PWD(CharSequence rawPassword, String encodedPassword) {
+		// TODO Auto-generated method stub
+		if(StringUtils.isBlank(encodedPassword)){
+			return false;
+		}
+		String password = (String) rawPassword;
 		return password.contentEquals(encodedPassword);
 	}
 
