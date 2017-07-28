@@ -13,7 +13,7 @@ GCI:
         #https:${GCI.service.host}:${GCI.service.port}/Chuzu/api/v1/Jkdd/gettaximonitorgpsreal?appid=${GCI.appid}&encryption=${GCI.encryption}
 
 DES:
-  iv: 12345678
+  iv: xxkj0912
 baiduMap: 
    ak: 5WMQoMkG1MBaizuSdXiT3o1xYRSokdGs
    url: http://api.map.baidu.com/geocoder/v2/
