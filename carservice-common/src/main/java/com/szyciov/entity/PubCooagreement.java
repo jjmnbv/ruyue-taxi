@@ -61,7 +61,7 @@ public class PubCooagreement {
     /**
     协议内容
      */
-    private String coocontent;
+    private String content;
 
     /**
      * get 主键
@@ -231,15 +231,15 @@ public class PubCooagreement {
     /**
      * get 协议内容
      */
-    public String getCoocontent() {
-        return coocontent;
+    public String getContent() {
+        return content;
     }
 
     /**
      *
      * set 协议内容
      */
-    public void setCoocontent(String coocontent) {
-        this.coocontent = coocontent == null ? null : coocontent.trim();
+    public void setCoocontent(String content) {
+        this.content = content == null ? null : content.trim();
     }
 }
