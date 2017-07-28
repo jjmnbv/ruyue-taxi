@@ -3,13 +3,21 @@
  */
 package com.szyciov.carservice.util.sendservice.sendmethod.op.car;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import cn.jpush.api.push.model.PushPayload;
 import com.szyciov.carservice.service.MessagePubInfoService;
 import com.szyciov.carservice.service.OrderApiService;
 import com.szyciov.carservice.service.SendInfoService;
 import com.szyciov.carservice.util.OrderRedisMessageFactory;
 import com.szyciov.carservice.util.sendservice.sendmethod.AbstractSendMethod;
-import com.szyciov.carservice.util.sendservice.sendmethod.CommonService;
 import com.szyciov.carservice.util.sendservice.sendmethod.op.taxi.ForceSendMethodImp;
 import com.szyciov.carservice.util.sendservice.sendrules.SendRuleHelper;
 import com.szyciov.carservice.util.sendservice.sendrules.impl.op.car.OpCarGrabSendRuleImp;
@@ -22,21 +30,28 @@ import com.szyciov.driver.enums.PayState;
 import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
-import com.szyciov.enums.*;
+import com.szyciov.enums.DriverEnum;
+import com.szyciov.enums.OrderEnum;
+import com.szyciov.enums.PlatformTypeByDb;
+import com.szyciov.enums.SendRulesEnum;
+import com.szyciov.enums.VehicleEnum;
 import com.szyciov.op.entity.OpOrder;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.PeUser;
 import com.szyciov.org.entity.OrgOrder;
 import com.szyciov.param.SendOrderDriverQueryParam;
-import com.szyciov.util.*;
+import com.szyciov.util.AppMessageUtil;
+import com.szyciov.util.BaiduUtil;
+import com.szyciov.util.PushObjFactory;
+import com.szyciov.util.SMMessageUtil;
+import com.szyciov.util.SMSTempPropertyConfigurer;
+import com.szyciov.util.StringUtil;
+import com.szyciov.util.SystemConfig;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * @ClassName GrabSendMethodImp 
@@ -185,8 +200,7 @@ public class OpCarGrabSendMethodImp extends AbstractSendMethod{
 		int syssendinterval_send = temprules.getSystemsendinterval();
 		Date time_send = new Date();
 		int sleeptime = 3;
-		int grabtime = temprules.getDriversendinterval();
-		Date temptime_send = new Date(time_send.getTime()+syssendinterval_send*60*1000-(grabtime+sleeptime)*1000);
+		Date temptime_send = new Date(time_send.getTime()+syssendinterval_send*60*1000-(sleeptime)*1000);
 		Date changetime_send = new Date();
 		int tempcount = 0;
 		List<String> driverids = new ArrayList<String>();
@@ -770,7 +784,7 @@ public class OpCarGrabSendMethodImp extends AbstractSendMethod{
 	/**
 	 * 派单失败处理
 	 * @param orderinfo
-	 */
+
 	private void grabSendOrderCancel(AbstractOrder orderinfo){
 		//更新订单状态
 		sendInfoService.forceOrderCancel(orderinfo);
@@ -786,7 +800,7 @@ public class OpCarGrabSendMethodImp extends AbstractSendMethod{
 		PushPayload pushload4ios = PushObjFactory.createSendOrderFailObj4IOS(order, userids, tag_ands);
 		AppMessageUtil.send(pushload4ios,pushload4android,AppMessageUtil.APPTYPE_PASSENGER);
 	}
-	
+	 */
 
 
 	/**
@@ -880,40 +894,14 @@ public class OpCarGrabSendMethodImp extends AbstractSendMethod{
 		takecashinfo.put("applytime", 0);
 		message.setOrderinfo(orderJson);
 		message.setTakecashinfo(takecashinfo);
-		
-		//订单信息转为字符串
-		String value = JSONObject.fromObject(message).toString();
-		for(PubDriver pd : drivers){
-			String key = "DriverGrabMessage_" + pd.getId() + "_" + pd.getPhone()+"_" + orderinfo.getOrderno();
-			//抢单结束时间比现在时间晚,才保存
-			if(grabEndTime != null && grabEndTime.after(new Date())){
-				JedisUtil.setString(key, (int)((grabEndTime.getTime() - System.currentTimeMillis())/1000), value);
-			}
-		}
+
+		setDriverMessage(message,orderinfo,drivers,grabEndTime);
 	}
 
-	protected List<OpOrder> listInServiceOrUseNowOrderDriver(String driverId) {
-		return sendInfoService.listInServiceOrUseNow4CarDriver(driverId);
-	}
-
-	@Override
-	protected List<String> listDriverUnServiceTimes(String driverId) {
-		return sendInfoService.listCarDriverUnServiceTimes(driverId);
-	}
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
 		return sendInfoService.getOpCarOrderStatus(orderNo);
 	}
-
-	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		List<OpOrder> list =  sendInfoService.listReverceOrders4CarDriver(driverId);
-		if(list!=null&&list.size()>0){
-			return list.get(0);
-		}
-		return null;
-	}
-
 
 }

@@ -82,7 +82,6 @@ import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PasswordEncoder;
-import com.szyciov.util.RedisUtil;
 import com.szyciov.util.SMMessageUtil;
 import com.szyciov.util.SMSTempPropertyConfigurer;
 import com.szyciov.util.StringUtil;
@@ -98,7 +97,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-import redis.clients.jedis.Jedis;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -491,6 +489,7 @@ public class OrderApiService {
 		ocp.setOnaddrlat(orderInfo.getOnaddrlat());
 		ocp.setOffaddrlng(orderInfo.getOffaddrlng());
 		ocp.setOffaddrlat(orderInfo.getOffaddrlat());
+		ocp.setIsusenow(orderInfo.isIsusenow());
 		
 		JSONObject json = new JSONObject();
 		json = getOrderCost(ocp);
@@ -989,7 +988,7 @@ public class OrderApiService {
 		orderInfo.setEstimatedtime((int)StringUtil.formatNum(minute,1));
 		orderInfo.setEstimatedcost(oc.getCost());
 		orderInfo.setPricecopy(JSONObject.fromObject(oc).toString());
-		orderInfo.setPaymentstatus(PayState.NOTPAY.state);
+		orderInfo.setPaymentstatus(PayState.MENTED.state);
 		orderInfo.setReviewstatus(ReviewState.NOTREVIEW.state);
 		orderInfo.setStatus(1);               //数据生效
 		orderInfo.setUserhidden("1");   //消息未读
@@ -1215,6 +1214,13 @@ public class OrderApiService {
 	public JSONObject createOpTaxiOrder(OpTaxiOrder orderInfo) {
 		JSONObject result = new JSONObject();
 		String manualDriver = orderInfo.getManualDriver();
+
+        if("1".equals(manualDriver) && isDriverOffline(orderInfo.getDriverid())){
+            result.put("status", Retcode.MANUAL_DRIVER_OFFLINE.code);
+            result.put("message", Retcode.MANUAL_DRIVER_OFFLINE.msg);
+            return result;
+        }
+
 		PeUser user = null;
 		OpTaxisendrules sendRule = null;
 		TaxiOrderCost oc = null;
@@ -1224,8 +1230,8 @@ public class OrderApiService {
 		orderInfo.setOrdertype(OrderEnum.ORDERTYPE_TAXI.code);
 		orderInfo.setPaymentmethod(PayMethod.OFFLINE.code);
         user = getPeUser(orderInfo.getUserid(),result);      //获取个人用户
+        sendRule = getSendRules(orderInfo,result);          //获取派单规则(先获取派单规则,确定订单是否即刻)
 		oc = countCost(orderInfo, result);                           //计算预估费用
-        sendRule = getSendRules(orderInfo,result);          //获取派单规则
 		if(!checkPermission(orderInfo,user,sendRule,oc,result)) return result;
 		if(null == orderInfo.getSchedulefee()) orderInfo.setSchedulefee(0);
 		//保存人工派单时间点和订单取消时间点
@@ -1241,6 +1247,7 @@ public class OrderApiService {
             opTaxiOrderManageService.createDriverNews(orderInfo, 0, OrderMessageFactory.OrderMessageType.MANTICORDER);
             TaxiOrderMessage message = new TaxiOrderMessage(orderInfo, TaxiOrderMessage.TAXI_MANTICORDER);
             MessageUtil.sendMessage(message);
+            logger.info("订单号：" + orderInfo.getOrderno() + "，人工指派给" + orderInfo.getDriverid() + "司机");
         }else{
         	sendOrder(orderInfo,FactoryProducer.TYPE_TAXI_OP);
         }
@@ -1265,6 +1272,13 @@ public class OrderApiService {
 	public JSONObject createOpOrder(OpOrder orderInfo){
 		JSONObject result = new JSONObject();
         String manualDriver = orderInfo.getManualDriver();
+
+        if("1".equals(manualDriver) && isDriverOffline(orderInfo.getDriverid())){
+            result.put("status", Retcode.MANUAL_DRIVER_OFFLINE.code);
+            result.put("message", Retcode.MANUAL_DRIVER_OFFLINE.msg);
+            return result;
+        }
+
 		PeUser user = null;
 		PubSendrules sendRule = null;
 		OrderCost oc = null;
@@ -1272,8 +1286,8 @@ public class OrderApiService {
 		int sendinterval = 0;
 		orderInfo.setUsetype(OrderEnum.USETYPE_PERSONAL.code);
         user = getPeUser(orderInfo.getUserid(),result); //获取个人用户
+        sendRule = getSendRules(orderInfo,result); //获取派单规则(先获取派单规则,确定订单是否即刻)
         oc = countCost(orderInfo, result); //计算预估费用
-		sendRule = getSendRules(orderInfo,result); //获取派单规则
 		if(!checkPermission(orderInfo, user, sendRule, oc, result)) return result;
         //保存人工派单时间点和订单取消时间点
         int[] reInt = updateSendTime(orderInfo,sendRule,false);
@@ -1288,6 +1302,7 @@ public class OrderApiService {
             this.opOrderApiService.createDriverNews(orderInfo, 0, OrderMessageFactory.OrderMessageType.MANTICORDER);
             OrderMessage message = new OrderMessage(orderInfo, OrderMessage.MANTICORDER);
             MessageUtil.sendMessage(message);
+            logger.info("订单号：" + orderInfo.getOrderno() + "，人工指派给" + driver.getId() + "司机");
         }else{
         	sendOrder(orderInfo,FactoryProducer.TYPE_CAR_OP);
         }
@@ -1311,7 +1326,14 @@ public class OrderApiService {
 	 */
 	public JSONObject createOrgOrder(OrgOrder orderInfo){
 		JSONObject result = new JSONObject();
-		String manualDriver = orderInfo.getManualDriver();
+        String manualDriver = orderInfo.getManualDriver();
+
+        if("1".equals(manualDriver) && isDriverOffline(orderInfo.getDriverid())){
+            result.put("status", Retcode.MANUAL_DRIVER_OFFLINE.code);
+            result.put("message", Retcode.MANUAL_DRIVER_OFFLINE.msg);
+            return result;
+        }
+
 		OrgUser user = null;
 		PubSendrules sendRule = null;
 		OrderCost oc = null;
@@ -1320,8 +1342,8 @@ public class OrderApiService {
         if(orderInfo.getOrganid() == null){   //如果没有organid,就重新获取
             orderInfo.setOrganid(user.getOrganId());
         }
+        sendRule = getSendRules(orderInfo, result); //获取派单规则(先获取派单规则,确定订单是否即刻)
         oc = countCost(orderInfo, result); //计算预估费用
-		sendRule = getSendRules(orderInfo, result); //获取派单规则
 		if(!checkPermission(orderInfo,user,sendRule,oc,result)) return result;
 
 		//保存人工派单时间点和订单取消时间点
@@ -1340,6 +1362,7 @@ public class OrderApiService {
             createDriverNews(orderInfo, 0.0D, OrderMessageFactory.OrderMessageType.MANTICORDER);
             OrderMessage message = new OrderMessage(orderInfo, "人工指派订单");
             MessageUtil.sendMessage(message);
+            logger.info("订单号：" + orderInfo.getOrderno() + "，人工指派给" + driver.getId() + "司机");
         }else{
         	sendOrder(orderInfo,FactoryProducer.TYPE_CAR_LE);
         }
@@ -1355,7 +1378,23 @@ public class OrderApiService {
         result.put("isusenow", orderInfo.isIsusenow());
 		return result;
 	}
-	
+
+    /**
+     * 判断司机是否下线
+     * @param driverId
+     * @return
+     */
+	private boolean isDriverOffline(String driverId){
+        com.szyciov.lease.entity.PubDriver driver = this.dao.getPubDriver(driverId);
+        if(DriverState.OFFLINE.code.equals(driver.getWorkStatus())){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
+
     /**
      * 获取订单信息
      * @param oap
@@ -1376,6 +1415,30 @@ public class OrderApiService {
 		OrderCost oc = null;
 		JSONObject result = new JSONObject();
 		OrderInfoDetail oid = null;
+		//用车时间不为null表示是页面获取预估
+		if(param.getUsetime() != null){
+			PubSendrules sendRule = new PubSendrules();
+	 		sendRule.setLeasescompanyid(param.getCompanyid());
+	 		sendRule.setVehicletype(Integer.valueOf(OrderEnum.ORDERSTYPE_CAR.code));
+	 		sendRule.setUsetype(SendRulesEnum.USETYPE_APPOINTMENT.code);
+			sendRule.setCity(param.getCity());
+	        if(param.getOrderprop() == 0) {
+	        	sendRule.setPlatformtype(PlatformTypeByDb.LEASE.code);
+	        } else {
+	        	sendRule.setPlatformtype(PlatformTypeByDb.OPERATING.code);
+	        }
+			sendRule = dao.getSendRule(sendRule);
+            if(null == sendRule) {
+                param.setIsusenow(true);
+            } else {
+                //计算公式:用车时间-当前时间<=约车时限(数据库单位:分钟)?即刻:约车
+                boolean usenow = true;
+                if(null != param.getUsetime()) {
+                    usenow = (param.getUsetime().getTime()-System.currentTimeMillis())/1000<=60*sendRule.getCarsinterval();
+                }
+                param.setIsusenow(usenow);
+            }
+		}
 		//非预估
 		if(param.getOrderno() != null){
 			OrderApiParam oap = new OrderApiParam();
@@ -1385,6 +1448,7 @@ public class OrderApiService {
 			oap.setOrdertype(param.getOrdertype());
             oap.setLog(param.getLog());
             if((oid = checkParam(oap,result)) == null) return result;
+            param.setIsusenow(oid.isIsusenow());
 			oc = getOrderCostInRealTime(oid,oap);
 		//预估
 		}else{
@@ -1402,15 +1466,28 @@ public class OrderApiService {
 			logger.info("==================================================");
 			return result;
 		}
-		
 		//计算价格
-		oc = StringUtil.countCost(oc, oid != null ? oid.getStarttime() : null, oid == null);
+		Date starttime = oid != null ? oid.getStarttime() : null;
+		oc = StringUtil.countCost(oc, starttime, oid == null,param.isIsusenow());
+		doDiscount(oc,param.getOrderprop() == 0);
 		if(param.isHasunit()){
 			result = convertOrderCost(oc);
 		}else{
 			result = JSONObject.fromObject(oc);
 		}
 		return result;
+	}
+	
+	/**
+	 * 费用打折
+	 */
+	private void doDiscount(OrderCost oc,boolean isorg){
+		boolean takeOff = checkCanTakeOff();
+		if(takeOff){  //如果折扣开关开启,使用折扣价
+			double takeOffPoint = getTakeOffPoint(isorg);
+			double amount = Math.round(oc.getCost() * takeOffPoint);
+			oc.setCost(amount);
+		}
 	}
 	
 	/**
@@ -1454,16 +1531,27 @@ public class OrderApiService {
 		result.put("status", Retcode.NOSERVICESINCITY.code);
 		result.put("message", getNoservicesincityMsg(param.getCity(), param.getOrdertype()));
 		TaxiOrderCost orderCost = null;
+		//用车时间不为null表示是页面获取预估
+		if(param.getUsetime() != null){
+			OpTaxiOrder orderInfo = new OpTaxiOrder();
+			orderInfo.setOncity(param.getCity());
+			orderInfo.setOrdertype(param.getOrdertype());
+			orderInfo.setUsetime(param.getUsetime());
+			getSendRules(orderInfo, result);
+			param.setIsusenow(orderInfo.isIsusenow());
+		}
 		//获取预估费用
 		if(null == param.getOrderno()) {
 			orderCost = getOpTaxiOrderCostInEstimated(param);
 			//当前城市有计费规则
 			if(null != orderCost) {
+				if(!param.isIsusenow()){ //预约单要加预约附加费
+					orderCost.setStartprice(orderCost.getStartprice() + orderCost.getReversefee());
+				}
 				if(null == orderCost.getMileage() || null == orderCost.getTimes()) {
 					orderCost.setMileage(0);
 					orderCost.setTimes(0);
 				}
-				
 				if(null == param.getSchedulefee()) {
 					orderCost.setSchedulefee(0);
 				} else {
@@ -1635,12 +1723,14 @@ public class OrderApiService {
 			cancellorder = new TaxiOrderMessage(opTaxiOrder, TaxiOrderMessage.TAXI_CANCELORDER);	
 		}
 		//如果已有司机接单,还需新记录一条司机消息(入库,app需要列出)
-		if(order.getDriverid() != null && !order.getDriverid().isEmpty()){
+		if(pd != null){
 			createDriverNews(order,param);
-			//还需将司机置回空闲
-			pd.setWorkstatus(DriverState.IDLE.code);
-			pd.setUpdateTime(new Date());
-			dao.updatePubDriver(pd);
+			if(DriverState.INSERVICE.code.equals(pd.getWorkstatus())){
+				//还需将司机置回空闲(司机服务中状态才置回空闲,其他状态不变)
+				pd.setWorkstatus(DriverState.IDLE.code);
+				pd.setUpdateTime(new Date());
+				dao.updatePubDriver(pd);
+			}
 		}
 		if(order.getOrderprop() == OrderVarietyEnum.LEASE_NET.icode){ //如果是机构订单,并且是机构支付,还需退回预扣款
 			OrgOrder orgOrder = dao.getOrgOrder(order.getOrderno());
@@ -1669,11 +1759,8 @@ public class OrderApiService {
 		ocp.setUsetype(param.getUsetype());
 		ocp.setOrdertype(param.getOrdertype());
 		ocp.setOrderno(param.getOrderno());
-        if(OrderState.SERVICEDONE.state.equals(param.getOrderstate())) { //订单结束，保存里程计算日志
-            ocp.setLog(true);
-        } else {
-            ocp.setLog(false);
-        }
+		ocp.setLog(true); //订单结束，保存里程计算日志
+		ocp.setOrderprop(order.getOrderprop());
 		JSONObject cost = getOrderCost(ocp);
 		if(cost.has("status")) {
 			result.clear();
@@ -1684,7 +1771,7 @@ public class OrderApiService {
 		//订单完成时保存费用,耗时
 		OrderCost oc = StringUtil.parseJSONToBean(cost.toString(), OrderCost.class);
 		StringUtil.formatOrderCost2Int(oc);   //完成时总费用不保留小数
-		order.setPricecopy(cost.toString());//保存计费副本(其中包含低速时长)
+		order.setPricecopy(cost.toString());     //保存计费副本(其中包含低速时长)
 		order.setOrderamount(oc.getCost());
 		order.setTimecost(oc.getTimecost());
 		order.setRangecost(oc.getRangecost());
@@ -1763,7 +1850,11 @@ public class OrderApiService {
         //订单类型 网约车订单
 		order.setOrderstyle(VehicleEnum.VEHICLE_TYPE_CAR.code);
 		if(OrderState.CANCEL.state.equals(param.getOrderstate())){
-			PubDriver pd = dao.getPubDriverById(order.getDriverid());
+			PubDriver pd = null;
+			//如果司机已接单
+			if(order.getDriverid() != null && !order.getDriverid().isEmpty()){
+				pd = dao.getPubDriverById(order.getDriverid());
+			}
 			ordermessage = orderCancel(order,param,pd);
 			removeDriverMessage(param,pd);
 		}else if(OrderState.SERVICEDONE.state.equals(param.getOrderstate())){
@@ -1818,14 +1909,14 @@ public class OrderApiService {
 	 * @param oid
 	 * @return
 	 */
-	private Map<String,Object> createPeUser(OrderInfoDetail oid,double awardpoint){
+	private Map<String,Object> createPeUser(AbstractOrder order,double awardpoint){
 		Map<String, Object> resultMap = new HashMap<>();
 		String rawpwd = StringUtil.getRandomStr(6, StringUtil.UPPERCASE_HASNUM);
 		PeUser user = new PeUser();
 		user.setId(GUIDGenerator.newGUID());
-		user.setAccount(oid.getPassengerphone());
+		user.setAccount(order.getPassengerphone());
 		user.setUserpassword(PasswordEncoder.encode(rawpwd));
-		user.setNickname(oid.getPassengers());
+		user.setNickname(order.getPassengers());
 		user.setSex("0");
 		user.setSpecialstate("0");
 		user.setUsetimes(0);
@@ -1885,17 +1976,17 @@ public class OrderApiService {
 	 * 获取积分返点比例
 	 * @return
 	 */
-	private double getAwardPoint(OrderInfoDetail oid){
+	private double getAwardPoint(AbstractOrder order){
 		PubDictionary awardPoint = new PubDictionary();
-		if(oid.getOrderprop() == 0){
+		if(order instanceof OrgOrder){
 			awardPoint.setType("机构用户订单支付返还比例");
 		}else{
 			awardPoint.setType("个人用户订单支付返还比例");
 		}
 		awardPoint = dao.getDicByType(awardPoint);
 		if(awardPoint == null) {
-			if(oid.getOrderprop() == 0) return 0.2D;  //默认20%(机构)
-			else return 0.34D;                                       //默认34%(个人)
+			if(order instanceof OrgOrder) return 0.2D;  //默认20%(机构)
+			else return 0.34D;                                            //默认34%(个人)
 		}
 		return Double.parseDouble(String.valueOf(awardPoint.getValue()));
 	}
@@ -1941,9 +2032,9 @@ public class OrderApiService {
 	 * @param oid
 	 * @return
 	 */
-	private double getTakeOffPoint(OrderInfoDetail oid){
+	private double getTakeOffPoint(boolean isorg){
 		PubDictionary takeOffPoint = new PubDictionary();
-		if(oid.getOrderprop() == 0){
+		if(isorg){
 			takeOffPoint.setType("机构用户订单支付折扣比例");
 		}else{
 			takeOffPoint.setType("个人用户订单支付折扣比例");
@@ -1958,17 +2049,18 @@ public class OrderApiService {
 	 * @param oid
 	 * @return 是否需要保存明细(null 不保存)
 	 */
-	private PeUser doAwardPoint(OrderInfoDetail oid){
+	private PeUser doAwardPoint(AbstractOrder order){
 		PeUser user = new PeUser();
 		PeUseraccount userAccount = new PeUseraccount();
-		double awardPoint = getAwardPoint(oid);        //返点比例
-		boolean awardPower = checkCanAward(oid.getOrderamount() * awardPoint);   //返点开关
+		double awardPoint = getAwardPoint(order);        //返点比例
+		double currentAward = order.getOriginalorderamount() * awardPoint;
+		boolean awardPower = checkCanAward(currentAward);   //返点开关
 		if(!awardPower) return null;
-		user.setAccount(oid.getPassengerphone());
+		user.setAccount(order.getPassengerphone());
 		user = dao.getPeUserByPhone(user);
-		if(user == null) {
-			double amount = Math.round(oid.getOrderamount() * awardPoint);
-			Map<String, Object> resultMap = createPeUser(oid,amount);
+		if(user == null && order.getPassengerphone() != null && !order.getPassengerphone().trim().isEmpty()) {
+			double amount = Math.round(currentAward);
+			Map<String, Object> resultMap = createPeUser(order,amount);
 			user = (PeUser)resultMap.get("user");
 			userAccount = (PeUseraccount)resultMap.get("useraccount");
 			userAccount.setBalance(amount);
@@ -1987,25 +2079,14 @@ public class OrderApiService {
 	 * @param orgOrder
 	 * @param ocp
 	 */
-	private void takeOffOrgBalance(OrderInfoDetail order,OrgOrder orgOrder,OrderCostParam ocp){
-		boolean takeOff = checkCanTakeOff();
-		if(takeOff){  //如果折扣开关开启,使用折扣价
-			double takeOffPoint = getTakeOffPoint(order);
-			double amount = Math.round(order.getOrderamount() * takeOffPoint);
-			order.setOrderamount(amount);  //折扣价
-			orgOrder.setOrderamount(amount);
-			orgOrder.setActualpayamount(amount);
-			orgOrder.setShouldpayamount(amount);
-		}
+	private void takeOffOrgBalance(OrgOrder orgOrder,OrderCostParam ocp){
 		ocp.setUserid(orgOrder.getUserid());
-		ocp.setCompanyid(order.getCompanyid());
+		ocp.setCompanyid(orgOrder.getCompanyid());
 		OrgOrganCompanyRef oocr = dao.getOrgBalance(ocp);
 		//这里要先把预估费用加回来,因为在下单时已经按预估费用扣除了可用余额
 		oocr.setBalance(oocr.getBalance() + orgOrder.getEstimatedcost());
 		double orgBalance = oocr.getBalance();
-		double realCost = order.getOrderamount();
-		order.setPaystatus(PayState.MENTED.state);
-		order.setCompletetime(new Date());
+		double realCost = orgOrder.getOrderamount();
 		oocr.setBalance(orgBalance - realCost);
 		dao.updateOrgBalance(oocr);
 	}
@@ -2020,13 +2101,15 @@ public class OrderApiService {
 		//还需要判断是否选择的机构支付
 		if(!PayMethod.ORGAN.code.equals(orgOrder.getPaymethod())) return;
 		if(!order.getUserphone().equals(order.getPassengerphone())){
-			PeUser user = doAwardPoint(order);       //完成时积分返积分(必须先返还,扣款后可能使用折扣)
-			takeOffOrgBalance(order,orgOrder,ocp);  //机构用户扣款(先扣款,明细中要保存打折后)
-			doSavePeUserExpenses(order,user);          //如果需要返积分则保存明细
+			PeUser user = doAwardPoint(orgOrder);       //完成时积分返积分(必须先返还,扣款后可能使用折扣)
+			takeOffOrgBalance(orgOrder,ocp);                 //机构用户扣款(先扣款,明细中要保存打折后)
+			doSavePeUserExpenses(order,user);                //如果需要返积分则保存明细
 		}else{
 			logger.info("下单人与乘车人相同,不返还积分");
-			takeOffOrgBalance(order,orgOrder,ocp);      //机构用户扣款
+			takeOffOrgBalance(orgOrder,ocp);      //机构用户扣款
 		}
+		order.setPaystatus(PayState.MENTED.state);
+		order.setCompletetime(new Date());
 	}
 	
 	/**
@@ -2035,15 +2118,16 @@ public class OrderApiService {
 	 * @param opOrder
 	 */
 	private void doOpPayOrder(OrderInfoDetail order,OpOrder opOrder){
-		boolean takeOff = checkCanTakeOff();
-		if(takeOff){  //如果折扣开关开启,使用折扣价
-			double takeOffPoint = getTakeOffPoint(order);
-			double amount = Math.round(order.getOrderamount() * takeOffPoint);
-			order.setOrderamount(amount);  //折扣价
-			opOrder.setOrderamount(amount);
-			opOrder.setActualpayamount(amount);
-			opOrder.setShouldpayamount(amount);
-		}
+		//获取费用时已经打折,不需要再次打折
+//		boolean takeOff = checkCanTakeOff();
+//		if(takeOff){  //如果折扣开关开启,使用折扣价
+//			double takeOffPoint = getTakeOffPoint(order);
+//			double amount = Math.round(order.getOrderamount() * takeOffPoint);
+//			order.setOrderamount(amount);  //折扣价
+//			opOrder.setOrderamount(amount);
+//			opOrder.setActualpayamount(amount);
+//			opOrder.setShouldpayamount(amount);
+//		}
 	}
 	
 	/**
@@ -2061,7 +2145,7 @@ public class OrderApiService {
 			orgOrder.setOrderamount(oc.getCost());
 			orgOrder.setShouldpayamount(oc.getCost());
 			orgOrder.setActualpayamount(oc.getCost());
-			orgOrder.setOriginalorderamount(oc.getCost());
+			orgOrder.setOriginalorderamount((double)Math.round(oc.getCost()/oc.getDiscount()));
 			orgOrder.setEndtime(order.getEndtime());
 			orgOrder.setUpdatetime(new Date());
 			orgOrder.setOrderstatus(OrderState.SERVICEDONE.state);
@@ -2074,7 +2158,7 @@ public class OrderApiService {
 			opOrder.setOrderamount(oc.getCost());
 			opOrder.setShouldpayamount(oc.getCost());
 			opOrder.setActualpayamount(oc.getCost());
-			opOrder.setOriginalorderamount(oc.getCost());
+			opOrder.setOriginalorderamount((double)Math.round(oc.getCost()/oc.getDiscount()));
 			opOrder.setEndtime(order.getEndtime());
 			opOrder.setUpdatetime(new Date());
 			opOrder.setOrderstatus(OrderState.SERVICEDONE.state);
@@ -2119,7 +2203,7 @@ public class OrderApiService {
 			(OrderState.INSERVICE.state.equals(order.getStatus()) 
 			|| OrderState.SERVICEDONE.state.equals(order.getStatus()))){
 			result.put("status", Retcode.INVALIDORDERSTATUS.code);
-			result.put("message", Retcode.INVALIDORDERSTATUS.msg);
+			result.put("message", "当前订单不可取消");
 			return false;
 		}
 		return true;
@@ -2145,13 +2229,12 @@ public class OrderApiService {
 	public Map<String, Object> cancelOrderRemind(OrderApiParam param) {
 		ObjectMapper objectMapper = new  ObjectMapper();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
-		Jedis jedis = RedisUtil.getJedis();
 		try {
 			if(!param.isRemind()) {
-				Set<String> orderKeys = jedis.keys(RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_PREFIX.code + "*" + param.getOrderid());
+				Set<String> orderKeys = JedisUtil.getKeys(RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_PREFIX.code + "*" + param.getOrderid());
 
 				for(String orderKey : orderKeys) {
-					String orderStr = jedis.get(orderKey);
+					String orderStr = JedisUtil.getString(orderKey);
 					AbstractOrder order = null;
 
 					if(orderKey.indexOf(RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_ORG.code) != -1) {
@@ -2165,8 +2248,8 @@ public class OrderApiService {
 					if(order != null) {
 						order.setLastsendtime(new Date(order.getLastsendtime().getTime() + 1000 * 60 * 60 * 4));
 
-						jedis.set(orderKey, objectMapper.writeValueAsString(order));
-						jedis.expire(orderKey, 1900);
+						JedisUtil.setString(orderKey, objectMapper.writeValueAsString(order));
+						JedisUtil.expire(orderKey, 1900);
 					}
 				}
 
@@ -2179,8 +2262,6 @@ public class OrderApiService {
 			resultMap.put("message", Retcode.FAILED.msg);
 			resultMap.put("error", e.getMessage());
 			logger.error("行程提醒取消异常：", e);
-		} finally {
-			if(jedis != null) RedisUtil.freedResource(jedis);
 		}
 		return resultMap;
 	}
@@ -2412,7 +2493,7 @@ public class OrderApiService {
 	 * @return
 	 */
 	private boolean removeDriverMessage(OrderApiParam param,PubDriver driver){
-		String key = "DriverGrabMessage_*_*_" + param.getOrderno();
+		String key = "DriverGrabMessage_*_*_" + param.getOrderno() + "*";
 		Set<String> keys = JedisUtil.getKeys(key);
 		List<String> phones = new ArrayList<>();
 		for(String k : keys){
@@ -2601,11 +2682,17 @@ public class OrderApiService {
         }
         List<LeAccountRules> accountRuleList = this.dao.findModelPriceByModels(params);
         if ((accountRuleList != null) && (!accountRuleList.isEmpty())) {
-            LeAccountRules accountRules = (LeAccountRules) accountRuleList.get(0);
+            LeAccountRules accountRules = accountRuleList.get(0);
             json.put("rangeprice", accountRules.getRangePrice());
             json.put("startprice", accountRules.getStartPrice());
             json.put("timeprice", accountRules.getTimePrice());
             json.put("timetype", Integer.valueOf(accountRules.getTimeType()));
+            json.put("deadheadmileage", accountRules.getDeadheadmileage());
+            json.put("deadheadprice", accountRules.getDeadheadprice());
+            json.put("nightstarttime", accountRules.getNightstarttime());
+            json.put("nightendtime", accountRules.getNightendtime());
+            json.put("nighteprice", accountRules.getNighteprice());
+            json.put("perhour", accountRules.getPerhour());
             return json.toString();
         }
         return null;
@@ -2620,9 +2707,10 @@ public class OrderApiService {
         param.setCompanyid(order.getCompanyid());
         param.setCity(order.getOncity());
         param.setOrderprop(0);
+		param.setUsetype(order.getUsetype());
 
         JSONObject json = getSendRule(param);
-        long carsinterval = json.getJSONObject("sendrule").getLong("carsInterval") * 60L * 1000L;
+        long carsinterval = json.getJSONObject("sendrule").getLong("carsinterval") * 60L * 1000L;
         long usetime = order.getUsetime().getTime();
         long nowtime = System.currentTimeMillis();
         if (usetime - nowtime > carsinterval) {

@@ -12,7 +12,6 @@ import com.szyciov.carservice.service.OrderApiService;
 import com.szyciov.carservice.service.SendInfoService;
 import com.szyciov.carservice.util.OrderRedisMessageFactory;
 import com.szyciov.carservice.util.sendservice.sendmethod.AbstractSendMethod;
-import com.szyciov.carservice.util.sendservice.sendmethod.CommonService;
 import com.szyciov.carservice.util.sendservice.sendmethod.log.SendLogMessage;
 import com.szyciov.carservice.util.sendservice.sendrules.SendRuleHelper;
 import com.szyciov.carservice.util.sendservice.sendrules.impl.AbstractSendRule;
@@ -411,6 +410,12 @@ public class GrabSingleSendMethodImp extends AbstractSendMethod{
 
 		//初始化预约单查询司机条件
 		SendOrderDriverQueryParam param = getReserveQueryParam(ruleImp,orderinfo);
+		if(!sow){
+			//弱调度需查询下线司机
+			List<String> status = param.getWorkstatus();
+			status.add(DriverEnum.WORK_STATUS_OFFLINE.code);
+			param.setWorkstatus(status);
+		}
 		Map<String,PubDriver> tempdrivers = new HashMap<String,PubDriver>();
 
 		//自主选单循环找司机
@@ -442,7 +447,7 @@ public class GrabSingleSendMethodImp extends AbstractSendMethod{
 				}
 				Thread.sleep(sleeptime*1000);
 			} catch (InterruptedException e) {
-				logger.error("{} 弱调度派单异常！订单编号-【{}】",new String[]{SendLogMessage.getOrderType(this.getClass()),orderinfo.getOrderno()},e);
+				logger.error("{} 弱调度派单异常！订单编号-【{}】",SendLogMessage.getOrderType(this.getClass()),orderinfo.getOrderno(),e);
 			}
 		}
 		if(isOrderTakedOrCancel(orderinfo.getOrderno())){
@@ -454,7 +459,8 @@ public class GrabSingleSendMethodImp extends AbstractSendMethod{
 				//抢单推送一次
 				grabSend2Drivers(ruleImp,orderinfo,alreadydrivers,sow);
 			}catch(Exception e){
-				logger.error("{} 主动推一次异常！订单编号-【{}】",new String[]{SendLogMessage.getOrderType(this.getClass()),orderinfo.getOrderno()},e);
+                e.printStackTrace();
+				logger.error("{} 主动推一次异常！订单编号-【{}】",SendLogMessage.getOrderType(this.getClass()),orderinfo.getOrderno(),e);
 			}
 		}
 		//判断是否有人工派单
@@ -654,7 +660,7 @@ public class GrabSingleSendMethodImp extends AbstractSendMethod{
 		takecashinfo.put("applytime", 0);
 		message.setOrderinfo(orderJson);
 		message.setTakecashinfo(takecashinfo);
-		
+
 		//订单信息转为字符串
 		String value = JSONObject.fromObject(message).toString();
 		for(PubDriver pd : drivers){
@@ -667,21 +673,13 @@ public class GrabSingleSendMethodImp extends AbstractSendMethod{
 		SendLogMessage.saveDriverMessage(logger,this.getClass(),new String[]{orderinfo.getOrderno(),drivers.size()+""});
 	}
 
-	@Override
-	protected List<String> listDriverUnServiceTimes(String driverId) {
-		return sendInfoService.getDriverUnServiceTimesByDay(driverId);
-	}
+
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
 		return sendInfoService.getOpTaxiOrderStatus(orderNo);
 	}
 
-	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		OpTaxiOrder opTaxiOrder =  sendInfoService.getLastReverceOrder4OpTaxiDriver(driverId);
-		return opTaxiOrder;
-	}
 
     /**
      * 订单是否被接走
@@ -727,32 +725,9 @@ public class GrabSingleSendMethodImp extends AbstractSendMethod{
 		return canpushdrivers;
 	}
 
-
-	/**
-	 * 判断司机是否可以派单
-	 * @param driver
-	 * @param order
-	 * @return
-	 */
 	@Override
-	protected  boolean canPush2Driver(PubDriver driver,AbstractOrder order){
-		//司机必须是当班空闲
-		Map<String, Object> pdStatus = messagePubInfoService.getDriverInfo(driver.getId());
-		if(pdStatus==null){
-			return false;
-		}
-		String workstatus = (String) pdStatus.get("workstatus");
-		if(!(DriverState.IDLE.code.equals(workstatus))){
-			return false;
-		}
-		//检查司机的未出行订单和是否有服务中订单
-		OrderListParam olp = new OrderListParam();
-		olp.setType(OrderListEnum.CURRENT.state);
-		olp.setDriverid(driver.getId());
-		//获取出租车订单列表
-		List<OrderInfoDetail> currentOrder = orderApiService.listTaxiOrderInfo(olp);
-
-		return isPush(currentOrder,order);
+	protected List<OrderInfoDetail> listOrderInfo(OrderListParam olp) {
+		return orderApiService.listTaxiOrderInfo(olp);
 	}
 
 	/**

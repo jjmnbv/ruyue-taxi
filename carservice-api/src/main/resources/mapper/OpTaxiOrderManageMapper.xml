@@ -128,6 +128,9 @@
         <if test='null != canceltime and "" != canceltime'>
             , canceltime = #{canceltime}
         </if>
+        <if test='null != belongleasecompany and "" != belongleasecompany'>
+            , belongleasecompany = #{belongleasecompany}
+        </if>
         where
         orderno = #{orderno}
     </update>
@@ -180,4 +183,10 @@
         AND pub_vehicle.vehclineid = pub_vehcline.Id
         AND pub_vehcline.vehcBrandID = pub_vehcbrand.Id
     </select>
+
+    <!-- 根据司机id查询司机详情 -->
+    <select id="getPubDriverById" parameterType="string" resultType="PubDriver">
+        select * from pub_driver where id = #{driverid}
+    </select>
+
 </mapper>

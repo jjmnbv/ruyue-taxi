@@ -5,6 +5,7 @@ import com.szyciov.driver.entity.OrderInfoMessage;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
 import com.szyciov.entity.OrderMessageFactory;
+import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.UserNews;
 import com.szyciov.enums.DriverEnum;
@@ -153,6 +154,12 @@ public class OpTaxiOrderManageService {
             order.setVehclinename(brandCars[1]);
         }
         order.setOrdertime(new Date());
+
+        //更新订单归属车企
+        PubDriver pubDriver = opTaxiOrderManageDao.getPubDriverById(pubVehicle.getDriverId());
+        if(null != pubDriver) {
+            order.setBelongleasecompany(pubDriver.getBelongleasecompany());
+        }
         opTaxiOrderManageDao.updateOpTaxiOrderByOrderno(order);
     }
 

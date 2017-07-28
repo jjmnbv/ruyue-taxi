@@ -1,5 +1,6 @@
 package com.szyciov.carservice.mapper;
 
+import com.szyciov.entity.PubDriver;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxisendrecord;
@@ -25,4 +26,6 @@ public interface OpTaxiOrderManageMapper {
     Map<String, Object> getInServiceOrderByDriver(String driverid);
 
     PubVehicle getById(String id);
+
+    PubDriver getPubDriverById(String driverid);
 }

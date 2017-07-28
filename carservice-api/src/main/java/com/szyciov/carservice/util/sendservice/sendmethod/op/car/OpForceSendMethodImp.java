@@ -1,6 +1,8 @@
 package com.szyciov.carservice.util.sendservice.sendmethod.op.car;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,14 +31,14 @@ import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.PlatformTypeByDb;
 import com.szyciov.enums.SendRulesEnum;
 import com.szyciov.enums.VehicleEnum;
-import com.szyciov.op.entity.OpOrder;
 import com.szyciov.op.entity.PeUser;
 import com.szyciov.param.SendOrderDriverQueryParam;
 import com.szyciov.util.AppMessageUtil;
 import com.szyciov.util.BaiduUtil;
 import com.szyciov.util.GsonUtil;
-import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PushObjFactory;
+import com.szyciov.util.SMMessageUtil;
+import com.szyciov.util.SMSTempPropertyConfigurer;
 import com.szyciov.util.StringUtil;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -566,7 +568,103 @@ public class OpForceSendMethodImp extends AbstractSendMethod  {
 		PushPayload pushobj4android = PushObjFactory.createTaskOrderObj4Android(order, dirphone);
 		//直接发送
 		AppMessageUtil.send(pushobj4ios,pushobj4android,AppMessageUtil.APPTYPE_DRIVER);
-		
+
+		this.sendSMMessage(orderinfo,order,driver,dirphone);
+	}
+
+	/**
+	 * 强派发送短信
+	 * @param orderinfo		订单信息
+	 * @param order			订单对象
+	 * @param driver		司机
+	 * @param dirphone		电话
+	 */
+	private void sendSMMessage(AbstractOrder orderinfo,OrderInfo order,PubDriver driver,List<String> dirphone){
+
+		//个人端出租车订单
+		String passengerphone = orderinfo.getPassengerphone();
+		String onaddress = orderinfo.getOnaddress();
+
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		String usertimestr = format.format(order.getUsetime());
+
+		Map<String,Object> userinfo = messagePubInfoService.getOpUserInfo(orderinfo.getUserid());
+		Map<String,Object> carinfo = messagePubInfoService.getCarInfo(orderinfo.getVehicleid());
+		Map<String,Object> opinfo = messagePubInfoService.getOpInfo();
+
+		if(userinfo!=null&&carinfo!=null&&opinfo!=null){
+			logger.info("获取到相关信息");
+			String driverstr = driver.getName()+"师傅"+driver.getPhone();
+			String carstr = ""+carinfo.get("color")+carinfo.get("vehcbrandname")+carinfo.get("vehclinename")+carinfo.get("plateno");
+			String servicephone = (String) opinfo.get("servcietel");
+
+			String userphone = (String) userinfo.get("account");
+			List<String> userphones = new ArrayList<String>();
+			userphones.add(userphone);
+			if(StringUtils.isNotBlank(passengerphone)&&!passengerphone.equalsIgnoreCase(userphone)){
+				logger.info("乘车人和坐车人不同的消息发送");
+				//乘车人不同
+				String username = (String) userinfo.get("nickname");
+				//模板：您好，{0}为您安排专车于{1}去{2}接您，司机为{3}，{4}。如需帮助可联系{5}(租赁公司简称)
+				String passenggercontent = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.message.ordermessage.takeorder.passenger", username,usertimestr,onaddress,driverstr,carstr,servicephone);
+				List<String> passenggerphones = new ArrayList<String>();
+				passenggerphones.add(passengerphone);
+				SMMessageUtil.send(passenggerphones, passenggercontent);
+				//发送给下单人
+				//模板：预订成功，您为{0}预订的{1}的专车，司机为{2}，{3}，如需帮助可联系{4}(租赁公司简称)
+				String usercontent = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.message.ordermessage.takeorder.user", orderinfo.getPassengers(),usertimestr,driverstr,carstr,servicephone);
+				SMMessageUtil.send(userphones, usercontent);
+			}else{
+				logger.info("乘车人和坐车人相同同的消息发送");
+				//认为相同，只发送userphone
+				//模板：{0}的用车预订成功，将由{1}为您服务，{2}，如需帮助可联系{3}(租赁公司简称)
+				String content = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.message.ordermessage.takeorder.userpassentger", usertimestr,driverstr,carstr,servicephone);
+				SMMessageUtil.send(userphones, content);
+			}
+			//推送给乘客
+			String hintcontent = "用车订单司机已接单，会准时来接您";
+			if(orderinfo.isIsusenow()){
+				hintcontent = "您的即刻"+hintcontent;
+			}else{
+				Date usetime = orderinfo.getUsetime();
+				SimpleDateFormat formatday = new SimpleDateFormat("yyyy-MM-dd");
+				String timestr = formatday.format(usetime);
+				Date servertime = new Date();
+
+				Calendar calender = Calendar.getInstance();
+				calender.setTime(servertime);
+				SimpleDateFormat format2 = new SimpleDateFormat("HH:mm");
+				if(timestr.equals(formatday.format(calender.getTime()))){
+					//今天
+					hintcontent = "今天"+format2.format(usetime)+"的预约"+hintcontent;
+				}else{
+					calender.add(Calendar.DATE, 1);
+					if(timestr.equals(formatday.format(calender.getTime()))){
+						//明天
+						hintcontent = "明天"+format2.format(usetime)+"的预约"+hintcontent;
+					}else{
+						calender.add(Calendar.DATE, 1);
+						if(timestr.equals(formatday.format(calender.getTime()))){
+							//后天
+							hintcontent = "后天"+format2.format(usetime)+"的预约"+hintcontent;
+						}else{
+							//其他时间
+							hintcontent = format.format(usetime)+"的预约"+hintcontent;
+						}
+					}
+				}
+			}
+			List<String> tag_ands = new ArrayList<String>();
+			tag_ands.add("1");
+			PushPayload pushload4ios = PushObjFactory.creatHintOrderStatus4IOS(hintcontent,PushObjFactory.HINT_HAVETAKEORDER,orderinfo.getOrderno(),"0",userphones,tag_ands,orderinfo.getUsetype(),orderinfo.getOrdertype());
+			PushPayload pushload4android = PushObjFactory.creatHintOrderStatus4Android(hintcontent,PushObjFactory.HINT_HAVETAKEORDER,orderinfo.getOrderno(),"0",userphones,tag_ands,orderinfo.getUsetype(),orderinfo.getOrdertype());
+			AppMessageUtil.send(pushload4ios,pushload4android,AppMessageUtil.APPTYPE_PASSENGER);
+			//发消息给司机端
+			String drivername = driver.getName();
+
+			String content = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.message.ordermessage.changedriver.new", drivername,usertimestr,servicephone);
+			SMMessageUtil.send(dirphone, content);
+		}
 	}
 	
 	/**
@@ -708,15 +806,9 @@ public class OpForceSendMethodImp extends AbstractSendMethod  {
 		message.setOrderinfo(orderJson);
 		message.setTakecashinfo(takecashinfo);
 		
-		//订单信息转为字符串
-		String value = JSONObject.fromObject(message).toString();
-		for(PubDriver pd : drivers){
-			String key = "DriverGrabMessage_" + pd.getId() + "_" + pd.getPhone()+"_" + orderinfo.getOrderno();
-			//抢单结束时间比现在时间晚,才保存
-			if(grabEndTime != null && grabEndTime.after(new Date())){
-				JedisUtil.setString(key, (int)((grabEndTime.getTime() - System.currentTimeMillis())/1000), value);
-			}
-		}
+		setDriverMessage(message,orderinfo,drivers,grabEndTime);
+		String[] m = new String[]{orderinfo.getOrderno(),drivers.size()+""};
+		SendLogMessage.saveDriverMessage(logger,this.getClass(),m);
 	}
 
 	/**
@@ -724,22 +816,10 @@ public class OpForceSendMethodImp extends AbstractSendMethod  {
 	 * @param driverId
 	 * @return
 	 */
-	@Override
-	protected  List<String> listDriverUnServiceTimes(String driverId) {
-		return sendInfoService.listCarDriverUnServiceTimes(driverId);
-	}
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
 		return sendInfoService.getOpCarOrderStatus(orderNo);
 	}
 
-	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		List<OpOrder> list =  sendInfoService.listReverceOrders4CarDriver(driverId);
-		if(list!=null&&list.size()>0){
-			return list.get(0);
-		}
-		return null;
-	}
 }

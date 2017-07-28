@@ -98,6 +98,8 @@ public class LeCarSendRuleFactory extends SendRuleFactory{
 		sendrule.setMaxsendradius(ruleinfo.getMaxsendradius());
 		sendrule.setPersonsendinterval(ruleinfo.getPersonsendinterval());
 		sendrule.setPushlimit(ruleinfo.getPushlimit());
+		sendrule.setPushnum(ruleinfo.getPushnum());
+		sendrule.setPushnumlimit(ruleinfo.getPushnumlimit());
 		sendrule.setSendmodel(ruleinfo.getSendmodel()+"");
 		sendrule.setSystemsendinterval(ruleinfo.getSystemsendinterval());
 		sendrule.setUsetype(ruleinfo.getUsetype());

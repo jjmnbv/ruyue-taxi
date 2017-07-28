@@ -1,13 +1,5 @@
 package com.szyciov.carservice.service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.szyciov.carservice.dao.OpOrderApiDao;
 import com.szyciov.carservice.dao.OrderApiDao;
 import com.szyciov.driver.entity.OrderInfoMessage;
@@ -25,8 +17,14 @@ import com.szyciov.op.entity.PubDriver;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
-
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ZF on 2017/5/26.
@@ -156,6 +154,12 @@ public class OpOrderApiService {
             json.put("startprice", accountRules.getStartprice());
             json.put("timeprice", accountRules.getTimeprice());
             json.put("timetype", Integer.valueOf(accountRules.getTimetype()));
+            json.put("deadheadmileage", accountRules.getDeadheadmileage());
+            json.put("deadheadprice", accountRules.getDeadheadprice());
+            json.put("nightstarttime", accountRules.getNightstarttime());
+            json.put("nightendtime", accountRules.getNightendtime());
+            json.put("nighteprice", accountRules.getNighteprice());
+            json.put("perhour", accountRules.getPerhour());
             return json.toString();
         } else {
             return null;

@@ -28,6 +28,16 @@
 	</select>
 	
 	<!-- 根据用户id获取机构用户的相关信息 -->
+	<select id="getOrgUserById" parameterType="String" resultType="OrgUser">
+		SELECT
+			org_user.*
+		FROM
+			org_user
+		WHERE
+			org_user.id = #{userid}
+	</select>
+	
+	<!-- 根据用户id获取机构用户的相关信息 -->
 	<select id="getOrgUserInfo" parameterType="String" resultType="HashMap">
 		SELECT
 			org_user.nickname AS nickname,

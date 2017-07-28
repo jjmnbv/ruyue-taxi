@@ -105,19 +105,10 @@ public class OpCarSystemSingleSendMethodImp  extends AbstractSendMethod {
 
 	}
 
-	@Override
-	protected List<String> listDriverUnServiceTimes(String driverId) {
-		return null;
-	}
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
 		return sendInfoService.getOpCarOrderStatus(orderNo);
-	}
-
-	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		return null;
 	}
 
 	/**

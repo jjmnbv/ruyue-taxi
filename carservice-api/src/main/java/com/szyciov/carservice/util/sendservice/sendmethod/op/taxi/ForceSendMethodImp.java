@@ -24,6 +24,7 @@ import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.enums.DriverMessageEnum;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.PayState;
+import com.szyciov.driver.param.OrderListParam;
 import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
@@ -731,7 +732,7 @@ public class ForceSendMethodImp extends AbstractSendMethod{
 		takecashinfo.put("applytime", 0);
 		message.setOrderinfo(orderJson);
 		message.setTakecashinfo(takecashinfo);
-		
+
 		//订单信息转为字符串
 		String value = JSONObject.fromObject(message).toString();
 		for(PubDriver pd : drivers){
@@ -743,10 +744,6 @@ public class ForceSendMethodImp extends AbstractSendMethod{
 		}
 	}
 
-	@Override
-	protected List<String> listDriverUnServiceTimes(String driverId) {
-		return sendInfoService.getDriverUnServiceTimesByDay(driverId);
-	}
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
@@ -754,11 +751,9 @@ public class ForceSendMethodImp extends AbstractSendMethod{
 	}
 
 	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		OpTaxiOrder opTaxiOrder =  sendInfoService.getLastReverceOrder4OpTaxiDriver(driverId);
-		return opTaxiOrder;
+	protected List<OrderInfoDetail> listOrderInfo(OrderListParam olp) {
+		return orderApiService.listTaxiOrderInfo(olp);
 	}
-
 	/**
 	 * 返回预约单查询条件
 	 * @param rule

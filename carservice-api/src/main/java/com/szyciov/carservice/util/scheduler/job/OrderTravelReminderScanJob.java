@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import com.szyciov.util.JedisUtil;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.quartz.DisallowConcurrentExecution;
@@ -29,9 +30,6 @@ import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.org.entity.OrgOrder;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
-import com.szyciov.util.RedisUtil;
-
-import redis.clients.jedis.Jedis;
 
 /**
  * 待出发订单提醒任务
@@ -53,7 +51,6 @@ public class OrderTravelReminderScanJob extends QuartzJobBean{
 
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-		Jedis jedis = RedisUtil.getJedis();
 		try {
 			Date currentDate = new Date();
 			Calendar calendar = Calendar.getInstance(); 
@@ -67,37 +64,34 @@ public class OrderTravelReminderScanJob extends QuartzJobBean{
 			
 			for(OrgOrder order : orgOrderList) {
 				String redisKey = RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_ORG.code + order.getOrderno();
-				if(!jedis.exists(redisKey)) {
+				if(!JedisUtil.exists(redisKey)) {
                     String orderStr = objectMapper.writeValueAsString(order);
-					jedis.set(redisKey, orderStr);
-					jedis.expire(redisKey, 1900);
+					JedisUtil.setString(redisKey, 1900, orderStr);
 				}
 			}
 			
 			for(OpOrder order : opOrderList) {
 				String redisKey = RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_OP.code + order.getOrderno();
-				if(!jedis.exists(redisKey)) {
+				if(!JedisUtil.exists(redisKey)) {
 					String orderStr = objectMapper.writeValueAsString(order);
-					jedis.set(redisKey, orderStr);
-					jedis.expire(redisKey, 1900);
+					JedisUtil.setString(redisKey, 1900, orderStr);
 				}
 			}
 
             for(OpTaxiOrder order : opTaxiOrderList) {
                 String redisKey = RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_OPTAXI.code + order.getOrderno();
-                if(!jedis.exists(redisKey)) {
+                if(!JedisUtil.exists(redisKey)) {
 					String orderStr = objectMapper.writeValueAsString(order);
-					jedis.set(redisKey, orderStr);
-					jedis.expire(redisKey, 1900);
+					JedisUtil.setString(redisKey, 1900, orderStr);
                 }
             }
 
 			
 			Set<String> travelReminderSet =
-					jedis.keys(RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_PREFIX.code + "*");
+				JedisUtil.getKeys(RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_PREFIX.code + "*");
 			
 			for(String travelReminderOrderno : travelReminderSet) {
-				String orderStr = jedis.get(travelReminderOrderno);
+				String orderStr = JedisUtil.getString(travelReminderOrderno);
 				AbstractOrder order = null;
 				try {
                     if(travelReminderOrderno.indexOf(RedisKeyEnum.MESSAGE_TRAVEL_REMINDER_ORG.code) != -1) {
@@ -109,7 +103,6 @@ public class OrderTravelReminderScanJob extends QuartzJobBean{
                 } catch (Exception e) {
 				    logger.error("订单解析异常：", e);
                 }
-
 
 				if(order == null) break;
 				
@@ -130,16 +123,13 @@ public class OrderTravelReminderScanJob extends QuartzJobBean{
 					
 					logger.warn("行程提醒发送成功：" + order.getOrderno());
 
-					jedis.set(travelReminderOrderno, objectMapper.writeValueAsString(order));
-					jedis.expire(travelReminderOrderno, 1900);
+					JedisUtil.setString(travelReminderOrderno, 1900, objectMapper.writeValueAsString(order));
 				}
 			
 			}
 			
 		} catch (Exception e) {
 			logger.error("待出发订单提醒任务执行失败", e);
-		} finally {
-			if(jedis != null) RedisUtil.freedResource(jedis);
 		}
 	}
 	

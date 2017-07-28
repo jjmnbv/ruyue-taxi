@@ -1,6 +1,7 @@
 package com.szyciov.carservice.dao;
 
 import com.szyciov.carservice.mapper.OpTaxiOrderManageMapper;
+import com.szyciov.entity.PubDriver;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxisendrecord;
@@ -45,6 +46,10 @@ public class OpTaxiOrderManageDao {
 
     public PubVehicle getById(String id) {
         return opTaxiOrderManageMapper.getById(id);
+    }
+
+    public PubDriver getPubDriverById(String driverid) {
+        return opTaxiOrderManageMapper.getPubDriverById(driverid);
     }
 
 }
