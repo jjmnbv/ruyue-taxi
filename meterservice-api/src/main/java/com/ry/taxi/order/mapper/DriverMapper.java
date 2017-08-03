@@ -3,6 +3,9 @@
  */
 package com.ry.taxi.order.mapper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 
 import com.ry.taxi.order.domain.Oporderpaymentrecord;
@@ -48,6 +51,22 @@ public interface DriverMapper {
 	 * 更新司机电话号码
 	 */
 	int updateDriverphone(@Param("id")String id, @Param("phone")String phone);
+	
+	/*
+	 * 插入司机
+	 */
+	int insertDriver(PubDriver driver);
+	
+	/*
+	 * 查询所有司机
+	 */
+	ArrayList<PubDriver> selectAllDriver();
+	
+	/*
+	 * 批量插入司机
+	 */
+	
+	int insertBatch(List<PubDriver> list);
 	
 	
 }

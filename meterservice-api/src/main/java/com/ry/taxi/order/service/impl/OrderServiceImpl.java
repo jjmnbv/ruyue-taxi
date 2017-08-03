@@ -40,6 +40,7 @@ import com.szyciov.driver.enums.PayState;
 import com.szyciov.entity.Retcode;
 import com.szyciov.message.TaxiOrderMessage;
 import com.szyciov.passenger.util.MessageUtil;
+import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.UNID;
 import com.xunxintech.ruyue.coach.io.date.DateUtil;
 
@@ -80,27 +81,32 @@ public class OrderServiceImpl implements OrderService {
 			return ErrorEnum.e3014.getValue();//订单状态不正确
 		//2.根据司机资格证,查询司机信息
 		PubDriver driver =  driverMapper.getDriverByJobNum(param.getCertNum());
-		logger.info("doTakingOrder,param:{},driver:{}",param, driver);
-		//系统若没有司机信
 		if(driver == null){
-			return ErrorEnum.e3017.getValue();//获取司机信息失败
+			driver = new PubDriver();
+			driver.setId(GUIDGenerator.newGUID());
+			driver.setJobnum(param.getCertNum());
+			driver.setPhone(param.getMobile());
+			driver.setWorkstatus("1");
+			driver.setVehicletype("1");
+			int insertCount = driverMapper.insertDriver(driver);
+			if (insertCount <= 0)
+				return ErrorEnum.e3017.getValue();//订单不存在
+		}else{
+			//更改司机电话
+			if(!StringUtils.equals(driver.getPhone(), param.getMobile())){
+				driverMapper.updateDriverphone(driver.getId(), param.getMobile());
+			}
 		}
+		
+		logger.info("doTakingOrder,param:{},driver:{}",param, driver);
 		taxiOrder.setOrderstatus(OrderState.WAITSTART.state);
 		taxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.WAITSTART.state));
 		taxiOrder.setOrdertime(new Date());
 		taxiOrder.setPaymentstatus(PayState.ALLNOPAY.state);
-		taxiOrder.setCompanyid(driver.getLeasescompanyid());
 		taxiOrder.setDriverid(driver.getId());
-		taxiOrder.setVehicleid(driver.getVehicleid());
 		taxiOrder.setPlateno(param.getPlateNum());
-		taxiOrder.setVehcbrandname(driver.getCarbrand());
-		taxiOrder.setVehclinename(driver.getCarvehcline());
 		taxiOrder.setBelongleasecompany(driver.getBelongleasecompany());
 		
-		//更改司机电话
-		if(!StringUtils.equals(driver.getPhone(), param.getMobile())){
-			driverMapper.updateDriverphone(driver.getId(), param.getMobile());
-		}
 		
 		int updateResult = opTaxiOrderMapper.updateTakingOrder(taxiOrder);
 		if (updateResult == 0)

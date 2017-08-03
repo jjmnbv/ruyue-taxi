@@ -85,5 +85,10 @@ public class PubDriver {
 	 * 纬度
 	 */
 	private Double lat;
+	
+	/**
+	 * '0-网约车，1-出租车',
+	 */
+	private String vehicletype;
 
 }
