@@ -15,5 +15,6 @@ service:
   company:
     code: RY
     key: SLj16Qq7FK9nbyi4
+    open-token: dsjjaAGJDJ224JD
 server:
   port: 8098

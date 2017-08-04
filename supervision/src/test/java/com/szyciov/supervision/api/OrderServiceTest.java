@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.supervision.api.order.*;
 import com.supervision.enums.CommandEnum;
 import com.supervision.enums.InterfaceType;
+import com.szyciov.supervision.config.CacheHelper;
 import com.szyciov.supervision.enums.RequestType;
 import com.szyciov.supervision.token.service.TokenService;
 import com.szyciov.supervision.util.BasicRequest;
@@ -139,13 +140,14 @@ public class OrderServiceTest extends ApiServiceTest {
         list.add(orderSupplementsRequest);
 
 
-        String token = "RY";
+        String token = CacheHelper.getOpenToken()+"1";
         EntityInfoList infoList = new EntityInfoList(list);
         String result = JSONUtil.toJackson(infoList);
         CommandEnum commandEnum = list.get(0).getCommand();
         InterfaceType interfaceType = list.get(0).getApiType();
         BasicRequest req = new BasicRequest(result, interfaceType, commandEnum, RequestType.REQ, token);
-        HttpContent httpContent=gzwycApi.sendMsg("http://localhost:8098/api/order/supplements",req,false);
+//http://120.76.199.119:8098/api/order/supplements
+        HttpContent httpContent=gzwycApi.sendMsg("http://120.76.199.119:8098/api/order/supplements",req,false);
         System.out.println("响应内容："+httpContent);
 
 

@@ -118,11 +118,11 @@ public class GzwycApi {
         in = new ByteArrayInputStream(paramStr.getBytes(Consts.UTF_8.name()));
         String md5 = hash(in);
         if(!md5.equals(httpServletRequest.getHeader(BINFILE_MD5))){
-            return new HttpContent(999,"md5签名错误:"+md5+"|"+httpServletRequest.getHeader(BINFILE_MD5));
+            return new HttpContent(998,"md5签名错误:"+md5+"|"+httpServletRequest.getHeader(BINFILE_MD5));
         }
-        if(!CacheHelper.getCompanyId().equals(httpServletRequest.getHeader(BINFILE_AUTH))){
-            return new HttpContent(999,"平台标识错误！");
-        }
+//        if(!CacheHelper.getOpenToken().equals(httpServletRequest.getHeader(BINFILE_AUTH))){
+//            return new HttpContent(999,"平台的标识错误！");
+//        }
 
         return  new HttpContent(200,paramStr);
 

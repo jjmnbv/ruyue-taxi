@@ -19,6 +19,8 @@ public class CacheHelper implements InitializingBean{
 
     private@Value("${service.company.key}") String key;
 
+    public @Value("${service.company.open-token}") String openToken;
+
     private@Value("${spring.http.timeout.connect:60000}") int connectTimeout;
 
     private@Value("${spring.http.timeout.socket:60000}") int socketTimeout;
@@ -37,6 +39,7 @@ public class CacheHelper implements InitializingBean{
         p_serviceUrl = serverUrl;
         p_companyId = companyId;
         p_key = key;
+        p_openToken=openToken;
         HttpClientUtil.initHttpClient(socketTimeout,connectTimeout,writeTimeout,null,maxRequests, maxRequestsPerHost, compression);
     }
 
@@ -44,6 +47,7 @@ public class CacheHelper implements InitializingBean{
     private static String p_serviceUrl;
     private static String p_companyId;
     private static String p_key;
+    private static String p_openToken;
     public static String getServiceUrl(){
         return p_serviceUrl;
     }
@@ -52,6 +56,10 @@ public class CacheHelper implements InitializingBean{
     }
     public static String getKey(){
         return p_key;
+    }
+
+    public static String getOpenToken(){
+        return p_openToken;
     }
 
 }
