@@ -218,6 +218,9 @@ public class OrderManageDao {
 	
 	public PubDriver getPubDriver(String id){
 		return mapper.getPubDriver(id);
-		
 	}
+
+	public void updatePubDriverLeisure(String driverid) {
+        mapper.updatePubDriverLeisure(driverid);
+    }
 }

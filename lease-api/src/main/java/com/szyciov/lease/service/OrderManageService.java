@@ -1,5 +1,16 @@
 package com.szyciov.lease.service;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import com.szyciov.driver.entity.OrderInfoMessage;
 import com.szyciov.driver.enums.ReviewState;
 import com.szyciov.driver.param.OrderCostParam;
@@ -7,6 +18,7 @@ import com.szyciov.entity.OrderCost;
 import com.szyciov.entity.OrderMessageFactory;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.UserNews;
+import com.szyciov.enums.SendRulesEnum;
 import com.szyciov.lease.dao.OrderManageDao;
 import com.szyciov.lease.dao.SendRulesDao;
 import com.szyciov.lease.entity.LeAccountRules;
@@ -26,6 +38,7 @@ import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
+import com.szyciov.util.Constants;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.StringUtil;
@@ -36,16 +49,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 @Service("orderManageService")
 public class OrderManageService {
@@ -250,6 +253,11 @@ public class OrderManageService {
 		PubSendRules sendRules = new PubSendRules();
 		sendRules.setLeasesCompanyId(queryParam.getLeasescompanyid());
 		sendRules.setCity(queryParam.getOncity());
+        if(order.isIsusenow()) {
+            sendRules.setUseType(1);
+        } else {
+            sendRules.setUseType(0);
+        }
 		List<PubSendRules> sendRulesList = this.sendRulesDao.getSendRulesList(sendRules);
 		if ((sendRulesList != null) && (!sendRulesList.isEmpty())) {
 			models = sendRulesList.get(0).getVehicleUpgrade() + "";
@@ -263,7 +271,7 @@ public class OrderManageService {
 		if ((list != null) && (!list.isEmpty())) {
 			Iterator<Map<String, Object>> ite = list.iterator();
 			while (ite.hasNext()) {
-				Map<String, Object> map = (Map<String, Object>) ite.next();
+				Map<String, Object> map = ite.next();
 				BaiduApiQueryParam baiduparam = new BaiduApiQueryParam();
 				baiduparam.setOrderStartLat(queryParam.getOrderLat());
 				baiduparam.setOrderStartLng(queryParam.getOrderLon());
@@ -277,16 +285,15 @@ public class OrderManageService {
 				} else {
 					baiduparam.setOrderEndLng(0.0D);
 				}
-				Map<String, Object> hintMap = (Map<String, Object>) this.templateHelper.dealRequestWithFullUrlToken(
-						SystemConfig.getSystemProperty("carserviceApi") + "/BaiduApi/GetMileageInfo", HttpMethod.POST,
-						null, baiduparam, Map.class);
-				if ((hintMap != null) && (((Integer) hintMap.get("status")).intValue() == Retcode.OK.code)) {
-					map.put("distance", hintMap.get("distance"));
-					map.put("duration", hintMap.get("duration"));
-				} else {
-					map.put("distance", Integer.valueOf(0));
-					map.put("duration", Integer.valueOf(0));
-				}
+                //计算预估距离和时间
+				double distance = LatLonUtil.getDistance(baiduparam.getOrderStartLng(), baiduparam.getOrderStartLat(), baiduparam.getOrderEndLng(), baiduparam.getOrderEndLat());
+                map.put("distance", distance);
+                if(distance == 0) {
+                    map.put("duration", 0);
+                } else {
+                    double duration = distance / 1000 / Constants.SPEED * 60 * 60; //到达时间
+                    map.put("duration", Math.ceil(duration));
+                }
 			}
 		}
 		int iTotalRecords = this.orderManageDao.getOrgDriverCountByQuery(queryParam);
@@ -675,7 +682,7 @@ public class OrderManageService {
 				resultMap.put("message", "所指派服务车型计费规则不存在，建议选择“按下单车型计费”或指派其他司机");
 				return resultMap;
 			}
-			Boolean isusenow = getOrderIsUseNow(order);
+			Boolean isusenow = order.isIsusenow();
 			if (isusenow == null) {
 				params.put("isusenow", order.isIsusenow());
 			}
@@ -694,6 +701,12 @@ public class OrderManageService {
 			driverchanges.setChargemodel(chargemodel);
 			this.orderManageDao.insertOrgDriverchanges(driverchanges);
 			int result = this.orderManageDao.changeOrgDriver(params);
+
+            //如果订单状态不是待出发时，修改原司机为空闲状态
+            if(!order.getOrderstatus().equals("2")) {
+                orderManageDao.updatePubDriverLeisure(order.getDriverid());
+            }
+
 			PubDriver driver = orderManageDao.getPubDriver(newdriverid);
 			//更新车辆基本信息
 			updateOrgOrderVehicleInfo(orderno,driver.getBelongleasecompany());
@@ -894,11 +907,17 @@ public class OrderManageService {
 		}
 		List<LeAccountRules> accountRuleList = this.orderManageDao.findModelPriceByModels(params);
 		if ((accountRuleList != null) && (!accountRuleList.isEmpty())) {
-			LeAccountRules accountRules = (LeAccountRules) accountRuleList.get(0);
+			LeAccountRules accountRules = accountRuleList.get(0);
 			json.put("rangeprice", accountRules.getRangePrice());
 			json.put("startprice", accountRules.getStartPrice());
 			json.put("timeprice", accountRules.getTimePrice());
 			json.put("timetype", Integer.valueOf(accountRules.getTimeType()));
+            json.put("deadheadmileage", accountRules.getDeadheadmileage());
+            json.put("deadheadprice", accountRules.getDeadheadprice());
+            json.put("nightstarttime", accountRules.getNightstarttime());
+            json.put("nightendtime", accountRules.getNightendtime());
+            json.put("nighteprice", accountRules.getNighteprice());
+            json.put("perhour", accountRules.getPerhour());
 			return json.toString();
 		}
 		return null;
@@ -924,6 +943,7 @@ public class OrderManageService {
 		GetSendInfoParam param = new GetSendInfoParam();
 		param.setCompanyid(order.getCompanyid());
 		param.setCity(order.getOncity());
+        param.setUsetype(SendRulesEnum.USETYPE_APPOINTMENT.code);
 		param.setOrderprop(0);
 		JSONObject json = (JSONObject) this.templateHelper.dealRequestWithFullUrlToken(
 				SystemConfig.getSystemProperty("carserviceApi") + "/OrderApi/GetSendRule", HttpMethod.POST, null, param,
@@ -932,13 +952,17 @@ public class OrderManageService {
 			return null;
 		}
 		if (json.getInt("status") == Retcode.OK.code) {
-			long carsinterval = json.getJSONObject("sendrule").getLong("carsInterval") * 60L * 1000L;
-			long usetime = order.getUsetime().getTime();
-			long nowtime = System.currentTimeMillis();
-			if (usetime - nowtime > carsinterval) {
-				return Boolean.valueOf(false);
-			}
-			return Boolean.valueOf(true);
+            if(json.containsKey("sendrule") && null != json.get("sendrule")) {
+                long carsinterval = json.getJSONObject("sendrule").getLong("carsInterval") * 60L * 1000L;
+                long usetime = order.getUsetime().getTime();
+                long nowtime = System.currentTimeMillis();
+                if (usetime - nowtime > carsinterval) {
+                    return Boolean.valueOf(false);
+                }
+                return Boolean.valueOf(true);
+            } else {
+                return true;
+            }
 		}
 		return null;
 	}

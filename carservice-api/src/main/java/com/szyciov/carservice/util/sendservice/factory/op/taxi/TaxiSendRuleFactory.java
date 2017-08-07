@@ -108,7 +108,7 @@ public class TaxiSendRuleFactory extends SendRuleFactory{
 		sendrule.setMaxsendradius(parseDouble(ruleinfo.get("maxsendradius")));
 		sendrule.setPersonsendinterval(parseInt(ruleinfo.get("personsendinterval")));
 		sendrule.setPushlimit((String) ruleinfo.get("pushlimit"));
-		sendrule.setPushnum((Integer)ruleinfo.get("pushnum"));
+		sendrule.setPushnum(parseInt(ruleinfo.get("pushnum")));
 		sendrule.setPushnumlimit((String) ruleinfo.get("pushnumlimit"));
 		sendrule.setSendmodel((String) ruleinfo.get("sendmodel"));
 		sendrule.setSystemsendinterval(parseInt(ruleinfo.get("systemsendinterval")));

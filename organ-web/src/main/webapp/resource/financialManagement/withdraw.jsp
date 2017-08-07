@@ -23,7 +23,7 @@
   <script type="text/javascript" src="content/js/jquery.js"></script>
   <script type="text/javascript" src="content/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
   <script type="text/javascript" src="content/js/common.js"></script>
-  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+  <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
   <script type="text/javascript" src="content/plugins/jquery-validate/js/jquery.validate.js"></script>
   <script type="text/javascript" src="content/plugins/toastr/toastr.min.js"></script>
   <script type="text/javascript" src="js/basecommon.js"></script>

@@ -136,7 +136,9 @@
 			var vmsApiUrl = "<%=vmsApiUrl%>";
 			var apikey="<%=apikey%>";
 			var echoplate="${plate}";//回显车牌
+			var echoVehcId="${vehcId}";//回显车辆Id
 			var echoeqpId="${eqpId}";//回显设备Id
+			var echoImei="${imei}";//回显设备IMEI
 			var echostartTime="${startTime}";
 			var echoendTime="${endTime}";
 			
@@ -311,9 +313,9 @@
 			                                    <label class="radio-inline">
 			                                        <span><input type="radio" name="optionsRadios" id="gj" value="1" checked="checked"></span>导出轨迹
 			                                    </label>
-			                                    <label class="radio-inline">
+			                                    <!-- <label class="radio-inline">
 			                                        <span><input type="radio" name="optionsRadios" id="xc" value="2"></span>导出行程
-			                                    </label>
+			                                    </label> -->
 			                                </div>
 			                            </div>
 			                        </div>
@@ -354,7 +356,7 @@
 			    </div>
 			</div>
 		</div>
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 		<script type="text/javascript" src="js/vehicleTrajectory/index.js??ver=<%=Math.random()%>"></script>
 		<script type="text/javascript" src="js/vehicleTrajectory/directiontranslate.js"></script>
 	</body>

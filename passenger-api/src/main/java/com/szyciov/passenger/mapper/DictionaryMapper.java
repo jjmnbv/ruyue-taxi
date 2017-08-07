@@ -59,4 +59,6 @@ public interface DictionaryMapper {
     Map<String,Object> getZKOnOff();
 
 	Map<String,Object> getZKInfo(Map<String, Object> params);
+
+    Map<String,Object> getYYFJF(Map<String, Object> params);
 }

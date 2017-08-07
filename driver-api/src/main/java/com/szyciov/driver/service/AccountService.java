@@ -70,6 +70,7 @@ import com.szyciov.util.FileUtil;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PasswordEncoder;
+import com.szyciov.util.RSAUtil;
 import com.szyciov.util.SMSTempPropertyConfigurer;
 import com.szyciov.util.StringUtil;
 import com.szyciov.util.SystemConfig;
@@ -121,6 +122,9 @@ public class AccountService extends BaseService{
 	 */
 	public JSONObject login(LoginParam param) {
 		String[] require = new String[]{"mobile","password","logintype"};
+		if(DriverEnum.LOGIN_TYPE_SMS.code.equals(param.getLogintype() + "")){
+			require = new String[]{"mobile","password","logintype","errorTimesSign"};
+		}
 		if(!checkeParam(param,getExceptElement(param, require, false))) {
 			return errorResult.get();
 		}
@@ -182,15 +186,10 @@ public class AccountService extends BaseService{
 	 * @return
 	 */
 	public JSONObject sendSMS(SendSMSParam param) {
-		String[] require = new String[]{"type","mobile"};
-		String[] exc = new String[]{};
+		String[] require = new String[]{"type","mobile","sendCodeTimesSign"};
 		//如果是登录发送短信去掉token验证
-		if(DriverEnum.SMS_TYPE_LOGIN.code.equals(param.getType())){
-			exc = getExceptElement(param, require, false);
-		}else{
-			exc = getExceptElement(param, require);
-		}
-		if(!checkeParam(param,exc)) return errorResult.get();
+		boolean checkToken = !DriverEnum.SMS_TYPE_LOGIN.code.equals(param.getType());
+		if(!checkeParam(param,getExceptElement(param, require, checkToken))) return errorResult.get();
 		//发送短信验证码
 		if(!doSendSMS(param)) return errorResult.get();
 		
@@ -515,6 +514,7 @@ public class AccountService extends BaseService{
 		if(smsToken == null || !param.getPassword().equals(smsToken.getSmscode())){
 			errorResult.get().put("status", Retcode.SMSCODEINVALID.code);
 			errorResult.get().put("message", Retcode.SMSCODEINVALID.msg);
+			doSaveErrorTimes(param);
 		//如果验证码超时则提示超时
 		}else if (System.currentTimeMillis() - smsToken.getUpdatetime().getTime() > SMS_CODE_OVER_TIME) {
 			errorResult.get().put("status", Retcode.SMSCODEOUTTIME.code);
@@ -528,6 +528,28 @@ public class AccountService extends BaseService{
 		}
 		logger.info("校验短信验证码失败");
 		return false;
+	}
+	
+	/**
+	 * 保存验证码错误次数
+	 * @param param
+	 */
+	private void doSaveErrorTimes(LoginParam param){
+		String account = driver.get().getPhone();
+		try{
+			boolean shouldsetexpire = false;
+			if(StringUtils.isBlank(JedisUtil.getString(RedisKeyEnum.SMS_DRIVER_LOGIN_ERRORTIMES.code+account))){
+				shouldsetexpire = true;
+			}
+			JedisUtil.getFlowNO(RedisKeyEnum.SMS_DRIVER_LOGIN_ERRORTIMES.code+account);
+			if(shouldsetexpire){
+				String smscodeerrorouttimestr = SystemConfig.getSystemProperty("smscodeerrorouttime","5");
+				int smscodeerrorouttime = parseInt(smscodeerrorouttimestr)<=0?5:parseInt(smscodeerrorouttimestr);
+				JedisUtil.expire(RedisKeyEnum.SMS_DRIVER_LOGIN_ERRORTIMES.code+account,smscodeerrorouttime*60);
+			}
+		}catch (Exception e){
+			logger.error("记录redis错误次数失败",e);
+		}
 	}
 	
 	/**
@@ -627,8 +649,15 @@ public class AccountService extends BaseService{
 		logger.info("变更司机密码开始...");
 		logger.info("使用参数:" + JSONObject.fromObject(param));
 		PubDriver pd =  driver.get();
-		//加密后
-		String encodePass= PasswordEncoder.encode(param.getPassword());
+		String encodePass = null;
+		if(param.isEncrypted()){
+			//RSA解密密码
+			String rawPass = RSAUtil.RSADecode(param.getPassword());
+			//密码明文MD5值
+			encodePass= PasswordEncoder.encode(rawPass);
+		}else{
+			encodePass= PasswordEncoder.encode(param.getPassword());
+		}
 		//根据类型改变对应密码
 		if(DriverEnum.PASSWORD_TYPE_LOGINPASS.code.equals(param.getType()+"")){
 			pd.setUserpassword(encodePass);
@@ -651,7 +680,15 @@ public class AccountService extends BaseService{
 		logger.info("使用参数:" + JSONObject.fromObject(param));
 		boolean valid = false;
 		PubDriver pd =  driver.get();
-		String encodePass= PasswordEncoder.encode(param.getPassword());
+		String encodePass = null;
+		if(param.isEncrypted()){
+			//RSA解密密码
+			String rawPass = RSAUtil.RSADecode(param.getPassword());
+			//密码明文MD5值
+			encodePass= PasswordEncoder.encode(rawPass);
+		}else{
+			encodePass= PasswordEncoder.encode(param.getPassword());
+		}
 		//根据类型校验对应密码,如果提现密码未修改过,当做登录密码校验
 		if(DriverEnum.PASSWORD_TYPE_LOGINPASS.code.equals(param.getType()+"")){
 			valid = pd.getUserpassword().equals(encodePass);
@@ -1183,8 +1220,15 @@ public class AccountService extends BaseService{
 	 */
 	private boolean checkLoginPass(LoginParam param){
 		logger.info("检查用户密码是否正确...");
-		//加密后
-		String encodePass= PasswordEncoder.encode(param.getPassword());
+		String encodePass = null;
+		if(param.isEncrypted()){
+			//RSA解密密码
+			String rawPass = RSAUtil.RSADecode(param.getPassword());
+			//密码明文MD5值
+			encodePass= PasswordEncoder.encode(rawPass);
+		}else{
+			encodePass= PasswordEncoder.encode(param.getPassword());
+		}
 		if(!driver.get().getUserpassword().equals(encodePass)){
 			errorResult.get().put("status", Retcode.PASSWORDWRONG.code);
 			errorResult.get().put("message", Retcode.PASSWORDWRONG.msg);
@@ -1543,4 +1587,74 @@ public class AccountService extends BaseService{
     	this.ordertype.set(OrderEnum.getOrderType(ordertype));
     	return this.ordertype.get() != null;
     }
+    
+    /**
+     * 检查验证码错误次数
+     * @param param
+     * @return
+     */
+    @ValidateRule(msg="验证码错误次数超限")
+	private boolean checkErrorTimes(boolean errorTimesSign){
+		String phone = driver.get().getPhone();
+		try{
+			String smscodeerrortimesstr = SystemConfig.getSystemProperty("smscodeerrortimes","5");
+			int smscodeerrortimes = parseInt(smscodeerrortimesstr)<=0?5:parseInt(smscodeerrortimesstr);
+			String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_DRIVER_LOGIN_ERRORTIMES.code+phone);
+			//redis错误次数是5，就直接返回false
+			if(parseInt(errortimes)>=smscodeerrortimes){
+				errorResult.get().put("status", Retcode.SMSCODEINVALID.code);
+				errorResult.get().put("message", Retcode.SMSCODEINVALID.msg);
+				return false;
+			}
+		}catch (Exception e){
+			logger.error("获取错误次数",e);
+		}
+		return true;
+	}
+    
+    /**
+     * 检查验证码获取次数
+     * @param sendCodeTimesSign
+     * @return
+     */
+    @ValidateRule(msg="验证码获取次数超限")
+    private boolean checkSendCodeTimes(boolean sendCodeTimesSign){
+    	String phone = driver.get().getPhone();
+    	try{
+			String smscodeouttimestr = SystemConfig.getSystemProperty("smscodeouttime","5");
+			int smscodeouttime = parseInt(smscodeouttimestr)<=0?5:parseInt(smscodeouttimestr);
+
+			String smscodetimesintimestr = SystemConfig.getSystemProperty("smscodetimesintime","5");
+			int smscodetimesintime = parseInt(smscodetimesintimestr)<=0?5:parseInt(smscodetimesintimestr);
+			String value = JedisUtil.getString(RedisKeyEnum.SMS_DRIVER_LOGIN.code+phone);
+			double gettimes = parseInt(value);
+			if(gettimes>=smscodetimesintime){
+				//获取次数超限
+				errorResult.get().put("status", Retcode.SENDSMSTOOOFTEN.code);
+				errorResult.get().put("message", Retcode.SENDSMSTOOOFTEN.msg);
+				return false;
+			}else{
+				//没有超限要递增
+				JedisUtil.getFlowNO(RedisKeyEnum.SMS_DRIVER_LOGIN.code+phone);
+				if(gettimes<=0){
+					JedisUtil.expire(RedisKeyEnum.SMS_DRIVER_LOGIN.code+phone,smscodeouttime*60);
+				}
+			}
+		}catch (Exception e){
+			logger.error("redis控制获取验证码次数失败了",e);
+		}
+    	return true;
+    }
+    /**********************************************************工具方法***************************************************************/
+    /**
+     * 转换为int
+     * @param value
+     * @return
+     */
+	private int parseInt(Object value){
+		if(value==null||"".equalsIgnoreCase(String.valueOf(value))){
+			return 0;
+		}
+		return Integer.parseInt(String.valueOf(value));
+	}
 }

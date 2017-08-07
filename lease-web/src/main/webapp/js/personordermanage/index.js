@@ -63,7 +63,9 @@ function manualOrderdataGrid() {
                 "sortable": false,
                 "mRender": function (data, type, full) {
                     var html = "";
-                    html += '<button type="button" class="SSbtn blue" onclick="manualSendOrder(' +"'"+ full.orderno +"'"+ ')"><i class="fa fa-paste"></i>人工派单</button>';
+                    if(full.orderstatus == "1") {
+                        html += '<button type="button" class="SSbtn blue" onclick="manualSendOrder(' +"'"+ full.orderno +"'"+ ')"><i class="fa fa-paste"></i>人工派单</button>';
+                    }
                     html += '&nbsp; <button type="button" class="SSbtn red"  onclick="cancelOrder(' +"'"+ full.orderno +"'"+ ')"><i class="fa fa-times"></i> 取消</button>';
                     return html;
                 }

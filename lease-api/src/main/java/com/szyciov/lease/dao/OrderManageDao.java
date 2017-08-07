@@ -241,4 +241,8 @@ public class OrderManageDao {
         return mapper.getBelongLeaseCompanySelect(params);
     }
 
+    public void updatePubDriverLeisure(String driverid) {
+        mapper.updatePubDriverLeisure(driverid);
+    }
+
 }

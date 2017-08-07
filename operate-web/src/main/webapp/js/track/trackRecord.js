@@ -1,27 +1,20 @@
 var dtGrid;
-var vehcId;
-var apikey="EFLc9FVyIHUWE4xKYFETDeF";
-
+var vehcId,imei;
 $(function () {
-	var imei = $('#imei').val();
+	imei = $('#imei').val();
 	var eqpId = $('#eqpId').val();
 	var plate = $('#plate').val();
-	
     var now = new Date();
     now.setDate(now.getDate() - 3);
     var startTime = now.format("yyyy-MM-dd hh:mm");
     var endTime = (new Date()).format("yyyy-MM-dd hh:mm");
     //绑定控件
-    
     bindControl(startTime, endTime);
-
     //绑定查询事件
     $("#btnSearch").click(function () {                
         dtGrid.fnSearch(getFnData());
     });
-
     //初始化表格
-    
     initGrid(startTime, endTime);
     if (imei) {
         $("#showli").show();
@@ -29,14 +22,13 @@ $(function () {
         $("#s2id_selPlates .select2-chosen").text(plate + "|" + imei);
         dtGrid.fnSearch(getFnData());
     }
-
     //导出
     $("#btnExport").click(function () {
     	var startTime = $("#txtStartDate").val();
     	var endTime = $("#txtEndDate").val();
     	var eqpId = $("#selPlates").select2("val")
     	if(eqpId == "" || eqpId == null){
-            toastr.warning("设备不能为空", "提示信息");
+            toastr.warning("车牌不能为空", "提示信息");
             return;
         }
         if (startTime == "" || typeof (startTime) == undefined) {
@@ -47,7 +39,10 @@ $(function () {
             toastr.warning("请选择结束时间", "提示信息");
             return;
         }
-
+        if (startTime > endTime) {
+            toastr.warning("开始时间' 应早于或等于 '结束时间'，请确认!", "提示信息");
+            return;
+        }
     	window.location.href = basePath+"Track/ExportTrackRecord?" +
     		"startTime="+startTime+"&apikey="+apikey+"" +
     		"&endTime="+endTime+"&eqpId="+eqpId;
@@ -62,6 +57,10 @@ function getFnData() {
     }
     if (endTime == "" || typeof (endTime) == undefined) {
         toastr.warning("请选择结束时间", "提示信息");
+        return;
+    }
+    if (startTime > endTime) {
+        toastr.warning("开始时间' 应早于或等于 '结束时间'，请确认!", "提示信息");
         return;
     }
     //查询行程信息
@@ -88,24 +87,8 @@ function bindControl(startTime, endTime) {
         clearBtn: true,
         minuteStep: 10
     });
-//    //绑定日期
-//    $("#txtStartDate").datetimepicker({
-//        format: 'yyyy-mm-dd hh:ii',
-//        autoclose: true,
-//        language: 'zh-CN',
-//        minuteStep: 30
-//    });
-//
-//    $("#txtEndDate").datetimepicker({
-//        format: 'yyyy-mm-dd hh:ii',
-//        autoclose: true,
-//        language: 'zh-CN',
-//        minuteStep: 30
-//    });
-
     $("#txtStartDate").val(startTime);
     $("#txtEndDate").val(endTime);
-
     //绑定车牌
     $("#selPlates").select2({
         placeholder: "车牌",
@@ -135,22 +118,11 @@ function bindControl(startTime, endTime) {
         }
     });
 }
-
-
 //初始化表格
 function initGrid(startTime, endTime) {
-	
    var gridObj = {
 		id: "dtGrid",
         sAjaxSource: "Track/getTrackRecord",
-      
-        userQueryParam: [
-        //	{"name": "eqpId", "value": $("#selPlates").select2("val")},
-        //	{"name": "startTime", "value": startTime },
-        //	{"name": "endTime", "value": endTime },
-        //	{"name": "iDisplayStart", "value": 0 },
-        //	{"name": "iDisplayLength", "value": 10 }
-        ],
         columns: [
             { "mDataProp": "startTime", "sTitle": "开始时间" },
             { "mDataProp": "endTime", "sTitle": "结束时间" },
@@ -169,13 +141,11 @@ function initGrid(startTime, endTime) {
                 "bSearchable": false,
                 "bStorable": false,
                 "mRender": function (data, type, full) {
-                    return '<a  href='+ basePath +'Track/trackRecordDetail?eqpId='+full.eqpId+'&trackId=' + full.trackId + ' class="btn default btn-xs blue"><img src="img/trafficflux/icon/checkDetail.png" alt=""/> 查看详情</a>';
+                    return '<a  href='+ basePath +'Track/trackRecordDetail?eqpId='+full.eqpId+'&trackId=' + full.trackId + '&imei='+imei+' class="SSbtn grey_q" style="text-decoration:none;"><img src="img/trafficflux/icon/checkDetail.png" alt=""/> 查看详情</a>';
                 }
             }
         ],
         fnServerData222: function (sSource, aoData, fnCallback) {
-        	
-        	
             $.ajax({
             	"dataType": 'json',
                 "type": "GET",
@@ -185,14 +155,13 @@ function initGrid(startTime, endTime) {
                 "success": fnCallback,
                // "timeout": __Constant.ajaxTimeout,
             	"complete": function (obj) {
-            		
                    	if(obj.responseJSON.aData!=null && obj.responseJSON.aData !=undefined){
                    		var data=obj.responseJSON.aData;
                    		$("#dTrackSum").text(data.strokeTimes);
                         $("#dMileageSum").text(data.mileage);
                         $("#dOilSum").text(data.totalFuel);
-                        $("#dTimeSum").text(data.totalRunTime);
-                        $("#dIdleTimeSum").text(data.totalIdleTime);
+                        $("#dTimeSum").text((null!=data.totalRunTime && data.totalRunTime !=undefined  && ""!=data.totalRunTime) ? data.totalRunTime :0);
+                        $("#dIdleTimeSum").text((null!=data.totalIdleTime && data.totalIdleTime !=undefined  && ""!=data.totalIdleTime) ? data.totalIdleTime : "00:00:00");
                         $("#dIdleFuelSum").text(data.totalIdleFuel);
                         $("#dAverageMileage").text(data.avgMileage);
                         var fuelConsumption = "0.00";
@@ -212,7 +181,6 @@ function initGrid(startTime, endTime) {
             });
         }
     }
-   
    dtGrid = renderGridTrafficflux(gridObj);
 }
 /**
@@ -260,64 +228,24 @@ function renderGridTrafficflux(gridObj) {
 			sSortDescending: ": 以降序排列此列"
 		    }
         },
-       
-            fnServerData: function(sSource, aoData, fnCallback) {
-            	if(gridObj.userQueryParam != null) {
-    	        	aoData = aoData.concat(gridObj.userQueryParam);
-    	        	
-            	}
-            	if(gridObj.fnServerData222){
-            	var a=gridObj.fnServerData222;
-            	a(sSource, aoData, fnCallback);
-            	}
-            
-//            	
-//    			$.ajax({
-//    	        	url: gridObj.sAjaxSource,
-//    	            data: aoData,
-//    	        	type: "GET",
-//    				dataType: 'json',
-//    	            contentType: 'application/json; charset=utf-8',
-//    	            cache: false,
-//    	            success: function (obj) {
-//            		
-//                   	if(obj.responseJSON.aData!=null && obj.responseJSON.aData !=undefined){
-//                   		var data=obj.responseJSON.aData;
-//                   		$("#dTrackSum").text(data.strokeTimes);
-//                        $("#dMileageSum").text(data.mileage);
-//                        $("#dOilSum").text(data.totalFuel);
-//                        $("#dTimeSum").text(data.totalRunTime);
-//                        $("#dIdleTimeSum").text(data.totalIdleTime);
-//                        $("#dIdleFuelSum").text(data.totalIdleFuel);
-//                        $("#dAverageMileage").text(data.avgMileage);
-//                        var fuelConsumption = "0.00";
-//                        var idleFuelSum = data.totalIdleFuel;
-//                        fuelConsumption = (data.totalFuel - idleFuelSum) * 100 / data.mileage;
-//                        if(isNaN(fuelConsumption)){
-//                        	fuelConsumption = "0.00";
-//                        }
-//                        $("#dFuelConsumption").text(parseFloat(fuelConsumption).toFixed(2));
-//                   	}
-//                },
-//    	            error: function(msg) {
-//    	            	
-//    	            }
-//    			})
+        fnServerData: function(sSource, aoData, fnCallback) {
+        	if(gridObj.userQueryParam != null) {
+	        	aoData = aoData.concat(gridObj.userQueryParam);
+        	}
+        	if(gridObj.fnServerData222){
+        	var a=gridObj.fnServerData222;
+        	a(sSource, aoData, fnCallback);
+        	}
     		}
-		
 	}
-
-
 	if(gridObj.scrollX) {
 		params["scrollX"] = true;
 		params["scrollCollapse"] = true;
 	}
 	var dataTable = $("#" + gridObj.id).dataTable(params);
-	
 	// 固定列属性设置
 	if(gridObj.iLeftColumn) {
 		new $.fn.dataTable.FixedColumns(dataTable,{"iLeftColumns": gridObj.iLeftColumn});
 	}
-	
 	return dataTable;
 }

@@ -62,7 +62,7 @@
 			org_user.id, org_user.nickname, org_user.account, org_order.passengers, org_order.passengerphone,
 			date_format(org_order.usetime, '%Y-%m-%d %H:%i') usetime,
 			date_format(org_order.undertime, '%Y-%m-%d %H:%i') undertime,
-			org_order.pushnumber,
+			org_order.pushnumber, org_order.orderstatus,
 			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_order.oncity) oncity,
 			org_order.oncity, org_order.onaddress,
 			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = org_order.offcity) offcity,
@@ -70,7 +70,7 @@
 		from
 			org_order left join org_user on org_order.userid = org_user.id
 		where
-			org_order.status = 1 and org_order.companyid = #{leasescompanyid} and org_order.orderstatus = '1'
+			org_order.status = 1 and org_order.companyid = #{leasescompanyid} and org_order.orderstatus in ("0", "1")
 			<if test='usetype == "0"'>
 				and org_order.paymethod = "2"
 			</if>
@@ -105,7 +105,7 @@
 		from
 			org_order
 		where
-			org_order.status = 1 and org_order.companyid = #{leasescompanyid} and org_order.orderstatus = '1'
+			org_order.status = 1 and org_order.companyid = #{leasescompanyid} and org_order.orderstatus in ("0", "1")
 			<if test='usetype == "0"'>
 				and org_order.paymethod = "2"
 			</if>
@@ -1012,6 +1012,9 @@
 		<if test="models == 0">
 			and g.id = #{orderSelectedmodel}
 		</if>
+        <if test='null != queryTmpBelongleasecompany and "" != queryTmpBelongleasecompany'>
+            and a.belongleasecompany = #{queryTmpBelongleasecompany}
+        </if>
 		and a.lng &gt; 0 and a.lat &gt; 0
 		group by a.id
 		limit #{iDisplayStart}, #{iDisplayLength}
@@ -1081,6 +1084,9 @@
 		<if test="models == 0">
 			and g.id = #{orderSelectedmodel}
 		</if>
+        <if test='null != queryTmpBelongleasecompany and "" != queryTmpBelongleasecompany'>
+            and a.belongleasecompany = #{queryTmpBelongleasecompany}
+        </if>
 		and a.lng &gt; 0 and a.lat &gt; 0
 		group by a.id) tmp
 	</select>
@@ -1496,5 +1502,10 @@
         </if>
         order by text asc
     </select>
+
+    <!-- 修改司机状态为空闲 -->
+    <update id="updatePubDriverLeisure" parameterType="string">
+        update pub_driver set workstatus = "0", updatetime = now() where id = #{driverid}
+    </update>
 
 </mapper>

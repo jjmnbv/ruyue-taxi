@@ -1,6 +1,8 @@
 package com.szyciov.util;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -146,4 +148,45 @@ public class FileUtil {
 		return result;
 	}
 	
+	/**
+	 * 保存文件
+	 * @param filename
+	 * @param bytes
+	 */
+	public static void saveFile(String fileName,byte[] bytes){
+		if(fileName == null || fileName.isEmpty()) return;
+		try {
+			File file = new File(fileName);
+			if(!file.exists()){
+				file.mkdirs();
+				file.delete();
+				file.createNewFile();
+			}
+			FileOutputStream fos = new FileOutputStream(file);
+			fos.write(bytes);
+			fos.flush();
+			fos.close();
+		} catch (Exception e) {
+			
+		}
+	}
+	
+	/**
+	 * 读取文件
+	 * @param fileName
+	 * @return
+	 */
+	public static void readFile(String fileName,byte[] bytes){
+		if(fileName == null || fileName.isEmpty()) return;
+		File file = new File(fileName);
+		if(!file.exists()) return;
+		try {
+			FileInputStream fis = new FileInputStream(file);
+			fis.read(bytes);
+			fis.close();
+		} catch (Exception e) {
+			
+		}
+		return;
+	}
 }

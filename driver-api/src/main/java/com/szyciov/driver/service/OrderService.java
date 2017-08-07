@@ -349,7 +349,13 @@ public class OrderService extends BaseService{
 				null, 
 				baqp, 
 				JSONObject.class);
-		if(result.getInt("status") != Retcode.OK.code) return;
+		if(result.getInt("status") != Retcode.OK.code) {
+			logger.info("经纬度反查失败,仅保存APP上传经纬度");
+			oid.setLng(cosp.getLng());
+			oid.setLat(cosp.getLat());
+			dao.updateOrder(oid);
+			return;
+		}
 		PubCityAddr pca = dao.getPubCity(result.getString("city"));
 		oid.setLng(result.getDouble("lng"));
 		oid.setLat(result.getDouble("lat"));
@@ -606,7 +612,7 @@ public class OrderService extends BaseService{
 	 */
 	public JSONObject takingOrder(OrderInfoDetail oid,PubDriver pd,OrderApiParam param){
 		JSONObject result = new JSONObject();
-		if(!checkDriverState(pd) || !checkDriverCanTakeOrder(pd,oid)) {
+		if(!checkDriverCanTakeOrder(pd,oid)) {
 			result.put("status", Retcode.ORDERNOTDONE.code);
 			result.put("message", Retcode.ORDERNOTDONE.msg);
 			return result;
@@ -1030,11 +1036,15 @@ public class OrderService extends BaseService{
 		List<OrderInfoDetail> currentOrder = dao.getOrderList(olp);
 		if(order.isIsusenow()){   //当前是即刻单
 			for(OrderInfoDetail o : currentOrder){
+				//当前订单预估时长(秒) + 1小时
+				int estimatedSecond = (int)order.getEstimatedtime()*60 + 3600;
+				//预估结束时间
+				Date noTakeStart = StringUtil.addDate(order.getUsetime(), estimatedSecond);
 				//存在未开始的即刻单或正在服务的订单
 				if(o.isIsusenow() || o.getStarttime() != null){
 					return false;
-				//当前订单用车时间不在已存在的预约单一个小时之后是不可以接的
-				}else if(!o.isIsusenow() && order.getUsetime().before(StringUtil.addDate(o.getUsetime(), 3600))){
+				//当前订单的预估结束时间(用车时间+预估时长+1小时)不在已存在的预约单用车时间之前是不可以接的
+				}else if(!noTakeStart.before(o.getUsetime())){
 					return false;
 				}
 			}
@@ -1222,7 +1232,7 @@ public class OrderService extends BaseService{
 	 */
 	private boolean removeDriverMessage(OrderInfoDetail oid,PubDriver driver,OrderApiParam param){
 		String useday = StringUtil.formatDate(StringUtil.getToday(oid.getUsetime()), StringUtil.TIME_WITH_DAY);
-		String key = "DriverGrabMessage_*_*_" + param.getOrderno();
+		String key = "DriverGrabMessage_*_*_" + param.getOrderno()+"_*";
 		String sameTime = "DriverGrabMessage_"+ driver.getId() +"_"+ driver.getPhone() +"_*_" + useday;
 		Set<String> keys = JedisUtil.getKeys(key);
 		Set<String> sameKeys = JedisUtil.getKeys(sameTime);

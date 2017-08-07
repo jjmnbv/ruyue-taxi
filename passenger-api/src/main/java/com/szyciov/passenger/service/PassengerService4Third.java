@@ -43,20 +43,7 @@ import com.szyciov.passenger.entity.PassengerOrder;
 import com.szyciov.passenger.entity.VehicleModels;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.passenger.util.VelocityUtil;
-import com.szyciov.util.BaiduUtil;
-import com.szyciov.util.GUIDGenerator;
-import com.szyciov.util.PasswordEncoder;
-import com.szyciov.util.RedisUtil;
-import com.szyciov.util.SMSCodeUtil;
-import com.szyciov.util.SMSTempPropertyConfigurer;
-import com.szyciov.util.StringUtil;
-import com.szyciov.util.SystemConfig;
-import com.szyciov.util.TemplateHelper;
-import com.szyciov.util.TemplateHelper4CarServiceApi;
-import com.szyciov.util.TemplateHelper4OrgApi;
-import com.szyciov.util.TemplateHelper4leaseApi;
-import com.szyciov.util.UNID;
-import com.szyciov.util.UserTokenManager;
+import com.szyciov.util.*;
 import com.wx.DocFunc;
 import com.wx.WXOrderUtil;
 import net.sf.json.JSONArray;
@@ -90,7 +77,7 @@ import java.util.Map;
 @Service("PassengerService4Third")
 public class PassengerService4Third {
 
-    private static final Logger logger = Logger.getLogger(PassengerService4Sec.class);
+    private static final Logger logger = Logger.getLogger(PassengerService4Third.class);
 
     private TemplateHelper4OrgApi orgapi = new TemplateHelper4OrgApi();
 
@@ -306,7 +293,49 @@ public class PassengerService4Third {
         String usertoken = (String) params.get("usertoken");
         String account = Const.getUserInfo(usertoken).get("account");
         params.put("account", account);
-        params.put("pwd", PasswordEncoder.encode((String)params.get("pwd")));
+        String pwd = (String)params.get("pwd");
+        if(StringUtils.isBlank(pwd)){
+            res.put("status",Retcode.EXCEPTION.code);
+            res.put("message","密码格式错误");
+            return res;
+        }
+        params.put("pwd", PasswordEncoder.encode(pwd));
+        //机构用户
+        OrgUser orguser =  userdao.getUser4Org(account);
+        if(orguser!=null){
+            params.put("userid",orguser.getId());
+            userdao.updatePwd4Org(params);
+        }
+        //个人用户
+        PeUser peuser = userdao.getUser4Op(account);
+        if(peuser!=null){
+            params.put("userid", peuser.getId());
+            userdao.updatePwd4Op(params);
+        }
+        return res;
+    }
+
+    /**
+     * 更新用户密码
+     * @param params
+     * @return
+     */
+    @Transactional
+    public Map<String,Object> updatePwd2(Map<String, Object> params) {
+        Map<String, Object> res = new HashMap<String, Object>();
+        res.put("status", Retcode.OK.code);
+        res.put("message", Retcode.OK.msg);
+        String usertoken = (String) params.get("usertoken");
+        String account = Const.getUserInfo(usertoken).get("account");
+        params.put("account", account);
+        String encodepwd = (String)params.get("pwd");
+        String pwd = RSAUtil.RSADecode(encodepwd);
+        if(StringUtils.isBlank(pwd)){
+            res.put("status",Retcode.EXCEPTION.code);
+            res.put("message","密码格式错误");
+            return res;
+        }
+        params.put("pwd", PasswordEncoder.encode(pwd));
         //机构用户
         OrgUser orguser =  userdao.getUser4Org(account);
         if(orguser!=null){
@@ -394,6 +423,167 @@ public class PassengerService4Third {
             res.put("message",Retcode.OK.msg);
             String usertoken = (String) loginparam.get("usertoken");
             String pwd = (String) loginparam.get("pwd");
+            String uuid = (String) loginparam.get("uuid");
+            if(StringUtils.isBlank(usertoken)||StringUtils.isBlank(pwd)||StringUtils.isBlank(uuid)){
+                res.put("status", Retcode.EXCEPTION.code);
+                res.put("message", "参数不完整");
+                return res;
+            }
+            Map<String,String> userinfo = Const.getUserInfo(usertoken);
+            if(userinfo==null){
+                res.put("status", Retcode.EXCEPTION.code);
+                res.put("message", "参数不合法");
+                return res;
+            }
+            String useraccount = userinfo.get("account");
+            OrgUser orguser = userdao.getUser4Org(useraccount);
+            if(orguser==null){
+                res.put("hasorguser",false);
+                res.put("hasorgidentity",false);
+            }else if(orguser.getStatus()!=1){
+                //离职的
+                res.put("hasorguser",true);
+                res.put("hasorgidentity",false);
+            }else{
+                res.put("hasorguser",true);
+                res.put("hasorgidentity",true);
+            }
+            if(dillWithDelLogin(res,loginparam)){
+                if(orguser!=null&&orguser.getStatus()==1){
+                    //有机构身份
+                    String newusertoken = UserTokenManager.createUserToken(UserTokenManager.ORGUSERTYPE,orguser.getAccount(), SystemConfig.getSystemProperty("securityKey"));
+                    Map<String,Object> pp = new HashMap<String,Object>();
+                    pp.put("userid", orguser.getId());
+                    pp.put("usertype", Const.USERTOKENTYPE_ORGUSER);
+                    Map<String,Object> dbusertokeninfo = userdao.getUserTokenByUserId(pp);
+                    Map<String,Object> tokeninfo = new HashMap<String,Object>();
+                    if(dbusertokeninfo==null){
+                        tokeninfo.put("id", GUIDGenerator.newGUID());
+                    }
+                    tokeninfo.put("usertoken", newusertoken);
+                    tokeninfo.put("userid", orguser.getId());
+                    tokeninfo.put("usertype", Const.USERTOKENTYPE_ORGUSER);
+                    tokeninfo.put("uuid", uuid);
+                    userdao.createOrUpdateUsertoken(tokeninfo);
+                    res.put("nickname", orguser.getNickName());
+                    //同步token到个人用户的token信息
+                    try{
+                        Map<String,Object> pep = new HashMap<String,Object>();
+                        PeUser peuser = userdao.getUser4Op(orguser.getAccount());
+                        pep.put("userid", peuser.getId());
+                        pep.put("usertype", Const.USERTOKENTYPE_PEUSER);
+                        Map<String,Object> dbpeusertokeninfo = userdao.getUserTokenByUserId(pep);
+                        Map<String,Object> petokeninfo = new HashMap<String,Object>();
+                        if(dbpeusertokeninfo==null){
+                            petokeninfo.put("id", GUIDGenerator.newGUID());
+                        }
+                        petokeninfo.put("usertoken", newusertoken);
+                        petokeninfo.put("userid", peuser.getId());
+                        petokeninfo.put("usertype", Const.USERTOKENTYPE_PEUSER);
+                        petokeninfo.put("uuid", uuid);
+                        res.put("nickname", peuser.getNickname());
+                        userdao.createOrUpdateUsertoken(petokeninfo);
+                    }catch (Exception e){}
+
+                    byte[] usertokencode4 = Base64.decodeBase64(newusertoken);
+                    String decodetoken = new String(usertokencode4);
+                    String timetag = decodetoken.substring(32, 49);
+                    List<String> tags = new ArrayList<String>();
+                    tags.add(timetag);
+                    tags.add("0");
+                    res.put("tags", tags);
+                    res.put("usertoken", newusertoken);
+                    res.put("name", orguser.getNickName());
+                    res.put("telphone", orguser.getAccount());
+                    res.put("sex", orguser.getSex());
+                    String imgpath = orguser.getHeadPortraitMax();
+                    if(StringUtils.isNotBlank(imgpath)){
+                        res.put("imgpath",SystemConfig.getSystemProperty("fileserver")+File.separator+imgpath);
+                    }
+                }else{
+                    PeUser peuser = userdao.getUser4Op(useraccount);
+                    //个人用户身份
+                    String newusertoken = UserTokenManager.createUserToken(UserTokenManager.PERSONNALUSER,peuser.getAccount(), SystemConfig.getSystemProperty("securityKey"));
+                    Map<String,Object> pp = new HashMap<String,Object>();
+                    pp.put("userid", peuser.getId());
+                    pp.put("usertype", Const.USERTOKENTYPE_PEUSER);
+                    Map<String,Object> dbusertokeninfo = userdao.getUserTokenByUserId(pp);
+                    Map<String,Object> tokeninfo = new HashMap<String,Object>();
+                    if(dbusertokeninfo==null){
+                        tokeninfo.put("id", GUIDGenerator.newGUID());
+                    }
+                    tokeninfo.put("usertoken", newusertoken);
+                    tokeninfo.put("userid", peuser.getId());
+                    tokeninfo.put("uuid", uuid);
+                    tokeninfo.put("usertype", Const.USERTOKENTYPE_PEUSER);
+                    userdao.createOrUpdateUsertoken(tokeninfo);
+                    res.put("name", peuser.getNickname());
+                    //同步token到机构用户的token信息
+                    try{
+                        Map<String,Object> pep = new HashMap<String,Object>();
+                        OrgUser orgusertemp = userdao.getUser4Org(peuser.getAccount());
+                        if(orgusertemp!=null){
+                            pep.put("userid", orgusertemp.getId());
+                            pep.put("usertype", Const.USERTOKENTYPE_ORGUSER);
+                            Map<String,Object> dborgusertokeninfo = userdao.getUserTokenByUserId(pep);
+                            Map<String,Object> orgtokeninfo = new HashMap<String,Object>();
+                            if(dborgusertokeninfo==null){
+                                orgtokeninfo.put("id", GUIDGenerator.newGUID());
+                            }
+                            orgtokeninfo.put("usertoken", newusertoken);
+                            orgtokeninfo.put("userid", orgusertemp.getId());
+                            orgtokeninfo.put("usertype", Const.USERTOKENTYPE_ORGUSER);
+                            orgtokeninfo.put("uuid", uuid);
+                            res.put("name", orgusertemp.getNickName());
+                            userdao.createOrUpdateUsertoken(orgtokeninfo);
+                        }
+                    }catch (Exception e){}
+                    byte[] usertokencode4 = Base64.decodeBase64(newusertoken);
+                    String decodetoken = new String(usertokencode4);
+                    String timetag = decodetoken.substring(32, 49);
+                    List<String> tags = new ArrayList<String>();
+                    tags.add(timetag);
+                    tags.add("1");
+                    res.put("tags", tags);
+                    res.put("usertoken", newusertoken);
+                    res.put("nickname", peuser.getNickname());
+                    res.put("telphone", peuser.getAccount());
+                    res.put("sex", peuser.getSex());
+                    String imgpath = peuser.getHeadportraitmin();
+                    if(StringUtils.isNotBlank(imgpath)){
+                        res.put("imgpath",SystemConfig.getSystemProperty("fileserver")+File.separator+imgpath);
+                    }
+                }
+            }else{
+                //失效了
+                res.put("status",Retcode.FAILED.code);
+                res.put("message", "静默失效");
+                res.put("tags", new ArrayList());
+                res.put("usertoken", "");
+                res.put("nickname", "");
+                res.put("telphone", "");
+                res.put("sex", "");
+                res.put("imgpath","");
+            }
+
+        }catch (Exception e){
+            res.put("status",Retcode.EXCEPTION.code);
+            res.put("message",Retcode.EXCEPTION.msg);
+            res.put("info",e.getMessage());
+        }
+        return res;
+    }
+
+    public Map<String,Object> defLogin2(Map<String, Object> loginparam) {
+        Map<String,Object> res = new HashMap<String,Object>();
+        try{
+            addPubInfos(res);
+            res.put("status", Retcode.OK.code);
+            res.put("message",Retcode.OK.msg);
+            String usertoken = (String) loginparam.get("usertoken");
+            String pwd = (String) loginparam.get("pwd");
+            pwd = RSAUtil.RSADecode(pwd);
+            loginparam.put("pwd",pwd);
             String uuid = (String) loginparam.get("uuid");
             if(StringUtils.isBlank(usertoken)||StringUtils.isBlank(pwd)||StringUtils.isBlank(uuid)){
                 res.put("status", Retcode.EXCEPTION.code);
@@ -716,6 +906,36 @@ public class PassengerService4Third {
 					logger.error("获取预估里程失败！");
 					return res;
 				}
+                //约车时限
+                double tempprice = 0;
+				try{
+                    Map<String,Object> carsintervalinfo = opdao.getSendRule4ReverceTaxi(params);
+                    String usetime = (String) params.get("usetime");
+                    String isusenow = (String) params.get("isusenow");
+                    if(carsintervalinfo!=null&&(StringUtils.isNotBlank(usetime)||"0".equals(isusenow))){
+                        int carsinterval = parseInt(carsintervalinfo.get("carsinterval"));
+                        if(StringUtils.isNotBlank(usetime)){
+                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            Date current = new Date();
+                            Date yydate = new Date(current.getTime()+carsinterval*60*1000);
+                            Date usetimeobj = format.parse(usetime);
+                            if(usetimeobj.after(yydate)){
+                                //预约时间
+                                Map<String,Object> yyparams = new HashMap<String,Object>();
+                                yyparams.put("type","个人用户出租车下单预约附加费用");
+                                tempprice += parseDouble(getYYFJF(yyparams));
+                            }
+                        }else{
+                            //预约时间
+                            Map<String,Object> yyparams = new HashMap<String,Object>();
+                            yyparams.put("type","个人用户出租车下单预约附加费用");
+                            tempprice += parseDouble(getYYFJF(yyparams));
+                        }
+                    }
+                }catch (Exception e){
+				    logger.error("个人出租车预约用车计费规则加上预约费异常",e);
+                }
+
 				int mileage = (int)direc.get("distance");
 				//打表来接的里程
 				mileage = parseInt(params.get("meterrange"))*1000+mileage;
@@ -723,7 +943,8 @@ public class PassengerService4Third {
 				accountrules.put("mileage", mileage);
 				accountrules.put("times", times);
 				//计算费用
-				double startprice = parseDouble(accountrules.get("startprice"));
+				double startprice = parseDouble(accountrules.get("startprice"))+tempprice;
+                accountrules.put("startprice",startprice);
 				double startrange = parseDouble(accountrules.get("startrange"));
 				double surcharge = parseDouble(accountrules.get("surcharge"));
 				double emptytravelrate = parseDouble(accountrules.get("emptytravelrate"));
@@ -766,13 +987,44 @@ public class PassengerService4Third {
 					logger.error("获取预估里程失败！");
 					return res;
 				}
-				
+
+				//约车时限
+                double tempprice = 0;
+                try{
+                    Map<String,Object> carsintervalinfo = opdao.getSendRuleByCity4ReverceNetCar(params);
+                    String usetime = (String) params.get("usetime");
+                    String isusenow = (String) params.get("isusenow");
+                    if(carsintervalinfo!=null&&(StringUtils.isNotBlank(usetime)||"0".equals(isusenow))){
+                        int carsinterval = parseInt(carsintervalinfo.get("carsinterval"));
+                        if(StringUtils.isNotBlank(usetime)){
+                            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            Date current = new Date();
+                            Date yydate = new Date(current.getTime()+carsinterval*60*1000);
+                            Date usetimeobj = format.parse(usetime);
+                            if(usetimeobj.after(yydate)){
+                                //预约时间
+                                Map<String,Object> yyparams = new HashMap<String,Object>();
+                                yyparams.put("type","个人用户下单预约附加费用");
+                                tempprice += parseDouble(getYYFJF(yyparams));
+                            }
+                        }else{
+                            //预约时间
+                            Map<String,Object> yyparams = new HashMap<String,Object>();
+                            yyparams.put("type","个人用户下单预约附加费用");
+                            tempprice += parseDouble(getYYFJF(yyparams));
+                        }
+                    }
+                }catch (Exception e){
+				    logger.error("个人用户网约车添加预约用车预约费失败",e);
+                }
+
 				int mileage = (int)direc.get("distance");
 				int times = (int)direc.get("duration");
 				accountrules.put("mileage", mileage);
 				accountrules.put("times", times);
 				//计算价格
-				double startprice = parseDouble(accountrules.get("startprice"));
+				double startprice = parseDouble(accountrules.get("startprice"))+tempprice;
+                accountrules.put("startprice",startprice);
 				double rangeprice = parseDouble(accountrules.get("rangeprice"));
 				double timeprice = parseDouble(accountrules.get("timeprice"));
 				String timetype = (String) accountrules.get("timetype");
@@ -1099,14 +1351,22 @@ public class PassengerService4Third {
 			costinfo.remove("status");
 			costinfo.remove("message");
 			String amount = costinfo.getString("cost");
+            String orderstatus = (String) orderinfo.get("orderstatus");
 			if(StringUtils.isNotBlank(amount)){
-//                double srcorderamount = getSrcOrderAmount(costinfo);
-//                orderinfo.put("orderamount", srcorderamount);
-//                orderinfo.put("orderamountint", (int)Math.round(parseDouble(amount.replaceAll("元", ""))));
-                orderinfo.put("orderamountint",(int)Math.round(StringUtil.formatNum(parseDouble(orderinfo.get("orderamount")),1)));
-                orderinfo.put("orderamount", StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
-//                order.setOrderamountint((int)Math.round(StringUtil.formatNum(order.getOrderamount(),1)));
-//                order.setOrderamount(StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
+			    if(OrderState.SERVICEDONE.state.equals(orderstatus)){
+			        //行程结束
+                    double srcorderamount = getSrcOrderAmount(costinfo);
+ //                 orderinfo.put("orderamount", srcorderamount);
+//                  orderinfo.put("orderamountint", (int)Math.round(parseDouble(amount.replaceAll("元", ""))));
+                    orderinfo.put("orderamountint",(int)Math.round(StringUtil.formatNum(parseDouble(orderinfo.get("orderamount")),1)));
+                    orderinfo.put("orderamount", StringUtil.formatNum(srcorderamount,1));
+//                  orderinfo.put("orderamount", StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
+//                  order.setOrderamountint((int)Math.round(StringUtil.formatNum(order.getOrderamount(),1)));
+//                  order.setOrderamount(StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
+                }else{
+			        //行程未结束
+                    orderinfo.put("orderamount", StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
+                }
 			}else{
                 orderinfo.put("orderamount", 0);
                 orderinfo.put("orderamountint", 0);
@@ -1155,7 +1415,7 @@ public class PassengerService4Third {
 
         String nightcoststr = costinfo.getString("nightcost");
         double nightcost = parseDouble(nightcoststr==null?null:nightcoststr.replaceAll("元", ""));
-        return startprice+rangecost+timecost+nightcost;
+        return startprice+rangecost+deadheadcost+timecost+nightcost;
     }
 	
 	private JSONObject addCostInfo(JSONObject costinfo) {
@@ -1336,7 +1596,7 @@ public class PassengerService4Third {
 			}
 			res.put("orderstatus", orderstatus);
 			if(OrderState.INSERVICE.state.equalsIgnoreCase(orderstatus)||OrderState.WAITMONEY.state.equalsIgnoreCase(orderstatus)){
-				String dorderinfo = RedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
+				String dorderinfo = JedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
 				if(StringUtils.isNotBlank(dorderinfo)){
 					JSONObject json = JSONObject.fromObject(dorderinfo);
 					int lefttime = json.getInt("lefttime");
@@ -1803,6 +2063,7 @@ public class PassengerService4Third {
 	private void addCostInfo(PassengerOrder order, String usertoken) {
 		OrderCostParam params = new OrderCostParam();
 		params.setHasunit(true);
+        params.setCompanyid(order.getCompanyid());
 		params.setOrderid(order.getOrderno());
 		JSONObject costinfo = carserviceapi.dealRequestWithToken("/OrderApi/GetOrderCost", HttpMethod.POST, usertoken, params, JSONObject.class);
 		if(costinfo!=null&&costinfo.getInt("status")==Retcode.OK.code){
@@ -1810,9 +2071,17 @@ public class PassengerService4Third {
 			costinfo.remove("message");
 			String amount = costinfo.getString("cost");
 			if(StringUtils.isNotBlank(amount)){
-//                double srcorderamount = getSrcOrderAmount(costinfo);
-                order.setOrderamountint((int)Math.round(StringUtil.formatNum(order.getOrderamount(),1)));
-				order.setOrderamount(StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
+			    if(OrderState.SERVICEDONE.state.equals(order.getOrderstatus())){
+			        //行程结束
+                    double srcorderamount = getSrcOrderAmount(costinfo);
+                    order.setOrderamountint((int)Math.round(StringUtil.formatNum(order.getOrderamount(),1)));
+    //				order.setOrderamount(StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
+                    order.setOrderamount(StringUtil.formatNum(srcorderamount,1));
+                }else{
+			        //行程未结束
+                    order.setOrderamount(StringUtil.formatNum(parseDouble(amount.replaceAll("元","")),1));
+                }
+
 			}
 			order.setStartprice(costinfo.getString("startprice"));
 			order.setRangeprice(costinfo.getString("rangeprice"));
@@ -1962,7 +2231,7 @@ public class PassengerService4Third {
 			if(order!=null){
 				res.put("orderstatus", order.getOrderstatus());
 				if(OrderState.INSERVICE.state.equalsIgnoreCase(order.getOrderstatus())){
-					String orderinfo = RedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
+					String orderinfo = JedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
 					if(StringUtils.isNotBlank(orderinfo)){
 						JSONObject json = JSONObject.fromObject(orderinfo);
 						int lefttime = json.getInt("lefttime");
@@ -2283,7 +2552,12 @@ public class PassengerService4Third {
         if(Const.USETYPE_PUBLIC.equalsIgnoreCase((String)params.get("usetype"))){
             params.put("rulestype", "1");
         }else{
-            params.put("rulestype", "0");
+            if("0".equalsIgnoreCase((String)params.get("type"))){
+                params.put("rulestype", "1");
+                params.put("usetype", Const.USETYPE_PUBLIC);
+            }else{
+                params.put("rulestype", "0");
+            }
         }
 
         //现获取机构在租赁公司的可用额度
@@ -2293,6 +2567,11 @@ public class PassengerService4Third {
         param.put("orgid", orguser.getOrganId());
         double balance = (double) userdao.getOrgBalance(param);
         try{
+        	if("0".equals(params.get("isusenow"))){
+        		params.put("isusenow", false);
+        	}else{
+        		params.put("isusenow", true);
+        	}
             params.put("userid", orguser.getId());
             costinfo = carserviceapi.dealRequestWithToken("/OrderApi/GetOrderCost", HttpMethod.POST, usertoken, params, JSONObject.class);
         }catch(Exception e){
@@ -2303,13 +2582,13 @@ public class PassengerService4Third {
             String coststr = (String) costinfo.get("cost");
             cost = Double.parseDouble(coststr.substring(0, coststr.length()-1));
             obj.put("cost", cost);
-            if(canZK4User()){
-                //可以折扣
-                double awardpercent = getZKPercent(true);
-                if(awardpercent>0){
-                    obj.put("cost", StringUtil.formatNum(cost*awardpercent,1));
-                }
-            }
+//            if(canZK4User()){
+//                //可以折扣
+//                double awardpercent = getZKPercent(true);
+//                if(awardpercent>0){
+//                    obj.put("cost", StringUtil.formatNum(cost*awardpercent,1));
+//                }
+//            }
 //            if(canAward4User()){
 //                double awardpercent = getAwardPercent(true);
 //                obj.put("awardpint", Math.round(cost*awardpercent));
@@ -2331,10 +2610,13 @@ public class PassengerService4Third {
             paydetail.add(obj4);
             paydetail.add(obj5);
             if (costinfo.get("deadheadcost") != null && StringUtils.isNotBlank(String.valueOf(costinfo.get("deadheadcost")))) {
-                JSONObject obj6 = new JSONObject();
-                obj6.put("name", "空驶费("+costinfo.get("realdeadheadmileage")+")");
-                obj6.put("price", costinfo.get("deadheadcost"));
-                paydetail.add(obj6);
+                String pricestr = (String) costinfo.get("deadheadcost");
+                if(parseDouble(pricestr.replace("元",""))>0){
+                    JSONObject obj6 = new JSONObject();
+                    obj6.put("name", "空驶费("+costinfo.get("realdeadheadmileage")+")");
+                    obj6.put("price", pricestr);
+                    paydetail.add(obj6);
+                }
             }
             obj.put("paydetail",paydetail);
             ress.put("status", Retcode.OK.code);
@@ -3566,6 +3848,8 @@ public class PassengerService4Third {
             order.setOrganid(user.getOrganId());
             res = carserviceapi.dealRequestWithToken("/OrderApi/CreateOrgOrder", HttpMethod.POST, null, order, Map.class);
         } else { //个人订单
+            order.setBelongleasecompany(order.getCompanyid());
+            order.setCompanyid(null);
             String account = Const.getUserInfo(usertoken).get("account");
             PeUser user = userdao.getUser4Op(account);
             if("1".equalsIgnoreCase(user.getDisablestate())){
@@ -3619,6 +3903,8 @@ public class PassengerService4Third {
     public Map<String, Object> addOder4Taxi(OpTaxiOrder taxiorder, HttpServletRequest request) {
         Map<String,Object> res = new HashMap<String,Object>();
         addPubInfos(res);
+        taxiorder.setBelongleasecompany(taxiorder.getCompanyid());
+        taxiorder.setCompanyid(null);
         res.put("status",Retcode.OK.code);
         res.put("message",Retcode.OK.msg);
         if(StringUtils.isNotBlank(taxiorder.getOrdersource())){
@@ -4829,7 +5115,9 @@ public class PassengerService4Third {
         Map<String,Object> params = new HashMap<String,Object>();
         params.put("city", city);
         params.put("rulestype", rulestype);
+        Map<String,Object> yyparams = new HashMap<String,Object>();
         if(Const.ORDERTYPE_ORG.equals(type)){
+            yyparams.put("type","机构用户下单预约附加费用");
             //机构
             String companyid =   (String) param.get("companyid");
             params.put("companyid", companyid);
@@ -4846,6 +5134,7 @@ public class PassengerService4Third {
             }
         }else{
             //个人
+            yyparams.put("type","个人用户下单预约附加费用");
             //获取运营端的计费规则
             rules = opdao.getAccountRules(params);
         }
@@ -4861,12 +5150,25 @@ public class PassengerService4Third {
         VelocityContext context = new VelocityContext();
         context.put("rules", JSONArray.fromObject(rules));
         context.put("company", companyname);
+        context.put("yyfjf", getYYFJF(yyparams));
         String vmpath = PassengerService.class.getClassLoader().getResource("accountrulesnew.vm").getPath();
         try {
             VelocityUtil.createTemplate(vmpath, res.getWriter(), context);
         } catch (Exception e) {
             logger.error("乘客端异常",e);
         }
+    }
+
+    /**
+     * 获取预约附加费
+     * @return
+     */
+    private double getYYFJF(Map<String,Object> params){
+        Map<String,Object> yyfjf = dicdao.getYYFJF(params);
+        if(yyfjf==null){
+            return 0;
+        }
+        return parseDouble(yyfjf.get("value"));
     }
 
     /**
@@ -4887,6 +5189,9 @@ public class PassengerService4Third {
             if(StringUtils.isNotBlank(logo)){
                 rule.put("logo",SystemConfig.getSystemProperty("fileserver")+ File.separator+logo);
             }
+//            Map<String,Object> yyparams = new HashMap<String,Object>();
+//            yyparams.put("type","个人用户出租车下单预约附加费用");
+//            rule.put("yyfjf",getYYFJF(yyparams));
         }
         VelocityContext context = new VelocityContext();
         context.put("rule", JSONObject.fromObject(rule));
@@ -4918,6 +5223,63 @@ public class PassengerService4Third {
                 res.put("message", "参数不完整");
                 return res;
             }
+
+            try{
+                String smscodeouttimestr = SystemConfig.getSystemProperty("smscodeouttime");
+                int smscodeouttime = parseInt(smscodeouttimestr)<=0?5:parseInt(smscodeouttimestr);
+
+                String smscodetimesintimestr = SystemConfig.getSystemProperty("smscodetimesintime");
+                int smscodetimesintime = parseInt(smscodetimesintimestr)<=0?5:parseInt(smscodetimesintimestr);
+                if("0".equals(smstype)){
+                    String value = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+phone);
+                    double gettimes = parseDouble(value);
+                    if(gettimes>=smscodetimesintime){
+                        //获取次数超限
+                        res.put("status", Retcode.EXCEPTION.code);
+                        res.put("message", "获取验证码次数超限");
+                        return res;
+                    }else{
+                        //没有超限要递增
+                        JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+phone);
+                        if(gettimes<=0){
+                            JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+phone,smscodeouttime*60);
+                        }
+                    }
+                }else if("1".equals(smstype)){
+                    String value = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD.code+phone);
+                    double gettimes = parseDouble(value);
+                    if(gettimes>=smscodetimesintime){
+                        //获取次数超限
+                        res.put("status", Retcode.EXCEPTION.code);
+                        res.put("message", "获取验证码次数超限");
+                        return res;
+                    }else{
+                        //没有超限要递增
+                        JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD.code+phone);
+                        if(gettimes<=0){
+                            JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD.code+phone,smscodeouttime*60);
+                        }
+                    }
+                }else{
+                    String value = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone);
+                    double gettimes = parseDouble(value);
+                    if(gettimes>=smscodetimesintime){
+                        //获取次数超限
+                        res.put("status", Retcode.EXCEPTION.code);
+                        res.put("message", "获取验证码次数超限");
+                        return res;
+                    }else{
+                        //没有超限要递增
+                        JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone);
+                        if(gettimes<=0){
+                            JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone,smscodeouttime*60);
+                        }
+                    }
+                }
+            }catch (Exception e){
+                logger.error("redis控制获取验证码次数失败了",e);
+            }
+
             //获取一串随机的短信验证码
             String smscode = SMSCodeUtil.getRandCode();
             Map<String,String> smscodeobj = new HashMap<String,String>();
@@ -5514,6 +5876,37 @@ public class PassengerService4Third {
             res.put("message", Retcode.EXCEPTION.msg);
         }
 
+        return res;
+    }
+
+    /**
+     * 验证密码
+     * @param params
+     * @return
+     */
+    public Map<String, Object> validatePwd(Map<String, Object> params) {
+        Map<String, Object> res = new HashMap<String, Object>();
+        String usertoken = (String) params.get("usertoken");
+        String account = Const.getUserInfo(usertoken).get("account");
+        String pwd = (String) params.get("oldpwd");
+        pwd = RSAUtil.RSADecode(pwd);
+        res.put("status", Retcode.OK.code);
+        res.put("message", Retcode.OK.msg);
+        if(isOrgUser(usertoken)){
+            //机构用户
+            OrgUser  orguer= userdao.getUser4Org(account);
+            if(!PasswordEncoder.matches(pwd, orguer.getUserPassword())){
+                res.put("status", Retcode.PASSWORDWRONG.code);
+                res.put("message", Retcode.PASSWORDWRONG.msg);
+            }
+        }else{
+            //个人用户
+            PeUser peuser = userdao.getUser4Op(account);
+            if(!PasswordEncoder.matches(pwd, peuser.getUserpassword())){
+                res.put("status", Retcode.PASSWORDWRONG.code);
+                res.put("message", Retcode.PASSWORDWRONG.msg);
+            }
+        }
         return res;
     }
 }

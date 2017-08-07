@@ -35,4 +35,13 @@ public class PasswordEncoder {
 		return password.contentEquals(encodedPassword);
 	}
 
+	public static boolean matches_PWD(CharSequence rawPassword, String encodedPassword) {
+		// TODO Auto-generated method stub
+		if(StringUtils.isBlank(encodedPassword)){
+			return false;
+		}
+		String password = (String) rawPassword;
+		return password.contentEquals(encodedPassword);
+	}
+
 }

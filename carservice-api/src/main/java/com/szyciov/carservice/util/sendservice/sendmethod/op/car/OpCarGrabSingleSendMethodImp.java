@@ -11,7 +11,6 @@ import com.szyciov.carservice.service.OrderApiService;
 import com.szyciov.carservice.service.SendInfoService;
 import com.szyciov.carservice.util.OrderRedisMessageFactory;
 import com.szyciov.carservice.util.sendservice.sendmethod.AbstractSendMethod;
-import com.szyciov.carservice.util.sendservice.sendmethod.CommonService;
 import com.szyciov.carservice.util.sendservice.sendmethod.log.SendLogMessage;
 import com.szyciov.carservice.util.sendservice.sendrules.SendRuleHelper;
 import com.szyciov.carservice.util.sendservice.sendrules.impl.AbstractSendRule;
@@ -385,15 +384,9 @@ public class OpCarGrabSingleSendMethodImp extends AbstractSendMethod{
 		message.setOrderinfo(orderJson);
 		message.setTakecashinfo(takecashinfo);
 
-		//订单信息转为字符串
-		String value = JSONObject.fromObject(message).toString();
-		for(PubDriver pd : drivers){
-			String key = "DriverGrabMessage_" + pd.getId() + "_" + pd.getPhone()+"_" + orderinfo.getOrderno();
-			//抢单结束时间比现在时间晚,才保存
-			if(grabEndTime != null && grabEndTime.after(new Date())){
-				JedisUtil.setString(key, (int)((grabEndTime.getTime() - System.currentTimeMillis())/1000), value);
-			}
-		}
+		setDriverMessage(message,orderinfo,drivers,grabEndTime);
+		String[] m = new String[]{orderinfo.getOrderno(),drivers.size()+""};
+		SendLogMessage.saveDriverMessage(logger,this.getClass(),m);
     }
 
     /**
@@ -458,9 +451,8 @@ public class OpCarGrabSingleSendMethodImp extends AbstractSendMethod{
 		long syssendinterval_send = temprules.getSystemsendinterval();
 
 		int sleeptime = 3;
-		int grabtime = temprules.getDriversendinterval();
 
-		Date temptime_send = new Date(System.currentTimeMillis()+syssendinterval_send*60*1000-(grabtime+sleeptime)*1000);
+		Date temptime_send = new Date(System.currentTimeMillis()+syssendinterval_send*60*1000-(sleeptime)*1000);
 
 		int tempcount = 0;
 
@@ -634,7 +626,7 @@ public class OpCarGrabSingleSendMethodImp extends AbstractSendMethod{
 		//推送司机端
 		if(driverList!=null&&driverList.size()>0){
 
-			saveDriverMessage(orderinfo, drivers,grabEndTime);
+			saveDriverMessage(orderinfo, driverList,grabEndTime);
 			List<String> driverphones = this.listDriverPhone(driverList);
 
 			PushPayload pushpayload4android = PushObjFactory.createSilenceOrderObj4Android(order, driverphones);
@@ -644,26 +636,10 @@ public class OpCarGrabSingleSendMethodImp extends AbstractSendMethod{
 			SendLogMessage.pushAppMessage(logger,this.getClass(),new String[]{orderinfo.getOrderno(),GsonUtil.toJson(driverphones)});
 		}
 	}
-	
-
-
-	@Override
-	protected List<String> listDriverUnServiceTimes(String driverId) {
-		return sendInfoService.listCarDriverUnServiceTimes(driverId);
-	}
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
 		return sendInfoService.getOpCarOrderStatus(orderNo);
-	}
-
-	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		List<OpOrder> list =  sendInfoService.listReverceOrders4CarDriver(driverId);
-		if(list!=null&&list.size()>0){
-			return list.get(0);
-		}
-		return null;
 	}
 
 	/**

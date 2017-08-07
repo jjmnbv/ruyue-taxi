@@ -66,7 +66,7 @@ public class SendRulesService {
 		} else {
 			String uuid = GUIDGenerator.newGUID();
 			sendRules.setId(uuid);
-//			sendRules.setShortName(city.getFullNameInitials());
+			sendRules.setShortName(city.getFullNameInitials());
 			sendRules.setPlatformType("0");//运管端
 			sendRules.setVehicleType(0);//网约车
 			sendRules.setRulesState("1");//初始为禁用

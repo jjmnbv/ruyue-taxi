@@ -109,6 +109,7 @@ public class VehicleTrajectoryController extends BaseController {
 				null, Map.class);
 		ArrayList<Map<String, String>> list = (ArrayList) map.get("vhecEqpList");
 		String plate = (String) list.get(0).get("plate");// 回显车牌
+		String vehcId = (String) list.get(0).get("vehcId");// 回显车牌
 		String eqpId = (String) list.get(0).get("eqpId");// 回显设备Id
 		Date date = new Date();// 得到当前时间
 		SimpleDateFormat smdate = new SimpleDateFormat("yyyy-MM-dd");// 日期的格式
@@ -116,14 +117,16 @@ public class VehicleTrajectoryController extends BaseController {
 
 		Calendar calendar = Calendar.getInstance();// 得到日历
 		calendar.setTime(date); // 把当前时间设置给日历
-		calendar.add(Calendar.DAY_OF_MONTH, -2);// 把日历的时间调成前两天
+		calendar.add(Calendar.DAY_OF_MONTH, 0);// 把日历的时间调成前两天
 		date = calendar.getTime();// 把调整后的日历时间给date
 		String startTime = smdate.format(date);// 回显时显示的开始时间
-
+		
 		model.put("plate", plate);
+		model.put("vehcId",vehcId);
 		model.put("eqpId", eqpId);
 		model.put("startTime", startTime);
 		model.put("endTime", endTime);
+		model.put("imei", imei);
 		return new ModelAndView("resource/vehicleTrajectory/index", model);
 	}
 
@@ -495,15 +498,16 @@ public class VehicleTrajectoryController extends BaseController {
 		JSONArray vehcTrajectoryArray = JSONArray.fromObject(trajectoryMap.get("vehcTrajectory"));// 转化为json数组-------JSONArray对象得到数组
 		list = JSONUtil.parseJSON2Map(vehcTrajectoryArray);
 		String address = "";
-
+		
 		// 获取车辆信息
 		VehcParam vehc = vehcSevice.getVehcById(queryTrajectoryByEqpParam.getVehcId(), userToken);
-		// todo 去掉vehc为空的判断
+		//
 		String vehcInfo = "";
 		if (vehc != null) {
-			vehcInfo = "车辆: " + vehc.getPlates() + " 所属部门: " + vehc.getDeptName();
+			vehcInfo = "车辆: " + vehc.getPlates() + " 服务车企: " + vehc.getDeptName();
 		} else {
-			vehcInfo = "车辆信息不存在，导出错误数据";
+			// vehcInfo = "车辆信息不存在，导出错误数据";
+			vehcInfo = " ";
 		}
 
 		// 获取行程
@@ -532,115 +536,120 @@ public class VehicleTrajectoryController extends BaseController {
 			trafficData.setEndTime(String.valueOf(traffivDataList.get("endTime")));
 			tempTrafficList.add(trafficData);
 		}
-
-		// 收集行程信息
-		for (OneTrafficData oneTrafficDatum : tempTrafficList) {
-			if (oneTrafficDatum.getStartTime() != null && !oneTrafficDatum.getStartTime().equals("")) {
-				VehcLocation startVehcLocation = new VehcLocation();
-				startVehcLocation.setLocTime(oneTrafficDatum.getStartTime());
-				startVehcLocation.setWorkStatusText("点火");
-				startVehcLocation.setSpeed(null);
-				startVehcLocation.setDirection("");
-				for (Map<String, Object> m : list) {
-					BigDecimal longitude = new BigDecimal(0);
-					BigDecimal latitude = new BigDecimal(0);
-					for (String k : m.keySet()) {
-						if (k.equals("longitudeOffSet")) { // 纠偏后的经度
-							longitude = new BigDecimal(m.get(k).toString());
+		try {
+			// 收集行程信息
+			for (OneTrafficData oneTrafficDatum : tempTrafficList) {
+				if (oneTrafficDatum.getStartTime() != null && !oneTrafficDatum.getStartTime().equals("")) {
+					VehcLocation startVehcLocation = new VehcLocation();
+					startVehcLocation.setLocTime(oneTrafficDatum.getStartTime());
+					startVehcLocation.setWorkStatusText("点火");
+					startVehcLocation.setSpeed(null);
+					startVehcLocation.setDirection("");
+					for (Map<String, Object> m : list) {
+						BigDecimal longitude = new BigDecimal(0);
+						BigDecimal latitude = new BigDecimal(0);
+						for (String k : m.keySet()) {
+							if (k.equals("longitude")) { // 纠偏后的经度
+								longitude = new BigDecimal(m.get(k).toString());
+							}
+							if (k.equals("latitude")) {// 纠偏后的纬度
+								latitude = new BigDecimal(m.get(k).toString());
+							}
 						}
-						if (k.equals("latitudeOffSet")) {// 纠偏后的纬度
-							latitude = new BigDecimal(m.get(k).toString());
+						try {
+							address = BaiduMap.getAdress(latitude, longitude);// 根据纠偏后的经纬度获取地址
+						} catch (Exception ex) {
+							address = "";
 						}
 					}
-					try {
-						address = BaiduMap.getAdress(latitude, longitude);// 根据纠偏后的经纬度获取地址
-					} catch (Exception ex) {
-						address = "";
+					startVehcLocation.setAddress(address);
+					vehcLocationList.add(startVehcLocation);
+				}
+
+				// 收集GPS列表
+				List<EqpTrajectory> trajectoryList = (List<EqpTrajectory>) trajectoryMap.get("vehcTrajectory");
+				// 转换接口查询数据
+				List<EqpTrajectory> tempTrajectoryList = new ArrayList<>();
+				if (trajectoryList != null && trajectoryList.size() > 0) {
+					for (Object eqpTrajectory : trajectoryList) {
+						LinkedHashMap<String, Object> traffivDataList = (LinkedHashMap<String, Object>) eqpTrajectory;
+						EqpTrajectory trajectory = new EqpTrajectory();
+						trajectory.setLocTime(String.valueOf(traffivDataList.get("locTime")));
+						trajectory.setLongitude(new BigDecimal(String.valueOf(traffivDataList.get("longitude"))));
+						trajectory.setLatitude(new BigDecimal(String.valueOf(traffivDataList.get("latitude"))));
+						trajectory.setSpeed(new BigDecimal(String.valueOf(traffivDataList.get("speed"))));
+						trajectory.setDirection(String.valueOf(traffivDataList.get("direction")));
+
+						tempTrajectoryList.add(trajectory);
 					}
 				}
-				startVehcLocation.setAddress(address);
-				vehcLocationList.add(startVehcLocation);
-			}
 
-			// 收集GPS列表
-			List<EqpTrajectory> trajectoryList = (List<EqpTrajectory>) trajectoryMap.get("vehcTrajectory");
-			// 转换接口查询数据
-			List<EqpTrajectory> tempTrajectoryList = new ArrayList<>();
-			if (trajectoryList != null && trajectoryList.size() > 0) {
-				for (Object eqpTrajectory : trajectoryList) {
-					LinkedHashMap<String, Object> traffivDataList = (LinkedHashMap<String, Object>) eqpTrajectory;
-					EqpTrajectory trajectory = new EqpTrajectory();
-					trajectory.setLocTime(String.valueOf(traffivDataList.get("locTime")));
-					trajectory.setLongitude(new BigDecimal(String.valueOf(traffivDataList.get("longitude"))));
-					trajectory.setLatitude(new BigDecimal(String.valueOf(traffivDataList.get("latitude"))));
-					trajectory.setSpeed(new BigDecimal(String.valueOf(traffivDataList.get("speed"))));
-					trajectory.setDirection(String.valueOf(traffivDataList.get("direction")));
-
-					tempTrajectoryList.add(trajectory);
-				}
-			}
-
-			if (tempTrajectoryList != null && tempTrajectoryList.size() > 0) {
-				for (int i = 0; i <= tempTrajectoryList.size(); i += 18) {
-					if (tempTrajectoryList.get(i).getLongitude() != null
-							&& ((tempTrajectoryList.get(i).getLongitude()).compareTo(new BigDecimal(0))) > 0
-							&& tempTrajectoryList.get(i).getLatitude() != null
-							&& ((tempTrajectoryList.get(i).getLatitude()).compareTo(new BigDecimal(0))) > 0
-							&& tempTrajectoryList.get(i).getLocTime() != null) {
-						VehcLocation vehcLocation = new VehcLocation();
-						vehcLocation.setLocTime(tempTrajectoryList.get(i).getLocTime());
-						vehcLocation.setSpeed(tempTrajectoryList.get(i).getSpeed() != null
-								? (tempTrajectoryList.get(i).getSpeed()) : null);
-						vehcLocation.setDirection(tempTrajectoryList.get(i).getDirection());
-						// 如果位置在行程内，则表示车辆运行中，否则是车辆停止
-						if (tempTrajectoryList.get(i).getSpeed() != null
-								&& ((tempTrajectoryList.get(i).getSpeed()).compareTo(new BigDecimal(0))) > 0) {
-							vehcLocation.setWorkStatusText("行驶");
-						} else {
-							vehcLocation.setWorkStatusText("怠速");
-						}
-						address = BaiduMap.getAdress(tempTrajectoryList.get(i).getLatitude(),
-								tempTrajectoryList.get(i).getLongitude());
-						vehcLocation.setAddress(address);
-						vehcLocationList.add(vehcLocation);
-					}
-				}
-			}
-
-			if (oneTrafficDatum.getEndTime() != null && !oneTrafficDatum.getEndTime().equals("")) {
-				VehcLocation endVehcLocation = new VehcLocation();
-				endVehcLocation.setLocTime(oneTrafficDatum.getEndTime());
-				endVehcLocation.setWorkStatusText("熄火");
-				endVehcLocation.setSpeed(null);
-				endVehcLocation.setDirection("");
-				for (Map<String, Object> m : list) {
-					BigDecimal longitude = new BigDecimal(0);
-					BigDecimal latitude = new BigDecimal(0);
-					for (String k : m.keySet()) {
-						if (k.equals("longitudeOffSet")) { // 纠偏后的经度
-							longitude = new BigDecimal(m.get(k).toString());
-						}
-						if (k.equals("latitudeOffSet")) {// 纠偏后的纬度
-							latitude = new BigDecimal(m.get(k).toString());
+				if (tempTrajectoryList != null && tempTrajectoryList.size() > 0) {
+					for (int i = 0; i <= tempTrajectoryList.size(); i += 18) {
+						if (tempTrajectoryList.get(i).getLongitude() != null
+								&& ((tempTrajectoryList.get(i).getLongitude()).compareTo(new BigDecimal(0))) > 0
+								&& tempTrajectoryList.get(i).getLatitude() != null
+								&& ((tempTrajectoryList.get(i).getLatitude()).compareTo(new BigDecimal(0))) > 0
+								&& tempTrajectoryList.get(i).getLocTime() != null) {
+							VehcLocation vehcLocation = new VehcLocation();
+							vehcLocation.setLocTime(tempTrajectoryList.get(i).getLocTime());
+							vehcLocation.setSpeed(tempTrajectoryList.get(i).getSpeed() != null
+									? (tempTrajectoryList.get(i).getSpeed()) : null);
+							vehcLocation.setDirection(tempTrajectoryList.get(i).getDirection());
+							// 如果位置在行程内，则表示车辆运行中，否则是车辆停止
+							if (tempTrajectoryList.get(i).getSpeed() != null
+									&& ((tempTrajectoryList.get(i).getSpeed()).compareTo(new BigDecimal(0))) > 0) {
+								vehcLocation.setWorkStatusText("行驶");
+							} else {
+								vehcLocation.setWorkStatusText("怠速");
+							}
+							try {
+								address = BaiduMap.getAdress(tempTrajectoryList.get(i).getLatitude(),
+										tempTrajectoryList.get(i).getLongitude());
+								vehcLocation.setAddress(address);
+								vehcLocationList.add(vehcLocation);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						}
 					}
-					try {
-						address = BaiduMap.getAdress(latitude, longitude);// 根据纠偏后的经纬度获取地址
-					} catch (Exception ex) {
-						address = "";
-					}
 				}
-				endVehcLocation.setAddress(address);
-				vehcLocationList.add(endVehcLocation);
-			}
 
+				if (oneTrafficDatum.getEndTime() != null && !oneTrafficDatum.getEndTime().equals("")) {
+					VehcLocation endVehcLocation = new VehcLocation();
+					endVehcLocation.setLocTime(oneTrafficDatum.getEndTime());
+					endVehcLocation.setWorkStatusText("熄火");
+					endVehcLocation.setSpeed(null);
+					endVehcLocation.setDirection("");
+					for (Map<String, Object> m : list) {
+						BigDecimal longitude = new BigDecimal(0);
+						BigDecimal latitude = new BigDecimal(0);
+						for (String k : m.keySet()) {
+							if (k.equals("longitude")) { // 纠偏后的经度
+								longitude = new BigDecimal(m.get(k).toString());
+							}
+							if (k.equals("latitude")) {// 纠偏后的纬度
+								latitude = new BigDecimal(m.get(k).toString());
+							}
+						}
+						try {
+							address = BaiduMap.getAdress(latitude, longitude);// 根据纠偏后的经纬度获取地址
+						} catch (Exception ex) {
+							address = "";
+						}
+					}
+					endVehcLocation.setAddress(address);
+					vehcLocationList.add(endVehcLocation);
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 
 		// 构建需要Excel表格数据
 		File demoFile = new File(session.getServletContext().getRealPath("/") + "content/template/历史轨迹导出模板.xls");
 		POIFSFileSystem poifsFileSystem = new POIFSFileSystem(new FileInputStream(demoFile));
 		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyyMMddHHmmss");
-		// todo 去掉vehc为空的判断
 		String plates = "";
 		if (vehc != null) {
 			plates = vehc.getPlates();

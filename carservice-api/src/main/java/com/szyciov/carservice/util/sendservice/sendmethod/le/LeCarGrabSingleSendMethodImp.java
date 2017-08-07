@@ -132,7 +132,7 @@ public class LeCarGrabSingleSendMethodImp extends ApiExceptionHandle implements 
 		//约车时限
 		int carsinterval = rule.getCarsinterval();
 		//约车时限的2倍
-		Date temptimeobj = StringUtil.addDate(new Date(), 2*carsinterval*60*1000);
+		Date temptimeobj = StringUtil.addDate(new Date(), 2*carsinterval*60);
 		boolean sow = false;
 		if(usetime.after(temptimeobj)){ //用车时间比较远，弱调度
 			sow = false;
@@ -399,6 +399,8 @@ public class LeCarGrabSingleSendMethodImp extends ApiExceptionHandle implements 
 				//当前范围内司机
 				List<PubDriver> drivers = new ArrayList<>();
 				drivers = getDriversInBound(rule, orderinfo, alreadySendDrivers, sow, rangeInfo, levelList);
+				//对需要静默推送的司机进行排序
+				optimalSortDriver(drivers, orderinfo,sow);
 				//过滤本轮能推送的司机
 				List<PubDriver> currentCanPushDrivers = new ArrayList<>();
 				for(PubDriver d : drivers) {
@@ -714,16 +716,24 @@ public class LeCarGrabSingleSendMethodImp extends ApiExceptionHandle implements 
 		List<OrderInfoDetail> currentOrder = orderApiService.getOrderInfoList(olp);
 		if(order.isIsusenow()){   //当前是即刻单
 			for(OrderInfoDetail o : currentOrder){
+				//当前订单预估时长(秒)+1小时
+				int estimatedSecond = order.getEstimatedtime()*60+3600;
+				//预估结束时间
+				Date noTakeStart = StringUtil.addDate(order.getUsetime(), estimatedSecond);
 				//存在未开始的即刻单或正在服务的订单
 				if(o.isIsusenow() || o.getStarttime() != null){
 					return false;
-				//当前订单用车时间不在已存在的预约单一个小时之后是不可以接的
-				}else if(!o.isIsusenow() && order.getUsetime().before(StringUtil.addDate(o.getUsetime(), 3600))){
+				//当前订单的预估结束时间(用车时间+预估时长+1小时)不在已存在的预约单用车时间之前是不可以接的
+				}else if(!noTakeStart.before(o.getUsetime())){
 					return false;
 				}
 			}
 		}else{   //当前是预约单
 			for(OrderInfoDetail o : currentOrder){
+				//已存在订单预估时长(秒)+1小时
+				int estimatedSecond = (int)o.getEstimatedtime()*60+3600;
+				//预估结束时间
+				Date noTakeStart = StringUtil.addDate(o.getUsetime(), estimatedSecond);
 				if(o.getStarttime() != null){  //存在正在服务的订单
 					int minute = (int)o.getEstimatedtime();  //预估时间
 					//调度时间(当前订单的用车时间,必须晚于服务中订单的预估时间的2倍)
@@ -732,7 +742,7 @@ public class LeCarGrabSingleSendMethodImp extends ApiExceptionHandle implements 
 	                	return false;
 	                }
 	            //当前订单用车时间不在已存在的即刻单一个小时之后是不可以接的
-				}else if(o.isIsusenow() && order.getUsetime().before(StringUtil.addDate(o.getUsetime(), 3600))){
+				}else if(o.isIsusenow() && order.getUsetime().before(noTakeStart)){
 					return false;
 				//当前订单的用车时间与已存在的预约单是同一天,不可以接
 				}else if (!o.isIsusenow() && StringUtil.getToday(order.getUsetime()).equals(StringUtil.getToday(o.getUsetime()))) {

@@ -21,6 +21,8 @@ import com.szyciov.organ.service.OrgIndexService;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.PageBean;
 
+import net.sf.json.JSONArray;
+
 /**
  * 控制器
  */
@@ -99,5 +101,18 @@ public class OrgIndexController extends BaseController {
 	@ResponseBody
 	public Map<String, Object> getOrgOrderByOrderno(@PathVariable String orderno) {
 		return orgIndexService.getOrgOrderByOrderno(orderno);
+	}
+	
+	/**
+	 * 获取服务中订单
+	 * @param userId
+	 * @param organId
+	 * @param usertype
+	 * @return
+	 */
+	@RequestMapping(value = "api/OrgIndex/GetServiceOrder", method = RequestMethod.POST)
+	@ResponseBody
+	public JSONArray getServiceOrder(@RequestBody OrgOrderQueryParam orgOrderQueryParam) {
+		return orgIndexService.getServiceOrder(orgOrderQueryParam);
 	}
 }

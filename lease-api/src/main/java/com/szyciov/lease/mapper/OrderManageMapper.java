@@ -124,4 +124,6 @@ public interface OrderManageMapper {
 
     List<Map<String, Object>> getBelongLeaseCompanySelect(Map<String, Object> params);
 
+    void updatePubDriverLeisure(String driverid);
+
 }

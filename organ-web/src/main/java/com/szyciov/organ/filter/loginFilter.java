@@ -1,24 +1,22 @@
 package com.szyciov.organ.filter;
 
-import java.io.IOException;
+import com.szyciov.util.CommonUtils;
+import com.szyciov.util.Constants;
+import com.szyciov.util.UserTokenManager;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.szyciov.util.CommonUtils;
-import com.szyciov.util.Constants;
-import com.szyciov.util.UserTokenManager;
+import java.io.IOException;
 
 public class loginFilter extends OncePerRequestFilter {
-	private static final String UNCHEKED_URL = "/login.jsp,/login,/doLogin";
+	private static final String UNCHEKED_URL = "/login.jsp,/login,/doLogin,/ThirdOrder/GetOrgOrderCost,/Order/CancelOrder,/OrgIndex/GetServiceOrder";
 	private static final String REDIRECT_PAGE = "/login.jsp";
 	Logger logger = Logger.getLogger(loginFilter.class);
 

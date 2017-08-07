@@ -89,7 +89,7 @@ public class OrgOrganService {
 			//随机生成密码，并发送随机密码到联系人手机
 			List<String> list = new ArrayList<String>();
 			list.add(orgOrgan.getPhone());
-			String password = UNID.getUNID(null, 6);
+			String password = UNID.getPwdDefStr();
 			//"模板：“您的超级管理员账号：xxxxxxx;随机密码：888888，请使用账号密码登录（租赁公司简称）”
 //			String content = "您的超级管理员账号："+orgOrgan.getAccount()+";随机密码："+password+"，请使用账号密码登录（"+pubDriverDao.getLeLeasescompany(orgOrgan.getCompanyId()).getShortName()+"）";
 			String content = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.lease.service.orgorganservice.addorguser", orgOrgan.getAccount(),password);
@@ -164,7 +164,7 @@ public class OrgOrganService {
 				if(!o.getAccount().equals(orgOrgan.getAccount()) || !o.getPhone().equals(orgOrgan.getPhone())){
 					List<String> list = new ArrayList<String>();
 					list.add(orgOrgan.getPhone());
-					String password = UNID.getUNID(null, 6);
+					String password = UNID.getPwdDefStr();
 					//"模板：“您的超级管理员账号：xxxxxxx;随机密码：888888，请使用账号密码登录（租赁公司简称）”
 //					String content = "您的超级管理员账号："+orgOrgan.getAccount()+";随机密码："+password+"，请使用账号密码登录（"+pubDriverDao.getLeLeasescompany(orgOrgan.getCompanyId()).getShortName()+"）";
 					String content = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.lease.service.orgorganservice.addorguser", orgOrgan.getAccount(),password);

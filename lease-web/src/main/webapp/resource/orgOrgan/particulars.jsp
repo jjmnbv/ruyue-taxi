@@ -292,7 +292,7 @@
 	</div>	
 	<!-- 百度地图弹窗 start-->
 	<div class="pop_box" id="map">
-	  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+	  <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 	  <div class="tip_box_c">
 	        <div class="row form" style="display: none;">
 	            <div class="col-12"><label style="width:6%;">搜索地址</label><input type="text" style="width:94%;" placeholder="详细地址" name="keyword" id="suggest"/></div>

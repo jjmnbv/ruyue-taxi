@@ -14,21 +14,22 @@ import java.util.Set;
 import com.szyciov.carservice.service.MessagePubInfoService;
 import com.szyciov.carservice.service.OrderApiService;
 import com.szyciov.carservice.util.sendservice.sendrules.SendRuleHelper;
+import com.szyciov.driver.entity.DriverMessage;
 import com.szyciov.driver.entity.OrderInfoDetail;
-import com.szyciov.driver.enums.DriverState;
 import com.szyciov.driver.enums.OrderListEnum;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.param.OrderListParam;
 import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.enums.SendRulesEnum;
+import com.szyciov.util.JedisUtil;
 import com.szyciov.util.StringUtil;
 import com.szyciov.util.latlon.LatLonUtil;
-import org.apache.log4j.Logger;
+import net.sf.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
 
 /**
  * 派单流程抽象类
@@ -38,7 +39,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Service
 public abstract class AbstractSendMethod implements SendMethodHelper {
 
-	private static final Logger logger = Logger.getLogger(AbstractSendMethod.class);
+	private static final Logger logger = LoggerFactory.getLogger(AbstractSendMethod.class);
 
     @Autowired
 	protected MessagePubInfoService messagePubInfoService;
@@ -102,31 +103,6 @@ public abstract class AbstractSendMethod implements SendMethodHelper {
         return map;
     }
 
-	/**
-	 * 根据用车时间、预估时间判断是否可以下单
-	 * 预约单：（已存在订单的用车时间、预估时间）、新订单的用车时间
-	 * 即刻单：(当前即刻单的用车时间、预估时间)、存在预约单的用车时间
-	 * @param oldUsetime		已存在订单的用车时间
-	 * @param estimatedtime		已存在订单的预估时间
-	 * @param newUsetime		新订单的用车时间
-	 * @return
-	 */
-	protected boolean isPlaceOrderByDate (Date oldUsetime,int estimatedtime ,Date newUsetime){
-		Date usenowusetime = oldUsetime;
-		int estime = estimatedtime;
-		//订单结束时间=用车时间+预估时间+1小时
-		Date usenowendtime = new Date(usenowusetime.getTime()+estime*60*1000+60*60*1000);
-		//当前下单的预约单的用车时间
-		Date cuusetime =newUsetime;
-		//如果存在的订单结束时间在新订单用车时间之后，则不可派单
-		if(usenowendtime.after(cuusetime)){
-			//不可以下单的
-			return false;
-		}else{
-			return true;
-		}
-	}
-
 
 	/**
 	 * 即可派单
@@ -142,23 +118,25 @@ public abstract class AbstractSendMethod implements SendMethodHelper {
 	 * @return
 	 */
 	protected  boolean canPush2Driver(PubDriver driver,AbstractOrder order){
-		//司机必须是当班空闲
-		Map<String, Object> pdStatus = messagePubInfoService.getDriverInfo(driver.getId());
-		if(pdStatus==null){
-			return false;
-		}
-		String workstatus = (String) pdStatus.get("workstatus");
-		if(!(DriverState.IDLE.code.equals(workstatus))){
-			return false;
-		}
+
 		//检查司机的未出行订单和是否有服务中订单
 		OrderListParam olp = new OrderListParam();
 		olp.setType(OrderListEnum.CURRENT.state);
 		olp.setDriverid(driver.getId());
-		List<OrderInfoDetail> currentOrder = orderApiService.getOrderInfoList(olp);
+		List<OrderInfoDetail> currentOrder = listOrderInfo(olp);
 
-		return isPush(currentOrder,order);
+		return isPush(currentOrder,order,driver.getPhone());
 	}
+
+	/**
+	 * 获取订单列表
+	 * @param olp
+	 * @return
+	 */
+	protected  List<OrderInfoDetail> listOrderInfo(OrderListParam olp){
+		return orderApiService.getOrderInfoList(olp);
+	}
+
 
 	/**
 	 * 处理选择合理的司机
@@ -219,28 +197,32 @@ public abstract class AbstractSendMethod implements SendMethodHelper {
 	 * @param order
 	 * @return
 	 */
-	protected boolean isPush(List<OrderInfoDetail> currentOrder,AbstractOrder order){
+	protected boolean isPush(List<OrderInfoDetail> currentOrder,AbstractOrder order,String driverPhone){
+		//当前订单预估时长(秒)
+		int estimatedSecond = order.getEstimatedtime()*60;
+
 		if(order.isIsusenow()){   //当前是即刻单
 			for(OrderInfoDetail o : currentOrder){
+
 				//存在未开始的即刻单或正在服务的订单
 				if(o.isIsusenow() || o.getStarttime() != null){
 					return false;
-					//当前订单用车时间不在已存在的预约单一个小时之后是不可以接的
-				}else if(!o.isIsusenow() && order.getUsetime().before(StringUtil.addDate(o.getUsetime(), 3600))){
+				//当前订单预估抵达时间不在已存在的预约单用车时间之前1小时
+				}else if(!o.isIsusenow() && o.getUsetime().before(StringUtil.addDate(order.getUsetime(), estimatedSecond+3600))){
 					return false;
 				}
 			}
 		}else{   //当前是预约单
 			for(OrderInfoDetail o : currentOrder){
+				int minute = (int)o.getEstimatedtime();  //预估时间
 				if(o.getStarttime() != null){  //存在正在服务的订单
-					int minute = (int)o.getEstimatedtime();  //预估时间
 					//调度时间(当前订单的用车时间,必须晚于服务中订单的预估时间的2倍)
 					Date temptime = StringUtil.addDate(o.getStarttime(), minute*60*2);
 					if(temptime.after(order.getUsetime())){
 						return false;
 					}
-					//当前订单用车时间不在已存在的即刻单一个小时之后是不可以接的
-				}else if(o.isIsusenow() && order.getUsetime().before(StringUtil.addDate(o.getUsetime(), 3600))){
+					//当前订单用车时间不在已存在的即刻单预估抵达时间一个小时之后是不可以接的
+				}else if(o.isIsusenow() && order.getUsetime().before(StringUtil.addDate(o.getUsetime(),minute*60+3600))){
 					return false;
 					//当前订单的用车时间与已存在的预约单是同一天,不可以接
 				}else if (!o.isIsusenow() && StringUtil.getToday(order.getUsetime()).equals(StringUtil.getToday(o.getUsetime()))) {
@@ -251,11 +233,11 @@ public abstract class AbstractSendMethod implements SendMethodHelper {
 		return true;
 	}
 
-		/**
-         * 订单是否被接走
-         * @param orderno
-         * @return
-         */
+	/**
+	 * 订单是否被接走
+	 * @param orderno
+	 * @return
+	 */
 	protected boolean isOrderTakedOrCancel(String orderno){
 		//查看订单有没有司机接单或者取消掉
 		String orderstatus = getOrderStatus(orderno);
@@ -380,26 +362,7 @@ public abstract class AbstractSendMethod implements SendMethodHelper {
         }
 
         return drivers;
-        //
-        //for(int i=1;i<distance.size()-1;i++){
-        //
-			//for(int j=0;j<distance.size()-i;j++){
-			//	Double distance1 = distance.get(j);
-			//	Double distance2 = distance.get(j+1);
-        //
-			//	PubDriver driver1 = drivers.get(j);
-			//	PubDriver driver2 = drivers.get(j+1);
-        //
-			//	if(distance1>distance2){
-        //
-			//		distance.set(j,distance2);
-			//		distance.set(j+1,distance1);
-        //
-			//		drivers.set(j,driver1);
-			//		drivers.set(j+1,driver2);
-			//	}
-			//}
-        //}
+
 	}
 
 	/**
@@ -421,12 +384,6 @@ public abstract class AbstractSendMethod implements SendMethodHelper {
 	protected abstract void saveDriverMessage(AbstractOrder orderinfo,List<PubDriver> drivers,Date grabEndTime) ;
 
 
-	/**
-	 * 获取存在服务的预约订单的时间
-	 * @param driverId
-	 * @return
-	 */
-	protected abstract List<String> listDriverUnServiceTimes(String driverId);
 
 	/**
 	 * 获取当前订单状态
@@ -435,11 +392,28 @@ public abstract class AbstractSendMethod implements SendMethodHelper {
 	 */
 	protected  abstract String getOrderStatus(String orderNo);
 
+
 	/**
-	 * 获取最近一次要出行的订单
-	 * @param driverId
-	 * @return
+	 * 保存司机信息2redis
+	 * @param message
+	 * @param orderinfo
+	 * @param drivers
+	 * @param grabEndTime
 	 */
-	protected  abstract AbstractOrder getLastReverceOrder(String driverId);
+	protected  void setDriverMessage(DriverMessage message,AbstractOrder orderinfo,
+									 List<PubDriver> drivers,Date grabEndTime){
+		//订单信息转为字符串
+		String value = JSONObject.fromObject(message).toString();
+		Date useday = StringUtil.getToday(orderinfo.getUsetime());
+		String usedaystr = StringUtil.formatDate(useday, StringUtil.TIME_WITH_DAY);
+
+		for(PubDriver pd : drivers){
+			String key = "DriverGrabMessage_" + pd.getId() + "_" + pd.getPhone()+"_" + orderinfo.getOrderno()+ "_" + usedaystr;
+			//抢单结束时间比现在时间晚,才保存
+			if(grabEndTime != null && grabEndTime.after(new Date())){
+				JedisUtil.setString(key, (int)((grabEndTime.getTime() - System.currentTimeMillis())/1000), value);
+			}
+		}
+	}
 
 }

@@ -1,6 +1,9 @@
 package com.szyciov.organ.service;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +19,9 @@ import com.szyciov.org.entity.OrgOrderDetails;
 import com.szyciov.org.param.OrgOrderQueryParam;
 import com.szyciov.organ.dao.OrgIndexDao;
 import com.szyciov.util.PageBean;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @Service("OrgIndexService")
 public class OrgIndexService {
@@ -471,5 +477,142 @@ public class OrgIndexService {
 	
 	public Map<String, Object> getOrgOrderByOrderno(String orderno) {
 		return dao.getOrgOrderByOrderno(orderno);
+	}
+	
+	public JSONArray getServiceOrder(OrgOrderQueryParam orgOrderQueryParam){
+//		long startTime=System.nanoTime();   //获取开始时间  
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("userId", orgOrderQueryParam.getUserid());
+		map.put("organId", orgOrderQueryParam.getKey());
+		map.put("usertype", orgOrderQueryParam.getUsertype());
+		map.put("iDisplayStart",orgOrderQueryParam.getiDisplayStart());
+		map.put("iDisplayLength",orgOrderQueryParam.getiDisplayLength());
+		List<OrgOrder> list = dao.getServiceOrder(map);
+		for (OrgOrder o : list) {
+			//设置如约的士
+			o.setCompanyName("如约的士");
+			if (o.getOrdertype() != null && !o.getOrdertype().equals("")) {
+				if (o.getOrdertype().equals(OrderEnum.ORDERTYPE_RESERVE.code)) {
+					o.setOrdertype("约车");
+				}
+			}
+			if (o.getOrdertype() != null && !o.getOrdertype().equals("")) {
+				if (o.getOrdertype().equals(OrderEnum.ORDERTYPE_PICKUP.code)) {
+					o.setOrdertype("接机");
+				}
+			}
+			if (o.getOrdertype() != null && !o.getOrdertype().equals("")) {
+				if (o.getOrdertype().equals(OrderEnum.ORDERTYPE_DROPOFF.code)) {
+					o.setOrdertype("送机");
+				}
+			}
+			if (o.getOrdertype() != null && !o.getOrdertype().equals("")) {
+				if (o.getOrdertype().equals(OrderEnum.ORDERTYPE_TAXI.code)) {
+					o.setOrdertype("出租车");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.WAITTAKE.state)) {
+					o.setOrderStatusShow("等待接单");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.MANTICSEND.state)) {
+					o.setOrderStatusShow("等待接单");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.WAITSTART.state)) {
+					o.setOrderStatusShow("等待服务");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.START.state)) {
+					o.setOrderStatusShow("等待服务");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.ARRIVAL.state)) {
+					o.setOrderStatusShow("等待服务");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.PICKUP.state)) {
+					o.setOrderStatusShow("服务中");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.INSERVICE.state)) {
+					o.setOrderStatusShow("服务中");
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.SERVICEDONE.state)) {
+					if(o.getPaymentstatus().equals("0")){
+						o.setOrderStatusShow("未支付");
+					}else if(o.getPaymentstatus().equals("1")){
+						o.setOrderStatusShow("已支付");
+					}else if(o.getPaymentstatus().equals("2")){
+						o.setOrderStatusShow("结算中");
+					}else if(o.getPaymentstatus().equals("3")){
+						o.setOrderStatusShow("已结算");
+					}else if(o.getPaymentstatus().equals("4")){
+						o.setOrderStatusShow("未结算");
+					}
+				}
+			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+					o.setOrderStatusShow("已取消");
+				}
+			}
+			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+				if (o.getPaymethod().equals("0")) {
+					o.setPayTypeShow("个人支付");
+				}
+			}
+			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+				if (o.getPaymethod().equals("1")) {
+					o.setPayTypeShow("个人垫付");
+				}
+			}
+			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+				if (o.getPaymethod().equals("2")) {
+					o.setPayTypeShow("机构支付");
+				}
+			}
+			if(o.getUsetime() != null && !o.getUsetime().equals("")){
+				o.setUsetimeShow(getStringDate(o.getUsetime()));
+			}
+		}
+		JSONArray json = new JSONArray();
+		for(OrgOrder o : list){
+			JSONObject jo = new JSONObject();
+			jo.put("orderno",o.getOrderno());
+			jo.put("userMessage",o.getUserMessage());
+			jo.put("companyName",o.getCompanyName());
+			jo.put("ordertype",o.getOrdertype());
+			jo.put("usetime",o.getUsetimeShow());
+			jo.put("orderStatusShow",o.getOrderStatusShow());
+			jo.put("payTypeShow",o.getPayTypeShow());
+			jo.put("orderamount",o.getOrderamount());
+			json.add(jo);
+		}
+//		long endTime=System.nanoTime(); //获取结束时间  
+//		System.out.println("程序运行时间： "+(endTime-startTime)+"ns"); 
+		return json;
+	};
+	public static String getStringDate(long now) {
+		Date d = new Date(now);
+		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+//		Calendar calendar = Calendar.getInstance();
+//		calendar.setTimeInMillis(now);
+//		return formatter.format(calendar.getTime());
+		return formatter.format(d);
+	}
+	public static String getStringDate(Date date) {
+	   SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+	   String dateString = formatter.format(date);
+	   return dateString;
 	}
 }

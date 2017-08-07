@@ -2,13 +2,17 @@ package com.szyciov.supervision.api.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.supervision.api.BaseApi;
 import com.supervision.api.basic.CompanyOperateInfo;
+import com.supervision.api.order.OrderSupplementsRequest;
 import com.supervision.enums.CommandEnum;
 import com.supervision.enums.InterfaceType;
+import com.szyciov.supervision.dao.PubSupervisionLogDao;
+import com.szyciov.supervision.entity.PubSupervisionLog;
 import com.szyciov.supervision.mq.MessageSender;
 import com.szyciov.supervision.util.HttpContent;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
@@ -36,6 +40,9 @@ public class BaseService {
 
     private @Autowired MessageSender messageSender;
 
+    private @Autowired TokenService tokenService;
+
+    private @Autowired GzwycApi gzwycApi;
     /**
      * 发送接口对象
      *
@@ -49,13 +56,14 @@ public class BaseService {
             return null;
         }
 
-        String token = TokenService.getToken();
+        String token = tokenService.getToken();
         EntityInfoList infoList = new EntityInfoList(list);
         String result = JSONUtil.toJackson(infoList);
         CommandEnum commandEnum = list.get(0).getCommand();
         InterfaceType interfaceType = list.get(0).getApiType();
         BasicRequest req = new BasicRequest(result, interfaceType, commandEnum, RequestType.REQ, token);
-        HttpContent httpContent = GzwycApi.send(req);
+        HttpContent httpContent = gzwycApi.send(req);
+
 
         if (httpContent.getStatus() == 200) {
             TypeReference<EntityInfoList<BaseApi>> t = new TypeReference<EntityInfoList<BaseApi>>() {
@@ -102,7 +110,6 @@ public class BaseService {
         }
         return list;
     }
-
     /**
      * 是否再次发送
      * @param list
@@ -117,5 +124,32 @@ public class BaseService {
             }
         } else
             return false;
+    }
+
+    /**
+     * 接收订单补传参数
+     * @param paramString
+     * @return
+     */
+    public EntityInfoList<OrderSupplementsRequest> receiveOrderSupplements(String paramString){
+        TypeReference<EntityInfoList<OrderSupplementsRequest>> t = new TypeReference<EntityInfoList<OrderSupplementsRequest>>() {
+        };
+        // 编码处理
+//        String content = new String(httpContent.getContent().getBytes("ISO-8859-1"), "UTF-8");
+        try {
+            EntityInfoList<OrderSupplementsRequest> infoList = JSONUtil.objectMapper.readValue(paramString, t);
+            List<OrderSupplementsRequest> list=infoList.getItems();
+            for (OrderSupplementsRequest orderSupplementsRequest:list) {
+//                处理补传请求
+                orderSupplementsRequest.setSuccess(1);
+                orderSupplementsRequest.setReason("成功");
+            }
+
+            return infoList;
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.error("API_INFO:订单补传请求数据异常:{}|请求参数:{}",e.getMessage(),paramString);
+            return null;
+        }
     }
 }

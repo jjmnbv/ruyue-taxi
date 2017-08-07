@@ -83,13 +83,17 @@
 			la.deadheadprice,
 			la.nightstarttime,
 			la.nightendtime,
-			la.nighteprice
+			la.nighteprice,
+			IFNULL(pd1.`value`,0) reversefee,
+			IFNULL(pd2.`value`,1.0) discount
 		FROM
 			<if test=" usetype == 0 or usetype == '0'.toString()">
 		 	le_company_rules_ref lcrr,
 		 	org_user ou,
 		 	</if>
 			le_accountrules la
+			LEFT JOIN pub_dictionary pd1 ON pd1.`status` = 1 AND pd1.type = '机构用户下单预约附加费用'
+			LEFT JOIN pub_dictionary pd2 ON pd2.`status` = 1 AND pd2.type = '机构用户订单支付折扣比例'
 		WHERE 1=1
 			AND la.`Status` = 1
 			AND la.rulesstate = 0
@@ -138,9 +142,13 @@
 			oa.deadheadprice,
 			oa.nightstarttime,
 			oa.nightendtime,
-			oa.nighteprice
+			oa.nighteprice,
+			IFNULL(pd1.`value`,0) reversefee,
+			IFNULL(pd2.`value`,1.0) discount
 		FROM
 			op_accountrules oa
+		LEFT JOIN pub_dictionary pd1 ON pd1.`status` = 1 AND pd1.type = '个人用户下单预约附加费用'
+		LEFT JOIN pub_dictionary pd2 ON pd2.`status` = 1 AND pd2.type = '个人用户订单支付折扣比例'
 		WHERE 1 = 1
 		AND oa.`status` = 1
 		AND oa.rulesstate = 0
@@ -1348,8 +1356,23 @@
 	
 	<!-- 查询出租车计费规则 -->
 	<select id="getOpTaxiAccountrulesByCity" resultType="TaxiOrderCost" parameterType="OrderCostParam">
-		select startprice, startrange, surcharge, emptytravelrate, standardrange, renewalprice
-		from op_taxiaccountrules where status = 1 and rulesstate = "0" and city = #{city} limit 1
+		SELECT
+			ot.startprice,
+			ot.startrange,
+			ot.surcharge,
+			ot.emptytravelrate,
+			ot.standardrange,
+			ot.renewalprice,
+			IFNULL(pd.`value`, 0) reversefee
+		FROM
+			op_taxiaccountrules ot
+		LEFT JOIN pub_dictionary pd ON pd.`status` = 1
+		AND pd.type = '个人用户出租车下单预约附加费用'
+		WHERE 1=1
+		AND ot.`status` = 1
+		AND ot.rulesstate = "0"
+		AND ot.city = #{city}
+		LIMIT 1
 	</select>
 	
 	<!-- 查询出租车派单规则 -->

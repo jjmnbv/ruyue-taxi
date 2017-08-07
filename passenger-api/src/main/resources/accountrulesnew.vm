@@ -110,6 +110,7 @@
 		<div id="table" style="margin: 1rem 2rem;">
 
 		</div>
+        <div style="margin: 1rem 2rem;color: red;">*预约用车会增加附加费用${yyfjf}元，本公司保留最终解释权。</div>
 		<!--描述-->
 		<div style="position: absolute;bottom: 0px;">
 			<span>注：司机服务过程中产生的高速费、路桥费、停车费等其他费用由乘客自己支付</span>
@@ -317,6 +318,8 @@
 </script>
 <script>
 	var rules = ${rules};
+	//预约附加费
+	var yyfjf = ${yyfjf};
     (function(){
         /*var rules = [
             {
@@ -420,33 +423,33 @@
         tr3_value.innerHTML = scf+"元/分钟";
 
         //回空里程
-        var tr3 = table.insertRow(-1);
-        var tr3_key = tr3.insertCell(-1);
-        tr3_key.innerHTML = "回空里程";
-        var tr3_value = tr3.insertCell(-1);
+        var tr4 = table.insertRow(-1);
+        var tr4_key = tr4.insertCell(-1);
+        tr4_key.innerHTML = "回空里程";
+        var tr4_value = tr4.insertCell(-1);
         var hklc = accountrule.deadheadmileage;
         if(!hklc||hklc==null){
             hklc = 0;
         }
-        tr3_value.innerHTML = hklc+"公里";
+        tr4_value.innerHTML = hklc+"公里";
 
         //回空费价
-        var tr3 = table.insertRow(-1);
-        var tr3_key = tr3.insertCell(-1);
-        tr3_key.innerHTML = "回空费价";
-        var tr3_value = tr3.insertCell(-1);
+        var tr5 = table.insertRow(-1);
+        var tr5_key = tr5.insertCell(-1);
+        tr5_key.innerHTML = "回空费价";
+        var tr5_value = tr5.insertCell(-1);
         var hkfj = accountrule.deadheadprice;
         if(!hkfj||hkfj==null){
             hkfj = 0;
         }
         hkfj = hkfj.toFixed(1);
-        tr3_value.innerHTML = hkfj+"元/公里";
+        tr5_value.innerHTML = hkfj+"元/公里";
 
         //夜间征收时段
-        var tr3 = table.insertRow(-1);
-        var tr3_key = tr3.insertCell(-1);
-        tr3_key.innerHTML = "夜间征收时段";
-        var tr3_value = tr3.insertCell(-1);
+        var tr6 = table.insertRow(-1);
+        var tr6_key = tr6.insertCell(-1);
+        tr6_key.innerHTML = "夜间征收时段";
+        var tr6_value = tr6.insertCell(-1);
         var starttime = accountrule.nightstarttime;
         var endtime = accountrule.nightendtime;
         var tempvar = "";
@@ -455,19 +458,29 @@
                 tempvar="次日";
             }
         }catch(e){}
-        tr3_value.innerHTML = starttime+"-"+endtime+tempvar;
+        tr6_value.innerHTML = starttime+"-"+endtime+tempvar;
 
         //夜间费价
-        var tr3 = table.insertRow(-1);
-        var tr3_key = tr3.insertCell(-1);
-        tr3_key.innerHTML = "夜间费价";
-        var tr3_value = tr3.insertCell(-1);
+        var tr7 = table.insertRow(-1);
+        var tr7_key = tr7.insertCell(-1);
+        tr7_key.innerHTML = "夜间费价";
+        var tr7_value = tr7.insertCell(-1);
         var yjfj = accountrule.nighteprice;
         if(!yjfj||yjfj==null){
             yjfj = 0;
         }
         yjfj = yjfj.toFixed(1);
-        tr3_value.innerHTML = yjfj+"元/公里";
+        tr7_value.innerHTML = yjfj+"元/公里";
+
+        //预约附加费fffjf
+//        var tr8 = table.insertRow(-1);
+//        var tr8_key = tr8.insertCell(-1);
+//        tr8_key.innerHTML = "预约附加费";
+//        var tr8_value = tr8.insertCell(-1);
+//        if(!fffjf||fffjf==null){
+//            fffjf = 0;
+//        }
+//        tr8_value.innerHTML = fffjf;
         return table;
     }
 

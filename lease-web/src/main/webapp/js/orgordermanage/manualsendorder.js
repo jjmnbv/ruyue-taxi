@@ -314,8 +314,13 @@ function changeDriver() {
 			var message = result.message == null ? result : result.message;
 			if (result.status == "success") {
 				$("#manualSendOrderFormDiv").hide();
+                var tmp = $("#tmp").val();
+                var url = window.location.href = $("#baseUrl").val() + "OrderManage/OrgCurrentOrderIndex";
+                if(null != tmp && "tmp" == tmp) {
+                    url = window.location.href = $("#baseUrl").val() + "TmpOrderManage/OrgCurrentOrderIndex";
+                }
             	toastr.options.onHidden = function() {
-            		window.location.href = $("#baseUrl").val() + "OrderManage/OrgCurrentOrderIndex";
+            		window.location.href = url;
             	}
             	toastr.success(message, "提示");
 			} else {

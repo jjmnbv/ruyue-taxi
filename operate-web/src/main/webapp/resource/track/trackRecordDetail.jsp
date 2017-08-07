@@ -1,9 +1,12 @@
+<%@page import="com.szyciov.util.SystemConfig"%>
 <%@ page contentType="text/html; charset=UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
+	String vmsApiUrl = SystemConfig.getSystemProperty("vmsApiUrl");	
+	String apikey = SystemConfig.getSystemProperty("vmsApikey");
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -43,15 +46,12 @@
 		<script type="text/javascript" src="content/js/jquery.combotree.js"></script>
 		<script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.core-3.5.js"></script>
 		<script type="text/javascript" src="content/plugins/zTree_v3/js/jquery.ztree.excheck-3.5.js"></script>
-		
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=AFLc9FVyIHUWExKYFETDeF6T"></script>
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=AFLc9FVyIHUWExKYFETDeF6T&s=1"></script>
 		<script src="content/plugins/amcharts/amcharts.js" type="text/javascript"></script>
 		<script src="content/plugins/amcharts/serial.js" type="text/javascript"></script>
 		<script src="content/plugins/amcharts/pie.js" type="text/javascript"></script>
 		<script src="content/plugins/amcharts/gauge.js" type="text/javascript"></script>
 		<script type="text/javascript" src="js/basecommon.js"></script>
-		
-		
 		<style type="text/css">
 			.form select{width:68%;}
 			.select2-container .select2-choice{height:30px;}
@@ -64,31 +64,40 @@
 			  width: $(window).width();
 			  margin: 0 auto;
 			}
-		</style>
-		<style type="text/css">
 		    #map_canvas {
 		        width: 100%;
 		        height: 500px;
 		        overflow: hidden;
 		        margin: 0;
 		    }
-
+			.track_bg_pImei{
+				width:165px;
+				background-size:100% 100%;
+			}
+			.track_bg_1_1{
+			    line-height: 40px;
+	    		height: 40px;
+			}
 		</style>
+			<script type="text/javascript">
+			var basePath = "<%=basePath%>";
+			var vmsApiUrl = "<%=vmsApiUrl%>";
+			var apikey="<%=apikey%>";
+		</script>
 	</head>
 	<body >
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden"/>
 		<input name="eqpId" id="eqpId" value="${eqpId}" type="hidden"/>
 		<input name="trackId" id="trackId" value="${trackId}" type="hidden"/>
-		
-		
+		<input name="imei" id="imei" value="${imei}" type="hidden"/>
 		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
-			<a href="<%=basePath%>Track/Index">行程数据 > </a>
-			<a href="<%=basePath%>Track/TrackRecord">行程记录 > </a>行程记录详情</div>
+			<a href="<%=basePath%>Track/TrackRecord">行程记录 > </a>行程记录详情
+			 <button class="SSbtn blue back" onclick="back()">返回</button>	
+		</div>
 		<div class="page-content-wrapper">
             <div class="content">
                 <div class="page-content-body">
                     <!-- 写具体业务代码 -->
-				
 					<div class="portlet" style="margin-bottom:0px;padding-top:10px;">
 					    <div class="portlet-title">
 					        <div class="caption">
@@ -97,25 +106,28 @@
 					    </div>
 					    <div class="portlet-body">
 					        <div class="row">
-					            <div class="col-3 ">
-					                <p id="pV_PLATES" class="track_bg_1"></p>
+					            <div class="col-4">
+					            	<div class="col-6"></div>
+						            <div class="col-6">
+						            	<p id="pImei" class="track_bg_1 track_bg_pImei"></p>
+						            </div>
 					            </div>
-					            <div class="col-3">
+					            <div class="col-4">
 					                <div class="col-6"><p class="car_icon"></p></div>
-					                <div class="col-6"><p id="pV_PROPERTY" class="track_bg_1" style=" float: left;"></p></div>
+					                <div class="col-6"><p id="pV_PLATES" class="track_bg_1" style=" float: left;"></p></div>
+					                <!-- <div class="col-6"><p id="pV_PROPERTY" class="track_bg_1" style=" float: left;"></p></div> -->
 					            </div>
-					            <div class="col-3">
+					            <div class="col-4">
 					                <div class="col-6"><p class="people"></p></div>
 					                <div class="col-6"><p id="pV_DEPT" class="track_bg_1_1" style=" float: left;"></p></div>
 					            </div>
-					            <div class="col-3">
+					           <!--  <div class="col-3">
 					                <div class="col-6"><p class="img_trave"></p></div>
 					                <div class="col-6"><p id="pD_NAME" class="track_bg_1_1" style=" float: left;"></p></div>
-					            </div>
+					            </div> -->
 					        </div>
 					    </div>
 					</div>
-					
 					<div class="portlet">
 					    <div class="portlet-title">
 					        <div class="caption">
@@ -158,7 +170,6 @@
 					        </div>
 					    </div>
 					</div>
-					
 					<div class="portlet">
 					    <div class="portlet-title">
 					        <div class="caption">
@@ -168,7 +179,7 @@
 					    <div class="portlet-body">
 					        <div class="row">
 					            <p style="font-size:16px">
-					                行程总里程数<font color="#2AADE0" style="font-weight: bold;"><span class="form-control-static" id="pVT_TOTALMILEAGE"></span> km</font>,各分段行程里程数和所占比例如下：
+					               	 行程总里程数<font color="#2AADE0" style="font-weight: bold;"><span class="form-control-static" id="pVT_TOTALMILEAGE"></span> km</font>,各分段行程里程数和所占比例如下：
 					            </p>
 					            <div class="col-8">
 					                <div id="mileagechar" style="height:220px"></div>
@@ -228,7 +239,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc" style="color: #333333">
-					                                    耗油量
+					                                   	 耗油量
 					                                </div>
 					                            </div>
 					                        </div>
@@ -243,7 +254,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc" style="color: #333333">
-					                                    怠速耗油量
+					                                   	 怠速耗油量
 					                                </div>
 					                            </div>
 					                        </div>
@@ -260,7 +271,7 @@
 					                                    0
 					                                </div>
 					                                <div class="desc" style="color: #333333">
-					                                    百公里油耗
+					                                   	 百公里油耗
 					                                </div>
 					                            </div>
 					                        </div>
@@ -270,7 +281,6 @@
 					        </div>
 					    </div>
 					</div>
-					
 					<div class="portlet">
 					    <div class="portlet-title">
 					        <div class="caption">
@@ -286,15 +296,9 @@
 					        </div>
 					    </div>
 					</div>
-					
                 </div>
             </div>
         </div>
-		
-		
 	</body>
 	<script type="text/javascript" src="js/track/trackRecordDetail.js"></script>
-	<script type="text/javascript">
-		var basePath = "<%=basePath%>";
-	</script>
 </html>

@@ -116,7 +116,7 @@
 	</insert>
 	
 	<update id="updateOpAccountrules" parameterType="OpAccountrules">
-		update op_accountrules set id = #{id}
+		update op_accountrules set updatetime = NOW()
 		<if test='null != city and "" != city'>
 			,city = #{city}
 		</if>
@@ -150,9 +150,6 @@
 		<if test='null != createtime and "" != createtime'>
 			,createtime = #{createtime}
 		</if>
-		<if test='null != updatetime and "" != updatetime'>
-			,updatetime = #{updatetime}
-		</if>
 		<if test='null != creater and "" != creater'>
 			,creater = #{creater}
 		</if>
@@ -162,11 +159,21 @@
 		<if test='null != status'>
 			,status = #{status}
 		</if>
+		<if test='null != deadheadmileage'>
 		,deadheadmileage = #{deadheadmileage}
+		</if>
+		<if test='null != deadheadprice'>
 		,deadheadprice = #{deadheadprice}
+		</if>
+		<if test='null != nightstarttime'>
 		,nightstarttime = #{nightstarttime}
+		</if>
+		<if test='null != nightendtime'>
 		,nightendtime = #{nightendtime}
+		</if>
+		<if test='null != nighteprice'>
 		,nighteprice = #{nighteprice}
+		</if>
 		where id = #{id}
 	</update>
 	

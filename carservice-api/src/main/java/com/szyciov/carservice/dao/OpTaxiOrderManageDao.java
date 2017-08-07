@@ -1,6 +1,9 @@
 package com.szyciov.carservice.dao;
 
+import java.util.Map;
+
 import com.szyciov.carservice.mapper.OpTaxiOrderManageMapper;
+import com.szyciov.entity.PubDriver;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxisendrecord;
@@ -8,8 +11,6 @@ import com.szyciov.op.entity.OpUser;
 import com.szyciov.op.entity.PubVehicle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import java.util.Map;
 
 /**
  * Created by ZF on 2017/5/27.
@@ -45,6 +46,10 @@ public class OpTaxiOrderManageDao {
 
     public PubVehicle getById(String id) {
         return opTaxiOrderManageMapper.getById(id);
+    }
+
+    public PubDriver getPubDriverById(String driverid) {
+        return opTaxiOrderManageMapper.getPubDriverById(driverid);
     }
 
 }

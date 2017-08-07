@@ -54,7 +54,7 @@ if (!version.contains("SNAPSHOT")){
 }
 
 springBoot {
-    mainClass = "com.ry.taxi.RyTaxiMeterServiceApplication"
+    mainClass = "com.ry.taxi.RyMeterServiceApplication"
 }
 
 repositories {
@@ -99,7 +99,6 @@ dependencies {
 
     //cache
     compile ('org.springframework.boot:spring-boot-starter-cache')
-    compile ('org.springframework.boot:spring-boot-starter-data-redis')
 
     //compile('org.springframework.boot:spring-boot-starter-data-jpa')
     //compile('org.hibernate:hibernate-core:5.2.8.Final')
@@ -143,7 +142,14 @@ dependencies {
 
     //h2
     //runtime('com.h2database:h2')
-
+    
+    //ruyue taxi
+    compile ('com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'){
+    	exclude module: 'slf4j-api'
+    	exclude module: 'slf4j-log4j12'
+    	exclude group : 'org.springframework.security'
+    }
+     
     //test
     testCompile('org.springframework.boot:spring-boot-starter-test')
 
@@ -162,12 +168,13 @@ task showTestTaskClasspath << {
 }
 
 task fatJar(type: Jar) {
-    baseName = "$artifactId"
-    version = "$project.version"
-    exclude('com/ruyue/taxi/RyTaxiMeterServiceApplication*')
-    exclude('config')
-    exclude('error*')
-    // from {configurations.compile.filter{!it.name.startsWith('ry-coach-common') && !it.name.startsWith('lombok')}.collect { it.isDirectory() ? it : zipTree(it)}}
+	baseName = "$artifactId"
+	version = "$project.version"
+	
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest {
+    	attributes 'Main-Class': 'com.ry.taxi.RyMeterServiceApplication'
+    }
     with jar
 }
 

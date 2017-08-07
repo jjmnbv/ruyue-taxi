@@ -134,6 +134,9 @@
 		<typeAlias type="com.szyciov.dto.pubAlarmprocess.PubAlarmprocessSaveDto" alias="PubAlarmprocessSaveDto"/>
 		
 		<typeAlias type="com.szyciov.op.entity.OpTaxiOrderReview" alias="OpTaxiOrderReview"/>
+		<typeAlias type="com.szyciov.entity.PubCoooperate" alias="PubCoooperate"/>
+		<typeAlias type="com.szyciov.entity.PubCooagreement" alias="PubCooagreement"/>
+		<typeAlias type="com.szyciov.entity.PubCooresource" alias="PubCooresource"/>
 
 	</typeAliases>
 </configuration>

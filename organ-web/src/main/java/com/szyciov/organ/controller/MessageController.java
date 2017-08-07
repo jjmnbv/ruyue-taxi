@@ -139,10 +139,13 @@ public class MessageController extends BaseController {
 		response.setContentType("text/html;charset=utf-8");
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		OrgUser orgUser = getLoginOrgUser(request);
-		String userId = orgUser.getId();
-		return templateHelper.dealRequestWithToken("/Message/GetUnReadNewsCountByUserId?userId={userId}",
-				HttpMethod.GET, userToken, null, Integer.class, userId);
+		if (orgUser != null) {
+			String userId = orgUser.getId();
+			return templateHelper.dealRequestWithToken("/Message/GetUnReadNewsCountByUserId?userId={userId}",
+					HttpMethod.GET, userToken, null, Integer.class, userId);
+		} else {
+			return 0;
+		}
 	}
-	
 	
 }

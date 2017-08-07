@@ -47,6 +47,7 @@ public class GPSRabbitTask implements AsyncTask {
             } else if(GpsSourceEnum.APP_GPS == gpsSource) {
                 ordergpsdata = appRabbit(msg);
             }
+            long starttime = System.currentTimeMillis();
             mileageApiService.uploadGps(ordergpsdata);
             //消息回复
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);

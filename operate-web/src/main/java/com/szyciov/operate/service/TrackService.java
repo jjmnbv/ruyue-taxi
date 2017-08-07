@@ -40,7 +40,7 @@ public class TrackService {
 		//显示的表头及对应的实体类属性名
 		List<String> cloumnList = new ArrayList<>(11);
 		cloumnList.add("plate");
-		cloumnList.add("eqpId");
+//		cloumnList.add("eqpId");
 		cloumnList.add("imei");
 		cloumnList.add("totalMileage");
 		cloumnList.add("totalFuel");
@@ -50,11 +50,11 @@ public class TrackService {
 		cloumnList.add("finalTrackTime");
 		List<String> titleList = new ArrayList<>(11);
 		titleList.add("车牌");
-		titleList.add("设备ID");
+//		titleList.add("设备ID");
 		titleList.add("设备IMEI");
-		titleList.add("总里程 单位：km");
-		titleList.add("总油耗量 单位：L");
-		titleList.add("总行程数 单位：次");
+		titleList.add("总里程 (km)");
+		titleList.add("总耗油量(L)");
+		titleList.add("总行程数 (次)");
 		titleList.add("总行程时长");
 		titleList.add("总怠速时长");
 		titleList.add("最后行驶时间");
@@ -98,7 +98,7 @@ public class TrackService {
 		titleList.add("结束时间");
 		titleList.add("行程时长");
 		titleList.add("里程(km)");
-		titleList.add("油耗量 单位：L");
+		titleList.add("耗油量 (L)");
 		titleList.add("怠速时长");
 		titleList.add("怠速耗油量(L)");
 		titleList.add("油耗(L/100km)");

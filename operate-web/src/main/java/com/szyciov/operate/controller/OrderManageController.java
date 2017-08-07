@@ -15,6 +15,7 @@ import com.szyciov.util.BaseController;
 import com.szyciov.util.Constants;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.StringUtil;
+import com.szyciov.util.SystemConfig;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Controller;
@@ -115,8 +116,11 @@ public class OrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/OrderManage/OrderDetailIndex")
-	public String orderDetailIndex(@RequestParam String orderno) {
-		return "resource/ordermanage/orderdetail";
+	public ModelAndView orderDetailIndex(@RequestParam String orderno, @RequestParam(required = false) String tmp) {
+		ModelAndView view = new ModelAndView();
+        view.addObject("tmp", tmp);
+        view.setViewName("resource/ordermanage/orderdetail");
+        return view;
 	}
 	
 	/**
@@ -215,6 +219,7 @@ public class OrderManageController extends BaseController {
 	@RequestMapping(value = "/OrderManage/ManualSendOrderIndex")
 	public ModelAndView manualSendOrderIndex(@RequestParam String orderno, @RequestParam String type,
             @RequestParam(required = false) String ordertype,
+            @RequestParam(required = false) String tmp,
 			HttpServletRequest request, HttpServletResponse response) {
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		List<Map<String, Object>> vehicleModelList = orderManageService.getCompanyVehicleModel(orderno, userToken);
@@ -222,6 +227,7 @@ public class OrderManageController extends BaseController {
 		ModelAndView view = new ModelAndView();
 		view.addObject("vehicleModelList", vehicleModelList);
         view.addObject("ordertype", ordertype);
+        view.addObject("tmp", tmp);
 		view.setViewName("resource/ordermanage/manualsendorder");
 		return view;
 	}
@@ -251,6 +257,8 @@ public class OrderManageController extends BaseController {
 		if(StringUtils.isBlank(queryParam.getIsDriverState())) {
 			queryParam.setDriverState("0");
 		}
+		OpUser user = getLoginOpUser(request);
+        queryParam.setQueryTmpBelongleasecompany(SystemConfig.getSystemProperty(user.getAccount()));
 		return orderManageService.getDriverByQuery(queryParam, userToken);
 	}
 	

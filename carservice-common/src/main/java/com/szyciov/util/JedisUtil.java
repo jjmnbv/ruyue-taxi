@@ -1,5 +1,6 @@
 package com.szyciov.util;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,7 +43,6 @@ public class JedisUtil {
 
         }finally {
             jedis.close();
-//            RedisUtil.freedResource(jedis);
         }
         return val;
     }
@@ -56,7 +56,6 @@ public class JedisUtil {
             return false;
         }finally {
             jedis.close();
-//            RedisUtil.freedResource(jedis);
         }
         return true;
     }
@@ -91,7 +90,6 @@ public class JedisUtil {
             logger.error("lPush error : k:{},v:{}",new String[]{k,v.toString()},e);
             return false;
         }finally {
-//            RedisUtil.freedResource(jedis);
             jedis.close();
         }
         return true;
@@ -112,7 +110,6 @@ public class JedisUtil {
             logger.error("eval error : k:{},count:{}v:{}",new String[]{script,keyCount+"",params.toString()},e);
             return false;
         }finally {
-//            RedisUtil.freedResource(jedis);
             jedis.close();
         }
         return true;
@@ -134,7 +131,6 @@ public class JedisUtil {
             return false;
         } finally{
             jedis.close();
-//            RedisUtil.freedResource(jedis);
         }
         return true;
     }
@@ -156,7 +152,6 @@ public class JedisUtil {
             throw e;
         } finally{
             jedis.close();
-//            RedisUtil.freedResource(jedis);
         }
     }
 
@@ -174,7 +169,25 @@ public class JedisUtil {
             logger.error("redis rpop 失败---key:{}",key,e);
         }finally {
             jedis.close();
-//            RedisUtil.freedResource(jedis);
+        }
+        return val;
+    }
+
+
+    /**
+     * 返回哈希表 key 中，所有的域和值。
+     * @param key
+     * @return
+     */
+    public static Map<String, String> hgetAll(String key){
+        Jedis jedis = RedisUtil.getJedis();
+        Map<String, String> val = null;
+        try{
+            val = jedis.hgetAll(key);
+        }catch (Exception e){
+            logger.error("redis rpoplpush 失败---key:{}",key,e);
+        }finally {
+            jedis.close();
         }
         return val;
     }
@@ -205,13 +218,31 @@ public class JedisUtil {
         try{
            return  jedis.incr(key);
         }catch (Exception e){
-            logger.error("redis expire 失败---key:{}",key,e);
+            logger.error("redis incr 失败---key:{}",key,e);
         }finally {
             jedis.close();
         }
         return 0;
     }
-    
+
+    /**
+     * 返回是否存在
+     * @param key
+     * @return
+     */
+    public static boolean exists(String key){
+        Jedis jedis = RedisUtil.getJedis();
+        try{
+            return  jedis.exists(key);
+        }catch (Exception e){
+            logger.error("redis exists 失败---key:{}",key,e);
+        }finally {
+            jedis.close();
+        }
+        return false;
+    }
+
+
     /**
      * 设置一个会超时的key
      * @param key
@@ -241,7 +272,6 @@ public class JedisUtil {
     		logger.error("redis del 失败---key:{}",key,e);
     	}finally {
     		jedis.close();
-//            RedisUtil.freedResource(jedis);
     	}
     }
 
@@ -258,7 +288,6 @@ public class JedisUtil {
             logger.error("redis pubsub 失败---chanel:{}",chanel,e);
         }finally {
             jedis.close();
-//            RedisUtil.freedResource(jedis);
         }
     }
     

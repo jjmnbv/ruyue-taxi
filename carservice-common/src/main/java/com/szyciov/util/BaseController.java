@@ -230,6 +230,12 @@ public class BaseController {
 		}
 		return user; 
 	}
+
+    public OpUser getLoginOpUser() {
+	    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+	    return getLoginOpUser(request);
+    }
+
 	
 	/**
 	 * 获取usertoken的通用方法

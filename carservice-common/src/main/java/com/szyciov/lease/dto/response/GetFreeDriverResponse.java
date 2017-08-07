@@ -12,6 +12,24 @@ public class GetFreeDriverResponse {
     private String workStatus; // 服务状态
     private String plateNo; // 车牌号
     private String vehicleModelName; // 服务车型
+    private String belongleasecompany; // 服务车企
+    private String belongleasecompanyId; // 服务车企ID
+
+    public String getBelongleasecompany() {
+        return belongleasecompany;
+    }
+
+    public void setBelongleasecompany(String belongleasecompany) {
+        this.belongleasecompany = belongleasecompany;
+    }
+
+    public String getBelongleasecompanyId() {
+        return belongleasecompanyId;
+    }
+
+    public void setBelongleasecompanyId(String belongleasecompanyId) {
+        this.belongleasecompanyId = belongleasecompanyId;
+    }
 
     public String getJobNum() {
         return jobNum;

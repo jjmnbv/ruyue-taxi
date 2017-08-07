@@ -54,6 +54,9 @@
 		.DTFC_ScrollWrapper{
 			margin-top:-20px;
 		}
+		 label.error{
+  	    padding-left: 0px !important;  
+  	    }
 	</style>
 	</head>
 	<body>

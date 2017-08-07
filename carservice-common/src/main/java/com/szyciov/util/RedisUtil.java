@@ -72,7 +72,7 @@ public class RedisUtil {
 	}
 	
 	
-	public static Jedis getJedis() {
+	protected static Jedis getJedis() {
 		assert ! lockJedis.isHeldByCurrentThread();
 		lockJedis.lock();
 		if(jedisPool == null) {
@@ -141,7 +141,7 @@ public class RedisUtil {
 		return getJedis().get(key);
 	}
 	
-	
+
 
 
 }

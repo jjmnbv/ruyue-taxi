@@ -51,10 +51,21 @@ public class LoginParam  extends BaseParam {
 	private String uuid;
 	
 	/**
+	 * 密码是否加密传输
+	 */
+	private boolean encrypted = false;
+	
+	/**
 	 * 极光推送消息ID
 	 */
 	@SzycValid(rules={"checkNull"})
 	private String regid;
+	
+	/**
+	 * 验证码错误次数校验标识
+	 */
+	@SzycValid(rules={"checkErrorTimes"})
+	private boolean errorTimesSign;
 	
 	/**  
 	 * 获取设备唯一标识  
@@ -242,6 +253,38 @@ public class LoginParam  extends BaseParam {
 	 */
 	public void setRegid(String regid) {
 		this.regid = regid;
+	}
+
+	/**  
+	 * 获取验证码错误次数校验标识  
+	 * @return errorTimesSign 验证码错误次数校验标识  
+	 */
+	public boolean isErrorTimesSign() {
+		return errorTimesSign;
+	}
+	
+	/**  
+	 * 设置验证码错误次数校验标识  
+	 * @param errorTimesSign 验证码错误次数校验标识  
+	 */
+	public void setErrorTimesSign(boolean errorTimesSign) {
+		this.errorTimesSign = errorTimesSign;
+	}
+
+	/**  
+	 * 获取密码是否加密传输  
+	 * @return encrypted 密码是否加密传输  
+	 */
+	public boolean isEncrypted() {
+		return encrypted;
+	}
+
+	/**  
+	 * 设置密码是否加密传输  
+	 * @param encrypted 密码是否加密传输  
+	 */
+	public void setEncrypted(boolean encrypted) {
+		this.encrypted = encrypted;
 	}
 	
 }

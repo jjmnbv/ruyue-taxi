@@ -84,7 +84,14 @@
 	<body class="ordermanage_css_body">
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs">
-			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrderManage/OrgOrderIndex">机构订单</a> > 订单详情
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
+            <c:if test="${empty tmp}">
+                <a class="breadcrumb" href="OrderManage/OrgOrderIndex">机构订单</a>
+            </c:if>
+            <c:if test="${not empty tmp}">
+                <a class="breadcrumb" href="TmpOrderManage/OrgCurrentOrderIndex">机构订单</a>
+            </c:if>
+            > 订单详情
 			<button class="SSbtn blue back" onclick="window.history.go(-1);">返回</button>
 		</div>
 		<div class="content" style="overflow: auto !important;">
@@ -354,7 +361,7 @@
 				orderno: "<%=request.getParameter("orderno")%>"
 			};
 		</script>
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>"></script>
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=yingyan_ak%>&s=1"></script>
 		<script type="text/javascript" src="js/orgordermanage/orderdetail.js"></script>
 	</body>
 </html>

@@ -1,6 +1,4 @@
-/**
- * 
- */
+
 package com.ry.taxi.sync.query;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,81 +19,87 @@ import lombok.Data;
 @Data
 public class RealTimeGps {
 	/*
-	 * ���ƺ�
+	 * 车牌号
 	 */
 	@JsonProperty("PlateNo")
 	private String plateNo;
 	
 	/*
-	 * �ֹ�˾��
+	 * 分公司名
 	 */
 	@JsonProperty("company")
 	private String company;
 	
 	/*
-	 * �ܹ�˾��
+	 * 总公司名
 	 */
 	@JsonProperty("MainCompany")
 	private String mainCompany;
 	
 	/*
-	 * Gps״̬ 0Ϩ�� 1�ճ� 2�س�
+	 * Gps状态 0熄火 1空车 2重车
 	 */
 	@JsonProperty("GpsStatus")
 	private Integer gpsStatus;
 	
 	/*
-	 * Gpsʱ�䣬��ʽyyyy-MM-dd HH:mm:ss 
+	 * Gps时间，格式yyyy-MM-dd HH:mm:ss 
 	 */
 	@JsonProperty("GpsTime")
 	private String gpsTime;
 	
 	/*
-	 * ����
+	 * 经度
 	 */
 	@JsonProperty("Longitude")
 	private Double longitude;
 	
 	/*
-	 * γ��
+	 * 纬度
 	 */
 	@JsonProperty("Latitude")
 	private Double latitude;
 	
 	/*
-	 * �ٶ� ����/Сʱ
+	 * 速度 公里/小时
 	 */
 	@JsonProperty("Speed")
 	private Integer speed;
 	
 	/*
-	 * ���� 0~360��
+	 * 方向 0~360度
 	 */
 	@JsonProperty("Direction")
 	private Integer direction;
 	
 	/*
-	 * �߶� ��
+	 * 高度 米
 	 */
-	@JsonProperty("height")
-	private Integer Height;
+	@JsonProperty("Height")
+	private Integer height;
 	
 	/*
-	 * ��Ч�� 0��Ч 1��Ч
+	 * 有效性 0无效 1有效
 	 */
-	@JsonProperty("effective")
-	private Integer Effective;
+	@JsonProperty("Effective")
+	private Integer effective;
 	
 	/*
-	 * ����˾������
+	 * 当班司机姓名
 	 */
 	@JsonProperty("drivername")
 	private String drivername;
 	
 	/*
-	 * ����˾���ʸ�֤��
+	 * 当班司机资格证号
 	 */
 	@JsonProperty("driverno")
 	private String driverno;
+	
+	/*
+	 * 同步服务时间
+	 */
+	@JsonProperty("ServiceTime")
+	private String serviceTime;
 
 }

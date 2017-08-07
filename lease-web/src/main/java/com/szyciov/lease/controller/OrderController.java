@@ -1,22 +1,13 @@
 package com.szyciov.lease.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang.StringUtils;
-import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
 
 import com.szyciov.driver.param.BaseParam;
 import com.szyciov.driver.param.OrderCostParam;
@@ -35,8 +26,18 @@ import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.param.OrderApiParam;
 import com.szyciov.param.Select2Param;
 import com.szyciov.util.WebExceptionHandle;
-
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.lang.StringUtils;
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
 /**
  * 订单控制器
@@ -110,9 +111,19 @@ public class OrderController extends WebExceptionHandle {
 	@RequestMapping(value="/Order/GetCarTypes")
 	public JSONObject getCarTypes(@RequestBody GetCarTypesParam param,HttpServletRequest request){
 		starttime.set(System.currentTimeMillis());
-		User user = getLoginLeUser(request);
-		param.setToken(getUserToken(request));
-		param.setCompanyid(user.getLeasescompanyid());
+
+        Object o = request.getSession().getAttribute("user");
+        if(o==null){
+            Map<String, Object> res = os.getCompanyidByruyue(new HashedMap());
+            String companyid = (String)res.get("companyid");
+            param.setCompanyid(companyid);
+            param.setToken("");
+        }else{
+            User user = getLoginLeUser(request);
+            param.setToken(getUserToken(request));
+            param.setCompanyid(user.getLeasescompanyid());
+        }
+
 		JSONObject result = os.getCarTypes(param);
 		releaseResource(os);
 		return checkResult(result);
@@ -218,9 +229,26 @@ public class OrderController extends WebExceptionHandle {
 	@RequestMapping(value="/Order/CreateOrgOrder")
 	public JSONObject createOrgOrder(@RequestBody OrgOrder orderInfo,HttpServletRequest request){
 		starttime.set(System.currentTimeMillis());
-		User u = getLoginLeUser(request);
-		orderInfo.setCompanyid(u.getLeasescompanyid());
-        orderInfo.setOperator(u.getId());
+
+        Object o = request.getSession().getAttribute("user");
+        if(o==null){
+            orderInfo.setOperator(orderInfo.getUserid());
+            Map<String, Object> param = new HashedMap();
+            Map<String, Object> res = os.getCompanyidByruyue(param);
+            String companyid = (String)res.get("companyid");
+            orderInfo.setCompanyid(companyid);
+            //验证乘车人数据
+            if(null == orderInfo.getPassengers()) {
+                orderInfo.setPassengers("");
+            }
+            if(null == orderInfo.getPassengerphone()) {
+                orderInfo.setPassengerphone("");
+            }
+        }else{
+            User u = getLoginLeUser(request);
+            orderInfo.setCompanyid(u.getLeasescompanyid());
+            orderInfo.setOperator(u.getId());
+        }
 
 		JSONObject result = os.createOrgOrder(orderInfo);
 		releaseResource(os);
@@ -248,8 +276,15 @@ public class OrderController extends WebExceptionHandle {
 	@RequestMapping(value = "/Order/GetCities")
 	public JSONObject getCities(HttpServletRequest request, HttpServletResponse response) {
 		starttime.set(System.currentTimeMillis());
-		BaseParam param = new BaseParam();
-		param.setToken(getUserToken(request));
+
+        Object o = request.getSession().getAttribute("user");
+        BaseParam param = new BaseParam();
+        if(o==null){
+            param.setToken("");
+        }else{
+            param.setToken(getUserToken(request));
+        }
+
 		JSONObject result =  os.getCities(param);
 		releaseResource(os);
 		return checkResult(result);
@@ -290,9 +325,19 @@ public class OrderController extends WebExceptionHandle {
 	@RequestMapping(value = "/Order/GetOrgUserBusCity")
 	public JSONObject getOrgUserBusCity(@RequestBody Map<String, Object> param, HttpServletRequest request) {
 		starttime.set(System.currentTimeMillis());
-		String userToken = getUserToken(request);
-		User user = getLoginLeUser(request);
-		param.put("companyid", user.getLeasescompanyid());
+        String userToken = "";
+
+        Object o = request.getSession().getAttribute("user");
+        if(o==null){
+            Map<String, Object> res = os.getCompanyidByruyue(new HashedMap());
+            String companyid = (String)res.get("companyid");
+            param.put("companyid", companyid);
+        }else{
+            userToken = getUserToken(request);
+            User user = getLoginLeUser(request);
+            param.put("companyid", user.getLeasescompanyid());
+        }
+
 		JSONObject result = os.getOrgUserBusCity(param, userToken);
 		releaseResource(os);
 		return checkResult(result);
@@ -323,14 +368,62 @@ public class OrderController extends WebExceptionHandle {
     @SuppressWarnings("rawtypes")
 	@ResponseBody
     @RequestMapping(value="/Order/GetManualSelectDriver")
-    public PagingResponse getManualSelectDriver(@RequestBody GetManualSelectDriverRequest model){
+    public PagingResponse getManualSelectDriver(@RequestBody GetManualSelectDriverRequest model, HttpServletRequest request){
         ModelMapper mapper = new ModelMapper();
         GetFreeDriverRequest condition = mapper.map(model, GetFreeDriverRequest.class);
         condition.setKeyword(model.getKeyword());
-        condition.setToken(getUserToken());
-        condition.setLeasesCompanyId(getLoginLeUser().getLeasescompanyid());
+
+        Object o = request.getSession().getAttribute("user");
+        if(o==null){
+            Map<String, Object> res = os.getCompanyidByruyue(new HashedMap());
+            String companyid = (String)res.get("companyid");
+            condition.setLeasesCompanyId(companyid);
+            condition.setToken("");
+        }else{
+            condition.setToken(getUserToken());
+            condition.setLeasesCompanyId(getLoginLeUser().getLeasescompanyid());
+        }
+
 		PagingResponse result = os.getManualSelectDriver(condition);
         return result;
     }
 
+
+	/**
+	 * 获取如约签约的机构信息列表
+	 * @param param
+	 * @param request
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/Order/GetOrgans")
+	public Map<String,Object> getOrgans(@RequestParam Map<String, Object> param) {
+		try{
+			return os.getOrgans(param);
+		}catch (Exception e){
+			Map<String,Object> res = new HashMap<String,Object>();
+			res.put("status",Retcode.EXCEPTION.code);
+			res.put("message",Retcode.EXCEPTION.msg);
+			return res;
+		}
+	}
+
+	/**
+	 * 获取机构下的用户信息列表
+	 * @param param
+	 * @param request
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/Order/GetOrganUsers")
+	public Map<String,Object> getOrganUsers(@RequestParam Map<String, Object> param) {
+		try{
+			return os.getOrganUsers(param);
+		}catch (Exception e){
+			Map<String,Object> res = new HashMap<String,Object>();
+			res.put("status",Retcode.EXCEPTION.code);
+			res.put("message",Retcode.EXCEPTION.msg);
+			return res;
+		}
+	}
 }

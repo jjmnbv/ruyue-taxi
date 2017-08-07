@@ -92,7 +92,7 @@
 
 	<context-param>
 		<param-name>webAppRootKey</param-name>
-		<param-value>lease-web.root</param-value>
+		<param-value>lease-api.root</param-value>
 	</context-param>
 
 	<session-config>

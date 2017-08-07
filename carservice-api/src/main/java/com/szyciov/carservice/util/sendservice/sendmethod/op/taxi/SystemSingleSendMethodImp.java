@@ -11,6 +11,7 @@ import com.szyciov.carservice.util.sendservice.sendrules.SendRuleHelper;
 import com.szyciov.carservice.util.sendservice.sendrules.impl.op.car.OpCarSystemSingleSendRuleImp;
 import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.enums.OrderState;
+import com.szyciov.driver.param.OrderListParam;
 import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
@@ -95,21 +96,17 @@ public class SystemSingleSendMethodImp extends AbstractSendMethod {
 
 	}
 
-	@Override
-	protected List<String> listDriverUnServiceTimes(String driverId) {
-		return null;
-	}
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
 		return sendInfoService.getOpTaxiOrderStatus(orderNo);
 	}
 
-	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		return null;
-	}
 
+	@Override
+	protected List<OrderInfoDetail> listOrderInfo(OrderListParam olp) {
+		return orderApiService.listTaxiOrderInfo(olp);
+	}
 	/**
 	 * 添加弹窗消息，仅限运管端出租车
 	 * @param orderinfo

@@ -25,15 +25,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -863,8 +862,11 @@ public class TocOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/OrderManage/NetAboutCarOrderDetailIndex")
-	public String orderDetailIndex(@RequestParam String orderno) {
-		return "resource/tocOrderManage/orderdetail";
+	public ModelAndView orderDetailIndex(@RequestParam String orderno, @RequestParam(required = false) String tmp) {
+        ModelAndView view = new ModelAndView();
+        view.addObject("tmp", tmp);
+        view.setViewName("resource/tocOrderManage/orderdetail");
+        return view;
 	}
 
 	// 网约车详情
@@ -982,8 +984,11 @@ public class TocOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/OrderManage/TaxiOrderDetailIndex")
-	public String taxiOrderDetailIndex(@RequestParam String orderno) {
-		return "resource/tocOrderManage/taxiorderdetail";
+	public ModelAndView taxiOrderDetailIndex(@RequestParam String orderno, @RequestParam(required = false) String tmp) {
+        ModelAndView view = new ModelAndView();
+        view.addObject("tmp", tmp);
+        view.setViewName("resource/tocOrderManage/taxiorderdetail");
+		return view;
 	}
 	
 	/**

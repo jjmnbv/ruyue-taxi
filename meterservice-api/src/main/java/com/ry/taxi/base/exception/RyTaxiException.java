@@ -3,6 +3,9 @@
  */
 package com.ry.taxi.base.exception;
 
+import com.ry.taxi.base.constant.ErrorEnum;
+import com.xunxintech.ruyue.coach.io.file.PropertiesUtil;
+
 /**
  * @Title:RealTaxiMonitor.java
  * @Package com.ry.taxi.sync.monitor
@@ -23,6 +26,18 @@ public class RyTaxiException extends RuntimeException{
         super(message);    
         this.errorNum = errorNum;
     } 
+   
+    public RyTaxiException(ErrorEnum errorNum, String message) {    
+        super(message);    
+        this.errorNum = errorNum.getValue();
+    } 
+    
+
+    public RyTaxiException(ErrorEnum errorEnum) {    
+        super(PropertiesUtil.getValue(errorEnum.getString()));    
+        this.errorNum = errorEnum.getValue();
+    } 
+    
  
 	public Integer getErrorNum() {
 		return errorNum;

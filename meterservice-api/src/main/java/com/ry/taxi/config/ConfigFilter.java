@@ -68,12 +68,13 @@ public class ConfigFilter implements HandlerInterceptor {
 	
 		//访问接口过滤
 		if(!permitList.contains(cmd)){
+			ErrorResponse.printErrorMessage(response, cmd, 2, "无效请求");
 			return false;
         }
 		
 		logger.debug("request parameter cmd:{},key:{},userId:{},args:{},sign:{}", cmd, key, userId, args, sign);
 		
-		if (cmd != null && key != null && userId != null && sign != null ) {
+		if (cmd != null && key != null && userId != null && args != null &&sign != null ) {
 			try {
 				String checkSign = MD5.MD5Encode(DESUtils.encode(key, args, ivCode), encoding);
 				if(checkSign.equals(sign))
@@ -81,12 +82,15 @@ public class ConfigFilter implements HandlerInterceptor {
 				else
 				{  
 					ErrorResponse.printErrorMessage(response, cmd, 2, "sign签名校验不通过");
+					return false;
 				}
 			} catch (Exception e) {
 				logger.error("check encryption error,cmd:{},key:{},userId:{},args:{},sign:{},error:{}", cmd, key, userId, args, sign);
+				ErrorResponse.printErrorMessage(response, cmd, 2, "请求异常");
+				return false;
 			}
 		}
-		
+		ErrorResponse.printErrorMessage(response, cmd, 2, "请求参数不能为空");
 		logger.error("check auth error,cmd:{},key:{},userId:{},args:{},sign:{},error:{}", cmd, key, userId, args, sign);
 		
 		return false;
@@ -94,13 +98,13 @@ public class ConfigFilter implements HandlerInterceptor {
 	
 	
 	static{
-		permitList.add("DriverTakeOrder");//司机应邀通知
-		permitList.add("DriverStartOrder");//司机执行订单通知
-		permitList.add("DriverArrival");//司机到达乘客起点通知
-		permitList.add("DriverCancelOrder");//司机取消订单通知
-		permitList.add("StartCalculation");//压表通知
-		permitList.add("EndCalculation");//起表通知
-		permitList.add("PaymentConfirmation");//支付确认通知
-		
+		permitList.add(UrlRequestConstant.CMD_DRIVERTAKEORDER);//司机应邀通知
+		permitList.add(UrlRequestConstant.CMD_DRIVERSTARTORDER);//司机执行订单通知
+		permitList.add(UrlRequestConstant.CMD_DRIVERARRIVAL);//司机到达乘客起点通知
+		permitList.add(UrlRequestConstant.CMD_DRIVERCANCELORDER);//司机取消订单通知
+		permitList.add(UrlRequestConstant.CMD_STARTCALCULATION);//压表通知
+		permitList.add(UrlRequestConstant.CMD_ENDCALCULATION);//起表通知
+		permitList.add(UrlRequestConstant.CMD_PAYMENTCONFIRMATION);//支付确认通知
+		permitList.add(UrlRequestConstant.CMD_DISTANCEUPLOAD);//里程回传
 	}
 }

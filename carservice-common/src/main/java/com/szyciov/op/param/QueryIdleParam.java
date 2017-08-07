@@ -47,11 +47,23 @@ public class QueryIdleParam extends BasePageParam{
      * 处理状态
      */
     private Integer processingState;
+    /**
+     * 组织ID
+     */
+    private String organizationId;
     
     
-    
-    
-    public Integer getProcessingState() {
+    public String getOrganizationId() {
+		return organizationId;
+	}
+
+
+	public void setOrganizationId(String organizationId) {
+		this.organizationId = organizationId;
+	}
+
+
+	public Integer getProcessingState() {
 		return processingState;
 	}
 

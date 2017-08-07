@@ -26,9 +26,9 @@ import com.szyciov.driver.entity.DriverMessage;
 import com.szyciov.driver.entity.OrderInfo;
 import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.enums.DriverMessageEnum;
-import com.szyciov.driver.enums.DriverState;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.PayState;
+import com.szyciov.driver.param.OrderListParam;
 import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
@@ -679,75 +679,7 @@ public class GrabSendMethodImp extends AbstractSendMethod{
 		res.addAll(tempdrivers.values());
 		return res;
 	}
-	
-	/**
-	 * 判断某个司机是否可以强派，即可单判断
-	 * @param driver
-	 * @return
-	 */
-	@Override
-	protected boolean canPush2Driver(PubDriver driver,AbstractOrder order) {
-		//司机必须是当班空闲
-		Map<String, Object> pdStatus = messagePubInfoService.getDriverInfo(driver.getId());
-		if(pdStatus==null){
-			return false;
-		}
-		String workstatus = (String) pdStatus.get("workstatus");
-		String shiftstatus = (String) pdStatus.get("passworkstatus");
-		if(!(DriverState.IDLE.code.equals(workstatus)&&(DriverState.ONSHIFT.code.equals(shiftstatus)||DriverState.NOSHIFTDRIVER.code.equals(shiftstatus)))){
-            return false;
-		}
-		if(order.isIsusenow()){
-			//（即可单）
-			List<OpTaxiOrder> inserviceorusenoworderinfo = sendInfoService.getInServiceOrUseNowOrder4OpTaxiDriver(driver.getId());
-			if(inserviceorusenoworderinfo!=null&&inserviceorusenoworderinfo.size()>0){
-				//存在正在服务的订单或者未开始的即可单
-				return false;
-			}
-			OpTaxiOrder reverceorderinfo = sendInfoService.getLastReverceOrder4OpTaxiDriver(driver.getId());
-			if(reverceorderinfo!=null){
-				Date cuusetime = order.getUsetime();
-				long estime = order.getEstimatedtime();
-				Date esendtime = new Date(cuusetime.getTime()+estime*60*1000+60*60*1000);
-				Date usetime = reverceorderinfo.getUsetime();
-				if(esendtime.after(usetime)){
-					//用车时间不在一个小时之后是不可以下单的
-					return false;
-				}
-			}
-		}else{
-			//（预约单）
-			//存在即可单，即可单和当前单用车时间大于1小时
-			List<OpTaxiOrder> orders = sendInfoService.getInServiceOrUseNowOrder4OpTaxiDriver(driver.getId());
-			for(int i=0;i<orders.size();i++){
-				OpTaxiOrder usenoworder = orders.get(i);
-				if(usenoworder.isIsusenow()){
-					Date usenowusetime = usenoworder.getUsetime();
-					long estime = usenoworder.getEstimatedtime();
-					Date usenowendtime = new Date(usenowusetime.getTime()+estime*60*1000+60*60*1000);
-					//当前下单的预约单的用车时间
-					Date cuusetime = order.getUsetime();
-					if(usenowendtime.after(cuusetime)){
-						//不可以下单的
-						return false;
-					}
-				}else{
-					//有正在服务中的订单
-					return false;
-				}
-			}
-			//司机有没有同一天的预约单
-			List<String> yuyuedays = sendInfoService.getDriverUnServiceTimesByDay(driver.getId());
-			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-			String cusetime = format.format(order.getUsetime());
-			if(yuyuedays.contains(cusetime)){
-				//同一天预约单已经有了
-				return false;
-			}
-		}
-		return true;
-	}
-	
+
 	/**
 	 * 将抽象订单类转为简化订单类
 	 * @param orderinfo
@@ -944,7 +876,7 @@ public class GrabSendMethodImp extends AbstractSendMethod{
 		takecashinfo.put("applytime", 0);
 		message.setOrderinfo(orderJson);
 		message.setTakecashinfo(takecashinfo);
-		
+
 		//订单信息转为字符串
 		String value = JSONObject.fromObject(message).toString();
 		for(PubDriver pd : drivers){
@@ -956,10 +888,7 @@ public class GrabSendMethodImp extends AbstractSendMethod{
 		}
 	}
 
-	@Override
-	protected List<String> listDriverUnServiceTimes(String driverId) {
-		return sendInfoService.getDriverUnServiceTimesByDay(driverId);
-	}
+
 
 	@Override
 	protected String getOrderStatus(String orderNo) {
@@ -967,11 +896,9 @@ public class GrabSendMethodImp extends AbstractSendMethod{
 	}
 
 	@Override
-	protected AbstractOrder getLastReverceOrder(String driverId) {
-		OpTaxiOrder opTaxiOrder =  sendInfoService.getLastReverceOrder4OpTaxiDriver(driverId);
-		return opTaxiOrder;
+	protected List<OrderInfoDetail> listOrderInfo(OrderListParam olp) {
+		return orderApiService.listTaxiOrderInfo(olp);
 	}
-
 
 	/**
 	 * 返回预约单查询条件

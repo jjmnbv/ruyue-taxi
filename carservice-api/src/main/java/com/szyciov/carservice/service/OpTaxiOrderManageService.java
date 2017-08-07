@@ -1,10 +1,15 @@
 package com.szyciov.carservice.service;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.szyciov.carservice.dao.OpTaxiOrderManageDao;
 import com.szyciov.driver.entity.OrderInfoMessage;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
 import com.szyciov.entity.OrderMessageFactory;
+import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.UserNews;
 import com.szyciov.enums.DriverEnum;
@@ -21,10 +26,6 @@ import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by ZF on 2017/5/27.
@@ -153,6 +154,12 @@ public class OpTaxiOrderManageService {
             order.setVehclinename(brandCars[1]);
         }
         order.setOrdertime(new Date());
+
+        //更新订单归属车企
+        PubDriver pubDriver = opTaxiOrderManageDao.getPubDriverById(pubVehicle.getDriverId());
+        if(null != pubDriver) {
+            order.setBelongleasecompany(pubDriver.getBelongleasecompany());
+        }
         opTaxiOrderManageDao.updateOpTaxiOrderByOrderno(order);
     }
 

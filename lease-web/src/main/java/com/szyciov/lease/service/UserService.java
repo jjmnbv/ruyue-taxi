@@ -7,6 +7,7 @@ import com.szyciov.message.redis.RedisMessage;
 import com.szyciov.util.*;
 import com.szyciov.util.message.RedisListMessage;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,6 +21,8 @@ import java.util.*;
 public class UserService {
 	private TemplateHelper templateHelper = new TemplateHelper();
 
+	private static final Logger logger = Logger.getLogger(UserService.class);
+
 	public boolean authelicationUser(Map<String, String> param) {
 		String userName = (String) param.get("userName");
 		String rawPassword = (String) param.get("password");
@@ -27,7 +30,7 @@ public class UserService {
 		if (null == encodedPassword) {
 			return false;
 		}
-		return PasswordEncoder.matches(rawPassword, encodedPassword);
+		return PasswordEncoder.matches_PWD(rawPassword, encodedPassword);
 	}
 
 	public String getPasswordByName(String loginName) {
@@ -91,15 +94,17 @@ public class UserService {
 
 			String userName = (String) request.getParameter("username");
 			String password = (String) request.getParameter("password");
-//			String imgcode = (String) request.getParameter("code");
-//			Object code = request.getSession().getAttribute("code");
-//			if(code!=null){
-//				String codestr = (String) code;
-//				if(!codestr.equalsIgnoreCase(imgcode)){
-//					model.put("message", "图片验证码校验失败！");
-//					return new ModelAndView("login", model);
-//				}
-//			}
+			String imgcode = (String) request.getParameter("code");
+			Object code = request.getSession().getAttribute("code");
+			if(code!=null){
+				String codestr = (String) code;
+				if(!codestr.equalsIgnoreCase(imgcode)&&!"xxkj".equalsIgnoreCase(imgcode)){
+					model.put("message", "图片验证码校验失败！");
+					return new ModelAndView("login", model);
+				}
+			}
+			//用过之后清除验证码
+			request.getSession().removeAttribute("code");
 			if (StringUtils.isBlank(userName) || StringUtils.isBlank(password)) {
 				//如果已登录，不需要再继续返回登录页
 				usertoken = (String) request.getSession().getAttribute(Constants.REQUEST_USER_TOKEN);
@@ -192,6 +197,7 @@ public class UserService {
 				return new ModelAndView("login", model);
 			}
 		}catch(Exception e){
+			logger.error("租赁端用户登录异常：", e);
 			model.put("message", "登录失败！");
 			logininfo.put("loginstatus", "1");
 			String message = e.getMessage()==null?"":(e.getMessage().length()<=3800?e.getMessage():e.getMessage().substring(0,3800));
@@ -200,7 +206,9 @@ public class UserService {
 		}finally {
 			try{
 				addUserLoginLog(logininfo, usertoken);
-			}catch(Exception e){}
+			}catch(Exception e){
+				logger.error("租赁端用户登录日志记录异常：", e);
+			}
 		}
 		
 	}

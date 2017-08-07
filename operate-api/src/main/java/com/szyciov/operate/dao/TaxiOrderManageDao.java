@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.szyciov.op.entity.PubDriver;
 import org.springframework.stereotype.Repository;
 
 import com.szyciov.lease.param.OrderManageQueryParam;
@@ -178,5 +179,9 @@ public class TaxiOrderManageDao {
 	public void orderReject(OpTaxiOrder object) {
 		mapper.orderReject(object);
 	}
+
+    public PubDriver getPubDriverById(String driverid) {
+        return mapper.getPubDriverById(driverid);
+    }
 	
 }

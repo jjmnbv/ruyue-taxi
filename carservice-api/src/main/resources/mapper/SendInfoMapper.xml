@@ -374,6 +374,9 @@
 			AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
 		</if>
 		AND pub_driver.vehicletype=#{vehicleType}
+		<if test="vehicleType==0">
+			and op_vehiclemodels.id is not null
+		</if>
 		AND (pub_driver.passworkstatus in ('0','1','') or pub_driver.passworkstatus is null)
 
         <if test="workstatus!=null">
@@ -459,6 +462,9 @@
 			AND pub_driver.phone not in (select account from pe_user where pe_user.id = #{userid} and pe_user.status = 1)
 		</if>
 		AND pub_driver.vehicletype=#{vehicleType}
+		<if test="vehicleType==0">
+			and op_vehiclemodels.id is not null
+		</if>
 		AND (pub_driver.passworkstatus in ('0','1','') or pub_driver.passworkstatus is null)
 
 		<if test="workstatus!=null">
@@ -498,7 +504,7 @@
 		where `Status` = '1'
 		and `level` >=
 		(SELECT t1.`level`FROM op_vehiclemodels t1 WHERE t1.id = #{selectedModelId})
-		order by `level` limit 0,#{nextCount}
+		order by `level` limit 0,${nextCount}
 	</select>
 
 	<!-- 强派订单给司机 -->

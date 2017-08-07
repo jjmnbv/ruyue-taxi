@@ -1,5 +1,14 @@
 package com.szyciov.operate.service;
 
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import com.szyciov.driver.entity.OrderInfoMessage;
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.OrdersortColumn;
@@ -31,6 +40,7 @@ import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
+import com.szyciov.util.Constants;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.StringUtil;
@@ -41,14 +51,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 @Service("TaxiOrderManageService")
 public class TaxiOrderManageService {
@@ -350,19 +352,15 @@ public class TaxiOrderManageService {
 				} else {
 					baiduparam.setOrderEndLng(0);
 				}
-				
-				Map<String,Object> hintMap = templateHelper.dealRequestWithFullUrlToken(
-						SystemConfig.getSystemProperty("carserviceApi") +"/BaiduApi/GetMileageInfo", 
-						HttpMethod.POST, null, baiduparam, Map.class);
-				
-				if(hintMap != null && (Integer)hintMap.get("status") == Retcode.OK.code){
-					map.put("distance", hintMap.get("distance"));
-					map.put("duration", hintMap.get("duration"));
-				} else {
-					map.put("distance", 0);
-					map.put("duration", 0);
-				}
-				
+                //计算预估距离和时间
+                double distance = LatLonUtil.getDistance(baiduparam.getOrderStartLng(), baiduparam.getOrderStartLat(), baiduparam.getOrderEndLng(), baiduparam.getOrderEndLat());
+                map.put("distance", 0);
+                if(distance == 0) {
+                    map.put("duration", 0);
+                } else {
+                    double duration = distance / 1000 / Constants.SPEED * 60; //到达时间
+                    map.put("duration", Math.ceil(duration));
+                }
 			}
 		}
 		
@@ -688,6 +686,12 @@ public class TaxiOrderManageService {
 			order.setVehclinename(brandCars[1]);
 		}
 		order.setOrdertime(new Date());
+
+        //更新订单归属车企
+        PubDriver pubDriver = dao.getPubDriverById(pubVehicle.getDriverId());
+        if(null != pubDriver) {
+            order.setBelongleasecompany(pubDriver.getBelongleasecompany());
+        }
 		dao.updateOpTaxiOrderByOrderno(order);
 	}
 	

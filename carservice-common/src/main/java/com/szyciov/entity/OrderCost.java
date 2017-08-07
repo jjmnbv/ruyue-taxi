@@ -104,7 +104,14 @@ public class OrderCost{
 	 * 夜间费价
 	 */
 	private double nighteprice;
-
+	/**
+	 * 预约附加费
+	 */
+	private double reversefee;
+	/**
+	 * 订单折扣
+	 */
+	private double discount;
 	
 	/**  
 	 * 获取低速用时限定时速  
@@ -450,6 +457,38 @@ public class OrderCost{
 	 */
 	public void setDeadheadcost(double deadheadcost) {
 		this.deadheadcost = deadheadcost;
+	}
+
+	/**  
+	 * 获取预约附加费  
+	 * @return reversefee 预约附加费  
+	 */
+	public double getReversefee() {
+		return reversefee;
+	}
+	
+	/**  
+	 * 设置预约附加费  
+	 * @param reversefee 预约附加费  
+	 */
+	public void setReversefee(double reversefee) {
+		this.reversefee = reversefee;
+	}
+
+	/**  
+	 * 获取订单折扣  
+	 * @return discount 订单折扣  
+	 */
+	public double getDiscount() {
+		return discount;
+	}
+
+	/**  
+	 * 设置订单折扣  
+	 * @param discount 订单折扣  
+	 */
+	public void setDiscount(double discount) {
+		this.discount = discount;
 	}
 	
 }

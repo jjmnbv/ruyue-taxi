@@ -7,7 +7,7 @@
 <!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
 	<insert id="createOrgUser" parameterType="OrgUser">
 		insert into org_user(id,organid,dpetid,usertype,account,email,nickname,userpassword,sex,specialstate,headportraitmin,headportraitmax,registertime,disablestate,disablehis,usetimes,gpsspeed,gpsdirection,lng,lat,createtime,UpdateTime,Status,customertype)
-			values (#{id},#{organId},#{dpetId},#{userType},#{account},#{email},#{nickName},#{userPassword},#{sex},#{specialState},#{headPortraitMin},#{headPortraitMax},#{registerTime},#{disableState},#{disableHis},#{useTimes},#{gpsSpeed},#{gpsDirection},#{lng},#{lat},now(),now(),1,#{customertype})
+			values (#{id},#{organId},#{dpetId},#{userType},#{account},#{email},#{nickName},#{userPassword},#{sex},#{specialState},#{headPortraitMin},#{headPortraitMax},#{registerTime},#{disableState},#{disableHis},#{useTimes},#{gpsSpeed},#{gpsDirection},#{lng},#{lat},now(),now(),1,#{customerType})
 	</insert>
 	<update id="resetPassword" parameterType="OrgUser">
 		UPDATE org_user

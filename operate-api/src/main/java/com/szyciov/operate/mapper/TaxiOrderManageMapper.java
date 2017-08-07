@@ -11,6 +11,7 @@ import com.szyciov.op.entity.OpTaxiordercomment;
 import com.szyciov.op.entity.OpTaxisendrecord;
 import com.szyciov.op.entity.OpTaxivehiclechanges;
 import com.szyciov.op.entity.PeUserRefund;
+import com.szyciov.op.entity.PubDriver;
 import com.szyciov.param.OrdercommentQueryParam;
 
 public interface TaxiOrderManageMapper {
@@ -90,5 +91,7 @@ public interface TaxiOrderManageMapper {
 	void updateOpTaxiorderReview(OpTaxiOrder object);
 	
 	void orderReject(OpTaxiOrder object);
+
+    PubDriver getPubDriverById(String driverid);
 	
 }

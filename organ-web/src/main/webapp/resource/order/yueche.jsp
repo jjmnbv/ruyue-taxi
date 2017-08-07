@@ -68,9 +68,9 @@
                     </div>
                     <div class="title_1">
                         <label for="checkbox">
-                            <!-- 						<span class="checkbox_ie"></span> -->
-                            <input type="checkbox" id="addFavUser" class="check_op" style="opacity:10;"/>
-                            <span>添加为常用联系人</span>
+<!-- 						<span class="checkbox_ie"></span> -->
+<!-- 						<input type="checkbox" id="addFavUser" class="check_op" style="opacity:10;"/> -->
+<!-- 						<span>添加为常用联系人</span> -->
                         </label>
                     </div>
                 </div>
@@ -219,6 +219,7 @@
                         <span class="price">￥0.0</span>
                         <span class="price_info">预估里程0公里,预估时长0分钟</span>
                     </div>
+                    <div class=""><span style="color:red;">(*预约用车会增加附加费用30元，本公司保留最终解释权)</span></div>
 <!--                     <div class="mar m" style="display:none;"  id="payable"> -->
 <!--                         企业账户已超出限额;建议使用个人垫付,否则无法叫车 -->
 <!--                     </div> -->

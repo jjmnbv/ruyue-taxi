@@ -121,6 +121,8 @@ public class PassengerController extends BaseController {
 			//v3.0.1接口更新密码
 			if(Const.INTERFACE_V3_0_1.equals(version)){
 				return passengerService4Third.defLogin(loginparam);
+			}if(Const.INTERFACE_V3_0_2.equals(version)){
+				return passengerService4Third.defLogin2(loginparam);
 			}
 		}catch (Exception e){
 		}
@@ -815,7 +817,18 @@ public class PassengerController extends BaseController {
 	@RequestMapping(value = "Passenger/ValidatePwd", method = RequestMethod.POST)
 	@ResponseBody
 	public Map<String,Object> validatePwd(@RequestBody Map<String,Object> params){
-		return passengerService.validatePwd(params);
+		try{
+			String version = (String) params.get("version");
+			if(Const.INTERFACE_V3_0_2.equals(version)){
+				return passengerService4Third.validatePwd(params);
+			}
+			return passengerService.validatePwd(params);
+		}catch (Exception e){
+			Map<String,Object> res = new HashMap<String,Object>();
+			res.put("status", Retcode.EXCEPTION.code);
+			res.put("message", Retcode.EXCEPTION.msg);
+			return res;
+		}
 	}
 	
 	/**
@@ -831,6 +844,8 @@ public class PassengerController extends BaseController {
 			//v3.0.1接口更新密码
 			if(Const.INTERFACE_V3_0_1.equals(version)){
 				return passengerService4Third.updatePwd(params);
+			}else if(Const.INTERFACE_V3_0_2.equals(version)){
+				return passengerService4Third.updatePwd2(params);
 			}
 			return passengerService.updatePwd(params);
 		}catch (Exception e){

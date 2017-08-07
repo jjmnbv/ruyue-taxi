@@ -303,6 +303,11 @@ function initSelect2Active(){
 			}
 		}
 	});
+	//下单人被清空时禁用表单
+	$("#userid").on("select2-clearing",function(){
+		disableForm("form",true);
+	});
+	
 	
 	var useridLastResult = [];
 	$("#passengers").select2({
@@ -387,7 +392,9 @@ function initSelect2Active(){
     		disableForm("form",false);
     	} else {
 	    	disableForm("form",true);
-    	} 
+    	}
+        $("#passengers").select2("val", "");
+        $("#passengerphone").select2("val", "");
     	$("#userid").valid();
     });
     
@@ -573,12 +580,10 @@ function initCitySelect(){
 
 
 function gridSearch(grid,sSearch){
-	var phone = $("#userid").select2("data").text.substr(0,11);
 	sSearch = sSearch == "手机号码/姓名" ? "" : sSearch;
 	var userQueryParam = [
      {name: "organid", value: $("#organ").val()},
-     /*{name: "userid", value: $("#user input[type='hidden']").eq(0).val()},*/
-     {name:"userid",value:phone},
+     {name: "userid", value: $("#user input[type='hidden']").eq(0).val()},
      {name: "usetype", value: $("#usetype :radio:checked").val()},
      {name: "sSearch", value: sSearch}
    ]
@@ -723,10 +728,8 @@ function getAirPorts(){
 }
 
 function getMostAddress(sSearch){
-	var phone = $("#userid").select2("data").text.substr(0,11);
 	var data = {
-		/*userid:$("#userid").val(),*/
-		userid:phone,	
+		userid:$("#userid").val(),
 		sSearch:sSearch
 	};
     $.ajax({
@@ -910,6 +913,16 @@ function initEvent() {
 	initHintEvent();
 	initUserEvent();
 	initPageButtonEvent();
+	initTimeEvent();
+}
+
+/**
+ * 更改时间时获取预估费用
+ */
+function initTimeEvent(){
+	$("#usetime").change(function(){
+		getCost();
+	});
 }
 
 /**
@@ -1242,6 +1255,13 @@ function createOrder(){
 	    url: "Order/CreateOpOrder" ,
 	    data: JSON.stringify(data),
 	    dataType: "json",
+	    beforeSend: function () {
+	        // 禁用按钮防止重复提交
+	        $("#sub").attr({ disabled: "disabled" });
+	    },
+	    complete: function () {
+	        $("#sub").removeAttr("disabled");
+	    },
 	    success: function(data){
 	    	showResult(data);
 	    },
@@ -1264,6 +1284,7 @@ function resetCost(){
 function getCost(){
 	var cartype = $("#cartype").val();
 	var usetype= $("#usetype").find("input[type='radio']:checked").val();
+	var usetime = $("#usetime").val();
 	var rulestype = usetype == "0"?"1":"0";
 	var city       = $("#onCity").val();
 	var ordertype=$("#ordertype").val();
@@ -1292,6 +1313,7 @@ function getCost(){
 	var data = {
 			cartype:cartype,
 			usetype:usetype,
+			usetime:usetime,
 			city:city,
 			ordertype:ordertype,
 			userid:userid,

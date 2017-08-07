@@ -1,5 +1,6 @@
 package com.szyciov.supervision.util;
 
+import jdk.nashorn.internal.runtime.regexp.joni.ast.StringNode;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
@@ -90,5 +91,24 @@ public class FileUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * 将InputStream转换成String
+     * @param in InputStream
+     * @return String
+     * @throws Exception
+     *
+     */
+    public static String convertStreamToString(InputStream in) throws Exception{
+
+        StringBuilder sb = new StringBuilder();
+
+        byte[] data = new byte[2048];
+        int count = -1;
+        while((count = in.read(data,0,2048)) != -1){
+            sb.append(new String(data,0,count));
+        }
+        return sb.toString();
     }
 }

@@ -186,7 +186,11 @@ function renderPageByOrder(order) {
 		//航班号
 		$("#hbh").text(order.fltno);
 		//起飞时间
-		$("#qfsj").text(order.falltime);
+        if(null == order.falltime) {
+            $("#qfsj").text("");
+        } else {
+            $("#qfsj").text(order.falltime);
+        }
 	}
 	//计费车型
 	$("#jfcx").text(order.pricemodelname);

@@ -61,6 +61,11 @@ public class TaxiOrderCost {
 	 */
 	private Integer times;
 	
+	/**
+	 * 预约单附加费
+	 */
+	private double reversefee;
+	
 	public String getOrderno() {
 		return orderno;
 	}
@@ -156,6 +161,20 @@ public class TaxiOrderCost {
 	public void setTimes(Integer times) {
 		this.times = times;
 	}
-	
-	
+
+	/**  
+	 * 获取预约单附加费  
+	 * @return reversefee 预约单附加费  
+	 */
+	public double getReversefee() {
+		return reversefee;
+	}
+
+	/**  
+	 * 设置预约单附加费  
+	 * @param reversefee 预约单附加费  
+	 */
+	public void setReversefee(double reversefee) {
+		this.reversefee = reversefee;
+	}
 }

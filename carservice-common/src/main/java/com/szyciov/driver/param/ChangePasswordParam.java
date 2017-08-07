@@ -18,6 +18,10 @@ public class ChangePasswordParam extends BaseParam {
 	 */
 	@SzycValid(rules={"checkNull","checkPasswordType"})
 	private String type = DriverEnum.PASSWORD_TYPE_LOGINPASS.code;
+	/**
+	 * 密码是否加密传输
+	 */
+	private boolean encrypted = false;
 	
 	/**  
 	 * 获取司机ID  
@@ -67,4 +71,20 @@ public class ChangePasswordParam extends BaseParam {
 		this.type = type;
 	}
 
+	/**  
+	 * 获取密码是否加密传输  
+	 * @return encrypted 密码是否加密传输  
+	 */
+	public boolean isEncrypted() {
+		return encrypted;
+	}
+
+	/**  
+	 * 设置密码是否加密传输  
+	 * @param encrypted 密码是否加密传输  
+	 */
+	public void setEncrypted(boolean encrypted) {
+		this.encrypted = encrypted;
+	}
+	
 }

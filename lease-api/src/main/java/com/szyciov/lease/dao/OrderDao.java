@@ -200,4 +200,16 @@ public class OrderDao {
         List<GetFreeDriverResponse> list = mapper.getManualSelectDriver(model);
         return list;
     }
+
+    public List<Map<String,Object>> getOrganUsers(Map<String, Object> param) {
+		return mapper.getOrganUsers(param);
+    }
+
+	public List<Map<String,Object>> getOrgans(Map<String, Object> param) {
+		return mapper.getOrgans(param);
+	}
+
+    public Map<String,Object> getRUYUE(Map<String, Object> param) {
+        return mapper.getRUYUE(param);
+    }
 }

@@ -101,7 +101,7 @@ function manualOrderdataGrid() {
         	sEmptyTable: "暂无服务订单信息"
         },
         columns: [
-        	{
+        	/*{
                 //自定义操作列
                 "mDataProp": "ZDY",
                 "sClass": "center",
@@ -117,7 +117,7 @@ function manualOrderdataGrid() {
                     html.push("<button type=\"button\" class=\"SSbtn blue\" onclick=\"reject('" + full.orderno + "')\"><i class=\"fa fa-paste\"></i>不受理</button>");
                     return html.join("");
                 }
-            },
+            },*/
             {
                 "mDataProp": "DDLY",
                 "sClass": "center",

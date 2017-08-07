@@ -226,4 +226,36 @@ public class OrderService {
 	public JSONObject getOrgUserBusCity(Map<String, Object> param, String userToken) {
 		return templateHelper.dealRequestWithToken("/Order/GetOrgUserBusCity", HttpMethod.POST, userToken, param, JSONObject.class);
 	}
+
+	/**
+	 * 获取机构列表
+	 * @param param
+	 * @return
+	 */
+	public Map<String,Object> getOrgans(Map<String, Object> param) {
+		Map<String,Object> result = templateHelper.dealRequestWithToken("/Order/GetOrgans", HttpMethod.POST, null, param, Map.class);
+		return result;
+	}
+
+    /**
+     * 获取机构列表
+     * @param param
+     * @return
+     */
+    public Map<String,Object> getCompanyidByruyue(Map<String, Object> param) {
+        Map<String,Object> result = templateHelper.dealRequestWithToken("/Order/GetCompanyidByruyue", HttpMethod.POST, null, param, Map.class);
+        return result;
+    }
+
+
+
+	/**
+	 * 获取机构下的员工列表
+	 * @param param
+	 * @return
+	 */
+	public Map<String,Object> getOrganUsers(Map<String, Object> param) {
+		Map<String,Object> result = templateHelper.dealRequestWithToken("/Order/GetOrganUsers", HttpMethod.POST, null, param, Map.class);
+		return result;
+	}
 }

@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,19 +44,25 @@ public class OrgUsecarrulesController extends BaseController {
 		response.setContentType("text/html;charset=utf-8");
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		OrgUsecarrules orgUsecarrules = new OrgUsecarrules();
+		String queryCompany = "";
+		String search = "";
 		if(request.getParameter("queryCompany") != null && !request.getParameter("queryCompany").equals("")){
-			orgUsecarrules.setName(request.getParameter("queryCompany"));
+			queryCompany = stringFilter(request.getParameter("queryCompany"));
+			orgUsecarrules.setName(queryCompany);
+		}
+		if(request.getParameter("search") != null && !request.getParameter("search").equals("")){
+			search = stringFilter(request.getParameter("search"));
 		}
 		orgUsecarrules.setOrganId(getLoginOrgUser(request).getOrganId());
 		Map map = templateHelper.dealRequestWithToken("/OrgUsecarrules/GetOrgUsecarrules", HttpMethod.POST, userToken, orgUsecarrules,
 				Map.class);
-		if(map.size() <= 0 && request.getParameter("search") != null && !request.getParameter("search").equals("") ){
+		if(map.size() <= 0 && search != null && !search.equals("") ){
 			mav.addObject("search", "没有查询到相关规则信息");
 		}else{
 			mav.addObject("map", map);
 		}
 		mav.addObject("size",map.size());
-		mav.addObject("queryCompany",request.getParameter("queryCompany"));
+		mav.addObject("queryCompany",queryCompany);
 		mav.setViewName("resource/orgUsecarrules/index");
 		return mav;
 	}
@@ -249,6 +257,20 @@ public class OrgUsecarrulesController extends BaseController {
 //		String organid = getLoginOrgUser(request).getOrganId();
 		return templateHelper.dealRequestWithToken("/OrgUsecarrules/CheckRulesUpdate/{name}", HttpMethod.GET, userToken, null,
 				int.class,name);
+	}
+	
+	private static String stringFilter(String str){  
+		    String result = "";
+		    try {
+		    	str = str.replaceAll("\\\\", "");  
+				String regEx = "[`~!@#$%^&*()+=|{}'.:;'\\[\\]<>/?~@#￥%……&*]";//+号表示空格  
+				Pattern p = Pattern.compile(regEx);  
+				Matcher m = p.matcher(str);  
+				result = m.replaceAll("").trim();  
+			} catch (Exception e) {
+				logger.error("stringFilter,str="+str,e);  
+			}
+		   return result;  
 	}
 	
 }

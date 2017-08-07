@@ -49,6 +49,9 @@
 		tbody tr td:first-child {
 		    text-align: left !important;
 		}
+		label.error{
+  	    padding-left: 0px !important;  
+  	    }
 		</style>
 	</head>
 	<body>

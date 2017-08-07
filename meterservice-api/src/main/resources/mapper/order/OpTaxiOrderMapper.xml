@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ry.taxi.order.mapper.OpTaxiOrderMapper">
+	<select id = "getOpTaxiOrder" resultType="com.ry.taxi.order.domain.OpTaxiOrder">
+		SELECT
+			oo.*	
+		FROM op_taxiorder oo
+		WHERE   oo.thirdOrderno = #{thirdOrderno}
+	</select>
+	
+	<update id="updateTakingOrder" parameterType="com.ry.taxi.order.domain.OpTaxiOrder">
+		UPDATE `op_taxiorder` oo SET 
+			oo.driverid = #{driverid}, 
+			oo.companyid = #{companyid},
+			oo.vehicleid = #{vehicleid}, 
+			oo.orderstatus =#{orderstatus},
+			oo.ordertime = #{ordertime}, 
+			oo.plateno = #{plateno}, 
+			oo.vehcbrandname = #{vehcbrandname}, 
+			oo.vehclinename = #{vehclinename}, 
+			oo.ordersortcolumn = #{ordersortcolumn},
+			oo.belongleasecompany = #{belongleasecompany},
+			oo.updatetime = NOW()
+		WHERE oo.thirdorderno = #{thirdorderno}
+		AND oo.orderstatus IN(0,1);
+	</update>
+	
+	<update id="updateTaxiOrder" parameterType="com.ry.taxi.order.domain.OpTaxiOrder">
+		update op_taxiorder 
+		<trim prefix="set" suffixOverrides=",">
+		 	updatetime=NOW(),
+				 
+		  <if test="departurecity!=null">
+		  	departurecity=#{departurecity},
+		  </if>
+		  <if test="departureaddress!=null">
+		  	departureaddress=#{departureaddress},
+		  </if>
+		  <if test="departurelng!=null">
+			departurelng=#{departurelng},
+		  </if>
+		  <if test="departurelat!=null">
+		  	departurelat=#{departurelat},
+		  </if>
+		  <if test="departuretime!=null">
+		  	departuretime=#{departuretime},
+		  </if>
+		  
+		  <if test="arrivalcity!=null">
+		  	arrivalcity=#{arrivalcity},
+		  </if>
+		  <if test="arrivaladdress!=null">
+			arrivaladdress=#{arrivaladdress},
+		  </if>
+		  <if test="arrivallng!=null">
+			arrivallng=#{arrivallng},
+		  </if>
+		  <if test="arrivallat!=null">
+			arrivallat=#{arrivallat},
+		  </if>
+		  <if test="arrivaltime!=null">
+			arrivaltime=#{arrivaltime},
+		  </if>
+		  
+		  <if test="orderstatus!=null">
+			orderstatus=#{orderstatus},
+		  </if>
+		  <if test="orderamount!=null">
+			orderamount=#{orderamount},
+		  </if>
+		  <if test="actualpayamount!=null">
+			actualpayamount=#{actualpayamount},
+		  </if>
+		  <if test="shouldpayamount!=null">
+			shouldpayamount=#{shouldpayamount},
+		  </if>
+		  <if test="originalorderamount!=null">
+			originalorderamount=#{originalorderamount},
+		  </if>
+		  
+		  <if test="starttime!=null">
+		  	starttime=#{starttime},
+		  </if>
+		  <if test="endtime!=null">
+		  	endtime=#{endtime},
+		  </if>
+		  <if test="userhidden!=null">
+		  	userhidden=#{userhidden},
+		  </if>
+		  <if test="paymentmethod!=null">
+		  	paymentmethod=#{paymentmethod},	
+		  </if>
+		  
+		  <if test="paymentstatus!=null">
+		  	paymentstatus = #{paymentstatus},
+		  </if>
+		  <if test="paymenttime!=null">
+		  	paymenttime=#{paymenttime},
+		  </if>
+		  <if test="settlementtime!=null">
+		  	settlementtime=#{settlementtime},
+		  </if>
+		  <if test="ordersortcolumn!=null">
+		  	ordersortcolumn = #{ordersortcolumn},
+		  </if>
+	         
+	      <if test="startcity!=null">
+	      	startcity = #{startcity},
+	      </if>
+	      <if test="startaddress!=null">
+	      	startaddress = #{startaddress},
+	      </if>
+	      <if test="startlng!=null">
+	      	startlng = #{startlng},
+	      </if>
+	      <if test="startllat!=null">
+	      	startllat = #{startllat},
+	      </if>
+	      
+	      <if test="endcity!=null">
+	      	endcity = #{endcity},
+	      </if>
+	      <if test="endaddress!=null">
+	      	endaddress = #{endaddress},
+	      </if>
+	      <if test="endlng!=null">
+	      	endlng = #{endlng},
+	      </if>
+	      <if test="endllat!=null">
+	      	endllat = #{endllat},
+	      </if>
+	      <if test="mileage!=null">
+	      	mileage = #{mileage},
+	      </if>
+	      <if test="cancelparty!=null">
+	      	cancelparty = #{cancelparty}
+	      </if>
+		</trim>
+    where orderno = #{orderno}
+	</update>
+	
+
+</mapper>

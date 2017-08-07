@@ -10,16 +10,10 @@
             http://www.springframework.org/schema/rabbit
             http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
 
-    <!-- rabbitMQ配置 -->
-    <rabbit:connection-factory id="connectionFactory" host="${rabbit.host}" port="${rabbit.post}" username="${rabbit.username}"
-                               password="${rabbit.password}" virtual-host="${rabbit.virtualhost}" channel-cache-size="${rabbit.channelCacheSize}"/>
-    <rabbit:admin connection-factory="connectionFactory"/>
-    <!-- spring template声明 -->
-    <rabbit:template exchange="${rabbit.commonExchange}" id="amqpTemplate" connection-factory="connectionFactory" message-converter="jsonMessageConverter"/>
-    <!-- 数据转换json -->
-    <bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter"/>
-
     <!-- OBD队列配置 -->
+    <rabbit:connection-factory id="obdConnectionFactory" host="${rabbit.host}" port="${rabbit.post}" username="${rabbit.obdusername}"
+                               password="${rabbit.obdpassword}" virtual-host="${rabbit.obdvirtualhost}" channel-cache-size="${rabbit.obdchannelCacheSize}"/>
+    <rabbit:admin connection-factory="obdConnectionFactory"/>
     <bean id="OBDRabbitHandler" class="com.szyciov.carservice.util.rabbit.OBDRabbitHandler"/>
     <rabbit:queue id="obdQueue" name="${rabbit.obdQueuename}" durable="true" auto-delete="false"/>
     <rabbit:topic-exchange id="obdExchange" name="${rabbit.obdExchange}" durable="true">
@@ -27,9 +21,20 @@
             <rabbit:binding queue="obdQueue" pattern="${rabbit.obdPattern}"></rabbit:binding>
         </rabbit:bindings>
     </rabbit:topic-exchange>
-    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual" prefetch="20">
+    <rabbit:listener-container connection-factory="obdConnectionFactory" acknowledge="manual" prefetch="20">
         <rabbit:listener ref="OBDRabbitHandler" method="onMessage" queues="obdQueue"></rabbit:listener>
     </rabbit:listener-container>
+
+
+
+    <!-- 公共队列配置 -->
+    <rabbit:connection-factory id="commonConnectionFactory" host="${rabbit.host}" port="${rabbit.post}" username="${rabbit.commonusername}"
+                               password="${rabbit.commonpassword}" virtual-host="${rabbit.commonvirtualhost}" channel-cache-size="${rabbit.commonchannelCacheSize}"/>
+    <rabbit:admin connection-factory="commonConnectionFactory"/>
+    <!-- spring template声明 -->
+    <rabbit:template exchange="${rabbit.commonExchange}" id="amqpTemplate" connection-factory="commonConnectionFactory" message-converter="jsonMessageConverter"/>
+    <!-- 数据转换json -->
+    <bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter"/>
 
     <!-- APPGPS队列配置 -->
     <bean id="APPGPSRabbitHandler" class="com.szyciov.carservice.util.rabbit.APPGPSRabbitHandler"/>
@@ -39,7 +44,7 @@
             <rabbit:binding queue="appQueue" pattern="${rabbit.appPattern}"></rabbit:binding>
         </rabbit:bindings>
     </rabbit:topic-exchange>
-    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual" prefetch="20">
+    <rabbit:listener-container connection-factory="commonConnectionFactory" acknowledge="manual" prefetch="20">
         <rabbit:listener ref="APPGPSRabbitHandler" method="onMessage" queues="appQueue"></rabbit:listener>
     </rabbit:listener-container>
 
@@ -58,7 +63,7 @@
             <rabbit:binding queue="commonDlxQueue" pattern="${rabbit.commonDlxPattern}"></rabbit:binding>
         </rabbit:bindings>
     </rabbit:topic-exchange>
-    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual" prefetch="20">
+    <rabbit:listener-container connection-factory="commonConnectionFactory" acknowledge="manual" prefetch="20">
         <rabbit:listener ref="CommonRabbitHandler" method="onMessage" queues="commonQueue"></rabbit:listener>
     </rabbit:listener-container>
 

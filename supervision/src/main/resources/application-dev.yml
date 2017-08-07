@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://rm-wz9v15h50ci9vu25yo.mysql.rds.aliyuncs.com:3306/carservice_dev?useUnicode=true&characterEncoding=utf-8
-    username: dbapp
-    password: gtg0705d
+    url: jdbc:mysql://szycwh.f3322.net:3306/carservicedev_test_v3.0.0?useUnicode=true&characterEncoding=utf-8
+    username: xxdeveloper
+    password: xxkj@2017
   rabbitmq:
     host: 120.76.199.119
     port: 5672
@@ -15,5 +15,6 @@ service:
   company:
     code: RY
     key: SLj16Qq7FK9nbyi4
+    open-token: dsjjaAGJDJ224JD
 server:
-  port: 8080
+  port: 8098

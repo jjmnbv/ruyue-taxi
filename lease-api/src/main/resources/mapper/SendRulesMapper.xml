@@ -166,6 +166,9 @@
 		<if test='null != city and "" != city'>
 			and city = #{city}
 		</if>
+        <if test='null != useType'>
+            and usetype = #{useType}
+        </if>
 	</select>
 	
 </mapper>

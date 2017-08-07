@@ -71,6 +71,11 @@ public class TocOrderManageQueryParam extends QueryParam {
      */
     private String belongleasecompany;
 
+    /**
+     * 账号对应服务车企权限
+     */
+    private String queryTmpBelongleasecompany;
+
     public String getBelongleasecompany() {
         return belongleasecompany;
     }
@@ -174,5 +179,12 @@ public class TocOrderManageQueryParam extends QueryParam {
 	public void setCompanyId(String companyId) {
 		this.companyId = companyId;
 	}
-	
+
+    public String getQueryTmpBelongleasecompany() {
+        return queryTmpBelongleasecompany;
+    }
+
+    public void setQueryTmpBelongleasecompany(String queryTmpBelongleasecompany) {
+        this.queryTmpBelongleasecompany = queryTmpBelongleasecompany;
+    }
 }

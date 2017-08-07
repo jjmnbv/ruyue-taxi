@@ -1,10 +1,12 @@
+<%@page import="com.szyciov.util.SystemConfig"%>
 <%@ page contentType="text/html; charset=UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
-	
+	String vmsApiUrl = SystemConfig.getSystemProperty("vmsApiUrl");	
+	String apikey = SystemConfig.getSystemProperty("vmsApikey");	
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -37,14 +39,14 @@
 		<script type="text/javascript" src="content/plugins/select2/select2_locale_zh-CN.js"></script>
 		<script type="text/javascript" src="content/plugins/select2/app.js"></script>
 		<script type="text/javascript" src="js/basecommon.js"></script>
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=AFLc9FVyIHUWExKYFETDeF6T"></script>
-		
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=AFLc9FVyIHUWExKYFETDeF6T&s=1"></script>
+		<script type="text/javascript" src="content/js/loading.js"></script>
 		<script type="text/javascript" src="js/location/realtimeTracking.js?v=1.6"></script>
 														
 		<style type="text/css">
 			 #map_canvas {
         width: 100%;
-        height: 600px;
+        height: 680px;
         overflow: hidden;
         margin: 0;
     }
@@ -172,139 +174,140 @@
 		</style>
 		<script type="text/javascript">
 		var basePath="<%=basePath%>";
+		var vmsApiUrl = "<%=vmsApiUrl%>";
+		var apikey="<%=apikey%>";
+		var echoplate="${plate}";//回显车牌
+		var echoeqpId="${eqpId}";//回显设备Id
+		var echoimei ="${imei}";//回显设备IMEI
 		</script>
 	</head>
 	<body style="height:auto; overflow-y:scroll">
-		
-		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 实时追踪</div>
+		<div class="crumbs">
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 实时追踪
+		</div>
 		<div class="content">
-			
-					<div class="row margin-top-10">
-					    <div class="col-md-10" style="width:80%;">
-					        <div id="map_canvas">
-					        </div>
-					    </div>
-					    <div class="col-md-2" style="width:20%;">
-					        <div class="row margin-top-10">
-					            <div class="col-md-12">
-					                <input type="hidden" style="width:100%" id="selPlates" />
-					            </div>
-					        </div>
-					        <div class="row margin-top-10">
-					            <div class="col-md-12">
-					                <button type="button" class="btn btn-primary  blue pull-right" id="btnSearch"><img src="img/trafficflux/icon/add.png" alt="" />添加</button>
-					            </div>
-					        </div>
-					        <div class="row margin-top-10">
-					            <div class="col-md-12">
-					                <div class="portlet">
-					                    <div class="portlet-title">
-					                        <div class="caption">
-					                            <i class="fa fa-check"></i>车辆:<span id="spVehcCount">0</span>
-					                        </div>
-					                    </div>
-					                    <div class="portlet-body">
-					                        <div class="vehc-content">
-					                            <div class="scroller" style="height: 440px;" data-always-visible="1" data-rail-visible1="1">
-					                                <!-- START vehc LIST -->
-					                                <ul class="vehc-list"></ul>
-					                                <!-- END START vehc LIST -->
-					                            </div>
-					                        </div>
-					                    </div>
-					                </div>
-					            </div>
-					        </div>
-					    </div>
-					</div>
-					
-					<!-- 时间栅栏  -->
-					<div class="modal fade" id="mdTimeFenceSet" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" style="min-height:350px">
-					    <div class="modal-dialog" style="min-width:700px;">
-					        <div class="modal-content">
-					            <form id="frmmodal" action="#" class="form-horizontal" role="form">
-					                <div class="modal-header">
-					                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-					                    <h4 class="modal-title">设置时间栅栏<span style="background-color:#3fbcfb;" id="TimeFenceSetInfo"></span></h4>
-					                    <input type="hidden" id="timeV_ID" />
-					                </div>
-					                <div class="modal-body" style="min-width:400px;max-height: 400px; overflow-x: hidden; overflow-y: auto;">
-					                    <div class="row">
-					                        <div class="col-md-12">
-					                            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGridTimeFenceSet"></table>
-					                        </div>
-					                    </div>
-					                </div>
-					                <div class="modal-footer">
-					                    <div class="pull-right" id="footer">
-					                        <button type="button" class="btn blue" onclick="AddTimeFaceToVehc()"><i class="fa fa-pencil"></i> 保存</button>
-					                        <button type="button" class="btn default" data-dismiss="modal"><img src="Content/img/icon_gallery/shutdown_ga.png" /> 关闭</button>
-					                    </div>
-					                </div>
-					            </form>
-					        </div>
-					    </div>
-					</div>
-					
-					<!-- 区域栅栏  -->
-					<div class="modal fade" id="mdAreaFenceSet" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" style="min-height:350px">
-					    <div class="modal-dialog" style="min-width:700px;">
-					        <div class="modal-content">
-					            <form id="frmmodal" action="#" class="form-horizontal" role="form">
-					                <div class="modal-header">
-					                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-					                    <h4 class="modal-title">设置区域栅栏<span style="background-color:#3fbcfb;" id="AreaFenceSetInfo"></span></h4>
-					                    <input type="hidden" id="areaV_ID" />
-					                </div>
-					                <div class="modal-body" style="min-width: 400px; max-height: 400px; overflow-x: hidden; overflow-y: auto;">
-					                    <div class="row">
-					                        <div class="col-md-12">
-					                            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGridAreaFenceSet"></table>
-					                        </div>
-					                    </div>
-					                </div>
-					                <div class="modal-footer">
-					                    <div class="pull-right" id="footer">
-					                        <button type="button" class="btn blue" onclick="AddAreaFaceToVehc()"><i class="fa fa-pencil"></i> 保存</button>
-					                        <button type="button" class="btn default" data-dismiss="modal"><img src="Content/img/icon_gallery/shutdown_ga.png" /> 关闭</button>
-					                    </div>
-					                </div>
-					            </form>
-					        </div>
-					    </div>
-					</div>
-					
-					<!-- 电子围栏  -->
-					<div class="modal fade" id="mdElectronFenceSet" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" style="min-height:350px">
-					    <div class="modal-dialog" style="min-width:200px;">
-					        <div class="modal-content">
-					            <form id="frmmodal" action="#" class="form-horizontal" role="form">
-					                <div class="modal-header">
-					                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-					                    <h4 class="modal-title">设置电子围栏<span style="background-color:#3fbcfb;" id="ElectronFenceSetInfo"></span></h4>
-					                    <input type="hidden" id="EfV_ID" />
-					                </div>
-					                <div class="modal-body" style="min-width: 150px; max-height: 400px; overflow-x: hidden; overflow-y: auto;">
-					                    <div class="row">
-					                        <div class="col-md-12">
-					                            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGridElectronFenceSet"></table>
-					                        </div>
-					                    </div>
-					                </div>
-					                <div class="modal-footer">
-					                    <div class="pull-right" id="footer">
-					                        <button type="button" class="btn blue" onclick="AddElectronFaceToVehc()"><i class="fa fa-pencil"></i> 保存</button>
-					                        <button type="button" class="btn default" data-dismiss="modal"><img src="Content/img/icon_gallery/shutdown_ga.png" /> 关闭</button>
-					                    </div>
-					                </div>
-					            </form>
-					        </div>
-					    </div>
-					</div>
-		
+			<div class="row margin-top-10">
+			    <div class="col-md-10" style="width:80%;">
+			        <div id="map_canvas">
+			        </div>
+			    </div>
+			    <div class="col-md-2" style="width:20%;">
+			        <div class="row margin-top-10">
+			            <div class="col-md-12">
+			                <input type="hidden" style="width:100%" id="selPlates" />
+			            </div>
+			        </div>
+			        <div class="row margin-top-10">
+			            <div class="col-md-12">
+			                <button type="button" class="btn btn-primary  blue pull-right" id="btnSearch"><img src="img/trafficflux/icon/add.png" alt="" />添加</button>
+			            </div>
+			        </div>
+			        <div class="row margin-top-10">
+			            <div class="col-md-12">
+			                <div class="portlet">
+			                    <div class="portlet-title">
+			                        <div class="caption">
+			                            <i class="fa fa-check"></i>车辆:<span id="spVehcCount">0</span>
+			                        </div>
+			                    </div>
+			                    <div class="portlet-body">
+			                        <div class="vehc-content">
+			                            <div class="scroller" style="height: 440px;" data-always-visible="1" data-rail-visible1="1">
+			                                <!-- START vehc LIST -->
+			                                <ul class="vehc-list"></ul>
+			                                <!-- END START vehc LIST -->
+			                            </div>
+			                        </div>
+			                    </div>
+			                </div>
+			            </div>
+			        </div>
+			    </div>
+			</div>
+			<!-- 时间栅栏  -->
+			<div class="modal fade" id="mdTimeFenceSet" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" style="min-height:350px">
+			    <div class="modal-dialog" style="min-width:700px;">
+			        <div class="modal-content">
+			            <form id="frmmodal" action="#" class="form-horizontal" role="form">
+			                <div class="modal-header">
+			                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+			                    <h4 class="modal-title">设置时间栅栏<span style="background-color:#3fbcfb;" id="TimeFenceSetInfo"></span></h4>
+			                    <input type="hidden" id="timeV_ID" />
+			                </div>
+			                <div class="modal-body" style="min-width:400px;max-height: 400px; overflow-x: hidden; overflow-y: auto;">
+			                    <div class="row">
+			                        <div class="col-md-12">
+			                            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGridTimeFenceSet"></table>
+			                        </div>
+			                    </div>
+			                </div>
+			                <div class="modal-footer">
+			                    <div class="pull-right" id="footer">
+			                        <!-- <button type="button" class="btn blue" onclick="AddTimeFaceToVehc()"><i class="fa fa-pencil"></i> 保存</button>
+			                        <button type="button" class="btn default" data-dismiss="modal"><img src="content/img/icon_gallery/shutdown_ga.png" /> 关闭</button> -->
+			                    </div>
+			                </div>
+			            </form>
+			        </div>
+			    </div>
+			</div>
+			<!-- 区域栅栏  -->
+			<div class="modal fade" id="mdAreaFenceSet" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" style="min-height:350px">
+			    <div class="modal-dialog" style="min-width:700px;">
+			        <div class="modal-content">
+			            <form id="frmmodal" action="#" class="form-horizontal" role="form">
+			                <div class="modal-header">
+			                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+			                    <h4 class="modal-title">设置区域栅栏<span style="background-color:#3fbcfb;" id="AreaFenceSetInfo"></span></h4>
+			                    <input type="hidden" id="areaV_ID" />
+			                </div>
+			                <div class="modal-body" style="min-width: 400px; max-height: 400px; overflow-x: hidden; overflow-y: auto;">
+			                    <div class="row">
+			                        <div class="col-md-12">
+			                            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGridAreaFenceSet"></table>
+			                        </div>
+			                    </div>
+			                </div>
+			                <div class="modal-footer">
+			                    <div class="pull-right" id="footer">
+			                       <!--  <button type="button" class="btn blue" onclick="AddAreaFaceToVehc()"><i class="fa fa-pencil"></i> 保存</button>
+			                        <button type="button" class="btn default" data-dismiss="modal"><img src="Content/img/icon_gallery/shutdown_ga.png" /> 关闭</button> -->
+			                    </div>
+			                </div>
+			            </form>
+			        </div>
+			    </div>
+			</div>
+			<!-- 电子围栏  -->
+			<div class="modal fade" id="mdElectronFenceSet" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" style="min-height:350px">
+			    <div class="modal-dialog" style="min-width:200px;">
+			        <div class="modal-content">
+			            <form id="frmmodal" action="#" class="form-horizontal" role="form">
+			                <div class="modal-header">
+			                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+			                    <h4 class="modal-title">设置电子围栏<span style="background-color:#3fbcfb;" id="ElectronFenceSetInfo"></span></h4>
+			                    <input type="hidden" id="EfV_ID" />
+			                </div>
+			                <div class="modal-body" style="min-width: 150px; max-height: 400px; overflow-x: hidden; overflow-y: auto;">
+			                    <div class="row">
+			                        <div class="col-md-12">
+			                            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGridElectronFenceSet"></table>
+			                        </div>
+			                    </div>
+			                </div>
+			                <div class="modal-footer">
+			                    <div class="pull-right" id="footer">
+			                        <!-- <button type="button" class="btn blue" onclick="AddElectronFaceToVehc()"><i class="fa fa-pencil"></i> 保存</button>
+			                        <button type="button" class="btn default" data-dismiss="modal"><img src="Content/img/icon_gallery/shutdown_ga.png" /> 关闭</button> -->
+			                    </div>
+			                </div>
+			            </form>
+			        </div>
+			    </div>
+			</div>
 	</body>
-		<script type="text/javascript">
-	var _loading = function () {
+		<%--<script type="text/javascript">
+		var _loading = function () {
 	    var loading = $('<div class="loadingdiv">').appendTo($(document.body));;
 	   // <img src="img/trafficflux/ajax-modal-loading.gif" alt="图片加载中···" /></div>
 	    return {
@@ -327,5 +330,5 @@
 	        }
 	    };
 	}();
-	</script>
+	</script>--%>
 </html>

@@ -95,6 +95,8 @@ public class Const {
 	 */
 	public static final String INTERFACE_V3_0_1 = "v3.0.1";
 
+	public static final String INTERFACE_V3_0_2 = "v3.0.2";
+
 	/**
 	 * 机构订单类型
 	 */

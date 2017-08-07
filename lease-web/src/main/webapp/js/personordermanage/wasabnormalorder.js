@@ -43,7 +43,7 @@ function manualOrderdataGrid() {
         	sEmptyTable: "暂无服务订单信息"
         },
         columns: [
-        	{
+        	/*{
                 //自定义操作列
                 "mDataProp": "ZDY",
                 "sClass": "center",
@@ -58,7 +58,7 @@ function manualOrderdataGrid() {
 						return "";
 					}
                 }
-            },
+            },*/
             {
                 "mDataProp": "DDLY",
                 "sClass": "center",

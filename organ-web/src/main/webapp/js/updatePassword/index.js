@@ -1,8 +1,8 @@
 $(document).ready(function() {
 //		placeholder属性的兼容性问题处理
 	if( navigator.appName == "Microsoft Internet Explorer" ){
-		placeholder( $(".con_inp").eq(1) , "6-16位字母、符号和数字组成" )
-		placeholder( $(".con_inp").eq(2) , "6-16位字母、符号和数字组成" )
+		placeholder( $(".con_inp").eq(1) , "8-16位字母、符号和数字组成" )
+		placeholder( $(".con_inp").eq(2) , "8-16位字母、符号和数字组成" )
 	}
 	
 //	$("#passwordNew1").blur(function(){
@@ -14,7 +14,7 @@ function checkSubmit(){
 	var passwordOld = $("#passwordOld").val();
 	var passwordNew = $("#passwordNew").val();
 	var passwordNew1 = $("#passwordNew1").val();
-	if((passwordOld!=null && passwordOld!='' && passwordOld.length>5) && (passwordNew!=null && passwordNew!='' && passwordNew.length>5) && (passwordNew1!=null && passwordNew1!='' && passwordNew1.length>5)){
+	if((passwordOld!=null && passwordOld!='' && passwordOld.length>7) && (passwordNew!=null && passwordNew!='' && passwordNew.length>7) && (passwordNew1!=null && passwordNew1!='' && passwordNew1.length>7)){
 		$("#submitRed").attr("class","on_inp con_sub");
 		$("#submitRed").attr("onclick","save();"); 
 	}else{
@@ -55,14 +55,16 @@ function save(){
 //			toastr.error("新密码不能和原密码相同", "提示");
 	}else{
 		if(passwordNew === passwordNew1){
-			var reg = /^(\w){6,16}$/; 
-			if(!reg.exec(passwordNew)){
-				$(".con_right").removeAttr("style");
-				$("#con_hint1").html("");
-				$("#con_hint3").html("");
-				$("#con_hint2").html("密码有6-16位的大小写英文字母、符号和数字组成");
-//  				toastr.error("密码有6-16位的大小写英文字母、符号和数字组成", "提示");
-			}else{
+			debugger;
+//			var reg = /^(\w){8,16}$/;
+			var reg1 = /\d+/;
+			var reg2 =/[a-zA-Z]+/;
+			var reg3 = /[\.@#\$%\^&\*\(\)\[\]\\?\\\/\|\-~`\+\=\,\r\n\:\'\"]+/;
+			var b = !reg1.exec(passwordNew);
+			var c = !reg2.exec(passwordNew);
+			var d = !reg3.exec(passwordNew);
+			if(passwordNew.length > 8 && passwordNew.length < 16 && reg1.exec(passwordNew) && reg2.exec(passwordNew) && reg3.exec(passwordNew)){
+
 				$.post("UpdatePassword/CheckPasswords", {"userpassword":passwordOld}, function (data) {
 					if(data.count > 0){
 						$.post("UpdatePassword/updatePassword", {"userpassword":passwordNew}, function (data) {
@@ -91,6 +93,12 @@ function save(){
 						}
 					}
 				});
+			}else{
+				$(".con_right").removeAttr("style");
+				$("#con_hint1").html("");
+				$("#con_hint3").html("");
+				$("#con_hint2").html("密码有8-16位的大小写英文字母、符号和数字组成");
+//  				toastr.error("密码有6-16位的大小写英文字母、符号和数字组成", "提示");
 			}
 		}else{
 			$(".con_right").removeAttr("style");
@@ -100,5 +108,4 @@ function save(){
 //  			toastr.error("两次输入的新密码不一致", "提示");
 		}
 	}
-
 }

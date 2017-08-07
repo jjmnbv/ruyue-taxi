@@ -26,5 +26,21 @@ public class UrlRequestConstant {
 	
 	public static final String SIGN = "Sign";
 	
+	public static final String CMD_DRIVERTAKEORDER = "DriverTakeOrder";//司机应邀通知
+	
+	public static final String CMD_DRIVERSTARTORDER = "DriverStartOrder";//司机执行订单通知
+	
+	public static final String CMD_DRIVERARRIVAL  = "DriverArrival";//司机到达乘客起点通知
+	
+	public static final String CMD_DRIVERCANCELORDER = "DriverCancelOrder";//司机取消通知
+	
+	public static final String CMD_STARTCALCULATION = "StartCalculation";//压表通知
+	
+	public static final String CMD_ENDCALCULATION = "EndCalculation";//起表通知
+	
+	public static final String CMD_PAYMENTCONFIRMATION = "PaymentConfirmation";//支付确认通知
+	
+	public static final String CMD_DISTANCEUPLOAD = "DistanceUpload";//里程回传
+	
 
 }

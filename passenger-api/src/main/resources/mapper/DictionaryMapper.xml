@@ -248,4 +248,9 @@
 	<select id="getAwardStopInfo" resultType="Map">
 		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='订单返还金额活动是否终止'
 	</select>
+
+	<!--获取预约用车附加费-->
+	<select id="getYYFJF" resultType="Map">
+		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type=#{type}
+	</select>
 </mapper>

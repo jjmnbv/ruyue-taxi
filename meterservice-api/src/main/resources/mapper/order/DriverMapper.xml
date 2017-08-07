@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ry.taxi.order.mapper.DriverMapper">
+    
+	<select id="getDriverByJobNum" parameterType="String" resultType="com.ry.taxi.order.domain.PubDriver">
+		SELECT
+			pd.*
+			FROM
+			pub_driver pd
+			WHERE 1=1
+			AND pd.jobnum = #{jobNum}
+			limit 1
+	</select>
+
+
+
+	<update id="setDriverWorkstatus" parameterType="com.ry.taxi.order.domain.PubDriver">
+			UPDATE pub_driver SET workstatus=#{workstatus} WHERE id = #{id}
+
+	</update>
+	
+	
+	<insert id="insertOrder" parameterType="com.ry.taxi.order.domain.Oporderpaymentrecord">
+			INSERT op_taxiorderpaymentrecord (
+				outtradeno,  orderno,  paymenttype,   tradeno,  
+				privatekey,  operateresult,  createtime,  updatetime,  
+				`status` )
+			VALUES(
+				#{outtradeno}, #{orderno}, #{paymenttype}, #{tradeno},
+				#{privatekey}, #{operateresult}, #{createtime},#{updatetime},
+				#{status} )
+	
+	</insert>
+	
+	
+	<select id="getTaxiOrderno" resultType="com.ry.taxi.order.domain.PubDriver" parameterType="java.lang.String">
+		SELECT * FROM pub_driver WHERE id =#{value}		
+	</select>
+	
+	
+	<update id ="updateDriverphone" >
+		update pub_driver set phone = #{phone} where id = #{id}
+	</update>
+	
+	<insert id = "insertDriver" parameterType="com.ry.taxi.order.domain.PubDriver">
+		insert into
+		pub_driver
+		(id,name,jobnum,phone,workstatus,vehicletype,belongleasecompany,createtime)
+		values
+		(#{id},#{name},#{jobnum},#{phone},#{workstatus},#{vehicletype},#{belongleasecompany},now())
+	</insert>
+	
+	<select id="selectAllDriver" resultType="com.ry.taxi.order.domain.PubDriver" >
+		select * from pub_driver where leasescompanyid is null 
+	</select>
+	
+	<insert id ="insertBatch" parameterType="java.util.List">
+		insert into
+		pub_driver
+		(id,name,jobnum,phone,workstatus,vehicletype,belongleasecompany,createtime)
+		values
+		 <foreach collection="list" item="item" index="index" separator="," >  
+        (#{item.id},#{item.name},#{item.jobnum},#{item.phone},#{item.workstatus},#{item.vehicletype},#{item.belongleasecompany},now())  
+    </foreach>  	
+	</insert>
+
+</mapper>

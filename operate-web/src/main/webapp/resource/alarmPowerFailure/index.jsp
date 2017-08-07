@@ -11,7 +11,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>断电处理</title>
+		<title>断电报警</title>
 		<base href="<%=basePath%>" >
 		<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/bootstrap.css" />
 		<link rel="stylesheet" type="text/css" href="content/css/style.css" />
@@ -21,7 +21,7 @@
 		<link rel="stylesheet" type="text/css" href="content/plugins/letterselect/letterselect.css">
 		<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/dataTables.bootstrap.css"/>
 		<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/fixedColumns.bootstrap.css"/>
-			<link rel="stylesheet" type="text/css" href="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.css"/>
+		<link rel="stylesheet" type="text/css" href="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.css"/>
 		<link rel="stylesheet" type="text/css" href="content/plugins/font-awesome/css/font-awesome.min.css" />
 		
 		<link href="content/css/style_chewutong.css" rel="stylesheet" type="text/css" />
@@ -45,6 +45,7 @@
 		<script type="text/javascript" src="content/plugins/select2/select2_locale_zh-CN.js"></script>
 		<script type="text/javascript" src="content/plugins/select2/app.js"></script>
 		<script type="text/javascript"  src="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.js"></script>
+		<script type="text/javascript" src="content/js/loading.js"></script>
 		<script type="text/javascript" src="js/alarmPowerFailure/index.js"></script>
 		<style type="text/css">
 		.btn.blue {
@@ -52,45 +53,45 @@
 		    text-shadow: none;
 		    background-color: #4d90fe;
 		   
-		}
-		
+		 }
 		 .glyphicon-arrow-left::before {
    		 content: "<";
-		}
+		 }
 		.glyphicon-arrow-right::before {
    		 content: ">";
-		}
-			.form-horizontal .control-label{
-				padding-top: 10px;
-			}
+		 }
+		.form-horizontal .control-label{
+		 padding-top: 12px;
+		 }
+		.asterisk:after{
+		 padding:0;
+		 }
 
 		</style>
 	</head>
 	<body style="overflow:hidden;">
 		<div class="crumbs">
-			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 断电处理
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 断电报警
 			
 		</div>
 		<div class="content">
 
-					
 					<!-- 查询  -->
 					<div class="form-horizontal">
 					    <div class="row">
 					    	<div class="col-4" >
-						 <div class="form-group">
-		                	<label class="control-label col-4">服务车企</label>
-							 <div class="col-8">
-				            <select id="company">
-				        		<option value="">全部</option>
-				        		<c:forEach items="${opUserCompany }" var="state">
-									<option value="${state.value }">${state.text }</option>
-								</c:forEach>
-				        	</select>
-							 </div>
-               			  </div>
-               			 </div>
-					    	
+								 <div class="form-group">
+				                	<label class="control-label col-4">服务车企</label>
+									 <div class="col-8">
+						            <select id="company">
+						        		<option value="">全部</option>
+						        		<c:forEach items="${opUserCompany }" var="state">
+											<option value="${state.value }">${state.text }</option>
+										</c:forEach>
+						        	</select>
+									 </div>
+		               			  </div>
+               			 	</div>
 					    	<div class="col-4">
 								<div class="form-group">
 									<label class="control-label col-4">报警时间(起)</label>
@@ -100,7 +101,6 @@
 									</div>
 								</div>
 							</div>
-
 							<div class="col-4">
 								<div class="form-group">
 									<label class="control-label col-4"> 报警时间(止) </label>
@@ -110,57 +110,47 @@
 									</div>
 								</div>
 							</div>
-					        
 					    </div>
 					    <div class="row">
-					       
 							<div class="col-4">
 								<div class="form-group">
 									<label class="control-label col-4">车牌</label>
-									<div class="col-md-8">
+									<div class="col-8">
 										<input type="text" class="form-control" name="plate"
 											id="plate" />
 									</div>
 								</div>
-							</div>
-							
-							<div class="col-md-4">
+							 </div>
+							<div class="col-4">
 								<div class="form-group">
-									<label class="control-label col-md-4">设备IMEI</label>
-									<div class="col-md-8">
+									<label class="control-label col-md-4">IMEI</label>
+									<div class="col-8">
 										<input type="text" class="form-control" name="imei"
 											id="imei" />
 									</div>
 								</div>
 							</div>
-							
-							<div class="col-md-4">
+							<div class="col-4">
 								<div class="form-group">
 									<label class="control-label col-md-4 ">处理状态</label>
-									<div class="col-md-8">
-										<select class="form-control" id="processingState" name="processingState" style="height: 30px;padding-top: 5px;">
+									<div class="col-8">
+										<select id="processingState" name="processingState" style="height: 30px;padding-top: 5px;">
 											<option value="">请选择</option>
 											<c:forEach items="${stateList }" var="state">
 												<option value="${state.Value }">${state.Text }</option>
 											</c:forEach>	
-											
 										</select>
 									</div>
 								</div>
 							</div>
-							
-							
 					    </div>
-					    
 					    <div  class="row">
-							
-							<div class="col-md-12">
+							<div class="col-12">
 								<div class="pull-right">
 									<button type="button" class="btn btn-default blue "
 										id="btnSearch" >
 										<img src="img/trafficflux/icon/seacrch.png" alt="" />查询
 									</button>
-									
 									<button type="button" class="btn btn-default blue"
 										id="btnClear" onclick="onClear() ">
 										<img src="img/trafficflux/icon/refresh.png" alt="" />重置
@@ -171,17 +161,13 @@
 									</button>
 								</div>
 							</div>
-							
 					    </div>
-					    
 					    <div class="row">
-					        <div class="col-md-12">
+					        <div class="col-12">
 					            <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid"></table>
 					        </div>
 					    </div>
-					
 					</div>
-				
 					<!--处理弹出  -->
 					<div class="modal fade" id="mdAdd" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" style="min-height:350px">
 					    <div class="modal-dialog">
@@ -194,24 +180,25 @@
 					                </div>
 					                <div class="modal-body">
 					                    <div class="form-group">
-					                        <label class="control-label col-md-3">断电原因<span class="required">*</span></label>
-					                        <div class="col-md-8">
+					                        <label class="control-label col-3">断电原因<em class="asterisk"> </em></label>
+					                        <div class="col-8">
 					                            <select class="form-control " id="outageReason" style="width:100%" name="outageReason" required="required">
 					                            	<option value="">请选择</option>
-					                            	
 					                            		<c:forEach items="${outageReasons }" var="outageReason">
 					                            			<option value="${ outageReason.Value}">${ outageReason.Text}</option>
 					                            		</c:forEach>
-					                            	
 					                            </select>
 					                        </div>
 					                    </div>
-
+					                     <div class="form-group">
+					                        <label class="control-label col-3">核实人姓名<em></em></label>
+					                        <div class="col-8">
+					                            <input name="txtVerifyPerson" class="form-control" id="txtVerifyPerson" maxlength="20" />
+					                        </div>
+					                    </div>
 					                    <div class="form-group">
-					                        <label class="control-label col-md-3">
-					                            备注信息
-					                        </label>
-					                        <div class="col-md-8">
+					                        <label class="control-label col-3" style="padding-top:15px;">备注信息<em</em></label>
+					                        <div class="col-8">
 					                            <textarea name="remarks" class="form-control" id="remarks" maxlength="100" rows="3" placeholder="最多输入100个字备注说明"></textarea>
 					                        </div>
 					                    </div>
@@ -236,33 +223,7 @@
 
 	</body>
 		<script type="text/javascript">
-		var basePath="<%=basePath%>"; 
-	    var _loading = function () {
-			    var loading = $('<div class="loadingdiv">').appendTo($(document.body));;
-			    //<img src="img/trafficflux/ajax-modal-loading.gif" alt="图片加载中···" /></div>
-			    return {
-			        show: function () {
-			            //div占满整个页面
-			            loading.css("width", "100%");
-			            loading.css("display", "block");
-			            loading.css("height", $(window).height() + $(window).scrollTop());
-			            //设置图片居中
-			            $('img', loading).css("display", "block");
-			            $('img', loading).css("left", ($(window).width() - 88) / 2);
-			            $('img', loading).css("top", ($(window).height() + $(window).scrollTop()) / 2);
-			        },
-			        hide: function () {
-			            loading.css("width", "0");
-			            loading.css("display", "none");
-			            loading.css("height", "0");
-			            //设置图片隐藏
-			            $('img', loading).css("display", "none");
-			        }
-			    };
-			}();
-			
-		var company;
-		
-		
+		var basePath="<%=basePath%>";
+
 	</script>
 </html>

@@ -159,5 +159,6 @@
 		
 		<typeAlias type="com.szyciov.op.param.OrderExportParam" alias="OrderExportParam"/>
 		<typeAlias type="com.szyciov.op.entity.OrderExportEntity" alias="OrderExportEntity"/>
+		<typeAlias type="com.szyciov.entity.PubCooagreement" alias="PubCooagreement"/>
 	</typeAliases>
 </configuration>

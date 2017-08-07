@@ -15,6 +15,7 @@ import com.szyciov.util.BaseController;
 import com.szyciov.util.Constants;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.StringUtil;
+import com.szyciov.util.SystemConfig;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -162,8 +163,11 @@ public class OrderManageController extends BaseController{
 	 * @return
 	 */
 	@RequestMapping(value = "/OrderManage/OrgOrderDetailIndex")
-	public String orgOrderDetailIndex(@RequestParam String orderno, HttpServletRequest request, HttpServletResponse response) {
-		return "resource/orgordermanage/orderdetail";
+	public ModelAndView orgOrderDetailIndex(@RequestParam String orderno, @RequestParam(required = false) String tmp, HttpServletRequest request, HttpServletResponse response) {
+		ModelAndView view = new ModelAndView();
+        view.setViewName("resource/orgordermanage/orderdetail");
+        view.addObject("tmp", tmp);
+        return view;
 	}
 	
 	/**
@@ -174,8 +178,11 @@ public class OrderManageController extends BaseController{
 	 * @return
 	 */
 	@RequestMapping(value = "/OrderManage/PersonOrderDetailIndex")
-	public String personOrderDetailIndex(@RequestParam String orderno, HttpServletRequest request, HttpServletResponse response) {
-		return "resource/personordermanage/orderdetail";
+	public ModelAndView personOrderDetailIndex(@RequestParam String orderno, @RequestParam(required = false) String tmp, HttpServletRequest request, HttpServletResponse response) {
+        ModelAndView view = new ModelAndView();
+        view.setViewName("resource/personordermanage/orderdetail");
+        view.addObject("tmp", tmp);
+        return view;
 	}
 	
 	/**
@@ -266,6 +273,7 @@ public class OrderManageController extends BaseController{
 			@RequestParam String type, 
 			@RequestParam String usetype,
             @RequestParam(required = false) String ordertype,
+            @RequestParam(required = false) String tmp,
 			HttpServletRequest request, HttpServletResponse response) {
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		Map<String, Object> param = new HashMap<String, Object>();
@@ -275,6 +283,7 @@ public class OrderManageController extends BaseController{
 		
 		param.put("vehicleModelList", vehicleModelList);
         param.put("ordertype", ordertype);
+        param.put("tmp", tmp);
 		
 		//0表示机构订单，1表示个人订单
 		if("0".equals(usetype)) {
@@ -302,6 +311,7 @@ public class OrderManageController extends BaseController{
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		User user = getLoginLeUser(request);
 		queryParam.setLeasescompanyid(user.getLeasescompanyid());
+        queryParam.setQueryTmpBelongleasecompany(SystemConfig.getSystemProperty(user.getAccount()));
 		if(StringUtils.isBlank(queryParam.getIsDriverState())) {
 			queryParam.setDriverState("0");
 		}

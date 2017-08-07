@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -42,7 +43,7 @@ import java.util.Set;
 @Service("MileageApiService")
 public class MileageApiService {
 
-    private static Logger LOGGER = Logger.getLogger(MileageApiService.class);
+    private static Logger LOGGER = Logger.getLogger("json");
 
     private TemplateHelper templateHelper = new TemplateHelper();
 
@@ -217,35 +218,40 @@ public class MileageApiService {
         }
 
         //查询车辆安装设备的状态
-        String url = SystemConfig.getSystemProperty("vmsApi") + "?apikey="
-                + SystemConfig.getSystemProperty("vmsApikey")
-                + "&plate=" + pubVehicle.getPlateNo();
-        JSONObject ret = templateHelper.dealRequestWithFullUrlToken(url, HttpMethod.GET, null, null, JSONObject.class);
-        if(null != ret && !ret.isEmpty() && ret.containsKey("status") && ret.getInt("status") == OBDConstans.VMS_API_OK) {
-            if(ret.containsKey("vhecEqpList") && null != ret.get("vhecEqpList")) {
-                JSONArray vhecEqpList = ret.getJSONArray("vhecEqpList");
-                if(vhecEqpList.isEmpty()) {
-                    return OBDInstallStateEnum.UNINSTALL;
-                } else {
-                    boolean flag = false;
-                    for (int m = 0;m < vhecEqpList.size();m++) {
-                        JSONObject vhecEqp = vhecEqpList.getJSONObject(m);
-                        if(vhecEqp.isEmpty()) {
-                            continue;
+        try {
+            String url = SystemConfig.getSystemProperty("vmsApi") + "?apikey="
+                    + SystemConfig.getSystemProperty("vmsApikey")
+                    + "&plate=" + pubVehicle.getPlateNo();
+            JSONObject ret = templateHelper.dealRequestWithFullUrlToken(url, HttpMethod.GET, null, null, JSONObject.class);
+            if(null != ret && !ret.isEmpty() && ret.containsKey("status") && ret.getInt("status") == OBDConstans.VMS_API_OK) {
+                if(ret.containsKey("vhecEqpList") && null != ret.get("vhecEqpList")) {
+                    JSONArray vhecEqpList = ret.getJSONArray("vhecEqpList");
+                    if(vhecEqpList.isEmpty()) {
+                        return OBDInstallStateEnum.UNINSTALL;
+                    } else {
+                        boolean flag = false;
+                        for (int m = 0;m < vhecEqpList.size();m++) {
+                            JSONObject vhecEqp = vhecEqpList.getJSONObject(m);
+                            if(vhecEqp.isEmpty()) {
+                                continue;
+                            }
+                            Object categoryName = vhecEqp.get("categoryName");
+                            if(OBDConstans.OBD_CATEGORY_NAME.equals(categoryName)) {
+                                return OBDInstallStateEnum.INSTALL_OBD;
+                            }
+                            if(OBDConstans.GPS_CATEGORY_NAME.equals(categoryName)) {
+                                flag = true;
+                            }
                         }
-                        Object categoryName = vhecEqp.get("categoryName");
-                        if(OBDConstans.OBD_CATEGORY_NAME.equals(categoryName)) {
-                            return OBDInstallStateEnum.INSTALL_OBD;
+                        if(flag) {
+                            return OBDInstallStateEnum.INSTALL_GPS;
                         }
-                        if(OBDConstans.GPS_CATEGORY_NAME.equals(categoryName)) {
-                            flag = true;
-                        }
-                    }
-                    if(flag) {
-                        return OBDInstallStateEnum.INSTALL_GPS;
                     }
                 }
             }
+        } catch (RestClientException e) {
+            LOGGER.error("查询车辆安装OBD设备异常", e);
+            return OBDInstallStateEnum.UNINSTALL;
         }
         return OBDInstallStateEnum.UNINSTALL;
     }
@@ -261,7 +267,6 @@ public class MileageApiService {
         }
 
         double retMileage = 0;
-        PubOrdergpsdata startOrdergpsdata = null; //第一个坐标点
         PubOrdergpsdata pubOrdergpsdata = null; //用于与下一个坐标点计算里程
         for (int m = 0;m < gpsList.size();m++) {
             PubOrdergpsdata ordergpsdata = gpsList.get(m); //当前计算里程的坐标点
@@ -270,7 +275,6 @@ public class MileageApiService {
             }
             if(null == pubOrdergpsdata) { //如果为空，表示当前为第一个点，默认第一个点为有效点
                 pubOrdergpsdata = ordergpsdata;
-                startOrdergpsdata = ordergpsdata;
                 continue;
             }
 
@@ -278,7 +282,6 @@ public class MileageApiService {
             double pointMileage = LatLonUtil.getDistance(pubOrdergpsdata.getLng(), pubOrdergpsdata.getLat(), ordergpsdata.getLng(), ordergpsdata.getLat());
             long pointTime = ordergpsdata.getGpstime().getTime() - pubOrdergpsdata.getGpstime().getTime();
             if(pointTime == 0) {
-                LOGGER.info("订单(" + ordergpsdata.getOrderno() + ")的坐标点(" + ordergpsdata.getId() + ")无效");
                 continue;
             }
             //校验两点间的平均速度是否符合:(pointMileage/1000)/(pointTime/1000/60/60)
@@ -291,25 +294,10 @@ public class MileageApiService {
             }
         }
 
-        //计算优化后的里程(只有订单结束才需要做里程优化)
-        double optimizeMileage = 0;
-        if(null != isLog && isLog) {
-            if(null != infoDetail.getStartlng() && null != infoDetail.getStartllat()) {
-                double startMileage = LatLonUtil.getDistance(infoDetail.getStartlng(), infoDetail.getStartllat(), startOrdergpsdata.getLng(), startOrdergpsdata.getLat());
-                optimizeMileage += startMileage;
-            }
-            if(null != infoDetail.getEndlng() && null != infoDetail.getEndllat()) {
-                double endMileage = LatLonUtil.getDistance(infoDetail.getEndlng(), infoDetail.getEndllat(), pubOrdergpsdata.getLng(), pubOrdergpsdata.getLat());
-                optimizeMileage += endMileage;
-            }
-        }
-
         if(CalcTypeEnum.OBD_GPS == calcType) {
             ordermileagecalcLog.setObdgpsmileage(retMileage);
-            ordermileagecalcLog.setOptimizeobdgpsmileage(retMileage + optimizeMileage);
         } else if(CalcTypeEnum.APP_GPS == calcType) {
             ordermileagecalcLog.setAppmileage(retMileage);
-            ordermileagecalcLog.setOptimizeappgpsmileage(retMileage + optimizeMileage);
         }
     }
 
@@ -349,56 +337,6 @@ public class MileageApiService {
             return;
         }
         ordermileagecalcLog.setObdmileage(endGps.getMileage() - startGps.getMileage());
-
-        //计算优化后的里程(只有订单结束才需要对里程计算做优化)
-        double startMileage = 0;
-        double endMileage = 0;
-        if(null != isLog && isLog) {
-            //计算订单开始时间到第一个坐标点的距离
-            PubOrdergpsdata secGps = null;
-            startIndex++;
-            for (;startIndex < gpsList.size();startIndex++) {
-                PubOrdergpsdata ordergpsdata = gpsList.get(startIndex);
-                if(null == ordergpsdata.getMileage() || ordergpsdata.getMileage() == 0) {
-                    continue;
-                }
-                secGps = ordergpsdata;
-                break;
-            }
-            if(null != secGps) {
-                double startSecMileage = secGps.getMileage() - startGps.getMileage(); //第一个点和第二个点的距离(米)
-                long startCountTimes = secGps.getGpstime().getTime() - startGps.getGpstime().getTime(); //第一个点和第二个点的间隔时间
-                long startGapTimes = startGps.getGpstime().getTime() - infoDetail.getStarttime().getTime(); //第一个点和订单开始时间间隔
-                if(startCountTimes != startGapTimes) {
-                    startMileage = startSecMileage / startCountTimes * startGapTimes;
-                }
-            }
-
-            //计算订单结束时间到最后一个坐标点的距离
-            PubOrdergpsdata lastSecGps = null;
-            endIndex--;
-            for (;endIndex >= 0;endIndex--) {
-                PubOrdergpsdata ordergpsdata = gpsList.get(endIndex);
-                if(null == ordergpsdata.getMileage() || ordergpsdata.getMileage() == 0) {
-                    continue;
-                }
-                lastSecGps = ordergpsdata;
-                break;
-            }
-            if(null != lastSecGps) {
-                Date endDate = infoDetail.getEndtime();
-                if(null == endDate) {
-                    endDate = new Date();
-                }
-                double lastSecMileage = endGps.getMileage() - lastSecGps.getMileage(); //最后一个点和倒数第二个点的距离(米)
-                long endCountTimes = endGps.getGpstime().getTime() - lastSecGps.getGpstime().getTime(); //最后一个点和倒数第二个点的时间间隔
-                long endGapTimes = endDate.getTime() - endGps.getGpstime().getTime(); //最后一个点和订单结束时间间隔
-                if(endCountTimes != endGapTimes) {
-                    endMileage = lastSecMileage / endCountTimes * endGapTimes;
-                }
-            }
-        }
-        ordermileagecalcLog.setOptimizeobdmileage(ordermileagecalcLog.getObdmileage() + startMileage + endMileage);
     }
 
     /**
@@ -555,11 +493,15 @@ public class MileageApiService {
 
         //查询司机当前正在服务的订单号
         PubDriver pubDriver = new PubDriver();
+        long starttime = System.currentTimeMillis();
         String orderno = getServiceOrdernoByDriver(object, pubDriver);
+        long endtime = System.currentTimeMillis();
+        LOGGER.info("查询司机正在服务订单花费时间:" + (endtime - starttime));
         if(StringUtils.isNotBlank(orderno)) {
             object.setId(GUIDGenerator.newGUID());
             object.setOrderno(orderno);
             mileageApiDao.insertPubOrdergpsdata(object);
+            LOGGER.info("添加订单轨迹花费时间:" + (System.currentTimeMillis() - endtime));
         } else {
             LOGGER.info("司机(" + object.getDriverid() + ")没有正在服务的订单");
         }
@@ -600,11 +542,13 @@ public class MileageApiService {
 
         //OBDGPS做纠偏处理
         if(flag && GpsSourceEnum.OBD_GPS.code == object.getGpssource()) {
+            long starttime = System.currentTimeMillis();
             PubOrdergpsdata ordergpsdata = mileageApiDao.getBaiduOffset(object);
             if(null != ordergpsdata) {
                 object.setLng(ordergpsdata.getLng()/1000000d + object.getLng());
                 object.setLat(ordergpsdata.getLat()/1000000d + object.getLat());
             }
+            LOGGER.info("轨迹纠偏花费时间:" + (System.currentTimeMillis() - starttime));
         }
         if(!flag) {
             if(GpsSourceEnum.APP_GPS.code == object.getGpssource()) {
@@ -625,12 +569,14 @@ public class MileageApiService {
         if(StringUtils.isNotBlank(object.getDriverid())) {
             return true;
         } else {
+            long starttime = System.currentTimeMillis();
             PubVehicle pubVehicle = mileageApiDao.getVehicleById(object.getVehicleid());
             if(null == pubVehicle || StringUtils.isBlank(pubVehicle.getDriverId())) {
                 return false;
             } else {
                 object.setDriverid(pubVehicle.getDriverId());
             }
+            LOGGER.info("查询车辆信息花费时间:" + (System.currentTimeMillis() - starttime));
         }
         return true;
     }
@@ -645,6 +591,7 @@ public class MileageApiService {
         }
         //更新司机gps信息
         if(null == pubDriver.getGpstime() || pubDriver.getGpstime().getTime() < object.getGpstime().getTime()) {
+            long starttime = System.currentTimeMillis();
             pubDriver.setId(object.getDriverid());
             pubDriver.setGpstime(object.getGpstime());
             pubDriver.setGpsspeed(object.getGpsspeed());
@@ -653,10 +600,12 @@ public class MileageApiService {
             pubDriver.setLat(object.getLat());
             pubDriver.setGpssource(object.getGpssource());
             mileageApiDao.updateDriverGps(pubDriver);
+            LOGGER.info("更新司机GPS坐标花费时间:" + (System.currentTimeMillis() - starttime));
         }
 
         //添加司机gps信息
         if(GpsSourceEnum.APP_GPS.code == object.getGpssource()) {
+            long starttime = System.currentTimeMillis();
             PubDrivertrack pubDrivertrack = new PubDrivertrack();
             pubDrivertrack.setId(GUIDGenerator.newGUID());
             pubDrivertrack.setDriverid(object.getDriverid());
@@ -665,6 +614,7 @@ public class MileageApiService {
             pubDrivertrack.setLng(object.getLng());
             pubDrivertrack.setLat(object.getLat());
             mileageApiDao.insertPubDrivertrack(pubDrivertrack);
+            LOGGER.info("添加司机GPS信息花费时间:" + (System.currentTimeMillis() - starttime));
         }
     }
 

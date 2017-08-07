@@ -3,8 +3,11 @@
  */
 package com.ry.taxi.base.common;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ry.taxi.base.constant.UrlRequestConstant;
 import com.ry.taxi.base.query.BaseResult;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
@@ -27,6 +30,20 @@ public class ErrorResponse {
 		errorResult.setResult(errorCode);
 		errorResult.setRemark(errorMsg);
 		response.getWriter().print(JSONUtil.toJackson(errorResult));
+	}
+	
+	public static String returnErrorMessage(HttpServletRequest request, int errorCode, String errorMsg){
+		String cmd = request.getParameter(UrlRequestConstant.CMD);//功能命令字
+		BaseResult<String > errorResult = new BaseResult<String>();
+		errorResult.setCmd(cmd);
+		errorResult.setResult(errorCode);
+		errorResult.setRemark(errorMsg);
+		try {
+			return JSONUtil.toJackson(errorResult);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

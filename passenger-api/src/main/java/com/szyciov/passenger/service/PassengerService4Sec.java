@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import com.szyciov.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.velocity.VelocityContext;
@@ -71,20 +72,6 @@ import com.szyciov.passenger.entity.LeasesCompany;
 import com.szyciov.passenger.entity.PassengerOrder;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.passenger.util.VelocityUtil;
-import com.szyciov.util.BaiduUtil;
-import com.szyciov.util.BankUtil;
-import com.szyciov.util.GUIDGenerator;
-import com.szyciov.util.PasswordEncoder;
-import com.szyciov.util.RedisUtil;
-import com.szyciov.util.SMSTempPropertyConfigurer;
-import com.szyciov.util.StringUtil;
-import com.szyciov.util.SystemConfig;
-import com.szyciov.util.TemplateHelper;
-import com.szyciov.util.TemplateHelper4CarServiceApi;
-import com.szyciov.util.TemplateHelper4OrgApi;
-import com.szyciov.util.TemplateHelper4leaseApi;
-import com.szyciov.util.UNID;
-import com.szyciov.util.UserTokenManager;
 import com.wx.DocFunc;
 import com.wx.WXOrderUtil;
 
@@ -2054,7 +2041,7 @@ public class PassengerService4Sec {
 			}
 			res.put("orderstatus", orderstatus);
 			if(OrderState.INSERVICE.state.equalsIgnoreCase(orderstatus)||OrderState.WAITMONEY.state.equalsIgnoreCase(orderstatus)){
-				String dorderinfo = RedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
+				String dorderinfo = JedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
 				if(StringUtils.isNotBlank(dorderinfo)){
 					JSONObject json = JSONObject.fromObject(dorderinfo);
 					int lefttime = json.getInt("lefttime");

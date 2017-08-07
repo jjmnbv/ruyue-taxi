@@ -246,7 +246,7 @@
 					
 					<div class="row">
 					    <div class="col-12">
-					        <table class="table table-bordered table-condensed table-striped table-hover" id="dtGrid"></table>
+					        <table class="table table-striped table-bordered" id="dtGrid"></table>
 					    </div>
 					</div>
                 </div>

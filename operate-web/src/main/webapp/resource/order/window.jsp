@@ -91,7 +91,7 @@ String ak = SystemConfig.getSystemProperty("yingyan_ak");
 <!-- 余额不足弹窗 end-->
 <!-- 百度地图弹窗 start-->
 <div class="pop_box" id="map" style="z-index: 0;">
-  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=<%=ak %>"></script>
+  <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=<%=ak %>&s=1"></script>
   <div class="tip_box_c">
         <div class="row form">
             <div class="col-12"><label style="min-width:6%;width:auto;">搜索地址</label><input type="text" style="max-width:94%;width:89%;" placeholder="详细地址" name="keyword" id="suggest"/></div>
@@ -144,7 +144,7 @@ String ak = SystemConfig.getSystemProperty("yingyan_ak");
         <div class="row form">
             <div class="col-3">
                 <label class="col-3" style="text-align:left;">资格证号</label>
-                <input id="manualDriverJobNum" class="col-9" type="text" placeholder="资格证号" maxlength="10"/>
+                <input id="manualDriverJobNum" class="col-9" type="text" placeholder="资格证号" maxlength="18"/>
             </div>
             <div class="col-3">
                 <label class="col-3" style="text-align:left;">手机号</label>

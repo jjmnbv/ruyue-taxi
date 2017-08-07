@@ -24,6 +24,11 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
   	<link rel="stylesheet" type="text/css" href="css/index/index.css"/>
   	<link rel="stylesheet" type="text/css" href="content/plugins/toastr/toastr.css" />
   	<link rel="stylesheet" type="text/css" href="content/css/style.css" />
+  	<style type="text/css">
+  	    label.error{
+  	    padding-left: 0px !important;  
+  	    }
+  	</style>
   	<script type="text/javascript" src="content/js/jquery.js"></script>
   	<script type="text/javascript"  src="content/js/common.js"></script>
   	<script type="text/javascript" src="content/plugins/toastr/toastr.min.js"></script>
@@ -121,11 +126,11 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
             <div class="w400">
             	<form id="editForm" method="get" class="form-horizontal  m-t" id="frmmodal">
             		<label>旧密码<em class="asterisk"></em></label>
-	                <input id="oldpassword" autocomplete="off" name="oldpassword" type="password" placeholder="6到16位字母、数字或符号"><br>
+	                <input id="oldpassword" autocomplete="off" name="oldpassword" type="password" placeholder="8到16位字母、数字和符号"><br>
 	                <label>新密码<em class="asterisk"></em></label>
-	                <input id="password" name="password" autocomplete="off" type="password" placeholder="6到16位字母、数字或符号"><br>
+	                <input id="password" name="password" autocomplete="off" type="password" placeholder="8到16位字母、数字和符号"><br>
 	                <label>重复新密码<em class="asterisk"></em></label>
-	                <input id="password2" type="password" autocomplete="off" name="password2" placeholder="6到16位字母、数字或符号"><br>
+	                <input id="password2" type="password" autocomplete="off" name="password2" placeholder="8到16位字母、数字和符号"><br>
             	</form>
                 <button id="save" class="Lbtn red" onclick="save()">提交</button>
                 <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
@@ -192,7 +197,7 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
   	return this.optional(element) || (length == 11 && myreg.test(value));
   }, "请输入正确的号码");
   $(document).ready(function() {
-	setInterval('getMessage()',3000);
+	//setInterval('getMessage()',3000);
   	if(account){
 		setCookie("lease_account",account);
 	}
@@ -318,7 +323,7 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
     });
 
     //查找未读消息数量
-    function initCount() {
+   /*  function initCount() {
 		$.ajax({
 			type: "GET",
 			url:"Message/GetUnReadNewsCount",
@@ -339,10 +344,10 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
 			},
 			complete: ajaxComplete
 	    });
-	}
+	} */
     //定时查找未读消息数量
     window.onload = function () {
-    	setInterval(initCount, 2000);
+    	//setInterval(initCount, 2000);
     }
     
  	// 处理弹窗后禁止滚动
@@ -366,7 +371,7 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
 
   });
 
-	function getMessage(){
+/* 	function getMessage(){
 		$.ajax({
 			type: 'POST',
 			dataType: 'json',
@@ -383,7 +388,7 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
 				},
 			complete: ajaxComplete
 		});
-	}
+	} */
 
 
 	function showPops(messageObj){
@@ -490,14 +495,14 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
   function validateForm() {
   	$("#editForm").validate({
   		rules: {
-  			oldpassword: {required: true,minlength:6,maxlength: 16},
-  			password:{required: true,minlength:6,maxlength: 16},
-  			password2:{required: true,minlength:6,maxlength: 16,equalTo:"#password"}
+  			oldpassword: {required: true,maxlength: 16},
+  			password:{required: true,minlength:8,maxlength: 16,checkPassword:true},
+  			password2:{required: true,minlength:8,maxlength: 16,equalTo:"#password"}
   		},
   		messages: {
-  			oldpassword: {required: "请输入正确长度的密码",minlength:"最小长度不能少于6个字符", maxlength: "最大长度不能超过16个字符"},
-  			password: {required: "请输入正确长度的密码",minlength:"最小长度不能少于6个字符", maxlength: "最大长度不能超过16个字符"},
-  			password2:{required: "请输入正确长度的密码",minlength:"最小长度不能少于6个字符", maxlength: "最大长度不能超过16个字符",equalTo:"两次密码需相同"}
+  			oldpassword: {required: "请输入正确长度的密码", maxlength: "最大长度不能超过16个字符"},
+  			password: {required: "请输入正确长度的密码",minlength:"最小长度不能少于8个字符", maxlength: "最大长度不能超过16个字符",checkPassword:"必须为字母、数字和符号(!@#%&$()*+)组成"},
+  			password2:{required: "请输入正确长度的密码",minlength:"最小长度不能少于8个字符", maxlength: "最大长度不能超过16个字符",equalTo:"两次密码需相同"}
   		}
   	});
 
@@ -583,6 +588,14 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
   		}
   	});
   }
+  
+  /**
+   * 校验密码,密码必须为8到16位数字字母符号组合，!@#%&$()*+ 0-9A-Za-z
+   */
+  $.validator.addMethod("checkPassword", function(value, element, param) {
+      var reg=/(?=.*[a-z])(?=.*\d)(?=.*[!@#%&$()*+])[a-z\d!@#%&$()*+]{8,16}/i;
+      return this.optional(element) || reg.test(value);
+  }, "密码格式不正确");
 </script>
 <script type="text/javascript" src="js/index.js"></script>
 </body>

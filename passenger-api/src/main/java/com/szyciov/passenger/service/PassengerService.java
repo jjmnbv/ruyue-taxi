@@ -28,6 +28,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import com.szyciov.util.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -82,22 +83,6 @@ import com.szyciov.passenger.param.LoginParam;
 import com.szyciov.passenger.param.RegisterParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.passenger.util.VelocityUtil;
-import com.szyciov.util.BaiduUtil;
-import com.szyciov.util.FileUtil;
-import com.szyciov.util.GUIDGenerator;
-import com.szyciov.util.MD5;
-import com.szyciov.util.NotifyUtil;
-import com.szyciov.util.PasswordEncoder;
-import com.szyciov.util.RedisUtil;
-import com.szyciov.util.SMSCodeUtil;
-import com.szyciov.util.SMSTempPropertyConfigurer;
-import com.szyciov.util.StringUtil;
-import com.szyciov.util.SystemConfig;
-import com.szyciov.util.TemplateHelper4CarServiceApi;
-import com.szyciov.util.TemplateHelper4OrgApi;
-import com.szyciov.util.TemplateHelper4leaseApi;
-import com.szyciov.util.UNID;
-import com.szyciov.util.UserTokenManager;
 import com.wx.DocFunc;
 import com.wx.WXOrderUtil;
 
@@ -273,6 +258,63 @@ public class PassengerService {
 			res.put("message", "参数不完整");
 			return res;
 		}
+		try{
+			String smscodeouttimestr = SystemConfig.getSystemProperty("smscodeouttime");
+			int smscodeouttime = parseInt(smscodeouttimestr)<=0?5:parseInt(smscodeouttimestr);
+
+			String smscodetimesintimestr = SystemConfig.getSystemProperty("smscodetimesintime");
+			int smscodetimesintime = parseInt(smscodetimesintimestr)<=0?5:parseInt(smscodetimesintimestr);
+			if("0".equals(smstype)){
+				String value = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+phone);
+				double gettimes = parseDouble(value);
+				if(gettimes>=smscodetimesintime){
+					//获取次数超限
+					res.put("status", Retcode.EXCEPTION.code);
+					res.put("message", "获取验证码次数超限");
+					return res;
+				}else{
+					//没有超限要递增
+					JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+phone);
+					if(gettimes<=0){
+						JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+phone,smscodeouttime*60);
+					}
+				}
+			}else if("1".equals(smstype)){
+				String value = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD.code+phone);
+				double gettimes = parseDouble(value);
+				if(gettimes>=smscodetimesintime){
+					//获取次数超限
+					res.put("status", Retcode.EXCEPTION.code);
+					res.put("message", "获取验证码次数超限");
+					return res;
+				}else{
+					//没有超限要递增
+					JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD.code+phone);
+					if(gettimes<=0){
+						JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD.code+phone,smscodeouttime*60);
+					}
+				}
+			}else{
+				String value = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone);
+				double gettimes = parseDouble(value);
+				if(gettimes>=smscodetimesintime){
+					//获取次数超限
+					res.put("status", Retcode.EXCEPTION.code);
+					res.put("message", "获取验证码次数超限");
+					return res;
+				}else{
+					//没有超限要递增
+					JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone);
+					if(gettimes<=0){
+						JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone,smscodeouttime*60);
+					}
+				}
+			}
+		}catch (Exception e){
+			logger.error("redis控制获取验证码次数失败了",e);
+		}
+
+
 		//获取一串随机的短信验证码
 		String smscode = SMSCodeUtil.getRandCode();
 		Map<String,String> smscodeobj = new HashMap<String,String>();
@@ -299,6 +341,13 @@ public class PassengerService {
 		return res;
 	}
 
+	private int parseInt(Object value){
+		if(value==null||"".equalsIgnoreCase(String.valueOf(value))){
+			return 0;
+		}
+		return Integer.parseInt(String.valueOf(value));
+	}
+
 	/**
 	 * 验证短信验证码
 	 * @param params
@@ -320,6 +369,37 @@ public class PassengerService {
 			res.put("message", "参数不完整");
 			return res;
 		}
+		try{
+			String smscodeerrortimesstr = SystemConfig.getSystemProperty("smscodeerrortimes");
+			int smscodeerrortimes = parseInt(smscodeerrortimesstr)<=0?5:parseInt(smscodeerrortimesstr);
+			if("0".equals(smstype)){
+				String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+phone);
+				//redis错误次数是5，就直接返回false
+				if(parseDouble(errortimes)>=smscodeerrortimes){
+					res.put("status", Retcode.EXCEPTION.code);
+					res.put("message", "错误次数超限!");
+					return res;
+				}
+			}else if("1".equals(smstype)){
+				String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD_ERRORTIMES.code+phone);
+				//redis错误次数是5，就直接返回false
+				if(parseDouble(errortimes)>=smscodeerrortimes){
+					res.put("status", Retcode.EXCEPTION.code);
+					res.put("message", "错误次数超限!");
+					return res;
+				}
+			}else{
+				String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+				//redis错误次数是5，就直接返回false
+				if(parseDouble(errortimes)>=smscodeerrortimes){
+					res.put("status", Retcode.EXCEPTION.code);
+					res.put("message", "错误次数超限!");
+					return res;
+				}
+			}
+		}catch (Exception e){
+			logger.error("获取错误次数",e);
+		}
 		//验证验证码的有效性
 		Map<String,Object> dbsmsinfo = userdao.getSMSInfo(params);
 		if(dbsmsinfo!=null){
@@ -334,11 +414,50 @@ public class PassengerService {
 			if(!verificationcode.equals(dbsmsinfo.get("smscode"))){
 				res.put("status", Retcode.SMSCODEINVALID.code);
 				res.put("message", "请输入正确的验证码");
+				try{
+					String smscodeerrorouttimestr = SystemConfig.getSystemProperty("smscodeerrorouttime");
+					int smscodeerrorouttime = parseInt(smscodeerrorouttimestr)<=0?5:parseInt(smscodeerrorouttimestr);
+					if("0".equals(smstype)){
+						String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+phone);
+						JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+phone);
+						if(parseDouble(errortimes)<=0){
+							JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+phone,smscodeerrorouttime*60);
+						}
+					}else if("1".equals(smstype)){
+						String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD_ERRORTIMES.code+phone);
+						JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD_ERRORTIMES.code+phone);
+						if(parseDouble(errortimes)<=0){
+							JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD_ERRORTIMES.code+phone,smscodeerrorouttime*60);
+						}
+					}else{
+						String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+						JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+						if(parseDouble(errortimes)<=0){
+							JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone,smscodeerrorouttime*60);
+						}
+					}
+				}catch (Exception e){
+					logger.error("获取错误次数",e);
+				}
 				return res;
 			}
 			res.put("status",  Retcode.OK.code);
 			res.put("message", Retcode.OK.msg);
 			deleteSMSCode(phone, usertype, smstype);
+			try{
+				if("0".equals(smstype)){
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+phone);
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+phone);
+				}else if("1".equals(smstype)){
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD_ERRORTIMES.code+phone);
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_CHANGEPWD.code+phone);
+				}else{
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone);
+				}
+			}catch (Exception e){
+				logger.error("清除redis数据",e);
+			}
 		}else{
 			res.put("status", Retcode.SMSCODEINVALID.code);
 			res.put("message", "请输入正确的验证码");
@@ -393,7 +512,12 @@ public class PassengerService {
 		if(Const.PWDLOGIN.equalsIgnoreCase(loginparam.getLogintype())){
 			//密码登录判断
 			String dbpwd = orguser.getUserPassword();
-			if(!StringUtils.isNotBlank(dbpwd)||!PasswordEncoder.matches(loginparam.getValidatecode(), dbpwd)){
+			//密码解密
+			String parampwd = loginparam.getValidatecode();
+			if(Const.INTERFACE_V3_0_2.equals(loginparam.getVversion())){
+				parampwd = RSAUtil.RSADecode(loginparam.getValidatecode());
+			}
+			if(!StringUtils.isNotBlank(dbpwd)||!PasswordEncoder.matches(parampwd, dbpwd)){
 				//密码错误
 				res.put("status", Retcode.PASSWORDWRONG.code);
 				res.put("message", "手机号码或者密码错误");
@@ -411,6 +535,22 @@ public class PassengerService {
 				}
 			}
 		}else{
+			try{
+				String smscodeerrortimesstr = SystemConfig.getSystemProperty("smscodeerrortimes");
+				int smscodeerrortimes = parseInt(smscodeerrortimesstr)<=0?5:parseInt(smscodeerrortimesstr);
+				String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+account);
+				if(StringUtils.isNotBlank(errortimes)){
+					//redis错误次数是5，就直接返回false
+					if(parseDouble(errortimes)>=smscodeerrortimes){
+						res.put("status", Retcode.FAILED.code);
+						res.put("message", "错误次数超限!");
+						return res;
+					}
+				}
+			}catch (Exception e){
+				logger.error("获取redis错误次数失败",e);
+			}
+
 			//验证码登录
 			Map<String,Object> params = new HashMap<String,Object>();
 			params.put("phone", loginparam.getPhone());
@@ -431,6 +571,20 @@ public class PassengerService {
 					res.put("status", Retcode.SMSCODEINVALID.code);
 					res.put("message", "请输入正确的验证码");
 					loginfo.put("loginstatus", Const.LOGINSTATUS_FAIL);
+					try{
+						boolean shouldsetexpire = false;
+						if(StringUtils.isBlank(JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+account))){
+							shouldsetexpire = true;
+						}
+						JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+account);
+						if(shouldsetexpire){
+							String smscodeerrorouttimestr = SystemConfig.getSystemProperty("smscodeerrorouttime");
+							int smscodeerrorouttime = parseInt(smscodeerrorouttimestr)<=0?5:parseInt(smscodeerrorouttimestr);
+							JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+account,smscodeerrorouttime*60);
+						}
+					}catch (Exception e){
+						logger.error("记录redis错误次数失败",e);
+					}
 				}else if(currentime.after(temptime)){
 					res.put("status", Retcode.SMSCODEOUTTIME.code);
 					res.put("message", "验证码已失效，请重新获取验证码");
@@ -442,6 +596,12 @@ public class PassengerService {
 						addUserInfo(res,uuid,orguser);
 						deleteSMSCode(loginparam.getPhone(), Const.USERTOKENTYPE_ORGUSER, Const.SMSTYPE_LOGIN);
 						loginfo.put("loginstatus", Const.LOGINSTATUS_OK);
+						try{
+							JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+account);
+							JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+account);
+						}catch (Exception e){
+							logger.error("清除redis数据",e);
+						}
 					}catch(Exception e){
 						res.put("status", Retcode.EXCEPTION.code);
 						res.put("message", Retcode.EXCEPTION.msg);
@@ -553,7 +713,11 @@ public class PassengerService {
 		if(Const.PWDLOGIN.equalsIgnoreCase(loginparam.getLogintype())){
 			//密码登录判断
 			String dbpwd = peuser.getUserpassword();
-			if(!PasswordEncoder.matches(loginparam.getValidatecode(), dbpwd)){
+			String parampwd = loginparam.getValidatecode();
+			if(Const.INTERFACE_V3_0_2.equals(loginparam.getVversion())){
+				parampwd = RSAUtil.RSADecode(loginparam.getValidatecode());
+			}
+			if(!PasswordEncoder.matches(parampwd, dbpwd)){
 				//密码错误
 				res.put("status", Retcode.PASSWORDWRONG.code);
 				res.put("message", "手机号码或者密码错误");
@@ -572,6 +736,21 @@ public class PassengerService {
 				
 			}
 		}else{
+			try{
+				String smscodeerrortimesstr = SystemConfig.getSystemProperty("smscodeerrortimes");
+				int smscodeerrortimes = parseInt(smscodeerrortimesstr)<=0?5:parseInt(smscodeerrortimesstr);
+				String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code);
+				if(StringUtils.isNotBlank(errortimes)){
+					//redis错误次数是5，就直接返回false
+					if(parseDouble(errortimes)>=smscodeerrortimes){
+						res.put("status", Retcode.FAILED.code);
+						res.put("message", "错误次数超限!");
+						return res;
+					}
+				}
+			}catch (Exception e){
+				logger.error("获取redis错误次数失败",e);
+			}
 			//验证码登录
 			Map<String,Object> params = new HashMap<String,Object>();
 			params.put("phone", account);
@@ -592,6 +771,20 @@ public class PassengerService {
 					res.put("status", Retcode.SMSCODEINVALID.code);
 					res.put("message", "请输入正确的验证码");
 					loginfo.put("loginstatus", Const.LOGINSTATUS_FAIL);
+					try{
+						boolean shouldsetexpire = false;
+						if(StringUtils.isBlank(JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code))){
+							shouldsetexpire = true;
+						}
+						JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code);
+						if(shouldsetexpire){
+							String smscodeerrorouttimestr = SystemConfig.getSystemProperty("smscodeerrorouttime");
+							int smscodeerrorouttime = parseInt(smscodeerrorouttimestr)<=0?5:parseInt(smscodeerrorouttimestr);
+							JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code,smscodeerrorouttime*60);
+						}
+					}catch (Exception e){
+						logger.error("记录redis错误次数失败",e);
+					}
 				}else if(currentime.after(temptime)){
 					res.put("status", Retcode.SMSCODEOUTTIME.code);
 					res.put("message", "验证码已失效，请重新获取验证码");
@@ -603,6 +796,12 @@ public class PassengerService {
 						addUserInfo(res,uuid,peuser);
 						deleteSMSCode(account, Const.USERTOKENTYPE_PEUSER, Const.SMSTYPE_LOGIN);
 						loginfo.put("loginstatus", Const.LOGINSTATUS_OK);
+						try{
+							JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+account);
+							JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+account);
+						}catch (Exception e){
+							logger.error("清除redis数据",e);
+						}
 					}catch(Exception e){
 						res.put("status", Retcode.EXCEPTION.code);
 						res.put("message", Retcode.EXCEPTION.msg);
@@ -711,6 +910,19 @@ public class PassengerService {
 			res.put("message", "该号码已注册");
 			return res;
 		}
+		try{
+			String smscodeerrortimesstr = SystemConfig.getSystemProperty("smscodeerrortimes");
+			int smscodeerrortimes = parseInt(smscodeerrortimesstr)<=0?5:parseInt(smscodeerrortimesstr);
+			String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+			//redis错误次数是5，就直接返回false
+			if(parseDouble(errortimes)>=smscodeerrortimes){
+				res.put("status", Retcode.EXCEPTION.code);
+				res.put("message", "错误次数超限!");
+				return res;
+			}
+		}catch (Exception e){
+			logger.error("获取redis信息出错",e);
+		}
 		Map<String,Object> param = new HashMap<String,Object>();
 		param.put("phone", phone);
 		param.put("usertype", Const.USERTOKENTYPE_PEUSER);
@@ -731,7 +943,24 @@ public class PassengerService {
 			}else if(smscode==null||!smscode.equals(verificationcode)){
 				res.put("status", Retcode.SMSCODEINVALID.code);
 				res.put("message", Retcode.SMSCODEINVALID.msg);
+				try{
+					String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+					JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+					if(parseDouble(errortimes)<=0){
+						String smscodeerrorouttimestr = SystemConfig.getSystemProperty("smscodeerrorouttime");
+						int smscodeerrorouttime = parseInt(smscodeerrorouttimestr)<=0?5:parseInt(smscodeerrorouttimestr);
+						JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone,smscodeerrorouttime*60);
+					}
+				}catch (Exception e){
+					logger.error("获取redis出错");
+				}
 			}else{
+				try{
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+					JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone);
+				}catch (Exception e){
+					logger.error("清除redis出错",e);
+				}
 				res.put("status", Retcode.OK.code);
 				res.put("message", Retcode.OK.msg);
 			}
@@ -755,9 +984,17 @@ public class PassengerService {
 		loginlog.put("phonemodel", registerparam.getPhonemodel());
 		loginlog.put("browserversion", registerparam.getBrowserversion());
 		loginlog.put("browsertype", registerparam.getBrowsertype());
-		
+
 		PeUser peuser = new PeUser();
 		String phone = registerparam.getPhone();
+
+		PeUser pp = userdao.getUser4Op(phone);
+		if(pp!=null){
+			res.put("status", Retcode.EXCEPTION.code);
+			res.put("message", "此号码已注册");
+			return res;
+		}
+
 		peuser.setAccount(phone);
 		String userid = GUIDGenerator.newGUID();
 		loginlog.put("userid", userid);
@@ -1901,21 +2138,21 @@ public class PassengerService {
 			Map<String,Object> userinfo = new HashMap<String,Object>();
 			userinfo.put("path", path);
 			String account = Const.getUserInfo(usertoken).get("account");
-			if(isOrgUser(usertoken)){
-				//机构用户
-				OrgUser user = userdao.getUser4Org(account);
-				if(user!=null&&StringUtils.isNotBlank(user.getId())){
-					userinfo.put("userid", user.getId());
-					userdao.updateUser4Org(userinfo);
-				}
-			}else{
+//			if(isOrgUser(usertoken)){
+//				//机构用户
+//				OrgUser user = userdao.getUser4Org(account);
+//				if(user!=null&&StringUtils.isNotBlank(user.getId())){
+//					userinfo.put("userid", user.getId());
+//					userdao.updateUser4Org(userinfo);
+//				}
+//			}else{
 				//个人用户
 				PeUser user = userdao.getUser4Op(account);
 				if(user!=null&&StringUtils.isNotBlank(user.getId())){
 					userinfo.put("userid", user.getId());
 					userdao.updateUser4Op(userinfo);
 				}
-			}
+//			}
 		}else{
 			res.put("status", Retcode.EXCEPTION.code);
 			res.put("message", Retcode.EXCEPTION.msg);
@@ -2238,7 +2475,7 @@ public class PassengerService {
 			if(order!=null){
 				res.put("orderstatus", order.getOrderstatus());
 				if(OrderState.INSERVICE.state.equalsIgnoreCase(order.getOrderstatus())){
-					String orderinfo = RedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
+					String orderinfo = JedisUtil.getString(RedisKeyEnum.MESSAGE_ORDER_TRAVEL_INFO.code+orderid);
 					if(StringUtils.isNotBlank(orderinfo)){
 						JSONObject json = JSONObject.fromObject(orderinfo);
 						int lefttime = json.getInt("lefttime");

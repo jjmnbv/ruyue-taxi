@@ -21,4 +21,6 @@ public interface OrgIndexMapper {
 	List<OrgOrder> exportExcel(OrgOrderQueryParam orgOrderQueryParam);
 	
 	public Map<String, Object> getOrgOrderByOrderno(String orderno);
+	
+	List<OrgOrder> getServiceOrder(Map<String, Object> map);
 }

@@ -75,11 +75,47 @@ public enum RedisKeyEnum {
 
 
 	/***************司机坐标附带距离终点的信息start******************/
-	MESSAGE_ORDER_TRAVEL_INFO("ORDER_TRAVEL_INFO_","司机距离终点的剩余信息");
+	MESSAGE_ORDER_TRAVEL_INFO("ORDER_TRAVEL_INFO_","司机距离终点的剩余信息"),
 	
 	
 	/***************司机坐标附带距离终点的信息end******************/
 
+	/**********************乘客端验证码验证信息start***************************/
+	SMS_PASSENGER_LOGIN_ERRORTIMES("SMS_PASSENGER_LOGIN_ERRORTIMES_","登录验证码失败次数"),
+    SMS_PASSENGER_LOGIN("SMS_PASSENGER_LOGIN_","登录短信验证码"),
+
+
+    SMS_PASSENGER_CHANGEPWD_ERRORTIMES("SMS_PASSENGER_CHANGEPWD_ERRORTIMES_","更改密码验证码失败次数"),
+    SMS_PASSENGER_CHANGEPWD("SMS_PASSENGER_CHANGEPWD_","更改密码短信验证码"),
+
+
+    SMS_PASSENGER_REGISTER_ERRORTIMES("SMS_PASSENGER_REGISTER_ERRORTIMES_","注册验证码失败次数"),
+    SMS_PASSENGER_REGISTER("SMS_PASSENGER_REGISTER_","注册短信验证码"),
+	/**********************乘客端验证码验证信息end*************************/
+
+
+    /**********************抵用券相关start***************************/
+
+    /**
+     * Map类型
+     * COUPON_RULE_租赁公司ID_规则对象(数字)_派发类别(数字)
+     */
+    COUPON_RULE("COUPON_RULE_","抵用券规则"),
+
+    /**
+     * Map类型
+     * COUPON_ACTIVY_规则ID
+     */
+    COUPON_ACTIVY("COUPON_ACTIVY_","抵用券活动"),
+
+    /**********************抵用券相关end*************************/
+
+
+
+    /**********************司机端验证码验证信息start*************************/
+	SMS_DRIVER_LOGIN_ERRORTIMES("SMS_DRIVER_LOGIN_ERRORTIMES_","登录验证码失败次数"),
+	SMS_DRIVER_LOGIN("SMS_DRIVER_LOGIN_","登录短信验证码");
+	/**********************司机端验证码验证信息end*************************/
     public String code;
     public String msg;
 

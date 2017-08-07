@@ -23,6 +23,7 @@ import com.szyciov.util.PageBean;
 import com.szyciov.util.PasswordEncoder;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
+import com.szyciov.util.UNID;
 import com.szyciov.util.UserTokenManager;
 
 @Service("userService")
@@ -60,6 +61,8 @@ public class UserService {
 					return new ModelAndView("login", model);
 				}
 			}
+			//验证码用过就清除
+			request.getSession().removeAttribute("code");
 			if (StringUtils.isBlank(userName) || StringUtils.isBlank(password)) {
 				//如果已登录，不需要再继续返回登录页
 				usertoken = (String) request.getSession().getAttribute(Constants.REQUEST_USER_TOKEN);
@@ -78,8 +81,8 @@ public class UserService {
 				logininfo.put("loginstatus", "1");
 				return new ModelAndView("login", model);
 			}
-			if( password.length() < 5){
-				model.put("message", "输入密码不能小于5个字符");
+			if( password.length() < 6){
+				model.put("message", "输入密码不能小于6个字符");
 				logininfo.put("loginstatus", "1");
 				return new ModelAndView("login", model);
 			}
@@ -306,7 +309,7 @@ public class UserService {
 		if (null == encodedPassword) {
 			return false;
 		}
-		return PasswordEncoder.matches(rawPassword, encodedPassword);
+		return PasswordEncoder.matches_PWD(rawPassword, encodedPassword);
 	}
 	
 	/**

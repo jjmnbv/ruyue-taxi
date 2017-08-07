@@ -80,6 +80,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 				return;
 			}
 			var form = $("#loginform");
+            $("#password").val(encodepwd($("#password").val()));
 			form.submit();
 		});
 		
@@ -90,6 +91,7 @@ String page_CopyrightDescription_value = SystemConfig.getSystemProperty("page_Co
 					return;
 				}
 		    	var form = $("#loginform");
+		    	$("#password").val(encodepwd($("#password").val()));
 				form.submit();
 		    }
 		}); 

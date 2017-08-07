@@ -39,10 +39,11 @@
 		<script type="text/javascript" src="content/plugins/select2/select2_locale_zh-CN.js"></script>
 		<script type="text/javascript" src="content/plugins/select2/app.js"></script>
 		<script type="text/javascript" src="js/basecommon.js"></script>
-		<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=AFLc9FVyIHUWExKYFETDeF6T"></script>
+		<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=AFLc9FVyIHUWExKYFETDeF6T&s=1"></script>
 		<script type="text/javascript" src="http://api.map.baidu.com/library/TrafficControl/1.4/src/TrafficControl_min.js"></script>
 		<script type="text/javascript" src="content/plugins/select2/select2.min.js"></script>
 		<script type="text/javascript" src="content/plugins/select2/select2_locale_zh-CN.js"></script>
+		<script type="text/javascript" src="content/js/loading.js"></script>
 		<script type="text/javascript" src="js/location/index.js?v=1.2"></script>
 	<style type="text/css">
     #map_canvas {
@@ -229,14 +230,6 @@ p {
 						<div id="map_canvas"></div>
 					</div>
 					<div class="col-2" style="width: 20%;">
-					<!-- 
-						<div class="row">
-							<div class="col-12">
-								<input class="form-control" type="text" id="txtDept"
-									placeholder="所属部门" />
-							</div>
-						</div>
-						 -->
 						<div class="row margin-top-10">
 						<div class="col-12" >
 		                	
@@ -313,14 +306,14 @@ p {
 								</div>
 								<div class="modal-footer">
 									<div class="pull-right" id="footer">
-										<button type="button" class="btn blue"
+										<!-- <button type="button" class="btn blue"
 											onclick="AddTimeFaceToVehc()">
 											<i class="fa fa-pencil"></i> 保存
 										</button>
 										<button type="button" class="btn default"
 											data-dismiss="modal">
 											<img src="Content/img/icon_gallery/shutdown_ga.png" /> 关闭
-										</button>
+										</button> -->
 									</div>
 								</div>
 							</form>
@@ -397,7 +390,7 @@ p {
 										</div>
 									</div>
 									<div class="modal-footer">
-										<div class="pull-right" id="footer">
+										<!-- <div class="pull-right" id="footer">
 											<button type="button" class="btn blue"
 												onclick="AddElectronFaceToVehc()">
 												<i class="fa fa-pencil"></i> 保存
@@ -405,7 +398,7 @@ p {
 											<button type="button" class="btn default"
 												data-dismiss="modal">
 												<img src="Content/img/icon_gallery/shutdown_ga.png" /> 关闭
-											</button>
+											</button> -->
 										</div>
 									</div>
 								</form>
@@ -414,7 +407,7 @@ p {
 					</div>
 			</div>
 	</body>
-	<script type="text/javascript">
+	<%--<script type="text/javascript">
 	var _loading = function () {
 	    var loading = $('<div class="loadingdiv">').appendTo($(document.body));;
 	    //<img src="img/trafficflux/ajax-modal-loading.gif" alt="图片加载中···" /></div>
@@ -438,5 +431,5 @@ p {
 	        }
 	    };
 	}();
-	</script>
+	</script>--%>
 </html>

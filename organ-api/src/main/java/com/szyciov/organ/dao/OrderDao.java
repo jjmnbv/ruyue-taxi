@@ -3,13 +3,6 @@
  */
 package com.szyciov.organ.dao;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.springframework.stereotype.Repository;
-
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.entity.LeVehiclemodels;
@@ -23,6 +16,11 @@ import com.szyciov.org.entity.OrgUser;
 import com.szyciov.org.param.BaseOrgParam;
 import com.szyciov.org.param.OrgUserParam;
 import com.szyciov.organ.mapper.OrderMapper;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName OrderDao 
@@ -132,4 +130,8 @@ public class OrderDao {
 	public List<PubCityAddr> getOrgUserPubBusCity(Map<String, Object> param) {
 		return mapper.getOrgUserPubBusCity(param);
 	}
+
+    public Map<String, Object> getRuyueCompany() {
+        return mapper.getRuyueCompany();
+    }
 }

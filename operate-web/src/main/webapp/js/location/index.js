@@ -42,7 +42,6 @@ $(function() {
 		currentZoomType = map.getZoom();
 		getVehcList();
 	});
-	//initCompanyList();
 });
 
 function bindControl() {  
@@ -219,7 +218,6 @@ function bindVehcMarker() {
 		if (isFrom != 1) {
 			vehcList = $.unique(vehcList.concat(vehcMapList));
 		}
-
 		vehcMapList = [];
 	}
 	for (var i = 0; i < vehcList.length; i++) {
@@ -239,17 +237,6 @@ function bindVehcMarker() {
 		if (vehcList[i].workStatus == "离线" && !isShowOffLine) {
 			continue;
 		}
-
-// if (isFrom == 1)// 标识是1:查询，2：运行停止离线，3：显示车牌，4：拖动，5缩放，6行点击
-// {
-// if (vehcList[i].workStatus == "在线") {
-// spRunCount++;
-// } else if (vehcList[i].workStatus == "断线") {
-// spStopCount++;
-// } else {
-// spOffLineCount++;
-// }
-// }
 		var contentObj = {};
 		// 在显示区域内的点才加载
 		if (vehcList[i].longitude >= bssw.lng && vehcList[i].longitude <= bsne.lng
@@ -321,45 +308,35 @@ function bindVehcMarker() {
 		}
 		deleteVehcIndex = [];
 	}
-
-// // 标识是1:查询，2：运行停止离线，3：显示车牌，4：拖动，5缩放，6行点击
-// if (isFrom == 1) {
-// $("#spOffLineCount").text(spOffLineCount);
-// $("#spStopCount").text(spStopCount);
-// $("#spRunCount").text(spRunCount);
-// }
 	// 标识是1:查询，2：运行停止离线，3：显示车牌，4：拖动，5缩放，6行点击
 	if (isFrom == 1 || isFrom == 2) {
 		$(".vehc-list").html(html);
-		$(".vehc-list li").on(
-				"click",
-				function() {
-					$(".vehc-list li").css("background-color", "");
-					$(this).css("background-color", "#e9e9e9");
-					var long = $(this).find(".longitude").val();
-					var lat = $(this).find(".latitude").val();
-					var content = $(this).find(".content").val();
-					var address = $(this).find(".address").val();
-					var point = new BMap.Point(long, lat);
-					map.panTo(point);
-					isFrom = 6;// 标识是1:查询，2：运行停止离线，3：显示车牌，4：拖动，5缩放，6行点击
-					isGoCount = false;
-					SetVehcMap();// 点击表格行，转到地图点附近时，加载当前视图区域未画到地图上的点
-					var mapindex = $(this).find(".indexNum").val();// 表格中有部分点conten为空，所以此处根据存的索引以及车辆id给该行赋值
-					if (content == null || content == undefined
-							|| content == "undefined") {
-						content = setMap(vehctableList[mapindex]);
-						$(this).find(".content").val(content);
-					}
-
-					var infoWindow = new BMap.InfoWindow(content, opts); // 创建信息窗口对象
-					map.openInfoWindow(infoWindow, point); // 开启信息窗口
-					gc.getLocation(point, function(rs) {
-						content = content.replace("未解析地址", rs.address);
-						infoWindow.setContent(content);
-						address = rs.address;
-					});
-				});
+		$(".vehc-list li").on("click",function() {
+			$(".vehc-list li").css("background-color", "");
+			$(this).css("background-color", "#e9e9e9");
+			var long = $(this).find(".longitude").val();
+			var lat = $(this).find(".latitude").val();
+			var content = $(this).find(".content").val();
+			var address = $(this).find(".address").val();
+			var point = new BMap.Point(long, lat);
+			map.panTo(point);
+			isFrom = 6;// 标识是1:查询，2：运行停止离线，3：显示车牌，4：拖动，5缩放，6行点击
+			isGoCount = false;
+			SetVehcMap();// 点击表格行，转到地图点附近时，加载当前视图区域未画到地图上的点
+			var mapindex = $(this).find(".indexNum").val();// 表格中有部分点conten为空，所以此处根据存的索引以及车辆id给该行赋值
+			if (content == null || content == undefined
+					|| content == "undefined") {
+				content = setMap(vehctableList[mapindex]);
+				$(this).find(".content").val(content);
+			}
+			var infoWindow = new BMap.InfoWindow(content, opts); // 创建信息窗口对象
+			map.openInfoWindow(infoWindow, point); // 开启信息窗口
+			gc.getLocation(point, function(rs) {
+				content = content.replace("未解析地址", rs.address);
+				infoWindow.setContent(content);
+				address = rs.address;
+			});
+		});
 	}
 	// 因为时间太短不出现，所以此处延迟关闭
 	setInterval("fnLoading()", 2000);
@@ -367,7 +344,7 @@ function bindVehcMarker() {
 
 var opts = {
 	width : 355, // 信息窗口宽度
-	height : 190, // 信息窗口高度
+	height : 200, // 信息窗口高度
 	enableMessage : false,
 	offset : new BMap.Size(0, -20)
 }
@@ -377,7 +354,6 @@ function openInfo(contentObj, e) {
 	var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
 	var infoWindow = new BMap.InfoWindow(contentObj.content, opts); // 创建信息窗口对象
 	map.openInfoWindow(infoWindow, point); // 开启信息窗口
-
 	if (!contentObj.address) {
 		gc.getLocation(point, function(rs) {
 			contentObj.content = contentObj.content
@@ -408,28 +384,6 @@ function setMap(vehcmap) {
 	} else {
 		icon = new BMap.Icon(basePath +"img/trafficflux/offline_car.png", iconSize);
 	}
-
-	// 转换数值方向为方位
-// if (vehcmap.VS_GPSDRCT != null && vehcmap.VS_GPSDRCT != undefined) {
-// if (vehcmap.VS_GPSDRCT >= 337.5 || vehcmap.VS_GPSDRCT < 22.5) {
-// direction = "向北";
-// } else if (vehcmap.VS_GPSDRCT >= 22.5 && vehcmap.VS_GPSDRCT < 67.5) {
-// direction = "东北";
-// } else if (vehcmap.VS_GPSDRCT >= 67.5 && vehcmap.VS_GPSDRCT < 112.5) {
-// direction = "向东";
-// } else if (vehcmap.VS_GPSDRCT >= 112.5 && vehcmap.VS_GPSDRCT < 157.5) {
-// direction = "东南";
-// } else if (vehcmap.VS_GPSDRCT >= 157.5 && vehcmap.VS_GPSDRCT < 202.5) {
-// direction = "向南";
-// } else if (vehcmap.VS_GPSDRCT >= 202.5 && vehcmap.VS_GPSDRCT < 247.5) {
-// direction = "西南";
-// } else if (vehcmap.VS_GPSDRCT >= 247.5 && vehcmap.VS_GPSDRCT < 292.5) {
-// direction = "向西";
-// } else if (vehcmap.VS_GPSDRCT >= 292.5 && vehcmap.VS_GPSDRCT < 337.5) {
-// direction = "西北";
-// }
-// }
-	
 	// 添加车辆地图标注
 	marker = new BMap.Marker(point);
 	map.addOverlay(marker);
@@ -470,11 +424,14 @@ function setMap(vehcmap) {
 	}
 	marker.setLabel(label);
 	var speed = vehcmap.speed;
-	if(speed==null && speed == undefined){
+	if(speed==null || speed == undefined){
 		speed = 0;
 	}
-	if(vehcmap.department == null && vehcmap.department == undefined){
+	if(vehcmap.department == null || vehcmap.department == undefined){
 		vehcmap.department = '';
+	}
+	if(vehcmap.plate ==null || vehcmap.plate == undefined){
+		vehcmap.plate= '';
 	}
 	content = "<p style='font-weight:bold;text-align:left '>车牌："
 			+ vehcmap.plate
@@ -492,7 +449,12 @@ function setMap(vehcmap) {
 	} else {
 		content += "<p>位置：" + vehcmap.address + "</p>";
 	}
-
+	content += "<p style='float:left;margin-left:175px;margin-right:5px;'><a  class='btn  btn-xs blue' href='" +basePath + "Location/realimeTracking?imei="
+		+ vehcmap.imei
+		+ "'><img src='" + basePath +"img/trafficflux/vehcCommon/moveTrack.png' />实时追踪</a></p>";
+   content += "<p style='float:right;margin-right:5px;margin-bottom:12px;'>"
+   			+"&nbsp;&nbsp;<a class='btn  btn-xs blue' href='" +basePath + "VehicleTrajectory/Index/" + vehcmap.imei +"' > "
+   			+"<img src='"+basePath +"img/trafficflux/vehcCommon/refresh.png' /> 车辆轨迹</a></p>";
 	if ((vehcmap.Flag != "" && vehcmap.Flag != null)
 			&& (vehcmap.XCFlag != "" && vehcmap.XCFlag != null)) {
 
@@ -507,9 +469,9 @@ function setMap(vehcmap) {
 		content += "<button type='button' class='btn default btn-xs blue dropdown-toggle' data-toggle='dropdown' onclick='showUlThreeList()' style='height:20px;margin-top:1px;'><i class='fa fa-angle-down'></i></button>";
 		content += "<ul class='dropdown-menu pull-right' role='menu' style='list-style:none;margin:0px;padding:0px;width:50px;' class='ListStyle'>";
 		if (vehcmap.XCFlag.indexOf("1") > -1) {
-			content += "<li><a class='btn  btn-xs blue' href='/VehcLocation/RealtimeTracking/"
-					+ vehcmap.imei
-					+ "'><img src='" + basePath +"img/trafficflux/vehcCommon/moveTrack.png' />实时追踪</a></li>";
+			content += "<p style='float:right;margin-right:5px;margin-bottom:12px;'><a  class='btn  btn-xs blue' href='/Location/RealtimeTracking/"
+				+ vehcmap.imei
+				+ "'><img src='" + basePath +"img/trafficflux/vehcCommon/moveTrack.png' />实时追踪</a></p>";
 		}
 		if (vehcmap.XCFlag.indexOf("2") > -1) {
 			content += "<li><a  class='btn  btn-xs blue' href='/VehcLocation/TrackPlayback/"
@@ -570,26 +532,6 @@ function setMap(vehcmap) {
 			content += "<button type='button' class='btn default btn-xs blue' onclick='showUlThreeList()' style='height:20px;margin-top:1px;'><img src='" + basePath +"img/trafficflux/vehcCommon/currentTravel.png' />行程轨迹</button>";
 			content += "<button type='button' class='btn default btn-xs blue dropdown-toggle' data-toggle='dropdown' onclick='showUlThreeList()' style='height:20px;margin-top:1px;'><i class='fa fa-angle-down'></i></button>";
 			content += "<ul class='dropdown-menu pull-right' role='menu' style='list-style:none;margin:0px;padding:0px;width:50px;' class='ListStyle'>";
-// if (vehcmap.XCFlag.indexOf("1") > -1) {
-// content += "<li><a class='btn btn-xs blue'
-// href='/VehcLocation/RealtimeTracking/"
-// + vehcmap.imei
-// + "'><img src='" + basePath +"img/trafficflux/vehcCommon/moveTrack.png'
-// />实时追踪</a></li>";
-// }
-// if (vehcmap.XCFlag.indexOf("2") > -1) {
-// content += "<li><a class='btn btn-xs blue'
-// href='/VehcLocation/TrackPlayback/"
-// + vehcmap.imei
-// + "'><img src='" + basePath +"img/trafficflux/vehcCommon/refresh.png'
-// />车辆轨迹</a></li>";
-// }
-// if (vehcmap.XCFlag.indexOf("3") > -1) {
-// content += "<li><a class='btn btn-xs blue' href='/VehcTrack/VehcTrackRecord/"
-// + vehcmap.imei
-// + "'><img src='" + basePath +"img/trafficflux/vehcCommon/icon_xingcheng.png'
-// />行程记录</a></li>";
-// }
 			content += "</ul></div>";
 		} else if (vehcmap.Flag != "" && vehcmap.Flag != null) {
 			// 栅栏设置
@@ -633,12 +575,6 @@ function setMap(vehcmap) {
 function getVehcList() {
 	var eqpId = $("#selPlates").select2("val");
 	var departmentId=$("#companyId").val();
-//	if ((eqpId == "" || eqpId == null || eqpId == undefined)
-//			&& (departmentId == "" || departmentId == undefined || departmentId == "-1")) {
-//		toastr.warning("查询条件部门和车牌不能同时为空", "提示信息");
-//		return;
-//	}
-	_loading.show();
 	vehcList = null;
 	$(".vehc-list").empty();
 	$("#spVehcCount").text("0");
@@ -653,7 +589,6 @@ function getVehcList() {
 		url : "Location/QueryLocation",
 		cache : false,
 		data : {
-			apikey : apikey,
 			processOption : 2,// 纠偏选项 1_不纠偏;2_百度纠偏;默认不纠偏
 			eqpId : eqpId,
 			relationType:1,

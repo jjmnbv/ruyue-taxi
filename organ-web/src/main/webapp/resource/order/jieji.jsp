@@ -260,6 +260,7 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
 					<span class="price">￥0.00</span>
 					<span class="price_info">预估里程0公里,预估时长0分钟</span>
 				</div>
+				<div class=""><span style="color:red;">(*预约用车会增加附加费用30元，本公司保留最终解释权)</span></div>
 <!-- 				<div class="mar m" style="display:none;"  id= "payable"> -->
 <!-- 					企业账户已超出限额;建议使用个人垫付,否则无法叫车 -->
 <!-- 				</div> -->

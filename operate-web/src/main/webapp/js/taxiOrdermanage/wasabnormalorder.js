@@ -47,7 +47,7 @@ function manualOrderdataGrid() {
         	sEmptyTable: "暂无服务订单信息"
         },
         columns: [
-        	{
+        	/*{
                 //自定义操作列
                 "mDataProp": "ZDY",
                 "sClass": "center",
@@ -61,7 +61,7 @@ function manualOrderdataGrid() {
                     html.push("<button type=\"button\" class=\"SSbtn red\" onclick=\"applyReview('" + full.orderno + "')\"><i class=\"fa fa-paste\"></i>申请复核</button>");
                     return html.join("");
                 }
-            },
+            },*/
             {
                 "mDataProp": "DDLY",
                 "sClass": "center",

@@ -1,6 +1,13 @@
 package com.szyciov.driver.param;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.apache.commons.lang.StringUtils;
+
 import com.szyciov.param.OrderApiParam;
+import com.szyciov.util.StringUtil;
 
 /**
  * @ClassName OrderCostParam 
@@ -82,6 +89,16 @@ public class OrderCostParam extends OrderApiParam{
 	 * 打表来接里程
 	 */
 	private Integer meterrange;
+	
+	/**
+	 * 是否即刻单
+	 */
+	private boolean isusenow;
+	
+	/**
+	 * 用车时间
+	 */
+	private Date usetime;
 	
 	/**  
 	 * 获取计费规则(0-标准1-个性化)  
@@ -338,5 +355,45 @@ public class OrderCostParam extends OrderApiParam{
 
 	public void setMeterrange(Integer meterrange) {
 		this.meterrange = meterrange;
+	}
+
+	/**  
+	 * 获取是否即刻单  
+	 * @return isusenow 是否即刻单  
+	 */
+	public boolean isIsusenow() {
+		return isusenow;
+	}
+	
+	/**  
+	 * 设置是否即刻单  
+	 * @param isusenow 是否即刻单  
+	 */
+	public void setIsusenow(boolean isusenow) {
+		this.isusenow = isusenow;
+	}
+
+	/**  
+	 * 获取用车时间  
+	 * @return usetime 用车时间  
+	 */
+	public Date getUsetime() {
+		return usetime;
+	}
+	
+	/**  
+	 * 设置用车时间  
+	 * @param usetime 用车时间  
+	 */
+	public void setUsetime(Object usetime) {
+		if(usetime instanceof Date){
+			this.usetime = (Date) usetime;
+		}else if(usetime instanceof String){
+			if(StringUtils.isNotBlank((String) usetime)){
+				this.usetime = StringUtil.parseDate((String)usetime, "yyyy-MM-dd HH:mm:ss");
+			}
+		}else if(usetime instanceof Long){
+			this.usetime = new Date((long)usetime);
+		}
 	}
 }
