@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxkj.passenger.wechat.mapper.UserAccessMapper">
+    <select id="getUserById" parameterType="String" resultType="com.xxkj.passenger.wechat.entity.User">
+        SELECT  * FROM  pe_user WHERE id = #{userId}
+    </select>
+    <select id="getUserByOpenId" parameterType="String" resultType="com.xxkj.passenger.wechat.entity.User">
+      SELECT * FROM pe_user WHERE wechatopenid = #{openid}
+    </select>
+
+    <update id="bindUserWithOpenId" parameterType="com.xxkj.passenger.wechat.entity.User">
+        UPDATE pe_user SET wechatopenid = #{wechatopenid} WHERE id = #{id}
+    </update>
+</mapper>

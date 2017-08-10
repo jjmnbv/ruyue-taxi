@@ -73,6 +73,7 @@ dependencies {
         exclude(module: 'commons-logging')
     }
 
+
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-aop')
@@ -115,13 +116,14 @@ dependencies {
         exclude module: 'slf4j-log4j12'
         exclude group : 'org.springframework.security'
     }
+
     compile 'org.codehaus.janino:janino:3.0.7'
 
 }
-
-configurations.all {
-   exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-}
+//
+//configurations.all {
+//   exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+//}
 
 jar {
     baseName = "$artifactId"
