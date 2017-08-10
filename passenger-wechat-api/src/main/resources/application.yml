@@ -1,12 +1,13 @@
 logging:
   level:
     tk.mybatis: DEBUG
-    com.szyciov.supervision: DEBUG
+    com.xxkj.passenger.wechat: DEBUG
 spring:
+  profiles:
+    active: dev
   datasource:
     name: ruyue
     type: com.zaxxer.hikari.HikariDataSource
-    driver-class-name: com.mysql.jdbc.Driver
     filters: stat
     maxActive: 100
     initialSize: 1

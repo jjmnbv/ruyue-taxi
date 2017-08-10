@@ -30,3 +30,11 @@ nbdist/
 logs/
 .idea/
 supervision/out/
+
+
+.metadata/
+passenger-wechat-api/out/
+passenger-wechat-api/classes/
+meterservice-api/out/
+meterservice-api/classes/
+rebel.xml
