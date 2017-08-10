@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
+import com.szyciov.op.entity.PeUser;
 import com.szyciov.operate.service.OpUserAccountService;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.PageBean;
@@ -93,6 +94,18 @@ public class OpUserAccountController extends BaseController {
 	@ResponseBody
 	public int getUserExpensesCount(@RequestBody OrganUserAccountQueryParam queryParam) {
 		return opUserAccountService.getUserExpensesListCountByQuery(queryParam);
+	}
+	//添加积分
+	@RequestMapping(value = "api/OpUserAccount/Admoney", method = RequestMethod.POST)
+	@ResponseBody
+	public PeUser admoney(@RequestBody PeUser peUser) {
+		return opUserAccountService.admoney(peUser);
+	}
+	//添加积分
+	@RequestMapping(value = "api/OpUserAccount/AdmoneyOk", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String,String> admoneyOk(@RequestBody PeUser peUser) {
+		return opUserAccountService.admoneyOk(peUser);
 	}
 	
 }

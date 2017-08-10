@@ -63,7 +63,7 @@
 	<body  class="ordermanage_css_body">
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs">
-			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrderManage/PersonOrderIndex">个人订单</a> > 订单复核
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrderManage/PersonOrderIndex">因私网约车订单</a> > 订单复核
 			<button class="SSbtn blue back" target="iframe" onclick="window.history.go(-1);">返回</button>
 		</div>
 		<div class="content" style="overflow: auto !important;">
@@ -103,60 +103,74 @@
 				<table id="reviewRecordDataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 			</div>
 		</div>
-		
-		<div class="pop_box" id="orderReivewFormDiv" style="display: none;">
-			<div class="tip_box_b" style="width: 530px;">
-	            <h3>订单复核</h3>
-	            <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
-	            <div class="w400" style="width: 510px;">
-	            	<input type="hidden" id="pricecopy" name="pricecopy">
-	            	<input type="hidden" id="beforeprice" name="beforeprice">
-	            	<input type="hidden" id="timetype" name="timetype">
-	            	<input type="hidden" id="paymentstatus" name="paymentstatus">
-	            	<form id="orderReivewForm" method="get">
-		            	<div class="row form">
-		            		<div class="col-12">
-			            		<label>服务时间<em class="asterisk"></em></label>
-			            		<input style="width:28%;" id="starttime" name="starttime" readonly="readonly" type="text" oninput="getPrice()" placeholder="服务开始时间" value="" class="searchDate">
-								至
-			            		<input style="width:28%;" id="endtime" name="endtime" readonly="readonly" type="text" oninput="getPrice()" placeholder="服务结束时间" value="" class="searchDate">
-		            		</div>
-		            	</div>
-		            	<div class="row form">
-		            		<div class="col-12">
-			            		<label>服务里程<em class="asterisk"></em></label>
-			            		<input id="mileage" name="mileage" style="width: 54%" oninput="getPrice()" maxlength="6" type="text" placeholder="服务里程">&nbsp;&nbsp;公里
-		            		</div>
-		            	</div>
-		            	<div class="row form" id="counttimesDiv">
-		            		<div class="col-12">
-			            		<label>计费时长<em class="asterisk"></em></label>
-			            		<input id="counttimes" oninput="getPrice()" name="counttimes" style="width: 54%" maxlength="6" type="text" placeholder="计费时长">&nbsp;&nbsp;分钟
-		            		</div>
-		            	</div>
-		            	<div class="row form">
-		            		<div class="col-12">
-			            		<label style="padding-right: 16px;">复核方</label>
-			            		<select id="reviewperson" name="reviewperson" style="width: 61%" disabled="disabled">
-			            			<option value="">请选择</option>
-									<option value="1">司机</option>
-									<option value="2">下单人</option>
-								</select>
-							</div>
-		            	</div>
-		            	<div class="row form">
-			                <div class="col-12">
-				                <label style="padding-right: 16px;">处理意见<em class="asterisk"></em></label>
-				                <textarea id="reasonTextarea" name="reasonTextarea" rows="2" style="width: 61%" maxlength="100" cols="3" placeholder="请输入处理意见"></textarea>
-		            		</div>
-		            	</div>
-	            	</form>
-	            	<span id="cyjets" class="font_red"></span>
-	                <button class="Lbtn red" onclick="reviewPost()">确定</button>
-	                <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
-	            </div>
-	        </div>
-		</div>
+
+        <div class="pop_box" id="orderReivewFormDiv" style="display: none;">
+            <div class="tip_box_b" style="width: 530px;">
+                <h3>订单复核</h3>
+                <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+                <div class="w400" style="width: 485px;">
+                    <input type="hidden" id="pricecopy" name="pricecopy">
+                    <input type="hidden" id="beforeprice" name="beforeprice">
+                    <input type="hidden" id="paymentstatus" name="paymentstatus">
+                    <input type="hidden" id="timetype" name="timetype">
+                    <form id="orderReivewForm" method="get">
+                        <div class="row form">
+                            <div class="col-12">
+                                <label>复核类型<em class="asterisk"></em></label>
+                                <input type="hidden" id="reviewtype" value="1">
+                                <input type="radio" name="reviewtype" value="1" checked="checked" style="margin-left: -90px;">按里程时长
+                                <input type="radio" name="reviewtype" value="2">按固定金额
+                            </div>
+                        </div>
+                        <div class="row form" style="display: none" id="reviewedpriceDiv">
+                            <div class="col-12">
+                                <label>复核金额<em class="asterisk"></em></label>
+                                <input type="text" id="reviewedprice" name="reviewedprice" style="width: 60%;" oninput="getPrice()" maxlength="6" placeholder="复核后金额">&nbsp;&nbsp;元
+                            </div>
+                        </div>
+                        <div class="row form" id="timeDiv">
+                            <div class="col-12">
+                                <label>服务时间<em class="asterisk"></em></label>
+                                <input style="width:30%;" id="starttime" name="starttime" readonly="readonly" type="text" oninput="getPrice()" placeholder="服务开始时间" value="" class="searchDate">
+                                至
+                                <input style="width:30%;" id="endtime" name="endtime" readonly="readonly" type="text" oninput="getPrice()" placeholder="服务结束时间" value="" class="searchDate">
+                            </div>
+                        </div>
+                        <div class="row form" id="mileageDiv">
+                            <div class="col-12">
+                                <label>服务里程<em class="asterisk"></em></label>
+                                <input id="mileage" name="mileage" style="width: 58%;" oninput="getPrice()" maxlength="6" type="text" placeholder="服务里程">&nbsp;&nbsp;公里
+                            </div>
+                        </div>
+                        <div class="row form" id="counttimesDiv">
+                            <div class="col-12">
+                                <label>计费时长<em class="asterisk"></em></label>
+                                <input id="counttimes" oninput="getPrice()" name="counttimes" style="width: 58%;" maxlength="6" type="text" placeholder="计费时长">&nbsp;&nbsp;分钟
+                            </div>
+                        </div>
+                        <div class="row form">
+                            <div class="col-12">
+                                <label style="padding-right: 16px;">复核方</label>
+                                <select id="reviewperson" name="reviewperson" style="width: 65%" disabled="disabled">
+                                    <option value="">请选择</option>
+                                    <option value="1">司机</option>
+                                    <option value="2">乘客</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row form">
+                            <div class="col-12">
+                                <label style="padding-right: 16px;">处理意见<em class="asterisk"></em></label>
+                                <textarea id="reasonTextarea" name="reasonTextarea" rows="2" style="width: 65%" cols="3" maxlength="100" placeholder="请输入处理意见"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                    <span id="cyjets" class="font_red"></span>
+                    <button class="Lbtn red" onclick="reviewPost()">确定</button>
+                    <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
+                </div>
+            </div>
+        </div>
 		<script type="text/javascript">
 			var orderObj = {
 				orderno: "<%=request.getParameter("orderno")%>"

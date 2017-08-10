@@ -1,5 +1,12 @@
 package com.szyciov.carservice.dao;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Repository;
+
 import com.szyciov.carservice.mapper.OrderApiMapper;
 import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.entity.PubDriverNews;
@@ -8,6 +15,7 @@ import com.szyciov.driver.param.OrderListParam;
 import com.szyciov.entity.OrderCost;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.PubJpushlog;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.entity.PubSendrules;
 import com.szyciov.entity.PubUserToken;
 import com.szyciov.entity.TaxiOrderCost;
@@ -32,11 +40,6 @@ import com.szyciov.org.entity.OrgOrderReview;
 import com.szyciov.org.entity.OrgUser;
 import com.szyciov.org.param.OrgUserParam;
 import com.szyciov.param.OrderApiParam;
-import org.springframework.stereotype.Repository;
-
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
 
 @Repository("OrderApiDao")
 public class OrderApiDao {
@@ -548,4 +551,23 @@ public class OrderApiDao {
     public List<Map<String,Object>> getLeCompanyRulesRefState(Map<String, Object> param) {
         return mapper.getLeCompanyRulesRefState(param);
     }
+    
+    /**
+     * 获取订单取消详情
+     * @param orderno
+     * @param ordertype 1-运管网约车单 2-机构网约车单 3-运管出租车单
+     * @return
+     */
+    public PubOrderCancel getOrderCancelInfo(String orderno,int ordertype){
+    	return mapper.getOrderCancelInfo(orderno,ordertype);
+    }
+    
+    /**
+     * 保存或更新取消详情
+     * @param cancelInfo
+     * @param ordertype 1-运管网约车单 2-机构网约车单 3-运管出租车单
+     */
+   public void saveOrUpdateOrderCancelInfo(PubOrderCancel cancelInfo,int ordertype){
+	   mapper.saveOrUpdateOrderCancelInfo(cancelInfo,ordertype);
+   }
 }

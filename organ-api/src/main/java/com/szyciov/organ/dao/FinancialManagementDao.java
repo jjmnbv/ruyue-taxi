@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Repository;
 
+import com.szyciov.entity.PubCouponDetail;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.entity.OrgOrganBill;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
@@ -167,4 +168,12 @@ public class FinancialManagementDao {
 	public List<String> getLeasesCompanyUserById(String leasesCompanyId) {
 		return mapper.getLeasesCompanyUserById(leasesCompanyId);
 	}
+	
+	public List<PubCouponDetail> getPubCouponDetailList(OrganAccountQueryParam organAccountQueryParam){
+		return mapper.getPubCouponDetailList(organAccountQueryParam);
+	};
+	
+	public int getPubCouponDetailListCount(OrganAccountQueryParam organAccountQueryParam){
+		return mapper.getPubCouponDetailListCount(organAccountQueryParam);
+	};
 }

@@ -46,7 +46,9 @@ public enum PayState {
 	/**
 	 * 已付结
 	 */
-	PAYOVER("8","已付结");
+	PAYOVER("8","已付结"),
+
+    CLOSE("9", "已关闭");
 
 	public static PayState getPayStateByDB(String payState){
 		for(PayState p : PayState.values()) {

@@ -156,7 +156,7 @@ function search() {
 function del(id) {
 	var comfirmData={
 		tittle:"提示",
-		context:"是否删除该协议?",
+		context:"确定要删除该协议?",
 		button_l:"否",
 		button_r:"是",
 		htmltex:"<input type='hidden' placeholder='添加的html'> "
@@ -177,4 +177,10 @@ function deletePost(id) {
 			toastr.error(message, "提示");
 		}
 	});
+}
+
+function emptys(){
+	$("#queryCompanyname").val("");
+	$("#queryServicetype").val("");
+	search();
 }

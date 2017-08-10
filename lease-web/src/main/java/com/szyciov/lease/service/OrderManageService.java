@@ -1,12 +1,24 @@
 package com.szyciov.lease.service;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.szyciov.entity.Excel;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.entity.Retcode;
 import com.szyciov.lease.entity.LeAccountRules;
 import com.szyciov.lease.entity.OrgOrdercomment;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.PubSendRules;
 import com.szyciov.org.entity.OrgOrder;
+import com.szyciov.org.entity.OrgOrderReview;
 import com.szyciov.param.OrderApiParam;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.util.ExcelExport;
@@ -18,15 +30,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service("orderManageService")
 public class OrderManageService {
@@ -49,7 +52,7 @@ public class OrderManageService {
 	}
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> manualSendOrder(OrgOrder orgOrder, String userToken) {
-		return templateHelper.dealRequestWithTokenCarserviceApiUrl("/OrderManage/ManualSendOrgOrder", HttpMethod.POST, userToken, orgOrder,
+		return templateHelper.dealRequestWithToken("/OrderManage/ManualSendOrder", HttpMethod.POST, userToken, orgOrder,
 				Map.class);
 	}
 	@SuppressWarnings("unchecked")
@@ -114,8 +117,8 @@ public class OrderManageService {
 				Map.class);
 	}
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> orgOrderReview(Map<String, Object> params, String userToken) {
-		return templateHelper.dealRequestWithToken("/OrderManage/OrgOrderReview", HttpMethod.POST, userToken, params,
+	public Map<String, Object> orgOrderReview(OrgOrderReview review, String userToken) {
+		return templateHelper.dealRequestWithToken("/OrderManage/OrgOrderReview", HttpMethod.POST, userToken, review,
 				Map.class);
 	}
 	@SuppressWarnings("unchecked")
@@ -180,6 +183,21 @@ public class OrderManageService {
                 SystemConfig.getSystemProperty("carserviceApiUrl")
                         + "/BaiduApi/GetGpsTraceData/?orderno={orderno}&ordertype={ordertype}&usetype={usetype}",
                 HttpMethod.GET, userToken, null, Map.class, orderno, ordertype, usetype);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getCancelPriceDetail(Map<String, String> param, String userToken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/GetCancelPriceDetail", HttpMethod.POST, userToken, param, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> exemptionOrder(PubOrderCancel object, String userToken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/ExemptionOrder", HttpMethod.POST, userToken, object, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> endOrder(String orderno, String usertoken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/EndOrder/{orderno}", HttpMethod.GET, usertoken, null, Map.class, orderno);
     }
 	
 	/**
@@ -901,7 +919,7 @@ public class OrderManageService {
      * @param userToken token
      * @return 车企list
      */
-    public List<Map<String, Object>> getBelongLeaseCompanySelect(Map<String, Object> params, String userToken) {
-        return templateHelper.dealRequestWithToken("/OrderManage/GetBelongLeaseCompanySelect", HttpMethod.POST, userToken, params, List.class);
+    public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam params, String userToken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/GetBelongCompanySelect", HttpMethod.POST, userToken, params, List.class);
     }
 }

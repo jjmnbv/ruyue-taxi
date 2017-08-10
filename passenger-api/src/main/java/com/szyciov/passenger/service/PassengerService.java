@@ -2867,6 +2867,8 @@ public class PassengerService {
 	            	orderparam.put("orderno", orderno);
 	            	orderparam.put("paytype", "1");
 	            	orderdao.payed4OpOrder(orderparam);
+	            	//使用优惠券
+	            	dillCouponUseInfo4Op(order);
 				}
 			}
 		}catch(Exception e){
@@ -2937,6 +2939,9 @@ public class PassengerService {
 	        	orderparam.put("orderno", orderno);
 	        	orderparam.put("paytype", "1");
 	        	orderdao.payed4OpTaxiOrder(orderparam);
+	        	
+	        	//优惠券处理
+				dillCouponUseInfo4Op(optaxiorder);
 			}
 		}catch(Exception e){
 			logger.error("钱包支付出租车订单", e);
@@ -3664,6 +3669,8 @@ public class PassengerService {
 							expenses.put("operateresult","0");
 							userdao.addExpenses4OpSec(expenses);
 						}
+	    				//优惠券处理
+	    				dillCouponUseInfo4Op(optaxiorder);
 					}else{
 						//网约车订单
 						tradeinfo = orderdao.getPayTradeRecord4OpNetCar(out_trade_no);
@@ -3697,6 +3704,8 @@ public class PassengerService {
 						expenses.put("operateresult","0");
 						userdao.addExpenses4OpSec(expenses);
 
+						//优惠券处理
+	    				dillCouponUseInfo4Op(order);
 //						//网约车返现
 //						try{
 //							Map<String,Object> awardparams = new HashMap<String,Object>();
@@ -4011,6 +4020,8 @@ public class PassengerService {
 										expenses.put("operateresult","0");
 										userdao.addExpenses4OpSec(expenses);
 									}
+		    	    				//优惠券使用
+		    	    				dillCouponUseInfo4Op(optaxiorder);
 		    					}else{
 		    						//网约车订单
 		    						tradeinfo = orderdao.getPayTradeRecord4OpNetCar(outtradeno);
@@ -4045,6 +4056,9 @@ public class PassengerService {
 									expenses.put("operateresult","0");
 									userdao.addExpenses4OpSec(expenses);
 
+									//优惠券处理
+									//优惠券处理
+				    				dillCouponUseInfo4Op(order);
 									//网约车返现
 //									try{
 //										Map<String,Object> awardparams = new HashMap<String,Object>();
@@ -4984,7 +4998,11 @@ public class PassengerService {
 		//有司机接单
 		String driverid = order.getDriverid();
 		if(StringUtils.isNotBlank(driverid)){
-			DriverInfo driverinfo = orderdao.getDriverInfo(driverid);
+			Map<String,Object> params = new HashMap<String,Object>();
+			params.put("orderno",order.getOrderno());
+			params.put("usetype",order.getUsetype());
+			params.put("ordertype",order.getOrdertype());
+			DriverInfo driverinfo = orderdao.getDriverInfo4New(params);
 			order.setCancelname(driverinfo.getName());
 		}
 	}
@@ -5582,4 +5600,483 @@ public class PassengerService {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * 获取司机信息（新）
+	 * @param params
+	 * @return
+	 */
+	public Map<String,Object> getDriverInfo(Map<String, Object> params) {
+		Map<String, Object> res = new HashMap<String,Object>();
+		res.put("status", Retcode.OK.code);
+		res.put("message", Retcode.OK.msg);
+		String orderno = (String) params.get("orderno");
+		String ordertype = (String) params.get("ordertype");
+		String usetype = (String) params.get("usetype");
+		if(StringUtils.isBlank(orderno)||StringUtils.isBlank(ordertype)||StringUtils.isBlank(usetype)){
+			res.put("status",Retcode.EXCEPTION.code);
+			res.put("message","参数不全");
+			return res;
+		}
+
+		Map<String,Object> pp = new HashMap<String,Object>();
+		if(!"2".equals(usetype)){
+			//机构用户
+			PassengerOrder orderinfo = orderdao.getOrderByOrderno4Org(orderno);
+			pp.put("driverid",orderinfo.getDriverid());
+			pp.put("vehicleid",orderinfo.getVehicleid());
+		}else{
+			Map<String,Object> orderinfo = null;
+			if(isTaxiOrder(ordertype)){
+				orderinfo = orderdao.getOrder4OpTaxi(params);
+			}else{
+				orderinfo = orderdao.getOrder4OpNetCar(params);
+			}
+			if(orderinfo!=null){
+				pp.put("driverid",(String) orderinfo.get("driverid"));
+				pp.put("vehicleid",(String) orderinfo.get("vehicleid"));
+			}
+		}
+		DriverInfo driverinfo = orderdao.getDriverInfo4New(pp);
+		if(driverinfo!=null){
+			String img = driverinfo.getHeadportraitmax();
+			if(StringUtils.isNotBlank(img)){
+				driverinfo.setDriverimg(SystemConfig.getSystemProperty("fileserver")+File.separator+img);
+			}
+			String avgrate = driverinfo.getAvgrate();
+			if(StringUtils.isNotBlank(avgrate)&&avgrate.indexOf(".")>=0&&(avgrate.indexOf(".")+2)<=avgrate.length()){
+				driverinfo.setAvgrate(avgrate.substring(0, avgrate.indexOf(".")+2));
+			}else if(StringUtils.isBlank(avgrate)){
+				driverinfo.setAvgrate("0.0");
+			}
+		}
+		res.put("driverinfo", driverinfo);
+		return res;
+	}
+	
+	/**
+	 * 处理优惠券的使用信息
+	 * @param userid
+	 * @param orderno
+	 */
+	private void dillCouponUseInfo4Op(Map<String,Object> orderinfo){
+		if(orderinfo==null){
+			return ;
+		}
+		String orderno = (String) orderinfo.get("orderno");
+		Map<String,Object> pp = new HashMap<String,Object>();
+		pp.put("orderno", orderno);
+		Map<String,Object> useinfo = userdao.getOrderCouponUseInfo(pp);
+		if(useinfo!=null){
+			String userid = (String) orderinfo.get("userid");
+			double amount = parseDouble(orderinfo.get("orderamount"));
+			String ordertype = (String) orderinfo.get("ordertype");
+			double couponmoney = parseDouble(useinfo.get("couponmoney"));
+			if(isTaxiOrder(ordertype)){
+				//出租车
+				String paymentmethod = (String) orderinfo.get("paymentmethod");
+				if("0".equalsIgnoreCase(paymentmethod)){
+					//线上支付
+					amount += parseDouble(orderinfo.get("schedulefee"));
+				}
+			}
+			if(couponmoney<=amount){
+				useinfo.put("discountamount", couponmoney);
+			}else{
+				useinfo.put("discountamount", amount);
+			}
+			//使用优惠券
+			userdao.useCoupon(useinfo);
+			//更新优惠券的实际抵用金额
+			userdao.updateCouponDiscountamount(useinfo);
+			//优惠券使用明细
+			String couponid = (String) useinfo.get("couponidref");
+			Map<String,Object> couponinfo = userdao.getCouponInfo(couponid);
+			Map<String,Object> params = new HashMap<String,Object>();
+			params.put("id", GUIDGenerator.newGUID());
+			params.put("userid", userid);
+			params.put("couponidref", couponid);
+			params.put("usetype", 2);
+			params.put("amount", couponmoney);
+			params.put("remark", couponinfo!=null?couponinfo.get("name"):"");
+			userdao.addCouponDetail(params);
+		}
+	}
+	
+	/**
+	 * 处理优惠券的使用信息
+	 * @param userid
+	 * @param orderno
+	 */
+	private void dillCouponUseInfo4Op(PassengerOrder orderinfo){
+		if(orderinfo==null){
+			return ;
+		}
+		String orderno = orderinfo.getOrderno();
+		Map<String,Object> pp = new HashMap<String,Object>();
+		pp.put("orderno", orderno);
+		Map<String,Object> useinfo = userdao.getOrderCouponUseInfo(pp);
+		if(useinfo!=null){
+			String userid = orderinfo.getUserid();
+			double amount = parseDouble(orderinfo.getOrderamount());
+			double couponmoney = parseDouble(useinfo.get("couponmoney"));
+			if(couponmoney<=amount){
+				useinfo.put("discountamount", couponmoney);
+			}else{
+				useinfo.put("discountamount", amount);
+			}
+			//使用优惠券
+			userdao.useCoupon(useinfo);
+			//更新优惠券的实际抵用金额
+			userdao.updateCouponDiscountamount(useinfo);
+			//优惠券使用明细
+			String couponid = (String) useinfo.get("couponidref");
+			Map<String,Object> couponinfo = userdao.getCouponInfo(couponid);
+			Map<String,Object> params = new HashMap<String,Object>();
+			params.put("id", GUIDGenerator.newGUID());
+			params.put("userid", userid);
+			params.put("couponidref", couponid);
+			params.put("usetype", 2);
+			params.put("amount", couponmoney);
+			params.put("remark", couponinfo!=null?couponinfo.get("name"):"");
+			userdao.addCouponDetail(params);
+		}
+	}
+
+	public void dillZFBPayed4OrgCancel(HttpServletRequest request, HttpServletResponse response) {
+		//根据支付结果，更改订单状态，并且返回支付宝“success”
+		String res = "success";
+		try{
+			String result_code = request.getParameter("trade_status");
+			if("TRADE_SUCCESS".equalsIgnoreCase(result_code)){
+				//机构订单
+				if(isZFBSignValid(request,"1")){
+					String out_trade_no = request.getParameter("out_trade_no");
+					//根据out_trade_no查询订单号，并且修改订单状态
+                	Map<String, Object> orderparam = new HashMap<String,Object>();
+                	orderparam.put("paymentstatus", "1");
+                	orderparam.put("outtradeno", out_trade_no);
+                	orderparam.put("paytype", "3");
+                	orderdao.payed4OrgOrder(orderparam);
+                	//更改交易流水
+                	Map<String,Object> tradeparam = new HashMap<String,Object>();
+                	tradeparam.put("outtradeno", out_trade_no);
+                	tradeparam.put("tradeno", request.getParameter("trade_no"));
+                	tradeparam.put("paymenttype", "0");
+                	orderdao.updateTradeInfo4OrgOrder(tradeparam);
+                	//3、记录
+                	Map<String,Object> tradeinfo = orderdao.getPayTradeRecord4Org(out_trade_no);
+                	String orderno = (String) tradeinfo.get("orderno");
+                	PassengerOrder order = orderdao.getOrderByOrderno4Org(orderno);
+                	double amount = 0;
+                	Map<String,Object> cancelinfo = orderdao.getCancelInfo4Org(orderno);
+                	if(cancelinfo!=null){
+                		amount = parseDouble(cancelinfo.get("cancelamount"));
+                	}
+            		Map<String,Object> expenses = new HashMap<String,Object>();
+            		expenses.put("logid", GUIDGenerator.newGUID());
+            		expenses.put("userid",order.getUserid());
+            		expenses.put("companyid",order.getCompanyid());
+            		expenses.put("expensetype","2");
+            		expenses.put("money",amount);
+            		expenses.put("remark","订单支付");
+            		expenses.put("tradetype","1");
+            		expenses.put("detailtype","1");
+            		expenses.put("operateresult","0");
+            		userdao.addExpenses4OrgSec(expenses);
+				}else{
+					//签名失败
+					res = "failure";
+				}
+			}else{
+				//交易失败，返回失败
+				res = "failure";
+			}
+			response.getWriter().write(res);
+		}catch(Exception e){
+			//记录日志
+		}
+	}
+
+	public void dillWXPayed4OrgCancel(HttpServletRequest request, HttpServletResponse response) {
+		//根据支付结果，更改订单状态，并且返回微信“success”
+		response.setContentType("application/xml");
+		String res = "SUCCESS";
+		try{
+			 try {
+		            DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();  
+		            DocumentBuilder builder=factory.newDocumentBuilder();  
+		            Document doc = builder.parse(request.getInputStream()); 
+		            Node return_code = doc.getElementsByTagName("return_code").item(0);
+	                if(return_code!=null){
+	                    if("SUCCESS".equalsIgnoreCase(return_code.getFirstChild().getNodeValue())){
+	                    	Node result_code = doc.getElementsByTagName("result_code").item(0);
+	    		            if(result_code!=null&&"SUCCESS".equalsIgnoreCase(result_code.getFirstChild().getNodeValue())){
+	    		            	//attach存储订单号，根据订单号修改订单状态
+				            	Node out_trade_no = doc.getElementsByTagName("out_trade_no").item(0);
+		                    	String outtradeno = out_trade_no.getFirstChild().getNodeValue();
+	                    		//更新订单状态
+		                    	Map<String, Object> orderparam = new HashMap<String,Object>();
+		                    	orderparam.put("paymentstatus", "1");
+		                    	orderparam.put("outtradeno", outtradeno);
+		                    	orderparam.put("paytype", "2");
+		                    	orderdao.payed4OrgOrder(orderparam);
+		                    	//更改订单流水
+		                    	Map<String,Object> tradeparam = new HashMap<String,Object>();
+		                    	tradeparam.put("outtradeno", outtradeno);
+		                    	tradeparam.put("tradeno", doc.getElementsByTagName("transaction_id").item(0).getFirstChild().getNodeValue());
+		                    	tradeparam.put("paymenttype", "1");
+		                    	orderdao.updateTradeInfo4OrgOrder(tradeparam);
+		                    	
+		                    	//添加记录
+		                    	Map<String,Object> tradeinfo = orderdao.getPayTradeRecord4Org(outtradeno);
+		                    	String orderno = (String) tradeinfo.get("orderno");
+		                    	PassengerOrder order = orderdao.getOrderByOrderno4Org(orderno);
+		                    	double amount = 0;
+		                    	Map<String,Object> cancelinfo = orderdao.getCancelInfo4Org(orderno);
+		                    	if(cancelinfo!=null){
+		                    		amount = parseDouble(cancelinfo.get("cancelamount"));
+		                    	}
+		                		Map<String,Object> expenses = new HashMap<String,Object>();
+		                		expenses.put("logid", GUIDGenerator.newGUID());
+		                		expenses.put("userid",order.getUserid());
+		                		expenses.put("companyid",order.getCompanyid());
+		                		expenses.put("expensetype","1");
+		                		expenses.put("money",amount);
+		                		expenses.put("remark","订单支付");
+		                		expenses.put("tradetype","1");
+		                		expenses.put("detailtype","1");
+		                		expenses.put("operateresult","0");
+		                		userdao.addExpenses4OrgSec(expenses);
+	    		            }else{
+	    		                //签名失败记录日志并且返回失败
+	    		            	res = "FAIL";
+	    		            }
+	                    }else{
+	                        //支付失败
+	                        res = "FAIL";
+	                    }
+	                }else{
+	                	//解析参数格式失败
+	                    res = "FAIL";
+	                }
+		        } catch (Exception e) {
+		        	//异常记录日志
+		        	 res = "FAIL";
+		        }
+			 	writeMessge4WX(response, res);
+		}catch(Exception e){
+			//记录日志
+			e.printStackTrace();
+		}
+	}
+
+	public void dillZFBPayed4OpCancel(HttpServletRequest request, HttpServletResponse response) {
+		//根据支付结果，更改订单状态，并且返回支付宝“success”
+		String res = "success";
+		try{
+			String result_code = request.getParameter("trade_status");
+			if("TRADE_SUCCESS".equalsIgnoreCase(result_code)){
+				if(isZFBSignValid(request,"0")){
+					//个人订单
+					String out_trade_no = request.getParameter("out_trade_no");
+					Map<String,Object> tradeinfo = orderdao.getPayTradeRecord4OpTaxi(out_trade_no);
+					String userid = null;
+					double amount = 0;
+					if(tradeinfo!=null){
+						//出租车订单
+						//更改订单状态
+						String orderno = (String) tradeinfo.get("orderno");
+						Map<String, Object> orderparam = new HashMap<String,Object>();
+	                	orderparam.put("paymentstatus", "1");
+	                	orderparam.put("orderno", orderno);
+	                	orderparam.put("paytype", "3");
+	                	orderdao.payed4OpTaxiOrder(orderparam);
+	                	//更改交易流水
+	                	Map<String,Object> tradeparam = new HashMap<String,Object>();
+	                	tradeparam.put("outtradeno", out_trade_no);
+	                	tradeparam.put("tradeno", request.getParameter("trade_no"));
+	                	tradeparam.put("paymenttype", "0");
+	                	orderdao.updateTradeInfo4OpTaxiOrder(tradeparam);
+	                	Map<String,Object> param = new HashMap<String,Object>();
+	                	param.put("orderno", orderno);
+	                	Map<String,Object> optaxiorder = orderdao.getOrder4OpTaxi(param);
+	                	userid = (String) optaxiorder.get("userid");
+	                	Map<String,Object> cancelfee = orderdao.getCancelInfo4Optaxi(orderno);
+	                	if(cancelfee!=null){
+	                		amount = parseDouble(cancelfee.get("cancelamount"));
+	                	}
+						//添加记录
+						Map<String,Object> expenses = new HashMap<String,Object>();
+						expenses.put("logid", GUIDGenerator.newGUID());
+						expenses.put("userid",userid);
+						expenses.put("expensetype",2);
+						expenses.put("money",amount);
+						expenses.put("remark","支付宝支付");
+						expenses.put("tradetype","1");
+						expenses.put("detailtype","1");
+						expenses.put("operateresult","0");
+						userdao.addExpenses4OpSec(expenses);
+					}else{
+						//网约车订单
+						tradeinfo = orderdao.getPayTradeRecord4OpNetCar(out_trade_no);
+						//根据out_trade_no查询订单号，并且修改订单状态
+	                	Map<String, Object> orderparam = new HashMap<String,Object>();
+	                	orderparam.put("paymentstatus", "1");
+	                	orderparam.put("outtradeno", out_trade_no);
+	                	orderparam.put("paytype", "3");
+	                	orderdao.payed4OpOrder(orderparam);
+	                	//更改交易流水
+						Map<String,Object> tradeparam = new HashMap<String,Object>();
+	                	tradeparam.put("outtradeno", out_trade_no);
+	                	tradeparam.put("tradeno", request.getParameter("trade_no"));
+	                	tradeparam.put("paymenttype", "0");
+	                	orderdao.updateTradeInfo4OpOrder(tradeparam);
+
+	                	String orderno = (String) tradeinfo.get("orderno");
+	                	PassengerOrder order = orderdao.getOrderByOrderno4Op(orderno);
+	                	userid = order.getUserid();
+	                	Map<String,Object> cancelfee = orderdao.getCancelInfo4Opnetcar(orderno);
+	                	if(cancelfee!=null){
+	                		amount = parseDouble(cancelfee.get("cancelamount"));
+	                	}
+						//添加记录
+						Map<String,Object> expenses = new HashMap<String,Object>();
+						expenses.put("logid", GUIDGenerator.newGUID());
+						expenses.put("userid",userid);
+						expenses.put("expensetype",2);
+						expenses.put("money",amount);
+						expenses.put("remark","支付宝支付");
+						expenses.put("tradetype","1");
+						expenses.put("detailtype","1");
+						expenses.put("operateresult","0");
+						userdao.addExpenses4OpSec(expenses);
+					}
+				}else{
+					//签名失败
+					res = "failure";
+				}
+			}else{
+				//交易失败，返回失败
+				res = "failure";
+			}
+			response.getWriter().write(res);
+		}catch(Exception e){
+			//记录日志
+		}
+	}
+
+	public void dillWXPayed4OpCancel(HttpServletRequest request, HttpServletResponse response) {
+		//根据支付结果，更改订单状态，并且返回微信“success”
+		response.setContentType("application/xml");
+		String res = "SUCCESS";
+		try{
+			 try {
+		            DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();  
+		            DocumentBuilder builder=factory.newDocumentBuilder();  
+		            Document doc = builder.parse(request.getInputStream()); 
+		            Node return_code = doc.getElementsByTagName("return_code").item(0);
+	                if(return_code!=null){
+	                    if("SUCCESS".equalsIgnoreCase(return_code.getFirstChild().getNodeValue())){
+	                    	Node result_code = doc.getElementsByTagName("result_code").item(0);
+	    		            if(result_code!=null&&"SUCCESS".equalsIgnoreCase(result_code.getFirstChild().getNodeValue())){
+	    		            	//attach存储订单号，根据订单号修改订单状态
+				            	Node out_trade_no = doc.getElementsByTagName("out_trade_no").item(0);
+		                    	String outtradeno = out_trade_no.getFirstChild().getNodeValue();
+		                    	Map<String,Object> tradeinfo = orderdao.getPayTradeRecord4OpTaxi(outtradeno);
+		    					String userid = null;
+		    					double amount = 0;
+		    					if(tradeinfo!=null){
+		    						//出租车订单
+		    						//更改订单状态
+		    						String orderno = (String) tradeinfo.get("orderno");
+		    						Map<String, Object> orderparam = new HashMap<String,Object>();
+		    	                	orderparam.put("paymentstatus", "1");
+		    	                	orderparam.put("orderno", orderno);
+		    	                	orderparam.put("paytype", "2");
+		    	                	orderdao.payed4OpTaxiOrder(orderparam);
+		    	                	//更改交易流水
+		    	                	Map<String,Object> tradeparam = new HashMap<String,Object>();
+		    	                	String tradeno = doc.getElementsByTagName("transaction_id").item(0).getFirstChild().getNodeValue();
+		    	                	tradeparam.put("outtradeno", outtradeno);
+		    	                	tradeparam.put("tradeno", tradeno);
+		    	                	tradeparam.put("paymenttype", "1");
+		    	                	orderdao.updateTradeInfo4OpTaxiOrder(tradeparam);
+		    	                	Map<String,Object> param = new HashMap<String,Object>();
+		    	                	param.put("orderno", orderno);
+		    	                	Map<String,Object> optaxiorder = orderdao.getOrder4OpTaxi(param);
+		    	                	userid = (String) optaxiorder.get("userid");
+		    	                	Map<String,Object> cancelfee = orderdao.getCancelInfo4Optaxi(orderno);
+		    	                	if(cancelfee!=null){
+		    	                		amount = parseDouble(cancelfee.get("cancelamount"));
+		    	                	}
+									//添加记录
+									Map<String,Object> expenses = new HashMap<String,Object>();
+									expenses.put("logid", GUIDGenerator.newGUID());
+									expenses.put("userid",userid);
+									expenses.put("expensetype",1);
+									expenses.put("money",amount);
+									expenses.put("remark","微信支付");
+									expenses.put("tradetype","1");
+									expenses.put("detailtype","1");
+									expenses.put("operateresult","0");
+									userdao.addExpenses4OpSec(expenses);
+		    					}else{
+		    						//网约车订单
+		    						tradeinfo = orderdao.getPayTradeRecord4OpNetCar(outtradeno);
+		    						//根据out_trade_no查询订单号，并且修改订单状态
+		    	                	Map<String, Object> orderparam = new HashMap<String,Object>();
+		    	                	orderparam.put("paymentstatus", "1");
+		    	                	orderparam.put("outtradeno", outtradeno);
+		    	                	orderparam.put("paytype", "2");
+		    	                	orderdao.payed4OpOrder(orderparam);
+		    	                	//更改交易流水
+		    						Map<String,Object> tradeparam = new HashMap<String,Object>();
+		    						String tradeno = doc.getElementsByTagName("transaction_id").item(0).getFirstChild().getNodeValue();
+		    	                	tradeparam.put("outtradeno", outtradeno);
+		    	                	tradeparam.put("tradeno", tradeno);
+		    	                	tradeparam.put("paymenttype", "1");
+		    	                	orderdao.updateTradeInfo4OpOrder(tradeparam);
+		    	                	
+		    	                	String orderno = (String) tradeinfo.get("orderno");
+		    	                	PassengerOrder order = orderdao.getOrderByOrderno4Op(orderno);
+		    	                	userid = order.getUserid();
+		    	                	Map<String,Object> cancelfee = orderdao.getCancelInfo4Opnetcar(orderno);
+		    	                	if(cancelfee!=null){
+		    	                		amount = parseDouble(cancelfee.get("cancelamount"));
+		    	                	}
+									//添加记录
+									Map<String,Object> expenses = new HashMap<String,Object>();
+									expenses.put("logid", GUIDGenerator.newGUID());
+									expenses.put("userid",userid);
+									expenses.put("expensetype",1);
+									expenses.put("money",amount);
+									expenses.put("remark","微信支付");
+									expenses.put("tradetype","1");
+									expenses.put("detailtype","1");
+									expenses.put("operateresult","0");
+									userdao.addExpenses4OpSec(expenses);
+		    					}
+	    		            }else{
+	    		            	//签名失败记录日志并且返回失败
+	    		            	res = "FAIL";
+	    		            }
+	                    }else{
+	                        //支付失败
+	                        res = "FAIL";
+	                    }
+	                }else{
+	                	//解析参数格式失败
+	                    res = "FAIL";
+	                }
+		        } catch (Exception e) {
+		        	//异常记录日志
+		        	 res = "FAIL";
+		        }
+			 	writeMessge4WX(response, res);
+		}catch(Exception e){
+			//记录日志
+		}
+	}
+	
 }

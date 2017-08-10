@@ -556,7 +556,7 @@ function initGridWaitCheck(id) {
 					}
 				}
 			},
-	        {mDataProp: "ordertype", sTitle: "类型", sClass: "center", sortable: true },
+	        {mDataProp: "ordertype", sTitle: "订单类型", sClass: "center", sortable: true },
 	        //{mDataProp: "orderno", sTitle: "订单号", sClass: "center", sortable: true },
 	        {
                 //自定义操作列
@@ -571,13 +571,59 @@ function initGridWaitCheck(id) {
                     return html;
                 }
             },
-	        {mDataProp: "orderstatus", sTitle: "订单状态", sClass: "center", sortable: true },
-	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true },
+	        //{mDataProp: "orderstatus", sTitle: "订单状态", sClass: "center", sortable: true },
+            {mDataProp: "expensetype", sTitle: "费用类型", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (data == 1) {
+							return "行程服务";
+						} else if (data == 2) {
+							return "取消处罚";
+						}
+					} else {
+						return "";
+					}
+				}
+            },
+	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true, 
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return full.orderamount;
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
+				}
+	        },
 	        {mDataProp: "mileage", sTitle: "里程(公里)", sClass: "center", sortable: true, 
 	        	"mRender": function(data, type, full) {
-	        		return (full.mileage/1000).toFixed(1);
+	        		if (data != null) {
+						if (full.orderstatus == '7') {
+							return (full.mileage/1000).toFixed(1);
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
 	        	}
 	        },
+	        {mDataProp: "cancelamount", sTitle: "取消费用(元)", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return "/";
+						} else if (full.orderstatus == '8') {
+							return full.cancelamount;
+						}
+					} else {
+						return "/";
+					}
+				}
+            },
 	        {mDataProp: "userid", sTitle: "下单人", sClass: "center", sortable: true },
 	        {mDataProp: "passengers", sTitle: "乘车人", sClass: "center", sortable: true }
         ]
@@ -711,7 +757,8 @@ function manualGenerate(){
 
 	$("#startTimeManual").val("");
 	$("#endTimeManual").val("");
-	$("#billStateManual").val("");
+	//$("#billStateManual").val("");
+	$("#expensetypeManual").val("");
 	
 	map = {};
 	checknum = 0;
@@ -780,9 +827,15 @@ function initGridManual() {
 				"bSearchable" : false,
 				"sortable" : false,
 				"mRender" : function(data, type, full) {
+					var orderamount = 0;
+					if (full.orderstatus == '7') {
+						orderamount = full.orderamount;
+					} else if (full.orderstatus == '8') {
+						orderamount = full.cancelamount;
+					}
 					var html = "";
 					html += '<input type="checkbox" id="checkOrderManual' + full.orderno + '" name="checkOrderManual" value="'
-							+ full.orderno + '" amountvalue="' + full.orderamount
+							+ full.orderno + '" amountvalue="' + orderamount
 							+ '" onclick="onClickManualHander(this)"></input>';
 					return html;
 				}
@@ -801,7 +854,7 @@ function initGridManual() {
 					}
 				}
 			},
-	        {mDataProp: "ordertype", sTitle: "类型", sClass: "center", sortable: true },
+	        {mDataProp: "ordertype", sTitle: "订单类型", sClass: "center", sortable: true },
 	        //{mDataProp: "orderno", sTitle: "订单号", sClass: "center", sortable: true },
 	        {
                 //自定义操作列
@@ -817,7 +870,7 @@ function initGridManual() {
                 }
             },
 	        //{mDataProp: "orderstatus", sTitle: "订单状态", sClass: "center", sortable: true },
-	        {
+	        /*{
 				mDataProp : "orderstatus",
 				sTitle : "订单状态",
 				sClass : "center",
@@ -835,13 +888,59 @@ function initGridManual() {
 						return "";
 					}
 				}
-			},
-	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true },
+			},*/
+            {mDataProp: "expensetype", sTitle: "费用类型", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (data == 1) {
+							return "行程服务";
+						} else if (data == 2) {
+							return "取消处罚";
+						}
+					} else {
+						return "";
+					}
+				}
+            },
+	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true, 
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return full.orderamount;
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
+				}
+	        },
 	        {mDataProp: "mileage", sTitle: "里程(公里)", sClass: "center", sortable: true, 
 	        	"mRender": function(data, type, full) {
-	        		return (full.mileage/1000).toFixed(1);
+	        		if (data != null) {
+						if (full.orderstatus == '7') {
+							return (full.mileage/1000).toFixed(1);
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
 	        	}
 	        },
+	        {mDataProp: "cancelamount", sTitle: "取消费用(元)", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return "/";
+						} else if (full.orderstatus == '8') {
+							return full.cancelamount;
+						}
+					} else {
+						return "/";
+					}
+				}
+            },
 	        {mDataProp: "userid", sTitle: "下单人", sClass: "center", sortable: true },
 	        {mDataProp: "passengers", sTitle: "乘车人", sClass: "center", sortable: true }
         ]
@@ -868,7 +967,8 @@ function searchManual() {
 		{ "name": "organId", "value": $("#organIdManual").val() },
 		{ "name": "startTime", "value": $("#startTimeManual").val() },
 		{ "name": "endTime", "value": $("#endTimeManual").val() },
-		{ "name": "billState", "value": $("#billStateManual").val() }
+		//{ "name": "billState", "value": $("#billStateManual").val() }
+		{ "name": "expensetype", "value": $("#expensetypeManual").val() }
 	];
 	dataGridManual.fnSearch(conditionArr,"没有查询到未结算订单数据");
 	$("#searchDiv").show();
@@ -1038,4 +1138,17 @@ function clearParameter() {
  */
 function exportOrderExcel() {
 	window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") + "OrganBill/GetOrgOrderListExport?billsId="+$("#billId").text()+"&billName="+$("#billName").text()+"&shortName="+$("#billShortName").text()+"&remark="+$("#billRemark").text()+"&money="+$("#billMoney").text()+"&check=1";
+}
+
+/**
+ * 清空-手动生成账单
+ */
+function clearManual() {
+	initSelect();
+	//$("#organIdManual").select2("val","");
+	$("#startTimeManual").val("");
+	$("#endTimeManual").val("");
+	$("#expensetypeManual").val("");
+
+	searchManual();
 }

@@ -74,6 +74,11 @@ public class LoginParam {
 	 * app的版本号
 	 */
 	private String appversion;
+	
+	/**
+	 * 登录城市
+	 */
+	private String city;
 
 	public String getAppversion() {
 		return appversion;
@@ -177,5 +182,13 @@ public class LoginParam {
 
 	public void setVversion(String vversion) {
 		this.vversion = vversion;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
 	}
 }

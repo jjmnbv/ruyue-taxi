@@ -276,6 +276,7 @@ public class OrganBillController extends BaseController {
 		List<Object> colData5 = new ArrayList<Object>();
 		List<Object> colData6 = new ArrayList<Object>();
 		List<Object> colData7 = new ArrayList<Object>();
+		List<Object> colData8 = new ArrayList<Object>();
 		OrganBillQueryParam queryParam = new OrganBillQueryParam();
 		queryParam.setLeasesCompanyId(user.getLeasescompanyid());
 		queryParam.setOrganId(organId);
@@ -295,12 +296,14 @@ public class OrganBillController extends BaseController {
 			colData5.add(String.valueOf(orgOrganBill.get(i).get("money")));
 			colData6.add((String) orgOrganBill.get(i).get("operationTime"));
 			colData7.add((String) orgOrganBill.get(i).get("createTime"));
+			colData8.add((String) orgOrganBill.get(i).get("id"));
 		}
 		Excel excel = new Excel();
 		// excel文件
 		File tempFile = new File("机构账单.xls");
 		
 		List<String> colName = new ArrayList<String>();
+		colName.add("账单编号");
 		colName.add("账单来源");
 		colName.add("账单名称");
 		colName.add("机构");
@@ -309,6 +312,7 @@ public class OrganBillController extends BaseController {
 		colName.add("最后更新时间");
 		colName.add("账单生成时间");
 		excel.setColName(colName);
+		colData.put("账单编号", colData8);
 		colData.put("账单来源", colData1);
 		colData.put("账单名称", colData2);
 		colData.put("机构", colData3);
@@ -441,6 +445,8 @@ public class OrganBillController extends BaseController {
 		List<Object> colData10 = new ArrayList<Object>();
 		List<Object> colData11 = new ArrayList<Object>();
 		List<Object> colData12 = new ArrayList<Object>();
+		List<Object> colData13 = new ArrayList<Object>();
+		List<Object> colData14 = new ArrayList<Object>();
 		OrganBillQueryParam queryParam = new OrganBillQueryParam();
 		queryParam.setLeasesCompanyId(user.getLeasescompanyid());
 		queryParam.setBillsId(request.getParameter("billsId"));
@@ -449,32 +455,61 @@ public class OrganBillController extends BaseController {
 		for (int i = 0; i < orgOrganBill.size(); i++) {
 			colData1.add((String) orgOrganBill.get(i).get("ordertype"));
 			colData2.add((String) orgOrganBill.get(i).get("orderno"));
-			colData3.add((String) orgOrganBill.get(i).get("orderstatus"));
-			colData4.add(String.valueOf(orgOrganBill.get(i).get("orderamount")));
-			// 里程(公里)
-			Double mileage = (Double) orgOrganBill.get(i).get("mileage");
-			BigDecimal mileages = new BigDecimal(mileage/1000);
-			colData5.add(String.valueOf(mileages.setScale(1, BigDecimal.ROUND_FLOOR)));
-			// 计费时长(分钟)
-			String priceCopy = (String) orgOrganBill.get(i).get("pricecopy");
-			JSONObject priceCopyJson = JSONObject.fromObject(priceCopy);
-			if ("1".equals(String.valueOf(priceCopyJson.get("timetype")))) {// 1-低速用时
-				colData6.add(String.valueOf(priceCopyJson.get("slowtimes")));
-			} else if ("0".equals(String.valueOf(priceCopyJson.get("timetype")))) {// 0-总用时
-				DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				BigDecimal startTime = new BigDecimal(format.parse((String) orgOrganBill.get(i).get("starttime")).getTime());
-				BigDecimal endTime = new BigDecimal(format.parse((String) orgOrganBill.get(i).get("endtime")).getTime());
-				//long interval = (endTime - startTime)/(1000*60);
-				BigDecimal interval = endTime.subtract(startTime).divide(new BigDecimal("1000").multiply(new BigDecimal("60")), 0, BigDecimal.ROUND_UP);
-				colData6.add(String.valueOf(interval));
+			colData3.add((String) orgOrganBill.get(i).get("paymentstatus"));
+			
+			if ("7".equals(orgOrganBill.get(i).get("orderstatus").toString())) {
+				colData4.add(String.valueOf(orgOrganBill.get(i).get("orderamount")));
+				// 里程(公里)
+				Double mileage = (Double) orgOrganBill.get(i).get("mileage");
+				BigDecimal mileages = new BigDecimal(mileage/1000);
+				colData5.add(String.valueOf(mileages.setScale(1, BigDecimal.ROUND_FLOOR)));
+				// 计费时长(分钟)
+				String priceCopy = (String) orgOrganBill.get(i).get("pricecopy");
+				JSONObject priceCopyJson = JSONObject.fromObject(priceCopy);
+				if ("1".equals(String.valueOf(priceCopyJson.get("timetype")))) {// 1-低速用时
+					colData6.add(String.valueOf(priceCopyJson.get("slowtimes")));
+				} else if ("0".equals(String.valueOf(priceCopyJson.get("timetype")))) {// 0-总用时
+					DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					BigDecimal startTime = new BigDecimal(format.parse((String) orgOrganBill.get(i).get("starttime")).getTime());
+					BigDecimal endTime = new BigDecimal(format.parse((String) orgOrganBill.get(i).get("endtime")).getTime());
+					//long interval = (endTime - startTime)/(1000*60);
+					BigDecimal interval = endTime.subtract(startTime).divide(new BigDecimal("1000").multiply(new BigDecimal("60")), 0, BigDecimal.ROUND_UP);
+					colData6.add(String.valueOf(interval));
+				}
+				// 处罚金额
+				colData14.add("/");
+			} else {
+				colData4.add("/");
+				colData5.add("/");
+				colData6.add("/");
+				if (orgOrganBill.get(i).get("cancelamount") != null) {
+					colData14.add(String.valueOf(orgOrganBill.get(i).get("cancelamount")));
+				} else {
+					colData14.add("/");
+				}
 			}
 
 			colData7.add((String) orgOrganBill.get(i).get("userid"));
 			colData8.add((String) orgOrganBill.get(i).get("passengers"));
 			colData9.add((String) orgOrganBill.get(i).get("driverid"));
 			colData10.add((String) orgOrganBill.get(i).get("endtime"));
-			colData11.add((String) orgOrganBill.get(i).get("vehiclessubjecttype"));
-			colData12.add((String) orgOrganBill.get(i).get("vehiclessubject"));
+			
+			if (orgOrganBill.get(i).get("vehiclessubjecttype") != null) {
+				colData11.add((String) orgOrganBill.get(i).get("vehiclessubjecttype"));
+			} else {
+				colData11.add("/");
+			}
+			if (orgOrganBill.get(i).get("vehiclessubject") != null) {
+				colData12.add((String) orgOrganBill.get(i).get("vehiclessubject"));
+			} else {
+				colData12.add("/");
+			}
+
+			if ("1".equals(orgOrganBill.get(i).get("expensetype").toString())) {
+				colData13.add("行程服务");
+			} else {
+				colData13.add("取消处罚");
+			}
 		}
 		Excel excel = new Excel();
 		// excel文件
@@ -490,9 +525,11 @@ public class OrganBillController extends BaseController {
 		colName.add("类型");
 		colName.add("订单号");
 		colName.add("订单状态");
+		colName.add("费用类型");
 		colName.add("订单金额(元)");
 		colName.add("里程(公里)");
 		colName.add("计费时长(分钟)");
+		colName.add("处罚金额(元)");
 		colName.add("下单人");
 		colName.add("乘车人");
 		colName.add("司机信息");
@@ -503,9 +540,11 @@ public class OrganBillController extends BaseController {
 		colData.put("类型", colData1);
 		colData.put("订单号", colData2);
 		colData.put("订单状态", colData3);
+		colData.put("费用类型", colData13);
 		colData.put("订单金额(元)", colData4);
 		colData.put("里程(公里)", colData5);
 		colData.put("计费时长(分钟)", colData6);
+		colData.put("处罚金额(元)", colData14);
 		colData.put("下单人", colData7);
 		colData.put("乘车人", colData8);
 		colData.put("司机信息", colData9);

@@ -1,5 +1,10 @@
 package com.szyciov.carservice.dao;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
 import com.szyciov.carservice.mapper.MileageApiMapper;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.PubDrivertrack;
@@ -7,9 +12,6 @@ import com.szyciov.entity.PubOrdergpsdata;
 import com.szyciov.entity.PubOrdermileagecalcLog;
 import com.szyciov.op.entity.PubVehicle;
 import org.springframework.stereotype.Repository;
-
-import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * Created by shikang on 2017/5/19.
@@ -73,5 +75,13 @@ public class MileageApiDao {
 
     public PubOrdergpsdata getBaiduOffset(PubOrdergpsdata object) {
         return mileageApiMapper.getBaiduOffset(object);
+    }
+
+    public List<Map<String, Object>> getOrderMileageCalctypeCount(Map<String, Object> param) {
+        return mileageApiMapper.getOrderMileageCalctypeCount(param);
+    }
+
+    public String getOrderMileageCalctypePhone() {
+        return mileageApiMapper.getOrderMileageCalctypePhone();
     }
 }

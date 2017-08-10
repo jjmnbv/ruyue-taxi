@@ -457,23 +457,10 @@
 	</select>
 	
 	<select id="getFavUserCount" resultType="int" parameterType="Select2Param">
-		select count(*) from (SELECT
+		SELECT COUNT(aa.id) from (SELECT
 			fav.*,CONCAT(fav.name,fav.phone) namephone
 		FROM
 		(
-			(
-				SELECT
-					om.*
-				FROM
-					pub_mostcontact om,
-					org_user ou
-		  	WHERE
-					om.`status` = 1
-				AND ou.`status` = 1
-				AND om.userphone = ou.account
-				AND ou.account = #{userid}
-			)
-			UNION
 			(
 				SELECT
 					ou.id,
@@ -489,13 +476,28 @@
 					org_user ou
 				WHERE
 				 	ou.`status` = 1
-					AND ou.account = #{userid}
+					AND ou.id = #{userid}
+			)
+			UNION
+			(
+				SELECT
+					om.*
+				FROM
+					pub_mostcontact om,
+					org_user ou
+		  		WHERE
+					om.`status` = 1
+				AND ou.`status` = 1
+				AND om.userphone = ou.account
+				AND om.phone != ou.account
+				AND ou.id = #{userid}
 			)
 		) fav
 		<if test="sSearch != null and sSearch != ''">
-		WHERE (fav.phone like '%${sSearch}%' OR fav.name like '%${sSearch}%')
+		WHERE
+			(fav.phone like '%${sSearch}%' OR fav.name like '%${sSearch}%')
 		</if>
-		group by CONCAT(fav.name,fav.phone))aa
+		GROUP BY CONCAT(fav.name,fav.phone))aa
 	</select>
 	
 	<select id="getFavUser" resultType="FavUser" parameterType="Select2Param">
@@ -518,7 +520,7 @@
 					org_user ou
 				WHERE
 				 	ou.`status` = 1
-					AND ou.account = #{userid}
+					AND ou.id = #{userid}
 			)
 			UNION
 			(
@@ -527,18 +529,19 @@
 				FROM
 					pub_mostcontact om,
 					org_user ou
-		  	WHERE
+		  		WHERE
 					om.`status` = 1
 				AND ou.`status` = 1
 				AND om.userphone = ou.account
-				AND ou.account = #{userid}
+				AND om.phone != ou.account
+				AND ou.id = #{userid}
 			)
 		) fav
 		<if test="sSearch != null and sSearch != ''">
 		WHERE
 			(fav.phone like '%${sSearch}%' OR fav.name like '%${sSearch}%')
 		</if>
-		group by CONCAT(fav.name,fav.phone)
+		GROUP BY CONCAT(fav.name,fav.phone)
 		LIMIT ${iDisplayStart},${iDisplayLength}
 	</select>
 

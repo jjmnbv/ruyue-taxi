@@ -201,6 +201,7 @@ toastr.options = {
  */
 function renderGrid(gridObj) {
 	var params = {
+		rowCallback:gridObj.rowCallback ? gridObj.rowCallback : null,
 		bProcessing: gridObj.bProcessing ? gridObj.bProcessing : false,
 		bServerSide: gridObj.bServerSide ? gridObj.bServerSide : true,
 		lengthChange: gridObj.hasOwnProperty("lengthChange") ? gridObj.lengthChange : false,
@@ -316,6 +317,31 @@ function formatTimeForDetail(time){
 	var minute = datetime.getMinutes()< 10 ? "0" + datetime.getMinutes() : datetime.getMinutes();
 	var second = datetime.getSeconds()< 10 ? "0" + datetime.getSeconds() : datetime.getSeconds();
 	return month + "/" + date+" "+hour+":"+minute;
+}
+
+/**
+ * 时间格式化
+ * @param fmt
+ * @param date
+ * @returns {*}
+ */
+function dateFtt(datetime, fmt) {
+    var date = new Date(datetime);
+    var o = {
+        "M+" : date.getMonth()+1,                 //月份
+        "d+" : date.getDate(),                    //日
+        "h+" : date.getHours(),                   //小时
+        "m+" : date.getMinutes(),                 //分
+        "s+" : date.getSeconds(),                 //秒
+        "q+" : Math.floor((date.getMonth()+3)/3), //季度
+        "S"  : date.getMilliseconds()             //毫秒
+    };
+    if(/(y+)/.test(fmt))
+        fmt=fmt.replace(RegExp.$1, (date.getFullYear()+"").substr(4 - RegExp.$1.length));
+    for(var k in o)
+        if(new RegExp("("+ k +")").test(fmt))
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+    return fmt;
 }
 
 //手机号码验证
@@ -608,4 +634,56 @@ function changeCity1(container, defValue, callbackFn) {
 		cityMarkid: defValue,
 		callbackFn: callbackFn
 	});
+}
+
+/**
+ * 初始化多文本框
+ * @param content
+ */
+function initUeditor(content, length,flag) {
+	var ue = UE.getEditor(content, {
+		toolbars:[
+			[
+			 'undo', //撤销
+			 'redo', //重做
+			 'bold', //加粗
+			 'indent', //首行缩进
+			 'italic', //斜体
+			 'underline', //下划线
+			 'strikethrough', //删除线
+			 'subscript', //下标
+			 'fontborder', //字符边框
+			 'superscript', //上标
+			 'formatmatch', //格式刷
+			 'source', //源代码
+			 'pasteplain', //纯文本粘贴模式
+			 'horizontal', //分隔线
+			 'removeformat', //清除格式
+			 'cleardoc', //清空文档
+			 'fontfamily', //字体
+			 'fontsize', //字号
+			 'paragraph', //段落格式
+			 'justifyleft', //居左对齐
+			 'justifyright', //居右对齐
+			 'justifycenter', //居中对齐
+			 'justifyjustify', //两端对齐
+			 'forecolor', //字体颜色
+			 'insertorderedlist', //有序列表
+			 'insertunorderedlist', //无序列表
+			 'fullscreen', //全屏
+			 'directionalityltr', //从左向右输入
+			 'directionalityrtl', //从右向左输入
+			 'rowspacingtop', //段前距
+			 'rowspacingbottom', //段后距
+			 'lineheight' //行间距
+			]
+		],
+		initialFrameHeight: 400, //初始化编辑器宽度
+		allHtmlEnabled: true, //提交到后台的数据是否包含整个html字符串
+		maximumWords: length, //允许的最大字数
+		elementPathEnabled: false, //是否启用元素路径
+		readonly:flag ? flag : false,
+		wordOverFlowMsg: "协议内容最多只能输入" + length + "个字符" //超出字数限制提示
+	});
+	return ue;
 }

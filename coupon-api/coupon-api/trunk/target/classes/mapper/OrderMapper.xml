@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.coupon.mapper.OrderMapper">
+
+
+    <select id="getOrderCount" resultType="Integer" parameterType="OrderQueryParam">
+        select
+          COUNT(t.orderno)
+        from ${tbName} t
+        where
+        t.endtime BETWEEN #{startDt} AND #{endDt}
+        and t.companyid = #{companyid}
+        and t.oncity = #{cityCode}
+        and t.orderstatus = '7'
+        and t.userid = #{userId} and t.`status` = '1'
+    </select>
+
+    <select id="listOrderMoney" resultType="Double" parameterType="OrderQueryParam">
+        select
+          t.actualpayamount
+        from ${tbName} t
+        where
+        t.completetime BETWEEN #{startDt} AND #{endDt}
+        and t.orderstatus = '7'
+        and t.oncity = #{cityCode}
+        and t.companyid = #{companyid}
+        and t.userid = #{userId} and t.`status` = '1'
+    </select>
+
+
+    <select id="listOrderByEndTime" resultType="OrderInfoDTO" parameterType="OrderQueryParam">
+        select
+          companyid,userid
+        from ${tbName} t
+        where
+          t.endtime BETWEEN #{startDt} AND #{endDt}
+          and t.orderstatus = '7'
+          and t.oncity = #{cityCode}
+          and t.companyid = #{companyid}
+          and t.`status` = '1'
+        group by companyid,userid
+    </select>
+
+    <select id="listOrderByComplTime" resultType="OrderInfoDTO" parameterType="OrderQueryParam">
+        select
+          companyid,userid
+        from ${tbName} t
+        where
+          t.completetime BETWEEN #{startDt} AND #{endDt}
+          and t.`status` = '1'
+          and t.oncity = #{cityCode}
+          and t.companyid = #{companyid}
+          and t.orderstatus = '7'
+        group by companyid,userid
+    </select>
+
+
+    <select id="listOrderByConsume" resultType="OrderInfoDTO" parameterType="OrderQueryParam">
+        select
+        companyid,userid,oncity
+        from ${tbName} t
+        where
+        (t.completetime BETWEEN #{startDt} AND #{endDt}
+        or t.endtime BETWEEN #{startDt} AND #{endDt}
+        )
+        and t.`status` = '1'
+        and t.orderstatus = '7'
+        group by companyid,userid,oncity
+    </select>
+</mapper>

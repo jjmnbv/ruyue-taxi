@@ -3,9 +3,18 @@ package com.szyciov.passenger;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
+
+import com.szyciov.entity.Retcode;
+import com.szyciov.util.SystemConfig;
+import com.szyciov.util.TemplateHelper;
 import com.szyciov.util.UserTokenManager;
 
+import net.sf.json.JSONObject;
+
 public class Const {
+	private static final Logger logger = Logger.getLogger(Const.class);
 	/**
 	 * app端广告页的type
 	 */
@@ -96,6 +105,8 @@ public class Const {
 	public static final String INTERFACE_V3_0_1 = "v3.0.1";
 
 	public static final String INTERFACE_V3_0_2 = "v3.0.2";
+	
+	public static final String INTERFACE_V4_0_1 = "v4.0.1";
 
 	/**
 	 * 机构订单类型
@@ -123,5 +134,23 @@ public class Const {
 		userinfo.put("usertype", usertype);
 		userinfo.put("account", account);
 		return userinfo;
+	}
+	
+	/**
+	 * 触发优惠券的发放
+	 * @param templateHelper
+	 * @param params
+	 * @return
+	 */
+	public static Map<String,Object> grenerateCoupon(TemplateHelper templateHelper,Map<String,Object> params){
+		Map<String,Object> res = new HashMap<String,Object>();
+	    res.put("status", Retcode.OK.code);
+	    res.put("message",Retcode.OK.msg);
+		try{
+			templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/grenerate", HttpMethod.POST, null, params, JSONObject.class);
+		}catch(Exception e){
+			logger.error("优惠券触发出错",e);
+		}
+		return res;
 	}
 }

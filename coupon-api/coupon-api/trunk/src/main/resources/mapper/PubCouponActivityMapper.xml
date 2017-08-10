@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.coupon.mapper.PubCouponActivityMapper">
+
+
+    <select id="listValidActivity" resultType="CouponActivityDTO" parameterType="CouponActivityQueryParam" >
+        select t.id,t.lecompanyid,t.sendruletarget,t.sendservicetype,t.couponrule
+        from pub_coupon_activity t
+        where #{nowDt}
+        BETWEEN t.sendstarttime  and t.sendendtime
+        and t.sendruletype = #{ruleType}
+    </select>
+
+</mapper>

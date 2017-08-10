@@ -83,7 +83,7 @@
 				<h3>
 					订单信息 <span class="daochu" style="cursor: pointer;" onclick="exportExcel();">导出数据</span>
 				</h3>
-				<div class="select_box queryOrder">
+				<div class="select_box queryOrder" style="width: 17%;">
 					<input placeholder="全部订单状态" class="select_val" data-value="" value="" id="queryOrder">
 					<ul class="select_content">
 						<li data-value="">全部订单状态</li>
@@ -96,11 +96,12 @@
 						<li data-value="7-2">结算中</li>
 						<li data-value="7-3">已结算</li>
 						<!-- <li data-value="9">已完成</li> -->
+						<li data-value="7-9">已关闭</li>
 						<li data-value="8">已取消</li>
 					</ul>
 					<input id="queryOrders" value="" type="hidden"/>
 				</div>
-				<div class="select_box queryVehicleMode">
+				<div class="select_box queryVehicleMode" style="width: 16%;">
 					<input placeholder="全部用车方式" class="select_val" data-value="" value="" id="queryVehicleMode">
 					<ul class="select_content">
 						<li data-value="">全部用车方式</li>
@@ -110,7 +111,7 @@
 					</ul>
 					<input id="queryVehicleModes" value="" type="hidden"/>
 				</div>
-				<div class="select_box queryPaymentMethod">
+				<div class="select_box queryPaymentMethod" style="width: 16%;">
 					<input placeholder="全部支付方式" class="select_val" data-value="" value="" id="queryPaymentMethod">
 					<ul class="select_content">
 						<li data-value="">全部支付方式</li>
@@ -119,6 +120,15 @@
 						<!-- <li data-value="1">个人垫付</li> -->
 					</ul>
 					<input id="queryPaymentMethods" value="" type="hidden"/>
+				</div>
+				<div class="select_box queryExpensetype" style="width: 16%;">
+					<input placeholder="全部费用类型" class="select_val" data-value="" value="" id="queryExpensetype">
+					<ul class="select_content">
+						<li data-value="">全部费用类型</li>
+						<li data-value="1">正常行驶</li>
+						<li data-value="2">取消处罚</li>
+					</ul>
+					<input id="queryExpensetypes" value="" type="hidden"/>
 				</div>
 				<button class="btn_grey" onclick="empty1();">清空</button>
 				<table id="dataGrid"></table>

@@ -423,6 +423,73 @@
 			pub_driver.id = #{driverid}
 	</select>
 	
+	<!-- 获取司机信息（新） -->
+	<select id="getDriverInfo4New" parameterType="Map" resultType="DriverInfo">
+		SELECT
+			pub_driver.*, (
+				SELECT
+					le_leasescompany.name
+				FROM
+					le_leasescompany
+				WHERE
+					le_leasescompany. STATUS = 1
+				AND le_leasescompany.id = pub_driver.leasescompanyid
+			) AS leasescompany,
+			(
+				SELECT
+					CONCAT(
+						(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.value=pub_vehicle.platenoprovince and pub_dictionary.type='车牌省'),
+						(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.value=pub_vehicle.platenocity and pub_dictionary.type='车牌市'),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = #{vehicleid}
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = #{vehicleid}
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = #{vehicleid}
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = #{vehicleid}
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand
+		FROM
+			pub_driver
+		where
+		  pub_driver.id=#{driverid}
+	</select>
+	
 	<!-- 获取机构端订单详细信息 -->
 	<select id="getOrderByOrderno4Org" parameterType="String" resultType="PassengerOrder">
 		SELECT
@@ -724,7 +791,9 @@
 		op_order.offcity,
 		'' as paymentmethod,
 		op_order.usetype,
-		op_order.usercomment
+		op_order.usercomment,
+		op_order.expensetype,
+		op_order.vehicleid
 	</sql>
 	
 	<!-- 个人端出租车订单查询字段属性 -->
@@ -777,7 +846,9 @@
 		op_taxiorder.offcity,
 		op_taxiorder.paymentmethod,
 		op_taxiorder.usetype,
-		op_taxiorder.usercomment
+		op_taxiorder.usercomment,
+		op_taxiorder.expensetype,
+		op_taxiorder.vehicleid
 	</sql>
 	
 	<!-- org的字段查询 -->
@@ -830,7 +901,9 @@
 		org_order.offcity,
 		'' as paymentmethod,
 		org_order.usetype,
-		org_order.usercomment
+		org_order.usercomment,
+		org_order.expensetype,
+		org_order.vehicleid
 	</sql>
 	<!-- 结果map，调整int和boolan -->
 	<resultMap type="HashMap" id="orderdetail">
@@ -883,6 +956,8 @@
 		<result column="paymentmethod" property="paymentmethod" javaType="String"></result>
 		<result column="usetype" property="usetype" javaType="String"></result>
 		<result column="usercomment" property="usercomment" javaType="String"></result>
+		<result column="expensetype" property="expensetype" javaType="int"></result>
+		<result column="vehicleid" property="vehicleid" javaType="String"></result>
 		
 		<result column="name" property="name" javaType="String"></result>
 		<result column="phone" property="phone" javaType="String"></result>
@@ -2113,6 +2188,66 @@
 	
 	<update id="setOrderdao4OpNetCar" parameterType="HashMap">
 		update op_order set op_order.orderstatus=#{orderstatus},op_order.cancelparty=#{cancelparty},op_order.updatetime=now() where op_order.orderno=#{orderno} and op_order.orderstatus in ('0','1')
+	</update>
+	
+	<!-- 获取订单的优惠券信息 -->
+	<select id="getOrderCouponInfo" parameterType="String" resultType="Map">
+		select * from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.usetype=2 and pub_coupon_use.billingorderid=#{orderno}
+	</select>
+	
+	<!-- 获取机构订单的取消信息 -->
+	<select id="getCancelInfo4Org" parameterType="String" resultType="Map">
+		select * from org_ordercancel where org_ordercancel.status=1 and org_ordercancel.cancelnature=1 
+		<![CDATA[
+			and org_ordercancel.cancelamount>0
+			and org_ordercancel.orderno=#{orderno}
+		]]>
+	</select>
+	
+	<!-- 获取出租车订单的取消信息 -->
+	<select id="getCancelInfo4Optaxi" parameterType="String" resultType="Map">
+		select * from op_taxiordercancel where op_taxiordercancel.status=1 and op_taxiordercancel.cancelnature=1 
+		<![CDATA[
+			and op_taxiordercancel.cancelamount>0
+			and op_taxiordercancel.orderno=#{orderno}
+		]]>
+	</select>
+	
+	<!-- 获取个人网约车订单的取消信息 -->
+	<select id="getCancelInfo4Opnetcar" parameterType="String" resultType="Map">
+		select * from op_ordercancel where op_ordercancel.status=1 and op_ordercancel.cancelnature=1 
+		<![CDATA[
+			and op_ordercancel.cancelamount>0
+			and op_ordercancel.orderno=#{orderno}
+		]]>
+	</select>
+	
+	<!-- 更新取消原因 -->
+	<update id="updateCancelReson4OrgNetCar" parameterType="Map">
+		UPDATE org_ordercancel
+		SET 
+			org_ordercancel.cancelreason = #{cancelreason},
+			org_ordercancel.updatetime = now()
+		WHERE
+			org_ordercancel.orderno=#{orderno}
+	</update>
+	
+	<update id="updateCancelReson4OpTaxi" parameterType="Map">
+		UPDATE op_taxiordercancel
+		SET 
+			op_taxiordercancel.cancelreason = #{cancelreason},
+			op_taxiordercancel.updatetime = now()
+		WHERE
+			op_taxiordercancel.orderno=#{orderno}
+	</update>
+	
+	<update id="updateCancelReson4OpNetCar" parameterType="Map">
+		UPDATE op_ordercancel
+		SET 
+			op_ordercancel.cancelreason = #{cancelreason},
+			op_ordercancel.updatetime = now()
+		WHERE
+			op_ordercancel.orderno=#{orderno}
 	</update>
 	
 </mapper>

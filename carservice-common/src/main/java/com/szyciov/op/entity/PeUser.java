@@ -116,6 +116,12 @@ public class PeUser {
 	 * 提现密码修改过的标识
 	 */
 	private int wdpwdchangestate;
+	
+	/**
+	 * 注册城市
+	 */
+	private String registercity;
+	
 	/**
 	 * 交易明细数
 	 */
@@ -339,5 +345,13 @@ public class PeUser {
 
 	public void setWdpwdchangestate(int wdpwdchangestate) {
 		this.wdpwdchangestate = wdpwdchangestate;
+	}
+
+	public String getRegistercity() {
+		return registercity;
+	}
+
+	public void setRegistercity(String registercity) {
+		this.registercity = registercity;
 	}
 }

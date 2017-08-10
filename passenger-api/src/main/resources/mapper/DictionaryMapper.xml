@@ -253,4 +253,15 @@
 	<select id="getYYFJF" resultType="Map">
 		select * from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type=#{type}
 	</select>
+	
+	<!-- 获取投诉列表 -->
+	<select id="getComplaints" resultType="String">
+		select DISTINCT(pub_dictionary.text) from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='投诉列表' ORDER BY pub_dictionary.createtime
+	</select>
+	
+	<!-- 获取取消原因 -->
+	<select id="getCancelResons" resultType="String">
+		select DISTINCT(pub_dictionary.text) from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='取消订单原因' ORDER BY pub_dictionary.createtime
+	</select>
+	
 </mapper>

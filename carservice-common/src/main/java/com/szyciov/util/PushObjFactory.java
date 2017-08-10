@@ -2,7 +2,6 @@ package com.szyciov.util;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -806,6 +805,8 @@ public class PushObjFactory {
 					.setNotification(Notification.newBuilder()
 		                    .addPlatformNotification(IosNotification.newBuilder()
 		                            .setAlert(alert)
+		                            //设置后台语音
+		                            .setSound("sound.m4r")
 		                            //消息类型
 									.addExtra("type", TASKORDER)
 									.addExtra("orderno", null2Blank(orderinfo.getOrderno()))

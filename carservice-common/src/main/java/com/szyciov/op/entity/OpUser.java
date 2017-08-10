@@ -121,6 +121,11 @@ public class OpUser {
 	 */
 	private String operateid;
 	
+	/**
+	 * 密码过期时间
+	 */
+	private Date expirestime;
+	
 	public String getOperateid() {
 		return operateid;
 	}
@@ -311,5 +316,13 @@ public class OpUser {
 
 	public void setRoletypecaption(String roletypecaption) {
 		this.roletypecaption = roletypecaption;
+	}
+
+	public Date getExpirestime() {
+		return expirestime;
+	}
+
+	public void setExpirestime(Date expirestime) {
+		this.expirestime = expirestime;
 	}
 }

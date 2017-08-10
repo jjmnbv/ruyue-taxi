@@ -1,5 +1,7 @@
 package com.szyciov.lease.entity;
 
+import java.util.Date;
+
 /**
  * 租赁端角色
  * @author admin
@@ -50,6 +52,9 @@ public class User {
 	private String roletype;
 	
 	private String roletypecaption;
+	
+	//密码过期强制更新时间
+	private Date expirestime;
 	
 	public String getOldPassword() {
 		return oldPassword;
@@ -225,5 +230,13 @@ public class User {
 
 	public void setRoletypecaption(String roletypecaption) {
 		this.roletypecaption = roletypecaption;
+	}
+
+	public Date getExpirestime() {
+		return expirestime;
+	}
+
+	public void setExpirestime(Date expirestime) {
+		this.expirestime = expirestime;
 	}
 }

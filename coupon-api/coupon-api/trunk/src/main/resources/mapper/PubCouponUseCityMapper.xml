@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.coupon.mapper.PubCouponUseCityMapper">
+
+    <insert id="saveUseCity" parameterType="PubCouponUseCity" >
+        insert into pub_coupon_use_city
+        (`id` ,`couponidref` ,`city` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,`status` )
+         values
+        (#{id},#{couponidref},#{city},#{createtime},#{updatetime},#{creater},#{updater},#{status})
+    </insert>
+
+    <select id="getUseCityByCityAndCouponId" parameterType="String" resultType="PubCouponUseCity">
+        select id from pub_coupon_use_city t
+        where t.city =#{city} and t.couponidref = #{couponidref}
+        and t.status ='1'
+    </select>
+</mapper>

@@ -6,6 +6,7 @@ import com.szyciov.passenger.entity.PassengerOrder;
 import com.szyciov.passenger.param.LoginParam;
 import com.szyciov.passenger.param.RegisterParam;
 import com.szyciov.passenger.service.PassengerService;
+import com.szyciov.passenger.service.PassengerService4Fourth;
 import com.szyciov.passenger.service.PassengerService4Third;
 import com.szyciov.util.BaseController;
 import org.apache.commons.lang.StringUtils;
@@ -40,6 +41,13 @@ public class PassengerController extends BaseController {
 		this.passengerService4Third = passengerService4Third;
 	}
 	
+	public PassengerService4Fourth passengerService4Fourth;
+
+	@Resource(name = "PassengerService4Fourth")
+	public void setPassengerService4Third(PassengerService4Fourth passengerService4Fourth) {
+		this.passengerService4Fourth = passengerService4Fourth;
+	}
+	
 	/**
 	 * 获取广告页接口
 	 * @return
@@ -71,7 +79,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getVerificationCode(params);
 			}
 			String phone = (String) params.get("phone");
@@ -121,7 +129,7 @@ public class PassengerController extends BaseController {
 			//v3.0.1接口更新密码
 			if(Const.INTERFACE_V3_0_1.equals(version)){
 				return passengerService4Third.defLogin(loginparam);
-			}if(Const.INTERFACE_V3_0_2.equals(version)){
+			}if(Const.INTERFACE_V3_0_2.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.defLogin2(loginparam);
 			}
 		}catch (Exception e){
@@ -148,7 +156,19 @@ public class PassengerController extends BaseController {
 	@RequestMapping(value = "Passenger/DoRegister", method = RequestMethod.POST)
 	@ResponseBody
 	public Map<String,Object> doRegister(@RequestBody RegisterParam registerparam){
-		return passengerService.doRegister(registerparam);
+		try{
+			String version = registerparam.getVversion();
+			//v4.0.1
+			if(Const.INTERFACE_V4_0_1.equals(version)){
+				return passengerService4Fourth.doRegister(registerparam);
+			}
+			return passengerService.doRegister(registerparam);
+		}catch (Exception e){
+			Map<String,Object> res = new HashMap<String,Object>();
+			res.put("status", Retcode.EXCEPTION.code);
+			res.put("message", Retcode.EXCEPTION.msg);
+			return res;
+		}
 	}
 	
 	/**
@@ -161,7 +181,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口获取未支付的订单
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getServiceOder(params);
 			}
 			String usertoken = (String) params.get("usertoken");
@@ -194,7 +214,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口获取未支付的订单
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getUnpayOders(usertoken,companyid);
 			}
 			return passengerService.getUnpayOders(usertoken,companyid);
@@ -235,7 +255,7 @@ public class PassengerController extends BaseController {
 	public Map<String,Object> getMostContact(@RequestParam String usertoken, @RequestParam(required = false) String version){
         try{
             //v3.0.1获取常用联系人接口
-            if(Const.INTERFACE_V3_0_1.equals(version)){
+            if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
                 return passengerService4Third.getMostContact(usertoken);
             }
         }catch (Exception e){
@@ -251,7 +271,7 @@ public class PassengerController extends BaseController {
 	@ResponseBody
 	public Map<String,Object> getEstimatedCost(@RequestParam Map<String,Object> params){
 		try {
-			if (StringUtils.isNotBlank(String.valueOf(params.get("version"))) && Const.INTERFACE_V3_0_1.equals(String.valueOf(params.get("version")))) {
+			if (Const.INTERFACE_V3_0_1.equals(String.valueOf(params.get("version")))||Const.INTERFACE_V4_0_1.equals(params.get("version"))) {
 				return passengerService4Third.getEstimatedCost(params);
 			} else {
 				return passengerService.getEstimatedCost(params);
@@ -287,7 +307,7 @@ public class PassengerController extends BaseController {
         try{
             String version = (String) params.get("version");
             //v3.0.1设置常用联系人接口
-            if(Const.INTERFACE_V3_0_1.equals(version)){
+            if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
                 return passengerService4Third.addMostContact(params);
             }
         }catch (Exception e){
@@ -306,7 +326,7 @@ public class PassengerController extends BaseController {
         try{
             String version = (String) params.get("version");
             //v3.0.1删除常用联系人接口
-            if(Const.INTERFACE_V3_0_1.equals(version)) {
+            if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
                 return passengerService4Third.deleteMostContact(params);
             }
         }catch(Exception e){
@@ -335,7 +355,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) param.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				 passengerService4Third.getAccountRules(param,res);
 				 return ;
 			}
@@ -356,7 +376,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getValidCity(params);
 			}
 			String usertoken = (String) params.get("usertoken");
@@ -387,7 +407,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getGetOffCitys(params);
 			}
 			return passengerService.getGetOffCitys(params);
@@ -405,7 +425,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getGetOnCitys(params);
 			}
 			return passengerService.getGetOnCitys(params);
@@ -439,7 +459,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			// v3.0.1接口我的行程列表调整
-			if (Const.INTERFACE_V3_0_1.equals(version)) {
+			if (Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
 				return passengerService4Third.getPassengerInfo(params);
 			}
 			String usertoken = (String) params.get("usertoken");
@@ -475,7 +495,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) userinfos.get("version");
 			// v3.0.1接口我的行程列表调整
-			if (Const.INTERFACE_V3_0_1.equals(version)) {
+			if (Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
 				return passengerService4Third.updatePassengerInfo(userinfos);
 			}
 			return passengerService.updatePassengerInfo(userinfos);
@@ -500,6 +520,8 @@ public class PassengerController extends BaseController {
 			// v3.0.1接口我的行程列表调整
 			if (Const.INTERFACE_V3_0_1.equals(version)) {
 				return passengerService4Third.getOders(params);
+			}else if(Const.INTERFACE_V4_0_1.equals(version)){
+				return passengerService4Fourth.getOders(params);
 			}
 			return passengerService.getOders(params);
 		} catch (Exception e) {
@@ -521,7 +543,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新订单状态
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.updateOderState(params);
 			}
 			return passengerService.updateOderState(params);
@@ -541,8 +563,22 @@ public class PassengerController extends BaseController {
 	 */
 	@RequestMapping(value = "Passenger/GetDriverInfo", method = RequestMethod.GET)
 	@ResponseBody
-	public Map<String,Object> getDriverInfo(@RequestParam String usertoken,@RequestParam String driverid){
-		return passengerService.getDriverInfo(usertoken,driverid);
+	public Map<String,Object> getDriverInfo(@RequestParam Map<String,Object> params){
+		try{
+			String orderno = (String) params.get("orderno");
+			if(StringUtils.isNotBlank(orderno)){
+				return passengerService.getDriverInfo(params);
+			}else{
+				String usertoken = (String) params.get("usertoken");
+				String driverid = (String) params.get("driverid");
+				return passengerService.getDriverInfo(usertoken,driverid);
+			}
+		}catch (Exception e){
+			Map<String,Object> res = new HashMap<String,Object>();
+			res.put("status", Retcode.EXCEPTION.code);
+			res.put("message", Retcode.EXCEPTION.msg);
+			return res;
+		}
 	}
 	
 	/**
@@ -569,7 +605,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getPayAccounts(params);
 			}
 			return passengerService.getPayAccounts(params);
@@ -594,6 +630,8 @@ public class PassengerController extends BaseController {
 			//v3.0.1接口更新密码
 			if(Const.INTERFACE_V3_0_1.equals(version)){
 				return passengerService4Third.payOder(params,req);
+			}else if(Const.INTERFACE_V4_0_1.equals(version)){
+				return passengerService4Fourth.payOder(params,req);
 			}
 			return passengerService.payOder(params,req);
 		}catch (Exception e){
@@ -614,6 +652,8 @@ public class PassengerController extends BaseController {
 		try {
 			if (StringUtils.isNotBlank(String.valueOf(params.get("version"))) && Const.INTERFACE_V3_0_1.equals(String.valueOf(params.get("version")))) {
 				return passengerService4Third.getOder(params);
+			}else if(Const.INTERFACE_V4_0_1.equals(String.valueOf(params.get("version")))){
+				return passengerService4Fourth.getOrder(params);
 			} else {
 				return passengerService.getOder(params);
 			}
@@ -647,7 +687,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.doComment(params);
 			}
 			return passengerService.doComment(params);
@@ -672,7 +712,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getOrbit(params);
 			}
 			return passengerService.getOrbit(params);
@@ -720,7 +760,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getMessages(params);
 			}
 			return passengerService.getMessages(params);
@@ -742,7 +782,7 @@ public class PassengerController extends BaseController {
 	public Map<String,Object> updateMessageState(@RequestBody Map<String,Object> params){
 		try{
 			String version = (String) params.get("version");
-			if(Const.INTERFACE_V3_0_1.equals(version)) {
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
 				return passengerService4Third.updateMessageState(params);
 			}
 			return passengerService.updateMessageState(params);
@@ -764,7 +804,7 @@ public class PassengerController extends BaseController {
 	public Map<String,Object> getMostAddress(@RequestParam Map<String,Object> params){
         try {
             String version = (String) params.get("version");
-            if(Const.INTERFACE_V3_0_1.equals(version)) {
+            if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
                 return passengerService4Third.getMostAddress(params);
             }
         } catch (Exception e) {
@@ -782,7 +822,7 @@ public class PassengerController extends BaseController {
 	public Map<String,Object> deleteMostAddress(@RequestBody Map<String,Object> params){
         try {
             String version = (String) params.get("version");
-            if(Const.INTERFACE_V3_0_1.equals(version)) {
+            if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
                 return passengerService4Third.deleteMostAddress(params);
             }
         } catch (Exception e) {
@@ -800,7 +840,7 @@ public class PassengerController extends BaseController {
 	public Map<String,Object> addMostAddress(@RequestBody Map<String,Object> params){
         try {
             String version = (String) params.get("version");
-            if(Const.INTERFACE_V3_0_1.equals(version)) {
+            if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
                 return passengerService4Third.addMostAddress(params);
             }
         } catch (Exception e) {
@@ -819,7 +859,7 @@ public class PassengerController extends BaseController {
 	public Map<String,Object> validatePwd(@RequestBody Map<String,Object> params){
 		try{
 			String version = (String) params.get("version");
-			if(Const.INTERFACE_V3_0_2.equals(version)){
+			if(Const.INTERFACE_V3_0_2.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.validatePwd(params);
 			}
 			return passengerService.validatePwd(params);
@@ -844,7 +884,7 @@ public class PassengerController extends BaseController {
 			//v3.0.1接口更新密码
 			if(Const.INTERFACE_V3_0_1.equals(version)){
 				return passengerService4Third.updatePwd(params);
-			}else if(Const.INTERFACE_V3_0_2.equals(version)){
+			}else if(Const.INTERFACE_V3_0_2.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.updatePwd2(params);
 			}
 			return passengerService.updatePwd(params);
@@ -898,6 +938,27 @@ public class PassengerController extends BaseController {
 		passengerService.dillZFBPayed4Op(req,res);
 	}
 	
+	
+	@RequestMapping(value = "Passenger/DillZFBPayed4OrgCancel", method = RequestMethod.POST)
+	public void dillZFBPayed4OrgCancel(HttpServletRequest req,HttpServletResponse res){
+		passengerService.dillZFBPayed4OrgCancel(req,res);
+	}
+	
+	@RequestMapping(value = "Passenger/DillWXPayed4OrgCancel", method = RequestMethod.POST)
+	public void dillWXPayed4OrgCancel(HttpServletRequest req,HttpServletResponse res){
+		passengerService.dillWXPayed4OrgCancel(req,res);
+	}
+	
+	@RequestMapping(value = "Passenger/DillZFBPayed4OpCancel", method = RequestMethod.POST)
+	public void dillZFBPayed4OpCancel(HttpServletRequest req,HttpServletResponse res){
+		passengerService.dillZFBPayed4OpCancel(req,res);
+	}
+	
+	@RequestMapping(value = "Passenger/DillWXPayed4OpCancel", method = RequestMethod.POST)
+	public void dillWXPayed4OpCancel(HttpServletRequest req,HttpServletResponse res){
+		passengerService.dillWXPayed4OpCancel(req,res);
+	}
+	
 	@RequestMapping(value = "Passenger/Logout", method = RequestMethod.POST)
 	@ResponseBody
 	public Map<String,Object> logout(@RequestBody Map<String,Object> params,HttpServletRequest req,HttpServletResponse res){
@@ -910,7 +971,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getServiceInfo(params);
 			}
 			return passengerService.getServiceInfo(params);
@@ -928,7 +989,7 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.readMessageAll(params);
 			}
 			return passengerService.readMessageAll(params);
@@ -958,7 +1019,7 @@ public class PassengerController extends BaseController {
 	public Map<String,Object> getNearDrivers(@RequestParam Map<String,Object> params,HttpServletRequest req,HttpServletResponse res){
         try {
             String version = (String) params.get("version");
-            if(Const.INTERFACE_V3_0_1.equals(version)) {
+            if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)) {
                 return passengerService4Third.getNearDrivers(params);
             }
         } catch (Exception e) {

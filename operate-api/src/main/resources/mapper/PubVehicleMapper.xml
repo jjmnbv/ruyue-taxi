@@ -56,7 +56,8 @@
 		t4.`name` AS serviceCars,
 		t.loads,
 		t.vehicletype,
-		t.vehiclestatus
+		t.vehiclestatus,
+		t4.level as level
 		FROM
 		pub_vehicle t
 		LEFT JOIN pub_driver t_driver on t_driver.id = t.driverid

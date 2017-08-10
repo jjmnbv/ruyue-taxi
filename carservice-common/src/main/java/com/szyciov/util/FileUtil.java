@@ -119,10 +119,10 @@ public class FileUtil {
 	public static Map<String, Object> upload2FileServer(InputStream in,String filename) {
 		Map<String, Object> result = new HashMap<String, Object>();
 		HttpClient httpclient = new DefaultHttpClient();
-		HttpPost httppost = new HttpPost(SystemConfig.getSystemProperty("carserviceApiUrl")+"/FileUtil/UploadFile");
-//		HttpPost httppost = new HttpPost("http://10.10.10.100:8002/carservice-api/FileUtil/UploadFile");
+		HttpPost httppost = new HttpPost(SystemConfig.getSystemProperty("carserviceApi")+"/FileUtil/UploadFile");
+//		HttpPost httppost = new HttpPost("http://10.10.10.100:8004/carservice-api/api/FileUtil/UploadFile");
 		MultipartEntity reqEntity = new MultipartEntity();
-		
+
 		InputStreamBody body = new InputStreamBody(in, filename);
 		FormBodyPart form = new FormBodyPart(filename, body);
 		reqEntity.addPart(form);
@@ -188,5 +188,30 @@ public class FileUtil {
 			
 		}
 		return;
+	}
+	
+	/**
+	 * 删除文件
+	 * @param fileName
+	 */
+	public static void delFile(String fileName){
+		if(fileName == null || fileName.isEmpty()) return;
+		try {
+			File file = new File(fileName);
+			if(file.isDirectory()){
+				for(File tempFile : file.listFiles()){
+					delFile(tempFile.getPath());
+				}
+			}
+//			System.out.println("删除" + file.getPath());
+			file.delete();
+		} catch (Exception e) {
+			
+		}
+		return;
+	}
+	
+	public static void main(String[] args) {
+		FileUtil.delFile("E:\\工作文档\\testdelete");
 	}
 }

@@ -2,7 +2,9 @@ package com.szyciov.passenger.controller;
 
 import com.szyciov.entity.Retcode;
 import com.szyciov.op.entity.OpTaxiOrder;
+import com.szyciov.passenger.Const;
 import com.szyciov.passenger.entity.PassengerOrder;
+import com.szyciov.passenger.service.PassengerService4Fourth;
 import com.szyciov.passenger.service.PassengerService4Third;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,13 @@ public class PassengerController4Third {
     public void setPassengerService(PassengerService4Third passengerService4Third) {
         this.passengerService4Third = passengerService4Third;
     }
+    
+    public PassengerService4Fourth passengerService4Fourth;
+
+	@Resource(name = "PassengerService4Fourth")
+	public void setPassengerService4Third(PassengerService4Fourth passengerService4Fourth) {
+		this.passengerService4Fourth = passengerService4Fourth;
+	}
 
 
     /**
@@ -58,6 +67,7 @@ public class PassengerController4Third {
     @ResponseBody
     public Map<String,Object> hasOrgIdentity(@RequestBody Map<String,Object> params){
         try{
+        	
             return passengerService4Third.hasOrgIdentity(params);
         }catch(Exception e){
             Map<String,Object> res = new HashMap<String,Object>();
@@ -121,6 +131,11 @@ public class PassengerController4Third {
     @ResponseBody
     public Map<String,Object> getServiceCompanys(@RequestParam Map<String,Object> params){
         try{
+        	String version = (String) params.get("version");
+			// v4.0.1接口我的行程列表调整
+			if (Const.INTERFACE_V4_0_1.equals(version)) {
+				return passengerService4Fourth.getServiceCompanys(params);
+			}
             return passengerService4Third.getServiceCompanys(params);
         }catch(Exception e){
             Map<String,Object> res = new HashMap<String,Object>();
@@ -140,6 +155,11 @@ public class PassengerController4Third {
     @ResponseBody
     public Map<String,Object> getEstimatedCost4NetCar(@RequestParam Map<String,Object> params){
         try{
+        	String version = (String) params.get("version");
+			// v4.0.1接口我的行程列表调整
+			if (Const.INTERFACE_V4_0_1.equals(version)) {
+				return passengerService4Fourth.getEstimatedCost4NetCar(params);
+			}
             return passengerService4Third.getEstimatedCost4NetCar(params);
         }catch(Exception e){
             Map<String,Object> res = new HashMap<String,Object>();
@@ -159,6 +179,11 @@ public class PassengerController4Third {
     @ResponseBody
     public Map<String,Object> getEstimatedCost4Taxi(@RequestBody Map<String,Object> params){
         try{
+        	String version = (String) params.get("version");
+			// v4.0.1接口我的行程列表调整
+			if (Const.INTERFACE_V4_0_1.equals(version)) {
+				return passengerService4Fourth.getEstimatedCost4Taxi(params);
+			}
             return passengerService4Third.getEstimatedCost4Taxi(params);
         }catch(Exception e){
             Map<String,Object> res = new HashMap<String,Object>();

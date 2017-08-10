@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.lease.mapper.PubCoooperateUnionMapper">
+    <select id="queryPubCoooperateData" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryPubCoooperateParam" resultType="com.szyciov.lease.vo.pubCoooperateUnion.QueryPubCoooperateVo">
+        select
+            t1.id,
+            le.name leasecompanyText,
+            coono,
+            cootype,
+            servicetype,
+            coostate,
+            case when ifnull(coostate,2)=0 or ifnull(coostate,2) =2 then '/'
+            else concat(DATE_FORMAT(t1.coostarttime, '%Y.%m.%d'),'-',DATE_FORMAT(t1.cooendtime, '%Y.%m.%d')) end validatetime,
+            DATE_FORMAT(applicationtime, '%Y-%m-%d') applicationtime
+        from pub_coooperate t1
+        inner join le_leasescompany le on le.id=t1.companyid
+        where 1=1
+            and t1.leasecompanyid = #{companyid}
+            and t1.status=1
+            <if test='null != coono and "" != coono'>
+                and instr(t1.coono, #{coono}) > 0
+            </if>
+            <if test='null != leasecompanyid and "" != leasecompanyid'>
+                and t1.companyid = #{leasecompanyid}
+            </if>
+            <if test='null != servicetype'>
+                and t1.servicetype = #{servicetype}
+            </if>
+            <if test='null != coostate and "" != coostate'>
+                and t1.coostate = #{coostate}
+            </if>
+            <if test='null != cootype and "" != cootype'>
+                and t1.cootype = #{cootype}
+            </if>
+            <if test='null != applicationtimeStart and "" != applicationtimeStart'>
+                and t1.applicationtime >= #{applicationtimeStart}
+            </if>
+            <if test='null != applicationtimeEnd and "" != applicationtimeEnd'>
+                and t1.applicationtime &#60; #{applicationtimeEnd}
+            </if>
+            order by applicationtime desc
+    </select>
+    <select id="queryLeasecompany" parameterType="java.lang.String" resultType="com.szyciov.entity.Select2Entity">
+      select distinct
+        coo.leasecompanyid id,
+        le.name text
+      from pub_coooperate coo
+      inner join le_leasescompany le on coo.companyid=le.id
+      where coo.status=1 and coo.leasecompanyid = #{companyid} order by le.name asc
+    </select>
+    <select id="queryCooagreementView" parameterType="java.lang.String" resultType="com.szyciov.lease.vo.pubCoooperateUnion.QueryCooagreementViewVo">
+        select cooname,
+        coocontent
+        from pub_coooperate t1
+        inner join pub_cooagreement t2 on t1.cooagreementid=t2.id
+        where t1.id=#{coooperateId}
+        order by t2.updatetime desc
+        limit 1
+    </select>
+    <update id = "disableCoooperate" parameterType="com.szyciov.lease.param.pubCoooperateUnion.DisableCoooperateParam">
+        update pub_coooperate
+        set coostate=#{coostate},
+        updater=#{updater},
+        updatetime=#{updatetime},
+        cooendtime=#{cooendtime}
+        where id=#{id}
+    </update>
+
+    <select id="queryResource" resultType="com.szyciov.lease.vo.pubCoooperateUnion.QueryResourceVo" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryResourceParam">
+        select * from (
+            select
+            cooo.id coooid,
+            ve.fullplateno, -- 车牌号
+            concat(br.name, ' ', li.name) vehclinename, -- 品牌车系
+            li.id vehclineid,
+            d.jobnum,  --  资格证号
+            concat(d.name, ' ', d.phone) driverInfo, -- 司机信息
+            ifnull(d.workstatus, '/') workstatus, --  服务状态
+            concat(mo.name,'(', ve.loads, '座)') vehiclemodelsname, -- 服务车型
+            mo.id vehiclemodels,
+            ci.city cityname,
+            case d.workstatus when null then 0 when 2 then 1 when 0 then 2 when 1 then 3 else 4 end
+            workOrder,
+            case when cooc.id is null then 0 else 1 end resource,
+            ci.fullpinyin,
+            ve.id vehicleid,
+            ci.id cityaddr
+            from pub_coooperate  cooo
+            inner join pub_vehicle ve on ve.leasescompanyid=cooo.leasecompanyid and ve.vehicletype=cooo.servicetype and ve.status=1
+            inner join pub_vehcline li on li.id=ve.vehclineid
+            inner join pub_vehcbrand br on br.id=li.vehcBrandID
+            left  join (select distinct driverid,vehicleid from pub_driver_vehicle_ref vreft
+                inner join pub_driver dt on dt.id=vreft.driverid and vreft.status=1
+                AND ( (dt.vehicletype = '1' AND dt.passworkstatus IN( '0' ,'1' ,'3') ) OR (dt.vehicletype = '0') ) ) vref
+                on vref.vehicleid=ve.id
+            left  join pub_driver d on d.id=vref.driverid
+            left  join le_vehcline_models_ref mref on mref.vehclineid=li.id and mref.status=1
+            left  join le_vehiclemodels mo on mo.Id=mref.vehiclemodelsid
+            inner join pub_cityaddr ci on ci.id=ve.city
+            left  join pub_cooresource cooc on cooo.id=cooc.coooperateid and cooc.vehicleid=ve.id
+        ) t
+        where 1=1
+        and coooid=#{coooid}
+        <if test='null != resource and "" != resource'>
+        and resource=#{resource}
+        </if>
+        <if test='null != vehclineid and "" != vehclineid'>
+        and vehclineid=#{vehclineid}
+        </if>
+        <if test='null != vehiclemodels and "" != vehiclemodels'>
+        and vehiclemodels=#{vehiclemodels}
+        </if>
+        <if test='null != workstatus and "" != workstatus'>
+        and workstatus=#{workstatus}
+        </if>
+        <if test='null != cityaddrid and "" != cityaddrid'>
+        and cityaddr=#{cityaddrid}
+        </if>
+        <if test='null != jobnum and "" != jobnum'>
+        and instr(jobnum, #{jobnum}) > 0
+        </if>
+        <if test='null != fullplateno and "" != fullplateno'>
+        and instr(fullplateno, #{fullplateno}) > 0
+        </if>
+        order by fullpinyin,workOrder,fullplateno asc
+    </select>
+    <select id="queryResourceVehclineSelect2" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryResourceCitySelect2Param" resultType="com.szyciov.entity.Select2Entity">
+        select * from (
+        select
+            distinct
+            concat(br.name, '.', li.name) text, -- 品牌车系
+            li.id id,
+        cooo.id coooid
+        from pub_coooperate  cooo
+        inner join pub_vehicle ve on ve.leasescompanyid=cooo.leasecompanyid and ve.vehicletype=cooo.servicetype and ve.status=1
+        inner join pub_vehcline li on li.id=ve.vehclineid
+        inner join pub_vehcbrand br on br.id=li.vehcBrandID
+        ) t
+        where 1=1
+        and coooid=#{coooId}
+        <if test='null != keyword and "" != keyword'>
+            and instr(text, #{keyword}) > 0
+        </if>
+        order by text asc
+    </select>
+    <select id="queryResourceCitySelect2" resultType="com.szyciov.entity.Select2Entity">
+
+        select  distinct
+        ci.city text,
+        ci.id id
+        from pub_coooperate  cooo
+        inner join pub_vehicle ve on ve.leasescompanyid=cooo.leasecompanyid and ve.vehicletype=cooo.servicetype and ve.status=1
+        inner join pub_vehcline li on li.id=ve.vehclineid
+        inner join pub_vehcbrand br on br.id=li.vehcBrandID
+
+        inner join pub_cityaddr ci on ci.id=ve.city
+        left  join pub_cooresource cooc on cooo.id=cooc.coooperateid and cooc.vehicleid=ve.id
+
+        where cooo.id=#{coooId}
+        order by ci.fullpinyin asc
+    </select>
+    <insert id="insertResourceBatch">
+        insert into pub_cooresource (id, companyid, leasecompanyid,
+        vehicleid, enabled, createtime,
+        updatetime, creater, updater,
+        status, coooperateid)
+        values
+        <foreach collection="list" item="item" index="index" separator="," >
+        (#{item.id,jdbcType=VARCHAR}, #{item.companyid,jdbcType=VARCHAR}, #{item.leasecompanyid,jdbcType=VARCHAR},
+        #{item.vehicleid,jdbcType=VARCHAR}, #{item.enabled,jdbcType=INTEGER}, #{item.createtime,jdbcType=TIMESTAMP},
+        #{item.updatetime,jdbcType=TIMESTAMP}, #{item.creater,jdbcType=VARCHAR}, #{item.updater,jdbcType=VARCHAR},
+        #{item.status,jdbcType=INTEGER}, #{item.coooperateid,jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+    <select id="queryCooVehicleId" resultType="java.lang.String">
+      select vehicleid from pub_cooresource where coooperateid=#{coooId}
+    </select>
+    <delete id="deleteResourceByVehicleId" parameterType="com.szyciov.lease.param.pubCoooperateUnion.DeleteCooresourceVehicleBatchParam" >
+        delete from pub_cooresource where coooperateid = #{coooId} and vehicleid in
+        <foreach item="item" index="index" collection="vehicleids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="queryCooVehicleModeSelect2" resultType="com.szyciov.entity.Select2Entity" parameterType="java.lang.String" >
+    select
+    distinct
+    mo.name text, -- 服务车型
+    mo.id id
+    from pub_coooperate  cooo
+    inner join pub_vehicle ve on ve.leasescompanyid=cooo.leasecompanyid and ve.vehicletype=cooo.servicetype and ve.status=1
+    inner join pub_vehcline li on li.id=ve.vehclineid
+    left  join le_vehcline_models_ref mref on mref.vehclineid=li.id
+    left  join le_vehiclemodels mo on mo.Id=mref.vehiclemodelsid
+    where  mo.id is not null and cooo.id=#{coooId}
+    order by text asc
+    </select>
+    <select id="selectPubCoooopertateByPrimaryKey" resultType="com.szyciov.entity.PubCoooperate" parameterType="java.lang.String" >
+        select
+       *
+        from pub_coooperate
+        where id = #{id}
+    </select>
+    <select id="queryApplyLeaseCompany" resultType="com.szyciov.lease.entity.LeLeasescompany" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyLeaseCompanyParam" >
+        select * from le_leasescompany where name = #{name} and status=1 and platformtype=1
+    </select>
+    <select id="queryApplyOpCompany" resultType="com.szyciov.op.entity.OpPlatformInfo" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyLeaseCompanyParam" >
+        select * from op_platforminfo where status=1 and companyname=#{name};
+    </select>
+    <select id="queryApplyResource" resultType="com.szyciov.lease.vo.pubCoooperateUnion.QueryApplyResourceVo" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyResourceParam">
+        select * from (
+        select
+        ve.fullplateno, -- 车牌号
+        concat(br.name, ' ', li.name) vehclinename, -- 品牌车系
+        li.id vehclineid,
+        d.jobnum,  --  资格证号
+        concat(d.name, ' ', d.phone) driverInfo, -- 司机信息
+        ifnull(d.workstatus, '/') workstatus, --  服务状态
+        concat(mo.name,'(', ve.loads, '座)') vehiclemodelsname, -- 服务车型
+        mo.id vehiclemodels,
+        ci.city cityname,
+        case d.workstatus when null then 0 when 2 then 1 when 0 then 2 when 1 then 3 else 4 end
+        workOrder,
+        ci.fullpinyin,
+        ve.id vehicleid,
+        ci.id cityaddr,
+        mo.level
+        from pub_vehicle ve
+        inner join pub_vehcline li on li.id=ve.vehclineid
+        inner join pub_vehcbrand br on br.id=li.vehcBrandID
+        left  join (select distinct driverid,vehicleid from pub_driver_vehicle_ref vreft
+                        inner join pub_driver dt on dt.id=vreft.driverid and vreft.status=1
+                        AND ( (dt.vehicletype = '1' AND dt.passworkstatus IN( '0' ,'1' ,'3') ) OR (dt.vehicletype = '0') ) ) vref
+                        on vref.vehicleid=ve.id
+        left  join pub_driver d on d.id=vref.driverid
+        left  join le_vehcline_models_ref mref on mref.vehclineid=li.id and mref.status=1
+        left  join le_vehiclemodels mo on mo.Id=mref.vehiclemodelsid
+        inner join pub_cityaddr ci on ci.id=ve.city
+        where ve.status=1 and ve.leasescompanyid=#{leasescompanyid} and ve.vehicletype=#{vehicletype}
+        ) t
+        where 1=1
+        and driverInfo is not null and driverInfo != ''
+        <if test='null != vehclineid and "" != vehclineid'>
+            and vehclineid=#{vehclineid}
+        </if>
+        <if test='null != vehiclemodels and "" != vehiclemodels'>
+            and vehiclemodels=#{vehiclemodels}
+        </if>
+        <if test='null != workstatus and "" != workstatus'>
+            and workstatus=#{workstatus}
+        </if>
+        <if test='null != cityaddrid and "" != cityaddrid'>
+            and cityaddr=#{cityaddrid}
+        </if>
+        <if test='null != jobnum and "" != jobnum'>
+            and instr(jobnum, #{jobnum}) > 0
+        </if>
+        <if test='null != fullplateno and "" != fullplateno'>
+            and instr(fullplateno, #{fullplateno}) > 0
+        </if>
+        order by fullpinyin,level,fullplateno asc
+    </select>
+    <select id="queryApplyResourceVehclineSelect2" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyResourceVehclineSelect2Param" resultType="com.szyciov.entity.Select2Entity">
+        select * from (
+        select
+        distinct
+        concat(br.name, '.', li.name) text, -- 品牌车系
+        li.id id
+        from pub_vehcline li
+        inner join pub_vehcbrand br on br.id=li.vehcBrandID
+        where 1=1 and li.leasescompanyid=#{leasescompanyid} and li.status=1
+        ) t
+        where 1=1
+        <if test='null != keyword and "" != keyword'>
+            and instr(text, #{keyword}) > 0
+        </if>
+        order by text asc
+    </select>
+    <select id="queryApplyResourceCitySelect2" resultType="com.szyciov.entity.Select2Entity" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyResourceCitySelect2Param">
+
+        select  distinct
+        ci.city text,
+        ci.id id
+        from pub_vehicle ve
+        inner join pub_vehcline li on li.id=ve.vehclineid
+        inner join pub_vehcbrand br on br.id=li.vehcBrandID
+        inner join pub_cityaddr ci on ci.id=ve.city
+        where ve.status=1 and ve.leasescompanyid=#{leasescompanyid} and ve.vehicletype=#{vehicletype}
+        order by ci.fullpinyin asc
+    </select>
+    <select id="queryApplyCooagreement" resultType="com.szyciov.entity.PubCooagreement" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyCooagreementParam" >
+            select * from pub_cooagreement  where companyid=#{companyid} and leasecompanyid=#{leasecompanyid} and servicetype=#{servicetype} and status=1 order by createtime desc limit 1
+    </select>
+    <select id="queryApplyCoooperate" resultType="com.szyciov.entity.PubCoooperate" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyCoooperateParam" >
+        select *
+        from pub_coooperate
+        where status=1
+            and ((cooendtime > now() and coostate='1') or coostate='0')
+            and companyid=#{companyid}
+             and leasecompanyid=#{leasecompanyid}
+        and servicetype=#{servicetype} limit 1
+    </select>
+    <select id="queryApplyCooVehicleModeSelect2" resultType="com.szyciov.entity.Select2Entity" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyResourceCitySelect2Param" >
+        select
+        distinct
+        name text, -- 服务车型
+        id id
+        from le_vehiclemodels
+        where status=1
+        and leasescompanyid=#{leasescompanyid}
+        order by text ASC
+    </select>
+    <insert id="insertPubCoooperateSelective" parameterType="com.szyciov.entity.PubCoooperate" >
+        insert into pub_coooperate
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="companyid != null" >
+                companyid,
+            </if>
+            <if test="leasecompanyid != null" >
+                leasecompanyid,
+            </if>
+            <if test="coono != null" >
+                coono,
+            </if>
+            <if test="cootype != null" >
+                cootype,
+            </if>
+            <if test="servicetype != null" >
+                servicetype,
+            </if>
+            <if test="coostate != null" >
+                coostate,
+            </if>
+            <if test="coostarttime != null" >
+                coostarttime,
+            </if>
+            <if test="cooendtime != null" >
+                cooendtime,
+            </if>
+            <if test="applicationtime != null" >
+                applicationtime,
+            </if>
+            <if test="platformtype != null" >
+                platformtype,
+            </if>
+            <if test="reviewtime != null" >
+                reviewtime,
+            </if>
+            <if test="reviewtext != null" >
+                reviewtext,
+            </if>
+            <if test="createtime != null" >
+                createtime,
+            </if>
+            <if test="updatetime != null" >
+                updatetime,
+            </if>
+            <if test="creater != null" >
+                creater,
+            </if>
+            <if test="updater != null" >
+                updater,
+            </if>
+            <if test="status != null" >
+                status,
+            </if>
+            <if test="cooagreementid != null" >
+                cooagreementid,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="companyid != null" >
+                #{companyid,jdbcType=VARCHAR},
+            </if>
+            <if test="leasecompanyid != null" >
+                #{leasecompanyid,jdbcType=VARCHAR},
+            </if>
+            <if test="coono != null" >
+                #{coono,jdbcType=VARCHAR},
+            </if>
+            <if test="cootype != null" >
+                #{cootype,jdbcType=INTEGER},
+            </if>
+            <if test="servicetype != null" >
+                #{servicetype,jdbcType=INTEGER},
+            </if>
+            <if test="coostate != null" >
+                #{coostate,jdbcType=INTEGER},
+            </if>
+            <if test="coostarttime != null" >
+                #{coostarttime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="cooendtime != null" >
+                #{cooendtime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="applicationtime != null" >
+                #{applicationtime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="platformtype != null" >
+                #{platformtype,jdbcType=INTEGER},
+            </if>
+            <if test="reviewtime != null" >
+                #{reviewtime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="reviewtext != null" >
+                #{reviewtext,jdbcType=VARCHAR},
+            </if>
+            <if test="createtime != null" >
+                #{createtime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updatetime != null" >
+                #{updatetime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="creater != null" >
+                #{creater,jdbcType=VARCHAR},
+            </if>
+            <if test="updater != null" >
+                #{updater,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null" >
+                #{status,jdbcType=INTEGER},
+            </if>
+            <if test="cooagreementid != null" >
+                #{cooagreementid},
+            </if>
+        </trim>
+    </insert>
+
+
+</mapper>

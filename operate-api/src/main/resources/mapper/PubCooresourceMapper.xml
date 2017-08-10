@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.PubCooresourceMapper">
+
+    <select id="queryPubCooresourceData" parameterType="com.szyciov.op.param.QueryPubCooresourceParam" resultType="com.szyciov.op.vo.pubCooresource.QueryCooresourceVo">
+        select
+            t1.id,
+            t1.coono,
+            le.name leasecompanyText,
+            t1.servicetype,
+            t1.leasecompanyid,
+            ifnull((select count(1) from pub_cooresource t2 where t1.id=t2.coooperateid and t2.status=1), 0) openresource,
+            ifnull((select count(1) from pub_cooresource t2 where t1.id=t2.coooperateid and t2.enabled=0 and t2.status=1), 0) workresource
+        from pub_coooperate t1
+        inner join le_leasescompany le on le.id=t1.leasecompanyid
+        where  t1.status=1
+            and t1.platformtype='0'
+            and coostate=1
+            <if test='null != coono and "" != coono'>
+                and instr(t1.coono, #{coono}) > 0
+            </if>
+            <if test='null != leasecompanyid and "" != leasecompanyid'>
+                and t1.leasecompanyid = #{leasecompanyid}
+            </if>
+            <if test='null != servicetype'>
+                and t1.servicetype = #{servicetype}
+            </if>
+    </select>
+
+    <select id="queryHavingCooLeasecompany" parameterType="java.lang.String" resultType="com.szyciov.op.vo.pubCooresource.QueryHavingCooLeasecompanyVo">
+        select distinct
+        coo.leasecompanyid id,
+        le.name text
+        from pub_coooperate coo
+        inner join le_leasescompany le on coo.leasecompanyid=le.id
+        where coo.status=1 and coo.companyid = #{companyid} and coostate=1 order by le.name asc
+    </select>
+
+    <select id="queryPubCooresourceInfoData" parameterType="com.szyciov.op.param.QueryPubCooresourceInfoParam" resultType="com.szyciov.op.vo.pubCooresource.QueryPubCooresourceInfoVo">
+        select
+            ifnull(t6.jobnum, '/') jobnum,
+            t3.fullplateno,
+            ifnull(t6.driverinfo, '/') driverinfo
+        from pub_coooperate t1
+        inner join pub_cooresource t2 on t1.id=t2.coooperateid and t2.status=1
+        inner join pub_vehicle t3 on t3.id=t2.vehicleid and t3.status=1
+        left join  pub_driver_vehicle_ref t4 on t4.vehicleid=t3.id and t4.status=1
+        left join  ( select
+                        id,
+                        jobnum,
+                        concat(name, ' ', phone) driverinfo,
+                        passworkstatus
+                    from pub_driver t5
+                    where t5.status=1 ) t6 on ((t3.vehicletype='1' and t6.passworkstatus in ('0' ,'1' ,'3')) or t3.vehicletype='0') and t6.id=t4.driverid
+        where 1=1
+            and t1.status=1
+            and t1.id=#{coooId}
+
+        <if test='null != driverinfo and "" != driverinfo'>
+            and instr(t6.id, #{driverinfo}) > 0
+        </if>
+        <if test='null != jobnum and "" != jobnum'>
+            and instr(jobnum, #{jobnum}) > 0
+        </if>
+        <if test='null != fullplateno and "" != fullplateno'>
+            and instr(fullplateno, #{fullplateno}) > 0
+        </if>
+    </select>
+
+    <select id="queryPubCooresourceInfoDriverSelect" parameterType="com.szyciov.op.param.QueryPubCooresourceInfoDriverSelectParam" resultType="com.szyciov.entity.Select2Entity">
+        select distinct
+            t6.id,
+            driverinfo text
+        from pub_coooperate t1
+        inner join pub_cooresource t2 on t1.id=t2.coooperateid and t2.status=1
+        inner join pub_vehicle t3 on t3.id=t2.vehicleid and t3.status=1
+        inner join  pub_driver_vehicle_ref t4 on t4.vehicleid=t3.id and t4.status=1
+        inner join  ( select
+                            id,
+                            jobnum,
+                            concat(name, ' ', phone) driverinfo,
+                            passworkstatus
+                        from pub_driver t5
+                        where t5.status=1 ) t6 on ((t3.vehicletype='1' and t6.passworkstatus in ('0' ,'1' ,'3')) or t3.vehicletype='0') and t6.id=t4.driverid
+        where 1=1
+        and t1.status=1
+        and t1.id=#{coooId}
+        <if test='null != keyword and "" != keyword'>
+            and instr(driverinfo, #{keyword}) > 0
+        </if>
+    </select>
+
+    <select id="queryPubCooresourceManageData" parameterType="com.szyciov.op.param.QueryPubCooresourceManageParam" resultType="com.szyciov.op.vo.pubCooresource.QueryPubCooresourceManageVo">
+        select
+            id,
+            jobnum,
+            driverinfo,
+            vehicleinfo,
+            vehicleModel,
+            updatetime,
+            vehicleModelId
+        from (
+            select
+                t1.id,
+                jobnum,
+                concat(t4.name, ' ', t4.phone) driverinfo,
+                t4.id driverid,
+                concat(t6.name, ' ', t2.fullplateno) vehicleinfo,
+                ifnull(t8.name, '未分配') vehiclemodel,
+                ifnull(t7.updatetime, '0') updatetimesort,
+                case when t7.updatetime is null then '/' else DATE_FORMAT(t7.updatetime,'%Y-%m-%d %H:%i:%s') end updatetime,
+                t8.id vehicleModelId
+            from pub_cooresource t1
+            inner join pub_coooperate cooo on cooo.id=t1.coooperateid and cooo.status=1
+            inner join pub_vehicle t2 on t2.id=t1.vehicleid and t2.vehicletype=cooo.servicetype and t2.status=1
+            left  join pub_driver_vehicle_ref t3 on t3.vehicleid=t2.id and t3.status=1
+            inner join pub_driver t4 on ((t2.vehicletype='1' and t4.passworkstatus in ('0' ,'1' ,'3')) or t2.vehicletype='0') and t4.id=t3.driverid
+            left  join le_vehcline_models_ref t5 on t5.vehclineid=t2.vehclineid and t5.status=1
+            left  join le_vehiclemodels t6 on t6.Id=t5.vehiclemodelsid
+            left  join pub_vehicle_models_ref t7 on t7.vehicleid=t1.vehicleid and t7.status=1
+            left  join op_vehiclemodels t8 on t8.Id=t7.vehiclemodelsid
+            where 1=1
+            and t1.coooperateid=#{coooId} ) res
+            where 1=1
+            <if test='null != fullplateno and "" != fullplateno'>
+                and instr(vehicleinfo, #{fullplateno}) > 0
+            </if>
+            <if test='null != driverinfo and "" != driverinfo'>
+                and instr(driverid, #{driverinfo}) > 0
+            </if>
+            <if test='null != vehicleModelId and "" != vehicleModelId'>
+                and vehicleModelId = #{vehicleModelId}
+            </if>
+        order by updatetimesort desc
+    </select>
+    <select id="queryPubCooresourceManageDriverSelect" parameterType="com.szyciov.op.param.QueryPubCooresourceManageDriverSelectParam" resultType="com.szyciov.entity.Select2Entity">
+        select * from (
+        select DISTINCT
+        t3.driverid id,
+        concat(t4.name, ' ', t4.phone) text
+        from pub_cooresource t1
+        inner join pub_coooperate cooo on cooo.id=t1.coooperateid and cooo.status=1
+        inner join pub_vehicle t2 on t2.id=t1.vehicleid and t2.vehicletype=cooo.servicetype and t2.status=1
+        left join pub_driver_vehicle_ref t3 on t3.vehicleid=t2.id and t3.status=1
+        inner join pub_driver t4 on ((t2.vehicletype='1' and t4.passworkstatus in ('0' ,'1' ,'3')) or
+        t2.vehicletype='0') and t4.id=t3.driverid
+        where t1.status=1
+        and t1.coooperateid=#{coooId}
+        ) t where 1=1
+        <if test='null != keyword and "" != keyword'>
+            and instr(text, #{keyword}) > 0
+        </if>
+    </select>
+    <select id="queryPubCooresourceManageVehicleModelSelect" resultType="com.szyciov.entity.Select2Entity">
+	    select distinct t1.name text,t1.id
+          from op_vehiclemodels t1
+          inner join op_accountrules t2 on t1.id=t2.vehiclemodelsid
+          where t1.status=1 and t1.modelstatus=0 and t2.rulesstate=0 and t2.status=1
+    </select>
+    <select id="queryPubVehicleModelsRefByCoocId" resultType="com.szyciov.entity.PubVehicleModelsRef">
+      select ref.* from pub_vehicle_models_ref ref
+        inner join pub_cooresource p on p.vehicleid=ref.vehicleid
+        where p.id=#{coocId} and ref.status=1
+    </select>
+
+    <insert id="insertPubVehicleModelsRefSelective" parameterType="com.szyciov.entity.PubVehicleModelsRef" >
+        insert into pub_vehicle_models_ref
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="companyid != null" >
+                companyid,
+            </if>
+            <if test="leasecompanyid != null" >
+                leasecompanyid,
+            </if>
+            <if test="vehicleid != null" >
+                vehicleid,
+            </if>
+            <if test="vehiclemodelsid != null" >
+                vehiclemodelsid,
+            </if>
+            <if test="createtime != null" >
+                createtime,
+            </if>
+            <if test="updatetime != null" >
+                updatetime,
+            </if>
+            <if test="creater != null" >
+                creater,
+            </if>
+            <if test="updater != null" >
+                updater,
+            </if>
+            <if test="status != null" >
+                status,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="companyid != null" >
+                #{companyid,jdbcType=VARCHAR},
+            </if>
+            <if test="leasecompanyid != null" >
+                #{leasecompanyid,jdbcType=VARCHAR},
+            </if>
+            <if test="vehicleid != null" >
+                #{vehicleid,jdbcType=VARCHAR},
+            </if>
+            <if test="vehiclemodelsid != null" >
+                #{vehiclemodelsid,jdbcType=VARCHAR},
+            </if>
+            <if test="createtime != null" >
+                #{createtime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updatetime != null" >
+                #{updatetime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="creater != null" >
+                #{creater,jdbcType=VARCHAR},
+            </if>
+            <if test="updater != null" >
+                #{updater,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null" >
+                #{status,jdbcType=INTEGER},
+            </if>
+        </trim>
+    </insert>
+    <update id="updatePubVehicleModelsRefByPrimaryKeySelective" parameterType="com.szyciov.entity.PubVehicleModelsRef" >
+        update pub_vehicle_models_ref
+        <set >
+            <if test="companyid != null" >
+                companyid = #{companyid,jdbcType=VARCHAR},
+            </if>
+            <if test="leasecompanyid != null" >
+                leasecompanyid = #{leasecompanyid,jdbcType=VARCHAR},
+            </if>
+            <if test="vehicleid != null" >
+                vehicleid = #{vehicleid,jdbcType=VARCHAR},
+            </if>
+            <if test="vehiclemodelsid != null" >
+                vehiclemodelsid = #{vehiclemodelsid,jdbcType=VARCHAR},
+            </if>
+            <if test="createtime != null" >
+                createtime = #{createtime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updatetime != null" >
+                updatetime = #{updatetime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="creater != null" >
+                creater = #{creater,jdbcType=VARCHAR},
+            </if>
+            <if test="updater != null" >
+                updater = #{updater,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null" >
+                status = #{status,jdbcType=INTEGER},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <insert id="insertPubVehicleModelsRefHistory" parameterType="com.szyciov.entity.PubVehicleModelsRefHistory" >
+        insert into pub_vehicle_models_ref_history (id, companyid, leasecompanyid,
+        vehicleid, vehiclemodelsid, createtime,
+        updatetime, creater, updater,
+        status)
+        values (#{id,jdbcType=VARCHAR}, #{companyid,jdbcType=VARCHAR}, #{leasecompanyid,jdbcType=VARCHAR},
+        #{vehicleid,jdbcType=VARCHAR}, #{vehiclemodelsid,jdbcType=VARCHAR}, #{createtime,jdbcType=TIMESTAMP},
+        #{updatetime,jdbcType=TIMESTAMP}, #{creater,jdbcType=VARCHAR}, #{updater,jdbcType=VARCHAR},
+        #{status,jdbcType=INTEGER})
+    </insert>
+    <select id="selectPubCoooperateByPrimaryKey" resultType="com.szyciov.entity.PubCoooperate" parameterType="java.lang.String" >
+        select
+            id, companyid, leasecompanyid, coono, cootype, servicetype, coostate, coostarttime,
+            cooendtime, applicationtime, platformtype, reviewtime, reviewtext, createtime, updatetime,
+            creater, updater, status
+        from pub_coooperate
+        where id = #{id,jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectPubCooresourceByPrimaryKey" resultType="com.szyciov.entity.PubCooresource" parameterType="java.lang.String" >
+        select
+            id, companyid, leasecompanyid, vehicleid, enabled, createtime, updatetime, creater,
+            updater, status, coooperateid
+        from pub_cooresource
+        where id = #{id,jdbcType=VARCHAR}
+    </select>
+
+</mapper>

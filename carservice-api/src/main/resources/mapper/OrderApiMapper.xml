@@ -8,6 +8,22 @@
 	<select id="getPeUserByPhone" parameterType="PeUser" resultType="PeUser">
 		SELECT * FROM pe_user WHERE `status` = 1 AND account = #{account}
 	</select>
+	
+	<select id="getOrderCancelInfo" resultType="PubOrderCancel">
+		#保存或更新订单取消信息表
+		SELECT * FROM 
+		<if test="ordertype == 1">
+		org_order
+		</if>
+		<if test="ordertype == 2">
+		org_ordercancel
+		</if>
+		<if test="ordertype == 3">
+		op_taxiordercancel
+		</if> 
+		WHERE `status` = 1 AND orderno = #{orderno}
+	</select>
+	
 	<select id="getPubDriverByPhone" parameterType="String" resultType="PubDriver">
 		SELECT 			
 			pd.*,pdvr.vehicleId vehicleid
@@ -1093,7 +1109,8 @@
 			isusenow=#{isusenow},
 			systemsendovertime=#{systemsendovertime},
 			autocanceltime=#{autocanceltime},
-			costtype=#{costtype}
+			costtype=#{costtype},
+			expensetype=#{expensetype}
 		WHERE `status` = 1 AND  orderno=#{orderno}	
 	</update>
 	
@@ -1157,7 +1174,8 @@
 			isusenow=#{isusenow},
 			systemsendovertime=#{systemsendovertime},
 			autocanceltime=#{autocanceltime},
-			costtype=#{costtype}
+			costtype=#{costtype},
+			expensetype=#{expensetype}
 		WHERE `status` = 1 AND orderno=#{orderno}	
 	</update>
 	
@@ -1500,6 +1518,34 @@
 			#{driverid},#{sendtime},#{handtime},#{registrationid},#{androidmsgid},#{iosmsgid},
 			#{pushtype},NOW(),NOW(),#{status},#{driverphone}
 		)
+    </insert>
+    
+    <insert id="saveOrUpdateOrderCancelInfo" parameterType="PubOrderCancel">
+    	#保存或更新订单取消信息表
+		INSERT INTO 
+		<if test="ordertype == 1">
+		org_order
+		</if>
+		<if test="ordertype == 2">
+		org_ordercancel
+		</if>
+		<if test="ordertype == 3">
+		op_taxiordercancel
+		</if>
+		(
+			id,orderno,dutyparty,cancelamount,cancelnature,cancelreason,
+			canceloperator,exemption,exemptionoperator,cancelrule,identifying,createtime,
+			updatetime,status
+		) VALUES(
+			#{id},#{orderno},#{dutyparty},#{cancelamount},#{cancelnature},#{cancelreason},
+			#{canceloperator},#{exemption},#{exemptionoperator},#{cancelrule},#{identifying},NOW(),
+			NOW(),#{status}
+		) ON DUPLICATE KEY UPDATE 
+			id=#{id},orderno=#{orderno},dutyparty=#{dutyparty},
+			cancelamount=#{cancelamount},cancelnature=#{cancelnature},cancelreason=#{cancelreason},
+			canceloperator=#{canceloperator},exemption=#{exemption},exemptionoperator=#{exemptionoperator},
+			cancelrule=#{cancelrule},identifying=#{identifying},createtime=#{createtime},
+			updatetime=#{updatetime},status=#{status}
     </insert>
     
     <!-- 根据机构用户id查找机构用户信息 -->

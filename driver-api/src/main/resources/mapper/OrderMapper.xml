@@ -552,6 +552,7 @@
 		AND oo.paymentstatus in (${paystatuslist})
 		AND oo.driverid = #{driverid}
 		AND oo.paymethod = #{paymethod}  <!-- 机构支付的才属于机构订单 -->
+		AND (oo.endtime IS NOT NULL OR oo.canceltime IS NOT NULL)
 		<if test="statis == 0">
 		GROUP BY YEAR,MONTH
 		ORDER BY YEAR DESC,MONTH DESC
@@ -583,6 +584,7 @@
 				AND oo.orderstatus in (${orderstatuslist})
 				AND oo.paymentstatus in (${paystatuslist})
 				AND oo.driverid = #{driverid}
+				AND (oo.endtime IS NOT NULL OR oo.canceltime IS NOT NULL)
 				<if test="statis == 0">
 				GROUP BY YEAR,MONTH
 				</if>
@@ -604,6 +606,7 @@
 				AND oo.paymentstatus in (${paystatuslist})
 				AND oo.driverid = #{driverid}
 				AND oo.paymethod != #{paymethod}  <!-- 不是机构支付的都属于个人订单 -->
+				AND (oo.endtime IS NOT NULL OR oo.canceltime IS NOT NULL)
 				<if test="statis == 0">
 				GROUP BY YEAR,MONTH
 				</if>

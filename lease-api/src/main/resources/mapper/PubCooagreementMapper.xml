@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.PubCooagreementMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 合作协议管理 首页分页查询返回list -->
+	<select id="getPubCooagreementList" resultType="PubCooagreement" parameterType="QueryParam">
+		SELECT t1.*,t2.`name` AS companyName,t3.nickname AS operator FROM pub_cooagreement t1 
+		LEFT JOIN le_leasescompany t2 ON (t1.leasecompanyid = t2.id AND t2.`Status`=1)
+		LEFT JOIN le_user t3 ON (t1.updater = t3.id AND t3.`Status`=1) 
+		WHERE 1=1 
+		AND t1.`status`=1 
+		AND t1.platformtype=1
+		AND t1.companyid = #{key} 
+		<if test="queryCompanyname != null and queryCompanyname != '' ">
+			AND t2.`name` like "%"#{queryCompanyname}"%"
+		</if>
+		<if test="queryServicetype != null and queryServicetype != '' ">
+			AND t1.servicetype = #{queryServicetype}
+		</if>
+		ORDER BY t1.updatetime DESC
+		LIMIT #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<!-- 合作协议管理 查询返回数据数 -->
+	<select id="getPubCooagreementListCount" resultType="int" parameterType="QueryParam">
+		SELECT count(*) FROM pub_cooagreement t1 
+		LEFT JOIN le_leasescompany t2 ON (t1.leasecompanyid = t2.id AND t2.`Status`=1)
+		LEFT JOIN le_user t3 ON (t1.updater = t3.id AND t3.`Status`=1) 
+		WHERE 1=1 
+		AND t1.`status`=1 
+		AND t1.platformtype=1
+		AND t1.companyid = #{key}
+		<if test="queryCompanyname != null and queryCompanyname != '' ">
+			AND t2.`name` like "%"#{queryCompanyname}"%"
+		</if>
+		<if test="queryServicetype != null and queryServicetype != '' ">
+			AND t1.servicetype = #{queryServicetype}
+		</if> 
+	</select>
+	<!-- 修改加载的租赁公司（车企名称） -->
+	<select id="getLeLeasescompanyList" resultType="map" parameterType="map">
+		SELECT id as id , name as text FROM le_leasescompany WHERE `Status`=1 
+		<if test="text != null and text != '' ">
+			and name like "%"#{text}"%"
+		</if>
+	</select>
+	<!-- 新增 -->
+	<insert id="createPubCooagreement" parameterType="PubCooagreement">
+		INSERT INTO `pub_cooagreement` 
+		(`id`, `companyid`, `leasecompanyid`, `cooname`, `servicetype`, `coocontent`, `platformtype`, `createtime`, `updatetime`, `creater`, `updater`, `status`) 
+		VALUES 
+		(#{id},#{companyid},#{leasecompanyid},#{cooname},#{servicetype},#{coocontent},#{platformtype},now(),now(),#{creater},#{updater},1);
+	</insert>
+	<!-- 根绝id查询到 pub_cooagreement -->
+	<select id="getById" resultType="PubCooagreement" parameterType="String">
+		SELECT pub_cooagreement.*,(SELECT le_leasescompany.name FROM le_leasescompany WHERE pub_cooagreement.leasecompanyid=le_leasescompany.id AND status = 1) AS companyName FROM pub_cooagreement WHERE `Status`=1 AND id = #{id}
+	</select>
+	<!-- 修改 -->
+	<update id="updatePubCooagreement" parameterType="PubCooagreement">
+		UPDATE `pub_cooagreement` SET companyid = #{companyid},cooname=#{cooname},coocontent=#{coocontent},updatetime=now(),updater=#{updater} WHERE id=#{id}
+	</update>
+	<!-- 删除 -->
+	<update id="deletePubCooagreement" parameterType="String">
+		UPDATE `pub_cooagreement` SET `Status`= 2 WHERE id=#{id}
+	</update>
+	<!-- 新增验重复 -->
+	<select id="checkCreatePubCooagreement" parameterType="PubCooagreement" resultType="int">
+		SELECT count(*) FROM pub_cooagreement WHERE leasecompanyid = #{leasecompanyid} AND servicetype = #{servicetype} AND `status`=1 AND companyid = #{companyid}
+	</select>
+	<!-- 通过车企名车查id -->
+	<select id="getLeLeasescompany" parameterType="map" resultType="LeLeasescompany"> 
+		SELECT * FROM le_leasescompany WHERE `Status`=1 and name = #{name}
+	</select>
+</mapper>

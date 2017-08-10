@@ -54,7 +54,6 @@
 			  width: $(window).width();
 			  margin: 0 auto;
 			}
-			.col-3{width: 23%;}
             .ordermanage_css_body #s2id_orderperson{
                 float: none;
             }
@@ -62,14 +61,15 @@
 	</head>
 	<body class="ordermanage_css_body">
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
-		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 机构订单</div>
+		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 因公订单</div>
 		<div class="content">
 			<ul class="tabmenu" style="padding-top: 30px;">
-				<li><a href="OrderManage/OrgOrderIndex" style="text-decoration: none;">待人工派单</a></li>
+				<li><a href="OrderManage/OrgOrderIndex" style="text-decoration: none;">待接订单</a></li>
 				<li><a href="OrderManage/OrgCurrentOrderIndex" style="text-decoration: none;">当前订单</a></li>
 				<li class="on">异常订单</li>
 				<li><a href="OrderManage/OrgWaitgatheringOrderIndex" style="text-decoration: none;">待收款订单</a></li>
 				<li><a href="OrderManage/OrgHistoryOrderIndex" style="text-decoration: none;">已完成订单</a></li>
+                <li><a href="OrderManage/OrgCancelOrderIndex" style="text-decoration: none;">已取消订单</a></li>
 			</ul>
 			
 			<ul class="tabbox">
@@ -80,46 +80,63 @@
 					</div>
 					<div class="stabox">
 						<div class="row form" style="margin-top: 40px;">
-							<div class="col-3">
-								<label>订单号</label><input id="orderno" type="text" placeholder="订单号">
-							</div>
-							<div class="col-3">
-								<label>订单类型</label>
-								<select id="ordertype">
-									<option value="">全部</option>
-									<option value="1">约车</option>
-									<option value="2">接机</option>
-									<option value="3">送机</option>
-								</select>
-							</div>
-							<div class="col-3">
-								<label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
-							</div>
-							<div class="col-3">
-								<label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
-							</div>
-							<div class="col-3">
-								<label>所属机构</label><input id="organName" type="hidden" placeholder="请选择机构名称">
-							</div>
-							<div class="col-3">
-								<label>复核方</label>
-								<select id="reviewperson">
-									<option value="">全部</option>
-									<option value="1">司机</option>
-									<option value="2">下单人</option>
-								</select>
-							</div>
-							<div class="col-3">
-								<label>订单来源</label>
-								<select id="ordersource" style="margin-left: -3px">
-									<option value="">全部</option>
-									<option value="BC">乘客端 | 因公</option>
-									<option value="BZ">租赁端 | 因公</option>
-									<option value="BJ">机构端</option>
-								</select>
-							</div>
                             <div class="col-3">
-                                <label>服务车企</label><input id="leasescompanyid" type="hidden" placeholder="服务车企">
+                                <label>订单来源</label>
+                                <select id="ordersource" style="margin-left: -3px">
+                                    <option value="">全部</option>
+                                    <option value="BC">乘客端 | 因公</option>
+                                    <option value="BZ">租赁端 | 因公</option>
+                                    <option value="BJ">机构端</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <label>订单性质</label>
+                                <select id="ordernature">
+                                    <option value="">全部</option>
+                                    <option value="0">自营单</option>
+                                    <option value="1">联盟单</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <label>订单类型</label>
+                                <select id="ordertype">
+                                    <option value="">全部</option>
+                                    <option value="1">约车</option>
+                                    <option value="2">接机</option>
+                                    <option value="3">送机</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <label>服务车企</label><input id="belongleasecompany" type="hidden" placeholder="服务车企">
+                            </div>
+                            <div class="col-3">
+                                <label>所属机构</label><input id="organName" type="hidden" placeholder="请选择机构名称">
+                            </div>
+                            <div class="col-3">
+                                <label>复核方</label>
+                                <select id="reviewperson">
+                                    <option value="">全部</option>
+                                    <option value="1">司机</option>
+                                    <option value="2">乘客</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
+                            </div>
+                            <div class="col-3">
+                                <label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
+                            </div>
+                            <div class="col-3">
+                                <label>订单号</label><input id="orderno" type="text" placeholder="订单号">
+                            </div>
+                            <div class="col-3">
+                                <label>订单状态</label>
+                                <select id="paymentstatus">
+                                    <option value="">全部</option>
+                                    <option value="4">未结算</option>
+                                    <option value="0">未支付</option>
+                                    <option value="1">已支付</option>
+                                </select>
                             </div>
                             <div class="col-3" style="white-space: nowrap;">
                                 <label>用车时间</label>
@@ -127,10 +144,10 @@
                                 至
                                 <input style="width:42%;min-width: 140px" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">
                             </div>
-							<div class="col-12" style="text-align: right;">
-								<button class="Mbtn green_a" onclick="search();">查询</button>
-								<button class="Mbtn grey_b" onclick="initSearch();">清空</button>
-							</div>
+                            <div class="col-3" style="text-align: right;">
+                                <button class="Mbtn green_a" onclick="search();">查询</button>
+                                <button class="Mbtn grey_b" onclick="initSearch();">清空</button>
+                            </div>
 						</div>
 						<div class="row" style="position:relative;top:20px;">
 							<div class="col-6">

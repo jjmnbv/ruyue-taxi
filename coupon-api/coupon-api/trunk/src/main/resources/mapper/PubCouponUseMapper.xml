@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.coupon.mapper.PubCouponUseMapper">
+
+    <insert id="saveCouponUse" parameterType="PubCouponUse" >
+        insert into
+        pub_Coupon_Use
+        (`id` ,`couponidref` ,`billingorderid` ,`couponmoney` ,`discountamount` ,`usestate` ,
+        `usetype` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,`status`,actualamount )
+        values
+        (#{id},#{couponidref},#{billingorderid},#{couponmoney},#{discountamount},#{usestate},
+        #{usetype},#{createtime},#{updatetime},#{creater},#{updater},#{status},#{actualamount})
+    </insert>
+
+    <select id="listByCouponUseParam" resultType="PubCouponUse" parameterType="PubCouponUse" >
+        select id,billingorderid from
+          pub_Coupon_Use
+        where
+        status = '1'
+        <if test="couponidref!=null and couponidref!=''">
+            and couponidref = #{couponidref}
+        </if>
+        <if test="usestate!=null and usestate!=''">
+            and usestate = #{usestate}
+        </if>
+        <if test="billingorderid!=null and billingorderid!=''">
+            and billingorderid = #{billingorderid}
+        </if>
+    </select>
+
+
+    <update id="updateCouponUse" parameterType="PubCouponUse">
+        update
+        pub_Coupon_Use
+        set
+        <if test="discountamount!=null and discountamount!=''">
+            discountamount = #{discountamount},
+        </if>
+        <if test="actualamount!=null and actualamount!=''">
+            actualamount = #{actualamount},
+        </if>
+        <if test="usestate!=null and usestate!=''">
+            usestate=#{usestate},
+        </if>
+        <if test="couponidref!=null and couponidref!=''">
+            couponidref = #{couponidref},
+        </if>
+        updatetime = #{updatetime},
+        updater = #{updater}
+        where id = #{id}
+    </update>
+
+
+    <update id="removeUseByOrderIdAndCouponId" parameterType="PubCouponUse">
+        update
+          pub_Coupon_Use
+        set
+          status = #{status},
+          updatetime = #{updatetime},
+          updater = #{updater}
+        where
+          couponidref = #{couponidref}
+        and billingorderid = #{billingorderid}
+    </update>
+    
+    <select id="getCouponUseByOrder" resultType="PubCouponUse" parameterType="String">
+        select t.usestate,t.id,t.couponmoney,t.discountamount,t.actualamount
+        from pub_coupon_use t
+        where t.usestate = #{usestate}
+        and t.billingorderid =#{billingorderid}
+        and t.status='1'
+
+
+    </select>
+
+</mapper>

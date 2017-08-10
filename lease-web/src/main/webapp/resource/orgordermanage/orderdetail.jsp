@@ -86,10 +86,10 @@
 		<div class="crumbs">
 			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> >
             <c:if test="${empty tmp}">
-                <a class="breadcrumb" href="OrderManage/OrgOrderIndex">机构订单</a>
+                <a class="breadcrumb" href="OrderManage/OrgOrderIndex">因公订单</a>
             </c:if>
             <c:if test="${not empty tmp}">
-                <a class="breadcrumb" href="TmpOrderManage/OrgCurrentOrderIndex">机构订单</a>
+                <a class="breadcrumb" href="TmpOrderManage/OrgCurrentOrderIndex">因公订单</a>
             </c:if>
             > 订单详情
 			<button class="SSbtn blue back" onclick="window.history.go(-1);">返回</button>
@@ -159,26 +159,24 @@
 					<td id="sjcx"></td>
 					<td class="grey_c">计费车型</td>
 					<td id="jfcx"></td>
-					<%--<td class="grey_c">更新时间</td>--%>
-					<%--<td><span id="gxsj" class="font_grey"></span></td>--%>
-                    <td class="grey_c">服务车企</td>
-                    <td id="fwcqtd"></td>
+					<td class="grey_c">更新时间</td>
+					<td><span id="gxsj" class="font_grey"></span></td>
 				</tr>
 				<tr id="sjtitle">
 					<td class="grey_c" id="ssjetd">实时金额</td>
 					<td id="ssje"></td>
-                    <td class="grey_c" id="qbjtd">起步价</td>
-                    <td id="qbj"></td>
-                    <td class="grey_c" id="sslcftd">实时里程费</td>
-                    <td id="sslcf"></td>
+                    <td class="grey_c" id="cffytd">处罚费用</td>
+                    <td id="cffy"></td>
+                    <td class="grey_c"></td>
+                    <td></td>
 				</tr>
-                <tr class="sjtitle">
+                <%--<tr class="sjtitle">
                     <td class="grey_c" id="sssjbttd">时长费</td>
                     <td id="sssjbt"></td>
                     <td class="grey_c" id="ksftd">空驶费</td>
                     <td id="ksf"></td>
                     <td class="grey_c" id="yjftd">夜间费</td>
-                    <td id="yjf"></td>
+                    <td id="yjf"></td>--%>
                 </tr>
 			</table>
 			
@@ -356,6 +354,30 @@
 	            </div>
 	        </div>
 		</div>
+
+        <div class="pop_box" id="costDetailDiv" style="display: none;">
+            <div class="tip_box_b" style="width: 500px;">
+                <h3>订单金额明细</h3>
+                <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+                <div class="w400" style="width: 371px;">
+                    <form id="costDetailForm" method="get">
+                        <span id="sfjeDetailTitle">实付金额</span>：<span id="sfjeDetail"></span><br>
+                        <span id="xcfyDetailTitle">行程费用</span>：<span id="xcfyDetail"></span><br>
+                        起步价：<span id="qbjDetail"></span><br>
+                        时长费(<span id="scDetail"></span>)：<span id="scfDetail"></span><br>
+                        里程费(<span id="lcDetail"></span>)：<span id="lcfDetail"></span><br>
+                        券已抵扣：<span id="qydkDetail"></span><br>
+                        计费规则<br>
+                        起步价：<span id="qbjRule"></span><br>
+                        里程费：<span id="lcfRule"></span><br>
+                        时间补贴：<span id="sjbtRule"></span><br>
+                        夜间费：<br>
+                        <span id="yjsdRule"></span><span id="yjfRule"></span>
+                    </form>
+                </div>
+            </div>
+        </div>
+
 		<script type="text/javascript">
 			var orderObj = {
 				orderno: "<%=request.getParameter("orderno")%>"

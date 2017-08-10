@@ -25,7 +25,7 @@
 	</select>
 	<!-- 合作协议管理 查询返回数据数 -->
 	<select id="getPubCooagreementListCount" resultType="int" parameterType="QueryParam">
-		SELECT count(*) AS companyName FROM pub_cooagreement t1 
+		SELECT count(*) FROM pub_cooagreement t1 
 		LEFT JOIN le_leasescompany t2 ON (t1.leasecompanyid = t2.id AND t2.`Status`=1)
 		LEFT JOIN op_user t3 ON (t1.updater = t3.id AND t3.`Status`=1) 
 		WHERE 1=1 
@@ -40,8 +40,11 @@
 		</if> 
 	</select>
 	<!-- 修改加载的租赁公司（车企名称） -->
-	<select id="getLeLeasescompanyList" resultType="LeLeasescompany">
-		SELECT * FROM le_leasescompany WHERE `Status`=1 
+	<select id="getLeLeasescompanyList" resultType="map" parameterType="map">
+		SELECT id as id , name as text FROM le_leasescompany WHERE `Status`=1 
+		<if test="text != null and text != '' ">
+			and name like "%"#{text}"%"
+		</if>
 	</select>
 	<!-- 新增 -->
 	<insert id="createPubCooagreement" parameterType="PubCooagreement">
@@ -62,4 +65,8 @@
 	<update id="deletePubCooagreement" parameterType="String">
 		UPDATE `pub_cooagreement` SET `Status`= 2 WHERE id=#{id}
 	</update>
+	<!-- 新增验重复 -->
+	<select id="checkCreatePubCooagreement" parameterType="PubCooagreement" resultType="int">
+		SELECT count(*) FROM pub_cooagreement WHERE leasecompanyid = #{leasecompanyid} AND servicetype = #{servicetype} AND `status`=1 AND companyid = #{companyid}
+	</select>
 </mapper>

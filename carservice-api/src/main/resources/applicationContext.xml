@@ -186,7 +186,27 @@
 	    <property name="jobClass" value="com.szyciov.carservice.util.scheduler.job.GiveIntegrationJob"/>
 		<property name="cronExpression" value="0 0 10 * * ?" />
 	</bean>
-	
+
+    <!-- 订单里程计算方式结果短信下发 -->
+    <bean id="orderMileageCalctypeJobTrigger" class="com.szyciov.carservice.util.scheduler.CronTriggerBean">
+        <property name="jobClass" value="com.szyciov.carservice.util.scheduler.job.OrderMileageCalctypeJob"/>
+        <property name="cronExpression" value="0 0 10,15,19 * * ?"/>
+    </bean>
+    
+    <!-- 抵扣券活动状态更新任务 -->
+	<bean id="couponActivityStatusJonTrigger" class="com.szyciov.carservice.util.scheduler.CronTriggerBean">
+        <property name="jobClass" value="com.szyciov.carservice.util.scheduler.job.CouponActivityStatusJob"/>
+        <!-- <property name="cronExpression" value="1 0 0 * * ?"/> -->
+        <!-- 为便于测试，调度时间改为每隔半个小时执行，测试完成后，改回每天0点执行 -->
+        <property name="cronExpression" value="0 0/30 * * * ?"/>
+    </bean>
+    
+    <!-- 强派订单行程提醒监控 -->
+    <bean id="orderForceSendRemindJobTrigger" class="com.szyciov.carservice.util.scheduler.CronTriggerBean">
+        <property name="jobClass" value="com.szyciov.carservice.util.scheduler.job.OrderForceSendRemindJob"/>
+        <property name="cronExpression" value="0/3 * * * * ?"/>
+    </bean>
+    	
 	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="dataSource" ref="MyDataSource" />
 		<property name="configLocation" value="classpath:quartz.properties"/>
@@ -200,6 +220,7 @@
 				<entry key="driverHeartbeattimeService" value-ref="driverHeartbeattimeService"/>
                 <entry key="mileageApiService" value-ref="MileageApiService"/>
                 <entry key="giveIntegrationService" value-ref="giveIntegrationService"/>
+                <entry key="CouponActivityStatusService" value-ref="couponActivityStatusService"/>
 			</map>
 		</property>
 	</bean>
@@ -207,7 +228,7 @@
 	<bean class="com.szyciov.carservice.util.scheduler.RefreshQuartz" init-method="run">
 		<property name="triggers">
 			<map>
-				<entry key="organBalanceNewsJobTrigger" value-ref="organBalanceNewsJobTrigger"/>
+			    <entry key="organBalanceNewsJobTrigger" value-ref="organBalanceNewsJobTrigger"/>
 				<entry key="OrderScanJobTrigger" value-ref="OrderTravelReminderScanJobTrigger"/>
 				<entry key="OrderOverTimeCancelJobTrigger" value-ref="OrderOverTimeCancelJobTrigger"/>
 				<entry key="OrderBillJobTrigger" value-ref="OrderBillJobTrigger"/>
@@ -217,6 +238,9 @@
 				<entry key="driverHeartbeattimeJobTrigger" value-ref="driverHeartbeattimeJobTrigger"></entry>
                 <entry key="ordergpsdataMigrationJobTrigger" value-ref="ordergpsdataMigrationJobTrigger"/>
                 <entry key="giveIntegrationJobTrigger" value-ref="giveIntegrationJobTrigger"/>
+               	<entry key="orderMileageCalctypeJobTrigger" value-ref="orderMileageCalctypeJobTrigger"/>
+                <entry key="couponActivityStatusJonTrigger" value-ref="couponActivityStatusJonTrigger"/>
+                <entry key="orderForceSendRemindJobTrigger" value-ref="orderForceSendRemindJobTrigger"/>
 			</map>
 		</property>
 	</bean>

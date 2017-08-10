@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.szyciov.entity.Retcode;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.passenger.Const;
+import com.szyciov.passenger.service.PassengerService4Fourth;
 import com.szyciov.passenger.service.PassengerService4Sec;
 import com.szyciov.passenger.service.PassengerService4Third;
 import com.szyciov.util.BaseController;
@@ -38,6 +39,13 @@ public class PassengerController4Sec extends BaseController {
 	@Resource(name = "PassengerService4Third")
 	public void setPassengerService4Third(PassengerService4Third passengerService4Third) {
 		this.passengerService4Third = passengerService4Third;
+	}
+	
+	public PassengerService4Fourth passengerService4Fourth;
+
+	@Resource(name = "PassengerService4Fourth")
+	public void setPassengerService4Third(PassengerService4Fourth passengerService4Fourth) {
+		this.passengerService4Fourth = passengerService4Fourth;
 	}
 	
 	/**
@@ -211,7 +219,7 @@ public class PassengerController4Sec extends BaseController {
 		try{
 			String version = (String) param.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getBalance4Third(param);
 			}
 			return passengerService4Sec.getBalance4Sec(param);
@@ -245,7 +253,7 @@ public class PassengerController4Sec extends BaseController {
 		try{
 			String version = (String) param.get("version");
 			//v3.0.1接口余额明细
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getDealDetail(param);
 			}
 			return passengerService4Sec.getDealDetail(param);
@@ -269,7 +277,7 @@ public class PassengerController4Sec extends BaseController {
 		try{
 			String version = (String) param.get("version");
 			//v3.0.1接口余额明细
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getBalanceDetail(param);
 			}
 			return passengerService4Sec.getBalanceDetail(param);
@@ -325,7 +333,7 @@ public class PassengerController4Sec extends BaseController {
 		try{
 			String version = (String) param.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getRechargeTypes(param);
 			}
 			return passengerService4Sec.getRechargeTypes(param);
@@ -349,7 +357,7 @@ public class PassengerController4Sec extends BaseController {
 		try {
 			String version = (String) param.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.recharge(param,request);
 			}
 			return passengerService4Sec.recharge(param,request);
@@ -383,6 +391,8 @@ public class PassengerController4Sec extends BaseController {
 		try {
 			if (StringUtils.isNotBlank(String.valueOf(param.get("version"))) && Const.INTERFACE_V3_0_1.equals(String.valueOf(param.get("version")))) {
 				return passengerService4Third.getOder4Op(param);
+			}else if(Const.INTERFACE_V4_0_1.equals(String.valueOf(param.get("version")))){
+				return passengerService4Fourth.getOder4Op(param);
 			} else {
 				return passengerService4Sec.getOder4Op(param);
 			}
@@ -427,7 +437,7 @@ public class PassengerController4Sec extends BaseController {
 		try{
 			String version = (String) param.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.registerAlarm(param);
 			}
 			return passengerService4Sec.registerAlarm(param);
@@ -449,7 +459,7 @@ public class PassengerController4Sec extends BaseController {
 	@ResponseBody
 	public Map<String,Object> getEstimatedCost4OpNetCar(@RequestParam Map<String,Object> param){
 		try {
-			if (StringUtils.isNotBlank(String.valueOf(param.get("version"))) && Const.INTERFACE_V3_0_1.equals(String.valueOf(param.get("version")))) {
+			if (Const.INTERFACE_V3_0_1.equals(String.valueOf(param.get("version")))||Const.INTERFACE_V4_0_1.equals(param.get("version"))) {
 				return passengerService4Third.getEstimatedCost4OpNetCar(param);
 			} else {
 				return passengerService4Sec.getEstimatedCost4OpNetCar(param);
@@ -593,7 +603,7 @@ public class PassengerController4Sec extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口获取未支付的订单
-			if(Const.INTERFACE_V3_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
 				return passengerService4Third.getCurrentTime(params);
 			}
 			return passengerService4Sec.getCurrentTime();

@@ -13,6 +13,7 @@ import com.szyciov.entity.PubCooagreement;
 import com.szyciov.op.entity.LeLeasescompany;
 import com.szyciov.op.param.PubCooagreementQueryParam;
 import com.szyciov.operate.dao.PubCooagreementDao;
+import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.PageBean;
 
 @Service("PubCooagreementService")
@@ -37,15 +38,18 @@ public class PubCooagreementService {
 		return pageBean;
 	}
 	
-	public List<LeLeasescompany> getLeLeasescompanyList(){
-		return dao.getLeLeasescompanyList();
+	public List<Map<String, Object>> getLeLeasescompanyList(Map<String, String> map){
+		return dao.getLeLeasescompanyList(map);
 	};
 	
 	public Map<String, String> createPubCooagreement(PubCooagreement pubCooagreement){
 		Map<String, String> map = new HashMap<>();
+		if(dao.checkCreatePubCooagreement(pubCooagreement)>0){
+			map.put("ResultSign", "Error");
+			map.put("MessageKey", "合作协议已存在");
+			return map;
+		}
 		dao.createPubCooagreement(pubCooagreement);
-//		map.put("ResultSign", "Error");
-//		map.put("MessageKey", "租赁端当前仅允许创建一个服务车企作为B2B业务运营方");
  		map.put("ResultSign", "Successful");
 		map.put("MessageKey", "保存成功");
  		return map;
@@ -57,7 +61,10 @@ public class PubCooagreementService {
 	
 	public Map<String, String> updatePubCooagreement(PubCooagreement pubCooagreement){
 		Map<String, String> map = new HashMap<>();
-		dao.updatePubCooagreement(pubCooagreement);
+		dao.deletePubCooagreement(pubCooagreement.getId());
+		pubCooagreement.setId(GUIDGenerator.newGUID());
+		dao.createPubCooagreement(pubCooagreement);
+//		dao.updatePubCooagreement(pubCooagreement);
 		map.put("ResultSign", "Successful");
 		map.put("MessageKey", "修改成功");
  		return map;

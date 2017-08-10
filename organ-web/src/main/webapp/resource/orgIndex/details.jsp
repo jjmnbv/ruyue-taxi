@@ -162,16 +162,8 @@
                     <td class="t"></td>
                     <td></td>
                 </tr>
-                <c:if test="${orgOrderDetails.orderStatusShow == '等待接单'}">
+                <c:if test="${orgOrderDetails.orderStatusShow == '等待接单' || orgOrderDetails.orderStatusShow == '等待服务'}">
                 	<tr>
-	                    <td class="t">预估费用</td>
-	                    <td><span class="bigred">${orgOrderDetails.estimatedcost}</span><span class="font-blue" style="cursor:pointer;">费用说明</span> </td>
-	                    <td class="t"></td>
-	                    <td></td>
-                	</tr>
-	            </c:if>
-	            <c:if test="${orgOrderDetails.orderStatusShow == '等待服务'}">
-	            	<tr>
 	                    <td class="t">预估费用</td>
 	                    <td><span class="bigred">${orgOrderDetails.estimatedcost}</span><span class="font-blue" style="cursor:pointer;">费用说明</span> </td>
 	                    <td class="t"></td>
@@ -186,10 +178,18 @@
 	                    <td></td>
                 	</tr>
 	            </c:if>
-	            <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">	
+	            <c:if test="${(orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算') && orgOrderDetails.cancelnature != 1}">	
 	            	<tr>
 	                    <td class="t">实际费用</td>
 	                    <td><span class="bigred">${orgOrderDetails.orderamount}</span><span class="font-blue" style="cursor:pointer;">费用说明</span> </td>
+	                    <td class="t"></td>
+	                    <td></td>
+                	</tr>
+	            </c:if>
+	            <c:if test="${(orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算') && orgOrderDetails.cancelnature == 1}">	
+	            	<tr>
+	                    <td class="t">取消费用</td>
+	                    <td><span class="bigred">${orgOrderDetails.cancelamount}</span></td>
 	                    <td class="t"></td>
 	                    <td></td>
                 	</tr>
@@ -200,21 +200,21 @@
 	                    <td><span class="bigred">${orgOrderDetails.orderamount}</span><span class="font-blue" style="cursor:pointer;">费用说明</span> </td>
 	                    <td class="t"></td>
 	                    <td></td>
-                	</tr>
+                	</tr> 
 	            </c:if>
-	            <c:if test="${orgOrderDetails.orderStatusShow == '已取消'}">
+	            <%-- <c:if test="${orgOrderDetails.orderStatusShow == '已取消'}">
 	            	<tr>
 	                    <td class="t">预估费用</td>
 	                    <td><span class="bigred">${orgOrderDetails.estimatedcost}</span><span class="font-blue" style="cursor:pointer;">费用说明</span> </td>
 	                    <td class="t"></td>
 	                    <td></td>
                 	</tr>
-	            </c:if>
+	            </c:if> --%>
             </table>
             <c:if test="${orgOrderDetails.orderStatusShow == '服务中'}">
 	             <div class="trail" data-value = "xingcheng" style="cursor:pointer;width:16%;">查看车辆位置>></div>	
             </c:if>
-            <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">
+            <c:if test="${(orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算') && orgOrderDetails.cancelnature != 1}">
             	 <div class="trail" data-value = "xingcheng" style="cursor:pointer;width:16%;">查看行程轨迹>></div>
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '已支付'}">
@@ -242,18 +242,18 @@
             	<span style="margin-left:50px;font-size: 18px;">车费总计 </span> <span class="bigred" style="margin-left: 50px;">${orderCost.cost}</span>
             	<br><br> 
             </c:if>
-            <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">
+            <c:if test="${(orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算') && orgOrderDetails.cancelnature != 1}">
             	<span style="margin-left:50px;font-size: 18px;">车费总计 </span><span class="bigred" style="margin-left: 50px;">${orgOrderDetails.orderamount}</span>
             	<br><br> 
             </c:if>
-            <c:if test="${orgOrderDetails.orderStatusShow == '已支付'}">
+            <%-- <c:if test="${orgOrderDetails.orderStatusShow == '已支付'}">
             	<span style="margin-left:50px;font-size: 18px;">车费总计 </span><span class="bigred" style="margin-left: 50px;">${orgOrderDetails.orderamount}</span>
             	<br><br> 
-            </c:if>
-            <c:if test="${orgOrderDetails.orderStatusShow == '已取消'}">
+            </c:if> --%>
+           <%--  <c:if test="${orgOrderDetails.orderStatusShow == '已取消'}">
             	<span style="margin-left:50px;font-size: 18px;">车费总计 </span><span class="bigred" style="margin-left: 50px;">${orgOrderDetails.estimatedcost}</span>
 				<br><br> 
-            </c:if>
+            </c:if> --%>
             <span style="margin-left:100px;width: 180px;display:inline-block;">起步价</span><span style="margin-right:100px;">${orderCost.startprice}</span>
             <br>
 			<span style="margin-left:100px;width: 180px;display:inline-block;">里程费（${orderCost.mileage}）</span><span style="margin-right:100px;">${orderCost.rangecost}</span>

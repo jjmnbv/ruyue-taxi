@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
 import com.szyciov.op.entity.PeUser;
+import com.szyciov.op.entity.PeUserExpenses;
+import com.szyciov.op.entity.PeUseraccount;
 import com.szyciov.operate.mapper.OpUserAccountMapper;
 
 @Repository("OpUserAccountDao")
@@ -47,4 +49,16 @@ public class OpUserAccountDao {
     public List<OrgUserExpenses> getUserExpensesListExport(OrganUserAccountQueryParam organUserAccountQueryParam) {
     	return mapper.getUserExpensesListExport(organUserAccountQueryParam);
     }
+    public PeUser admoney(PeUser peUser) {
+		return mapper.admoney(peUser);
+	}
+    public void admoneyOk(PeUser peUser) {
+		 mapper.admoneyOk(peUser);
+	}
+    public void addPeuserexpenses(PeUserExpenses peUserExpenses) {
+		 mapper.addPeuserexpenses(peUserExpenses);
+	}
+    public void insertAccount(PeUseraccount peUseraccount) {
+		 mapper.insertAccount(peUseraccount);
+	}
 }

@@ -1,12 +1,13 @@
 package com.szyciov.carservice.mapper;
 
+import java.util.List;
+import java.util.Map;
+
 import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.PubDrivertrack;
 import com.szyciov.entity.PubOrdergpsdata;
 import com.szyciov.entity.PubOrdermileagecalcLog;
 import com.szyciov.op.entity.PubVehicle;
-
-import java.util.List;
 
 /**
  * Created by shikang on 2017/5/19.
@@ -38,5 +39,9 @@ public interface MileageApiMapper {
     void deletePubOrdergpsdataById(String id);
 
     PubOrdergpsdata getBaiduOffset(PubOrdergpsdata object);
+
+    List<Map<String, Object>> getOrderMileageCalctypeCount(Map<String, Object> param);
+
+    String getOrderMileageCalctypePhone();
 
 }

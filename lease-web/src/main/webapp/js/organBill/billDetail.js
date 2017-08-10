@@ -21,7 +21,7 @@ function initGrid() {
         	sEmptyTable: "没有查询到未结算订单数据"
         },
         columns: [     
-	        {mDataProp: "ordertype", sTitle: "类型", sClass: "center", sortable: true },
+	        {mDataProp: "ordertype", sTitle: "订单类型", sClass: "center", sortable: true },
 	        //{mDataProp: "orderno", sTitle: "订单号", sClass: "center", sortable: true },
 	        {
                 //自定义操作列
@@ -37,7 +37,7 @@ function initGrid() {
                 }
             },
 	        //{mDataProp: "orderstatus", sTitle: "订单状态", sClass: "center", sortable: true },
-	        {
+	        /*{
 				mDataProp : "orderstatus",
 				sTitle : "订单状态",
 				sClass : "center",
@@ -55,28 +55,78 @@ function initGrid() {
 						return "";
 					}
 				}
-			},
-	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true },
+			},*/
+            {mDataProp: "expensetype", sTitle: "费用类型", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (data == 1) {
+							return "行程服务";
+						} else if (data == 2) {
+							return "取消处罚";
+						}
+					} else {
+						return "";
+					}
+				}
+            },
+	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true, 
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return full.orderamount;
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
+				}
+	        },
 	        {mDataProp: "mileage", sTitle: "里程(公里)", sClass: "center", sortable: true, 
 	        	"mRender": function(data, type, full) {
-	        		return (full.mileage/1000).toFixed(1);
+	        		if (data != null) {
+						if (full.orderstatus == '7') {
+							return (full.mileage/1000).toFixed(1);
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
 	        	}
 	        },
 	        {mDataProp: "JFSC", sTitle: "计费时长(分钟)", sClass: "center", sortable: true, 
 	        	mRender: function(data, type, full) {
-	        		if(null != full.pricecopy) {
-	        			var pricecopy = JSON.parse(full.pricecopy);
-	        			if(pricecopy.timetype == 1) { //低速用时
-	        				return pricecopy.slowtimes;
-	        			} else if(pricecopy.timetype == 0) { //总用时
-	        				var starttime = new Date(full.starttime);
-	        				var endtime = new Date(full.endtime);
-	        				return Math.ceil((endtime - starttime)/(1000*60));
-	        			}
+	        		if (full.orderstatus == '7') {
+	        			if(null != full.pricecopy) {
+		        			var pricecopy = JSON.parse(full.pricecopy);
+		        			if(pricecopy.timetype == 1) { //低速用时
+		        				return pricecopy.slowtimes;
+		        			} else if(pricecopy.timetype == 0) { //总用时
+		        				var starttime = new Date(full.starttime);
+		        				var endtime = new Date(full.endtime);
+		        				return Math.ceil((endtime - starttime)/(1000*60));
+		        			}
+		        		}
+		        		return "0";
+	        		} else {
+	        			return "/";
 	        		}
-	        		return "0";
 	        	}
 	        },
+	        {mDataProp: "cancelamount", sTitle: "取消费用(元)", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return "/";
+						} else if (full.orderstatus == '8') {
+							return full.cancelamount;
+						}
+					} else {
+						return "/";
+					}
+				}
+            },
 	        {mDataProp: "userid", sTitle: "下单人", sClass: "center", sortable: true },
 	        {mDataProp: "passengers", sTitle: "乘车人", sClass: "center", sortable: true },
 	        {mDataProp: "driverid", sTitle: "司机信息", sClass: "center", sortable: true },

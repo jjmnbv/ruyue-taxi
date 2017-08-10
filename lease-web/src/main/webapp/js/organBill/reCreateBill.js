@@ -79,9 +79,15 @@ function initGrid() {
 				"bSearchable" : false,
 				"sortable" : false,
 				"mRender" : function(data, type, full) {
+					var orderamount = 0;
+					if (full.orderstatus == '7') {
+						orderamount = full.orderamount;
+					} else if (full.orderstatus == '8') {
+						orderamount = full.cancelamount;
+					}
 					var html = "";
 					html += '<input type="checkbox" id="checkOrder' + full.orderno + '" name="checkOrder" value="'
-							+ full.orderno + '" amountvalue="' + full.orderamount
+							+ full.orderno + '" amountvalue="' + orderamount
 							+ '" onclick="onClickHander(this)"></input>';
 					return html;
 				}
@@ -100,7 +106,7 @@ function initGrid() {
 					}
 				}
 			},
-	        {mDataProp: "ordertype", sTitle: "类型", sClass: "center", sortable: true },
+	        {mDataProp: "ordertype", sTitle: "订单类型", sClass: "center", sortable: true },
 	        //{mDataProp: "orderno", sTitle: "订单号", sClass: "center", sortable: true },
 	        {
                 //自定义操作列
@@ -116,7 +122,7 @@ function initGrid() {
                 }
             },
 	        //{mDataProp: "orderstatus", sTitle: "订单状态", sClass: "center", sortable: true },
-	        {
+	        /*{
 				mDataProp : "orderstatus",
 				sTitle : "订单状态",
 				sClass : "center",
@@ -134,13 +140,59 @@ function initGrid() {
 						return "";
 					}
 				}
-			},
-	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true },
+			},*/
+            {mDataProp: "expensetype", sTitle: "费用类型", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (data == 1) {
+							return "行程服务";
+						} else if (data == 2) {
+							return "取消处罚";
+						}
+					} else {
+						return "";
+					}
+				}
+            },
+	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true, 
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return full.orderamount;
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
+				}
+	        },
 	        {mDataProp: "mileage", sTitle: "里程(公里)", sClass: "center", sortable: true, 
 	        	"mRender": function(data, type, full) {
-	        		return (full.mileage/1000).toFixed(1);
+	        		if (data != null) {
+						if (full.orderstatus == '7') {
+							return (full.mileage/1000).toFixed(1);
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
 	        	}
 	        },
+	        {mDataProp: "cancelamount", sTitle: "取消费用(元)", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return "/";
+						} else if (full.orderstatus == '8') {
+							return full.cancelamount;
+						}
+					} else {
+						return "/";
+					}
+				}
+            },
 	        {mDataProp: "userid", sTitle: "下单人", sClass: "center", sortable: true },
 	        {mDataProp: "passengers", sTitle: "乘车人", sClass: "center", sortable: true }
         ]
@@ -296,7 +348,7 @@ function initGridPreview(orderId) {
 					}
 				}
 			},
-	        {mDataProp: "ordertype", sTitle: "类型", sClass: "center", sortable: true },
+	        {mDataProp: "ordertype", sTitle: "订单类型", sClass: "center", sortable: true },
 	        //{mDataProp: "orderno", sTitle: "订单号", sClass: "center", sortable: true },
 	        {
                 //自定义操作列
@@ -312,7 +364,7 @@ function initGridPreview(orderId) {
                 }
             },
 	        //{mDataProp: "orderstatus", sTitle: "订单状态", sClass: "center", sortable: true },
-	        {
+	        /*{
 				mDataProp : "orderstatus",
 				sTitle : "订单状态",
 				sClass : "center",
@@ -330,13 +382,59 @@ function initGridPreview(orderId) {
 						return "";
 					}
 				}
-			},
-	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true },
+			},*/
+            {mDataProp: "expensetype", sTitle: "费用类型", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (data == 1) {
+							return "行程服务";
+						} else if (data == 2) {
+							return "取消处罚";
+						}
+					} else {
+						return "";
+					}
+				}
+            },
+	        {mDataProp: "orderamount", sTitle: "订单金额(元)", sClass: "center", sortable: true, 
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return full.orderamount;
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
+				}
+	        },
 	        {mDataProp: "mileage", sTitle: "里程(公里)", sClass: "center", sortable: true, 
 	        	"mRender": function(data, type, full) {
-	        		return (full.mileage/1000).toFixed(1);
+	        		if (data != null) {
+						if (full.orderstatus == '7') {
+							return (full.mileage/1000).toFixed(1);
+						} else if (full.orderstatus == '8') {
+							return "/";
+						}
+					} else {
+						return "/";
+					}
 	        	}
 	        },
+	        {mDataProp: "cancelamount", sTitle: "取消费用(元)", sClass: "center", sortable: true,
+            	mRender : function(data, type, full) {
+					if (data != null) {
+						if (full.orderstatus == '7') {
+							return "/";
+						} else if (full.orderstatus == '8') {
+							return full.cancelamount;
+						}
+					} else {
+						return "/";
+					}
+				}
+            },
 	        {mDataProp: "userid", sTitle: "下单人", sClass: "center", sortable: true },
 	        {mDataProp: "passengers", sTitle: "乘车人", sClass: "center", sortable: true }
         ]

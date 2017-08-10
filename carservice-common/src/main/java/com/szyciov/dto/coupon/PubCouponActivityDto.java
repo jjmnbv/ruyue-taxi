@@ -19,14 +19,14 @@ public class PubCouponActivityDto {
 	  private Double sendfixedmoney;       //'固定方法的金额',
 	  private Double sendlowmoney;         //'随机发放的最新金额',
 	  private Double sendhighmoney;        //'随机发放的最高金额',
-	  private String sendstarttime;        //'发放的开始时间',
-	  private String sendendtime;          //'发放的结束时间',
+	  private String sendstarttime;        //'发放的开始时间',格式yyyy-MM-dd
+	  private String sendendtime;          //'发放的结束时间',格式yyyy-MM-dd
 	  private Integer sendcount;          //每个人优惠卷发放数量
 	  private Integer usetype;              //'使用区域 1-发放区域有效，2-开通业务城市有效',
 	  private Integer outimetype;           //'有效期类型 1-多少天内有效，2-固定期限',
 	  private Integer sendtimeinday;       //'发放多少天内有效',
-	  private String fixedstarttime;       //'固定开始时间有效',
-	  private String fixedendtime;         //'固定时间结束',
+	  private String fixedstarttime;       //'固定开始时间',格式yyyy-MM-dd
+	  private String fixedendtime;         //'固定结束时间',格式yyyy-MM-dd
 	  private String lecompanyid;          //'租赁公司或者运管端id',
 	  private Integer platformtype;         //'平台类型 0-运管端，1-租赁端',
 	  private String updatetime;           //更新时间
@@ -34,7 +34,9 @@ public class PubCouponActivityDto {
 	  private String creater;
 	  private String updater;
 	  private String citys;               //usetype=1时，限定发放区域，城市名以 ，隔开
-	  private String users;               //指定用户时，用户ID以 ， 隔开
+	  private String users;               //指定用户时，用户account以 ， 隔开
+	  private String couponrule;          //优惠券规则
+	  
 	  
 	public String getId() {
 		return id;
@@ -207,5 +209,10 @@ public class PubCouponActivityDto {
 	public PubCouponActivityDto() {
 		super();
 	}
-	  
+	public String getCouponrule() {
+		return couponrule;
+	}
+	public void setCouponrule(String couponrule) {
+		this.couponrule = couponrule;
+	}
 }

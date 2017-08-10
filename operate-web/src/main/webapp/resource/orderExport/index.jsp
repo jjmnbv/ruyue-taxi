@@ -111,6 +111,9 @@
 				<div class="col-4" style="width: 33.5%;">
 					<label >司机</label><input id="driver" type="hidden" placeholder="请选择司机">
 				</div>
+				<div class="col-4" style="width: 33.5%;">
+					<label >服务车企</label><input id="leasescompany" type="hidden" placeholder="请选择服务车企">
+				</div>
 				<div class="col-12" style="text-align: right;">
 					<button class="Mbtn red_q" onclick="search();">查询</button>
 					<button class="Mbtn grey_w" onclick="reset();">清空</button>

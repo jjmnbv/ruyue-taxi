@@ -65,17 +65,19 @@ function initForm() {
         minuteStep: 1
     });
 
-    $("#leasescompanyid").select2({
+    $("#belongleasecompany").select2({
         placeholder: "服务车企",
         minimumInputLength: 0,
         allowClear: true,
         ajax: {
-            url: $("#baseUrl").val() + "OrderManage/GetBelongLeaseCompanySelect",
+            url: $("#baseUrl").val() + "OrderManage/GetBelongCompanySelect",
             dataType: 'json',
             data: function (term, page) {
                 $(".datetimepicker").hide();
                 return {
-                    shortname: term
+                    belongleasecompany: term,
+                    type: "6",
+                    usetype: "1"
                 };
             },
             results: function (data, page) {
@@ -83,7 +85,6 @@ function initForm() {
             }
         }
     });
-
 }
 
 /**
@@ -119,14 +120,14 @@ function manualOrderdataGrid() {
 	var gridObj = {
 		id: "manualOrderdataGrid",
         sAjaxSource: $("#baseUrl").val() + "OrderManage/GetOrgOrderByQuery",
-        userQueryParam: [{name: "type", value: "5"}, { name: "usetype", value: "1" }],
+        userQueryParam: [{name: "type", value: "6"}, { name: "usetype", value: "1" }],
         iLeftColumn: 3,
         scrollX: true,
         language: {
         	sEmptyTable: "暂无服务订单信息"
         },
         columns: [
-        	/*{
+        	{
                 //自定义操作列
                 "mDataProp": "ZDY",
                 "sClass": "center",
@@ -135,25 +136,23 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                    return "";
+                    if(full.orderstatus == '7' && full.paymentstatus == "1") {
+                        return "<button type='button' class='SSbtn red' onclick='applyReview(\"" + full.orderno + "\")'><i class='fa fa-paste'></i>申请复核</button>";
+                    } else {
+                        return "";
+                    }
                 }
-            },*/
+            },
             {
                 "mDataProp": "DDLY",
                 "sClass": "center",
                 "sTitle": "订单来源",
                 "mRender": function (data, type, full) {
                    var orderno = full.orderno.substring(0, 2);
-                   if(orderno == "BC") {
-                	   return "乘客端 | 因公";
-                   } else if(orderno == "CJ") {
+                   if(orderno == "CJ") {
                 	   return "乘客端 | 因私";
-                   } else if(orderno == "BZ") {
-                	   return "租赁端 | 因公";
                    } else if(orderno == "CZ") {
                 	   return "租赁端 | 因私";
-                   } else if(orderno == "BJ") {
-                	   return "机构端";
                    } else {
                 	   return "/";
                    }
@@ -165,13 +164,8 @@ function manualOrderdataGrid() {
                 "sTitle": "订单号",
                 "sWidth": 200,
                 "mRender": function (data, type, full) {
-                   var htmlArr = [];
-                   htmlArr.push("<a href=\"" + $("#baseUrl").val() + "OrderManage/PersonOrderDetailIndex?orderno=");
-                   htmlArr.push(full.orderno);
-                   htmlArr.push("\">");
-                   htmlArr.push(full.orderno);
-                   htmlArr.push("</a>");
-                   return htmlArr.join("");
+                    return "<a href='" + $("#baseUrl").val() + "OrderManage/PersonOrderDetailIndex?orderno="
+                        + full.orderno + "'>" + full.orderno + "</a>";
                 }
             },
             {
@@ -183,19 +177,19 @@ function manualOrderdataGrid() {
                    	case "1": return "约车"; break;
                    	case "2": return "接机"; break;
                    	case "3": return "送机"; break;
-                   	default: return "";
+                   	default: return "/";
                    }
                 }
             },
             {mDataProp: "paymentstatus", sTitle: "订单状态", sClass: "center", sortable: true,
             	"mRender": function(data, type, full) {
-                	if(full.orderstatus == "7" && full.paymentstatus == "1") {
-                		return "已支付";
-                	} else if(full.orderstatus == "8") {
-                		return "<span class='font_red'>已取消</span>";
-                	} else {
-                		return "/";
-                	}
+                    if(full.paymentstatus == "1") {
+                        return "已支付";
+                    } else if(full.paymentstatus == "9") {
+                        return "已关闭";
+                    } else {
+                        return "/";
+                    }
                 }
             },
             {
@@ -212,27 +206,79 @@ function manualOrderdataGrid() {
                 }
             },
             {mDataProp: "paymethod", sTitle: "支付方式", sClass: "center", sortable: true,"mRender": function(data, type, full) {
-            	switch(full.paymethod) {
-	               	case "0": return "个人支付"; break;
-					case "1": return "个人垫付"; break;
-					default: return "/";
-               }
-            } },
+                    switch(full.paymethod) {
+                        case "0": return "个人支付"; break;
+                        case "1": return "个人垫付"; break;
+                        default: return "/";
+                   }
+                }
+            },
+            {
+                "mDataProp": "expensetype",
+                "sClass": "center",
+                "sTitle": "费用类型",
+                "mRender": function (data, type, full) {
+                    if(full.expensetype == 1) {
+                        return "行程服务";
+                    } else if(full.expensetype == 2) {
+                        return "取消处罚";
+                    } else {
+                        return "/";
+                    }
+                }
+            },
             {
 				mDataProp : "orderamount",
 				sTitle : "订单金额(元)",
 				sClass : "center",
 				sortable : true,
 				"mRender" : function(data, type, full) {
-					if (null == full.shouldpayamount) {
-						return full.orderamount;
-					} else {
-						return full.shouldpayamount;
-					}
+                    if(full.expensetype == 1) {
+                        return full.shouldpayamount;
+                    } else {
+                        return "/";
+                    }
 				}
 			},
+            {
+                mDataProp : "SFJE",
+                sTitle : "实付金额(元)",
+                sClass : "center",
+                sortable : true,
+                "mRender" : function(data, type, full) {
+                    if(full.paymentstatus == "1") {
+                        var actualamount = full.actualamount;
+                        if(null == actualamount) {
+                            actualamount = 0;
+                        }
+                        return full.shouldpayamount - actualamount;
+                    } else {
+                        return "/";
+                    }
+                }
+            },
+            {
+                mDataProp : "actualamount",
+                sTitle : "优惠金额(元)",
+                sClass : "center",
+                sortable : true,
+                "mRender" : function(data, type, full) {
+                    if(full.shouldpayamount > 0) {
+                        if(null == full.actualamount) {
+                            return "0";
+                        } else {
+                            return full.actualamount;
+                        }
+                    } else {
+                        return "/";
+                    }
+                }
+            },
             {mDataProp: "mileage", sTitle: "里程(公里)", sClass: "center", sortable: true,
 	        	"mRender": function(data, type, full) {
+                    if(full.expensetype == 2) {
+                        return "/";
+                    }
 	        		if(null != full.reviewid && "" != full.reviewid) {
 	        			return (full.reviewmileage/1000).toFixed(1);
 	        		}
@@ -241,9 +287,9 @@ function manualOrderdataGrid() {
 	        },
 	        {mDataProp: "JFSC", sTitle: "计费时长(分钟)", sClass: "center",
 	        	mRender: function(data, type, full) {
-	        		if(full.orderstatus == '8') {
-	        			return "0";
-	        		}
+                    if(full.expensetype == 2) {
+                        return "/";
+                    }
 	        		if(null != full.pricecopy) {
 	        			var timetype = JSON.parse(full.pricecopy).timetype;
 	        			if(timetype == 0) {
@@ -264,6 +310,19 @@ function manualOrderdataGrid() {
 	        		}
 	        	}
 	        },
+            {
+                mDataProp : "cancelamount",
+                sTitle : "取消费用(元)",
+                sClass : "center",
+                sortable : true,
+                "mRender" : function(data, type, full) {
+                    if(full.expensetype == 2) {
+                        return full.cancelamount;
+                    } else {
+                        return "/";
+                    }
+                }
+            },
 	        {
                 "mDataProp": "XDRXX",
                 "sClass": "center",
@@ -297,7 +356,18 @@ function manualOrderdataGrid() {
 					}
 				}
             },
-            {mDataProp: "usetime", sTitle: "用车时间", sClass: "center", sortable: true },
+            {
+                "mDataProp": "usetime",
+                "sClass": "left",
+                "sTitle": "用车时间",
+                "mRender": function (data, type, full) {
+                    if(null == full.usetime) {
+                        return "/";
+                    } else {
+                        return dateFtt(full.usetime, "yyyy-MM-dd hh:mm");
+                    }
+                }
+            },
             {
                 "mDataProp": "SCDZ",
                 "sClass": "center",
@@ -309,32 +379,30 @@ function manualOrderdataGrid() {
                 }
             },
             {
-                "mDataProp": "cancelparty",
-                "sClass": "center",
-                "sTitle": "取消方",
-                "mRender": function (data, type, full) {
-                   switch(full.cancelparty) {
-                   	case "0": return "客服"; break;
-                   	case "2": return "客服"; break;
-                   	case "3": return "下单人"; break;
-                   	case "4": return "系统"; break;
-                   	default: return "/";
-                   }
-                }
-            },
-            {
                 "mDataProp": "tradeno",
                 "sClass": "center",
                 "sTitle": "交易流水号",
                 "mRender": function (data, type, full) {
-                   if(null != full.tradeno) {
-                	   return full.tradeno;
-                   } else {
-                	   return "/";
-                   }
+                    if(null != full.tradeno) {
+                        return full.tradeno;
+                    } else {
+                        return "/";
+                    }
                 }
             },
-            {mDataProp: "shortname", sTitle: "服务车企", sClass: "center", sortable: true}
+            {
+                "mDataProp": "ordernature",
+                "sClass": "center",
+                "sTitle": "订单性质",
+                "mRender": function (data, type, full) {
+                    if(full.companyid == full.belongleasecompany) {
+                        return "自营单";
+                    } else {
+                        return "联盟单";
+                    }
+                }
+            },
+            {mDataProp: "belongcompanyname", sTitle: "服务车企", sClass: "center", sortable: true}
         ],
         userHandle: function(oSettings, result) {
         	if(null == result.aaData || result.aaData.length == 0) {
@@ -346,28 +414,28 @@ function manualOrderdataGrid() {
         	}
         }
     };
-    
 	dataGrid = renderGrid(gridObj);
 }
-
 
 /**
  * 查询
  */
 function search() {
 	var conditionArr = [
-		{"name":"orderNo", "value":$("#orderno").val()},
-		{"name":"orderType", "value":$("#ordertype").val()},
-		{"name":"orderstatus", "value":$("#orderstatus").val()},
-		{"name":"userId", "value":$("#orderperson").val()},
-		{"name":"driverid", "value":$("#drivername").val()},
-		{"name":"paymethod", "value":$("#paymethod").val()},
-		{"name":"cancelparty", "value":$("#cancelparty").val()},
-		{"name":"minUseTime", "value":$("#minUseTime").val()},
-		{"name":"maxUseTime", "value":$("#maxUseTime").val()},
-		{"name":"ordersource", "value":$("#ordersource").val()},
-		{"name":"tradeno", "value":$("#tradeno").val()},
-        {"name":"belongleasecompany", "value":$("#leasescompanyid").val()}
+        {"name":"ordersource", "value":$("#ordersource").val()},
+        {"name":"ordernature", "value":$("#ordernature").val()},
+        {"name":"orderType", "value":$("#ordertype").val()},
+        {"name":"belongleasecompany", "value":$("#belongleasecompany").val()},
+        {"name":"driverid", "value":$("#drivername").val()},
+        {"name":"userId", "value":$("#orderperson").val()},
+        {"name":"paytype", "value":$("#paytype").val()},
+        {"name":"expensetype", "value":$("#expensetype").val()},
+        {"name":"orderNo", "value":$("#orderno").val()},
+        {"name":"tradeno", "value":$("#tradeno").val()},
+        {"name":"paymentstatus", "value":$("#paymentstatus").val()},
+        {"name":"paymethod", "value":$("#paymethod").val()},
+        {"name":"minUseTime", "value":$("#minUseTime").val()},
+        {"name":"maxUseTime", "value":$("#maxUseTime").val()}
 	];
 	dataGrid.fnSearch(conditionArr);
 }
@@ -377,52 +445,50 @@ function search() {
  * @param {} orderno
  */
 function applyReview(orderno) {
-	$("#orderno").val(orderno);
-	
-	$("#cancelpartyFormDiv").show();
-	
-	showObjectOnForm("cancelpartyForm", null);
-	
-	var editForm = $("#cancelpartyForm").validate();
-	editForm.resetForm();
-	editForm.reset();
+    $("#cancelpartyFormDiv").show();
+
+    showObjectOnForm("cancelpartyForm", null);
+    $("#ordernoHide").val(orderno);
+
+    var editForm = $("#cancelpartyForm").validate();
+    editForm.resetForm();
+    editForm.reset();
 }
 
 /**
  * 复核
  */
 function save() {
-	var form = $("#cancelpartyForm");
-	if(!form.valid()) return;
-	
-	var formData = {
-		orderno: $("#orderno").val(),
-		orderreason: $("#reasonTextarea").val(),
-		reviewperson: $("#reviewpersonAgain").val()
-	}
-	
-	$.ajax({
-		type: "POST",
-		dataType: "json",
-		url: $("#baseUrl").val() + "OrderManage/ApplyRecheckOrder",
-		data: JSON.stringify(formData),
-		contentType: "application/json; charset=utf-8",
-		async: false,
-		success: function (result) {
-			var message = result.message == null ? result : result.message;
-			if (result.status == "success") {
-				$("#cancelpartyFormDiv").hide();
-				toastr.options.onHidden = function() {
-            		window.location.href = $("#baseUrl").val() + "OrderManage/PersonAbnormalOrderIndex";
-            	}
-            	toastr.success(message, "提示");
-			} else {
-            	toastr.error(message, "提示");
-			}
-			
-			dataGrid._fnReDraw();
-		}
-	});
+    var form = $("#cancelpartyForm");
+    if(!form.valid()) return;
+
+    var formData = {
+        orderno: $("#ordernoHide").val(),
+        orderreason: $("#reasonTextarea").val(),
+        reviewperson: $("#reviewpersonAgain").val()
+    }
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: $("#baseUrl").val() + "OrderManage/ApplyRecheckOrder",
+        data: JSON.stringify(formData),
+        contentType: "application/json; charset=utf-8",
+        async: false,
+        success: function (result) {
+            var message = result.message == null ? result : result.message;
+            if (result.status == "success") {
+                $("#cancelpartyFormDiv").hide();
+                toastr.options.onHidden = function() {
+                    window.location.href = $("#baseUrl").val() + "OrderManage/PersonAbnormalOrderIndex";
+                }
+                toastr.success(message, "提示");
+            } else {
+                toastr.error(message, "提示");
+            }
+
+            dataGrid._fnReDraw();
+        }
+    });
 }
 
 /**
@@ -433,32 +499,23 @@ function canel() {
 }
 
 /**
- * 显示长度限制
- * @param addr
- */
-function limitLength(text) {
-	if(null != text && text.length > 18) {
-		return text.substr(0, 18) + "...";
-	}
-	return text;
-}
-
-/**
  * 初始化查询
  */
 function initSearch() {
-	$("#orderno").val("");
-	$("#ordertype").val("");
-	$("#orderstatus").val("");
-	$("#orderperson").select2("val", "");
-	$("#drivername").select2("val", "");
-	$("#paymethod").val("");
-	$("#cancelparty").val("");
-	$("#minUseTime").val("");
-	$("#maxUseTime").val("");
-	$("#ordersource").val("");
-	$("#tradeno").val("");
-    $("#leasescompanyid").select2("val", "");
+    $("#ordersource").val("");
+    $("#ordernature").val("");
+    $("#ordertype").val("");
+    $("#belongleasecompany").select2("val", "");
+    $("#drivername").select2("val", "");
+    $("#orderperson").select2("val", "");
+    $("#paytype").val("");
+    $("#expensetype").val("");
+    $("#orderno").val("");
+    $("#tradeno").val("");
+    $("#paymentstatus").val("");
+    $("#paymethod").val("");
+    $("#minUseTime").val("");
+    $("#maxUseTime").val("");
 	search();
 }
 

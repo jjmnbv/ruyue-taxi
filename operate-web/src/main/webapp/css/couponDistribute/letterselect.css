@@ -1,0 +1,66 @@
+#inp_box1 {
+  display: inline-block;
+  position: relative;
+}
+#inp_box2 {
+  display: inline-block;
+  position: relative;
+  top: 200px;
+}
+#inp_box3 {
+  display: inline-block;
+  position: relative;
+  top: 300px;
+  left: 500px;
+}
+.kongjian_list {
+  display:none;
+  position: absolute;
+ /*  left: 0;
+  top: 100px; */
+  z-index: 1000;
+  font-family: 'Arial Normal', 'Arial';
+  width: 336px;
+  background: #fff;
+  box-shadow:5px 5px 5px rgba(0,0,0,.4);
+  border-left: 1px solid #dbdbdb;
+}
+.kongjian_list * {
+  margin: 0;
+  padding: 0;
+}
+.kongjian_list .box {
+  width: 336px;
+  min-height: 108px;
+  font-size: 12px;
+  zoom:1;
+}
+.kongjian_list .box .title {
+  border-bottom: 1px solid #dbdbdb;
+  height: 29px;
+}
+.kongjian_list .box .title span {
+  display: inline-block;
+  background:#f38a33;
+  width: 67px;
+  line-height: 29px;
+  border-left: 1px solid #dbdbdb;
+  border-bottom: 1px solid #dbdbdb;
+  color: #fff;
+  text-align: center;
+  float: left;
+  cursor: pointer;
+}
+.kongjian_list .box .con {
+  padding: 5px;
+  display: none;
+}
+.kongjian_list .box .con span {
+  display: inline-block;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+.kongjian_list .box .con span:hover {
+  color: #cc6600;
+}
+/*# sourceMappingURL=demo.css.map */

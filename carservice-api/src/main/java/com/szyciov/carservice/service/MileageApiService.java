@@ -1,5 +1,12 @@
 package com.szyciov.carservice.service;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
 import com.szyciov.carservice.dao.MileageApiDao;
 import com.szyciov.carservice.dao.OrderApiDao;
 import com.szyciov.driver.entity.OrderInfoDetail;
@@ -31,11 +38,6 @@ import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-
-import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by shikang on 2017/5/18.
@@ -911,6 +913,23 @@ public class MileageApiService {
 
         LOGGER.info("订单(" + orderno + ")轨迹查询花费时间:" + (System.currentTimeMillis() - startLong));
         return json;
+    }
+
+    /**
+     * 订单里程计算方式结果短信下发
+     * @param param
+     * @return
+     */
+    public List<Map<String, Object>> getOrderMileageCalctypeCount(Map<String, Object> param) {
+        return mileageApiDao.getOrderMileageCalctypeCount(param);
+    }
+
+    /**
+     * 查询字典表中下发短信的号码
+     * @return
+     */
+    public String getOrderMileageCalctypePhone() {
+        return mileageApiDao.getOrderMileageCalctypePhone();
     }
 
 }

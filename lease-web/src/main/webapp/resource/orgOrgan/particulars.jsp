@@ -151,7 +151,7 @@
 					<label>结算方式<em class="asterisk"></em></label>
 					<select id="billType" name="billType" disabled="disabled">
 						<c:choose>
-							<c:when test="${orgOrgan.cooperationStatus == 1}"> 
+							<c:when test="${orgOrgan.billType == '1'}"> 
 								<option value="1" selected="selected">季结</option>
 							</c:when>
 							<c:otherwise> 

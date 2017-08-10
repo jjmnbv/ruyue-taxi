@@ -171,6 +171,11 @@ public class OrgUser {
 	 */
 	private String customerType;
 	
+	/**
+	 * 注册城市
+	 */
+	private String registercity;
+	
 	/**  
 	 * 获取是否分配了用车规则  
 	 * @return hasrule 是否分配了用车规则  
@@ -838,6 +843,14 @@ public class OrgUser {
 
 	public void setCustomerType(String customerType) {
 		this.customerType = customerType;
+	}
+
+	public String getRegistercity() {
+		return registercity;
+	}
+
+	public void setRegistercity(String registercity) {
+		this.registercity = registercity;
 	}
 
 

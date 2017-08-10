@@ -133,4 +133,12 @@ public class DictionaryDao {
 	public Map<String,Object> getYYFJF(Map<String, Object> params) {
 		return mapper.getYYFJF(params);
 	}
+
+	public List<String> getComplaints() {
+		return mapper.getComplaints();
+	}
+
+	public List<String> getCancelResons() {
+		return mapper.getCancelResons();
+	}
 }

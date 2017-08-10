@@ -1,8 +1,14 @@
 package com.szyciov.carservice.service;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.szyciov.carservice.dao.OpOrderApiDao;
 import com.szyciov.carservice.dao.OrderApiDao;
 import com.szyciov.driver.entity.OrderInfoMessage;
+import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.OrderMessageFactory;
 import com.szyciov.entity.PubSendrules;
 import com.szyciov.entity.UserNews;
@@ -17,14 +23,12 @@ import com.szyciov.op.entity.PubDriver;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.JedisUtil;
+import com.szyciov.util.StringUtil;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ZF on 2017/5/26.
@@ -107,6 +111,10 @@ public class OpOrderApiService {
 
             //添加司机消息
             order = getOpOrder(object.getOrderno());
+
+            order.setLastsendtime(StringUtil.addDate(new Date(), 20));
+            addDriverTravelReminder(order);
+
             createDriverNews(order, 0, OrderMessageFactory.OrderMessageType.MANTICORDER);
 
             if (orderResult == 1 && recordRsult == 1) {
@@ -289,5 +297,14 @@ public class OpOrderApiService {
 
     public int insertOpSendrecord(OpSendrecord object) {
         return opOrderApiDao.insertOpSendrecord(object);
+    }
+
+    /**
+     * 添加订单提醒信息到redis
+     * @param order
+     */
+    private void addDriverTravelReminder(AbstractOrder order) {
+        JedisUtil.delKey("DRIVER_TRAVEL_REMINDER_" + order.getOrderno() + "_" + order.getUsetype());
+        JedisUtil.setString("DRIVER_TRAVEL_REMINDER_" + order.getOrderno() + "_" + order.getUsetype(), StringUtil.parseBeanToJSON(order));
     }
 }

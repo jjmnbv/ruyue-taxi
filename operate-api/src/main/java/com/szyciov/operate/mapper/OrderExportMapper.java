@@ -12,4 +12,5 @@ public interface OrderExportMapper {
 	List<Map<String, Object>> getPassage(OrderExportEntity orderExportEntity);
 	List<Map<String, Object>> getAllOrganid(OrderExportEntity orderExportEntity);
 	List<OrderExportParam> exportOrders(OrderExportEntity orderExportEntity);
+	List<Map<String, Object>> getLeasescompany(OrderExportEntity orderExportEntity);
 }

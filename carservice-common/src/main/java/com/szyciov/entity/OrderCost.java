@@ -112,6 +112,10 @@ public class OrderCost{
 	 * 订单折扣
 	 */
 	private double discount;
+	/**
+	 * 溢价倍率
+	 */
+	private double premiumrate = 1.0D;
 	
 	/**  
 	 * 获取低速用时限定时速  
@@ -489,6 +493,22 @@ public class OrderCost{
 	 */
 	public void setDiscount(double discount) {
 		this.discount = discount;
+	}
+
+	/**  
+	 * 获取溢价倍率  
+	 * @return premiumrate 溢价倍率  
+	 */
+	public double getPremiumrate() {
+		return premiumrate;
+	}
+
+	/**  
+	 * 设置溢价倍率  
+	 * @param premiumrate 溢价倍率  
+	 */
+	public void setPremiumrate(double premiumrate) {
+		this.premiumrate = premiumrate;
 	}
 	
 }

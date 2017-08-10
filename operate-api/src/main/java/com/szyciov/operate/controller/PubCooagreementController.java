@@ -50,8 +50,8 @@ public class PubCooagreementController extends BaseController {
 	 */
 	@RequestMapping(value = "api/PubCooagreement/GetLeLeasescompanyList", method = RequestMethod.POST)
 	@ResponseBody
-	public List<LeLeasescompany> getLeLeasescompanyList(){
-		return service.getLeLeasescompanyList();
+	public List<Map<String, Object>> getLeLeasescompanyList(@RequestBody Map<String, String> map){
+		return service.getLeLeasescompanyList(map);
 	};
 	/** 
 	 * <p>新增协议</p>

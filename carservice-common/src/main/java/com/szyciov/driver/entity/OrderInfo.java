@@ -140,6 +140,11 @@ public class OrderInfo{
 	 */
 	private boolean alwayshowdialog;
 
+	/**
+	 * 下次提醒时间
+	 */
+	private long lastsendtime;
+
 	public String getOrderstyle() {
 		return orderstyle;
 	}
@@ -527,5 +532,13 @@ public class OrderInfo{
 
 	public void setAlwayshowdialog(boolean alwayshowdialog) {
 		this.alwayshowdialog = alwayshowdialog;
+	}
+
+	public long getLastsendtime() {
+		return lastsendtime;
+	}
+
+	public void setLastsendtime(long lastsendtime) {
+		this.lastsendtime = lastsendtime;
 	}
 }

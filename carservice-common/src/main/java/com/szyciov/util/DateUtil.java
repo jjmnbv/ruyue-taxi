@@ -1,14 +1,17 @@
 package com.szyciov.util;
 
-import BP.Tools.DateUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
-
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
+
+import BP.Tools.DateUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * 时间处理工具类
@@ -195,32 +198,17 @@ public class DateUtil {
 
         return day;
     }
+
     /**
      *  对比两个字符串格式的日期，返回相差日期
      *  如果date1比date2大，返回负数。
      * **/
-    public static int contrastStringDate(String date1,String date2){
+    public static long contrastStringDate(String date1,String date2){
 
-        int day=0;
 
-        SimpleDateFormat sf=new SimpleDateFormat("yyyy-MM-dd");
-
-        GregorianCalendar calendar1=new GregorianCalendar();
-        GregorianCalendar calendar2=new GregorianCalendar();
-        //String s1="2006-04-21";
-        //String s2="2006-04-25";
-        Date xxx1=new Date();
-        Date xxx2=new Date();
-        try {
-            xxx1=sf.parse(date1);
-            xxx2=sf.parse(date2);
-            day = (int) ((xxx2.getTime() - xxx1.getTime()) / 3600 / 24 / 1000);
-        } catch (ParseException e) {
-
-            //e.printStackTrace();
-        }
-
-        return day;
+        LocalDate from = LocalDate.parse(date1);
+        LocalDate to = LocalDate.parse(date2);
+        return from.until(to, ChronoUnit.DAYS);
     }
 
 
@@ -463,8 +451,12 @@ public class DateUtil {
         }
     }
     public static void main(String[] args) {
-        System.out.println(getFirstDayOfMonth(format(new Date())));
-        judgeIsLastDayOfYear("2013-12-30");
+        //获取活动发放开始时间
+        LocalDate startDt = LocalDate.parse("2017-07-28");
+        LocalDate endDt = LocalDate.parse("2017-07-29");
+
+        long days = startDt.until(endDt,DAYS);
+        System.out.println(days);
     }
 
     /**
@@ -493,6 +485,43 @@ public class DateUtil {
         }else{
             return false;
         }
+    }
+
+
+    /**
+     * 当前时间是否在两个时间范围之内
+     * @param
+     * @return
+     */
+    public static boolean nowDateBetween(Date starDt,Date endDt){
+        long systime = System.currentTimeMillis();
+        //当前毫秒数小于截止时间毫秒且大于起始时间毫秒
+        if(systime<endDt.getTime()&&systime>starDt.getTime()){
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * 当前时间是否在两个时间范围之内(包括两个时间)
+     * 仅限于 日期格式 YYYY-MM-DD
+     * @param
+     * @return
+     */
+    public static boolean nowDateBetween(String starDtStr,String endDtStr){
+        LocalDate nowDt = LocalDate.now();
+        LocalDate starDt = LocalDate.parse(starDtStr);
+        LocalDate endDt = LocalDate.parse(endDtStr);
+        //如果当前时间=起始日期或结束日期
+        if(nowDt.isEqual(endDt)||nowDt.isEqual(starDt)){
+            return true;
+        }
+        //当前时间 在结束时间之前，开始时间之后
+        if(nowDt.isBefore(endDt) &&nowDt.isAfter(starDt)){
+            return true;
+        }
+        return false;
     }
 
 

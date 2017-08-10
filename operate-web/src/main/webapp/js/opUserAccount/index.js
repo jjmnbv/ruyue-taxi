@@ -26,7 +26,7 @@ function initGrid() {
                 "mDataProp": "ZDY",
                 "sClass": "center",
                 "sTitle": "操作",
-                "sWidth": 100,
+                "sWidth": 210,
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
@@ -34,6 +34,8 @@ function initGrid() {
 //                    html += '<button type="button" class="SSbtn pink"  onclick="searchDetail(' +"'"+ full.id + "','" + full.account + "','" + full.nickname +"'"+ ')"><i class="fa fa-times"></i>查看往来明细</button>';
 //                    return html;
 //                    var html = "";
+                    html += '<button type="button" class="SSbtn pink"  onclick="addmoney('+"'"+ full.id + "','" + full.account + "','" + full.nickname + "','"+ full.balance +"'"+ ')"><i class="fa fa-times"></i>送积分</button>';
+                    html += '&nbsp; ';
                     if (full.dealCount > 0) {
                     	html += '<button type="button" class="SSbtn pink"  onclick="searchDetail(' +"'"+ full.id + "','" + full.account + "','" + full.nickname +"'"+ ')"><i class="fa fa-times"></i>交易明细</button>';
                     }
@@ -188,7 +190,94 @@ function searchBalanceDetail(id,account,nickName) {
 
 	window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") + "OpUserAccount/AccountDetail?userId=" + id +"&account=" + account + "&nickName=" + nickName+"&detaills=yue";
 }
+/**
+ * 送积分
+ * @param {} id
+ */
+function addmoney(id,account,nickname,balance) {
+	 $("#giveBalance").val("");
+	$("#editFormDiv").show();
+		$("#titleForm").html("送积分");
+		$.ajax({
+			type: "GET",
+			url:"OpUserAccount/Admoney",
+			cache: false,
+			data: { id: id,account:account,nickname:nickname,balance:balance},
+			success: function (result) {
+				$("#account").val(result.account)
+				$("#balance").val(result.balance)
+				$("#id").val(result.id)
+			},
+			error: function (xhr, status, error) {
+				return;
+			}
+	    });
+}
+//取消积分
+function canelBalance(){
+//	window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") +"OpUserAccount/Index";
+	$("#editFormDiv").hide();
+}
+/**
+ * 处理整数前面多余的0
+ */
+function overFormat(obj) {
+	if(/^0+\d+\.?\d*.*$/.test(obj.value)){
+		obj.value = obj.value.replace(/^0+(\d+\.?\d*).*$/, '$1');
+	}
+}
 
+//保存积分
+function addBalance(){
+	validateForm();
+	var form = $("#editForm");
+	var a = !form.valid();
+	if(!form.valid()) return;
+	var editForm = $("#editForm").validate();
+	//输入正整数
+	/* var giveBalance = $("#giveBalance").val(); 
+	 var type = /^[+]{0,1}(\d+)$/;
+     var re = new RegExp(type);
+     if (giveBalance.match(re) == null) {
+    	 toastr.error("输入格式错误", "提示");
+         return;
+     }
+     var max = 10000;
+     if(giveBalance>max){
+    	toastr.error("输入不能大于10000", "提示");
+    	return;
+     }*/
+     var id = $("#id").val();
+     var giveBalance = $("#giveBalance").val();
+     $.ajax({
+			type: "GET",
+			url:"OpUserAccount/AdmoneyOk",
+			cache: false,
+			data: { id: id,balance:giveBalance},
+			success: function (result) {
+			  toastr.success("保存成功", "提示");
+			  window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") +"OpUserAccount/Index";
+			},
+			error: function (xhr, status, error) {
+				return;
+			}
+	    });
+     
+}
+function validateForm() {
+	$("#editForm").validate({
+		ignore:'',
+		rules: {
+			giveBalance: {required: true, maxlength: 4,balanceCheck:true},
+		},
+		messages: {
+			giveBalance: {required: "送积分不能为空",maxlength: "最大长度不能超过4个字符",balanceCheck:"不能输入0，或小数"},
+		}
+	})
+}
+$.validator.addMethod("balanceCheck",function(value,element,params){
+    var balanceCheck = /^[1-9]*[1-9][0-9]*$/;
+       return this.optional(element)||(balanceCheck.test(value));},"");
 //取消
 function cancel(){
 	$("#userId").select2("val","");

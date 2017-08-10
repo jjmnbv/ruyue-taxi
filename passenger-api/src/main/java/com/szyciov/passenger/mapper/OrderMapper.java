@@ -99,4 +99,20 @@ public interface OrderMapper {
 
 	void setOrderdao4OpNetCar(Map<String, Object> params);
 
+	DriverInfo getDriverInfo4New(Map<String, Object> pp);
+
+	Map<String, Object> getOrderCouponInfo(String orderno);
+
+	Map<String, Object> getCancelInfo4Org(String orderno);
+
+	Map<String, Object> getCancelInfo4Optaxi(String orderno);
+
+	Map<String, Object> getCancelInfo4Opnetcar(String orderno);
+
+	void updateCancelReson4OrgNetCar(Map<String, Object> pp);
+
+	void updateCancelReson4OpTaxi(Map<String, Object> pp);
+
+	void updateCancelReson4OpNetCar(Map<String, Object> pp);
+
 }

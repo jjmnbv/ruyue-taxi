@@ -357,13 +357,6 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>1.16.16</version>
-			<scope>compile</scope>
-		</dependency>
-		
-		<dependency>
 			<groupId>org.csource</groupId>
 			<artifactId>fastdfs-client-java</artifactId>
 			<version>1.25</version>
@@ -373,6 +366,13 @@
 		  <groupId>alipay</groupId>
 		  <artifactId>alipay_jar</artifactId>
 		  <version>1.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.16.16</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- ******************start unit test****************** -->

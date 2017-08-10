@@ -228,6 +228,8 @@ public class OrgIndexController extends BaseController {
 		List<Object> colData37 = new ArrayList<Object>();
 		List<Object> colData38 = new ArrayList<Object>();
 		List<Object> colData39 = new ArrayList<Object>();
+		List<Object> colData40 = new ArrayList<Object>();
+		List<Object> colData41 = new ArrayList<Object>();
 		OrgOrderQueryParam oo = new OrgOrderQueryParam();
 		String organId = getLoginOrgUser(request).getOrganId();
 		String queryCompany = request.getParameter("queryCompany");
@@ -238,6 +240,7 @@ public class OrgIndexController extends BaseController {
 		String queryOrderTemp = request.getParameter("queryOrderTemp");
 		String queryVehicleMode = request.getParameter("queryVehicleMode");
 		String queryPaymentMethod = request.getParameter("queryPaymentMethod");
+		String queryExpensetype = request.getParameter("queryExpensetype");
 		oo.setKey(organId);
 		oo.setQueryCompany(queryCompany);
 		oo.setQueryOrderNo(queryOrderNo);
@@ -249,6 +252,7 @@ public class OrgIndexController extends BaseController {
 		oo.setQueryPaymentMethod(queryPaymentMethod);
 		oo.setUserid(this.getLoginOrgUser(request).getId());
 		oo.setUsertype(getLoginOrgUser(request).getUserType());
+		oo.setQueryExpensetype(queryExpensetype);
 		List<Map> orgOrder = templateHelper.dealRequestWithToken("/OrgIndex/ExportExcel", HttpMethod.POST,
 				userToken, oo, List.class);
 		for(int i=0;i<orgOrder.size();i++){
@@ -448,13 +452,27 @@ public class OrgIndexController extends BaseController {
 			}else{
 				colData37.add("");
 			}
+			if(orgOrder.get(i).get("expensetypeShow") != null){
+				colData40.add(orgOrder.get(i).get("expensetypeShow"));
+			}else{
+				colData40.add(orgOrder.get(i).get("expensetypeShow"));
+			}
+			if(orgOrder.get(i).get("cancelamount") != null){
+				colData41.add(orgOrder.get(i).get("cancelamount"));
+			}else{
+				colData41.add(orgOrder.get(i).get("cancelamount"));
+			}
 		}
 		Excel excel = new Excel();
 		// excel文件
 		File tempFile = new File("订单管理.xls");
 		//订单号	下单人姓名	下单人电话	下单人部门	乘车人姓名	乘车人电话	上车地址	下车地址	预估行驶时长（分钟）	预估行驶里程（公里）	下单时间	用车时间	
-		//接单时间	开始时间	结束时间	订单状态	支付方式	支付状态	支付渠道	订单来源	用车方式	订单类型	服务车型	用车事由	事由说明	行程备注	
-		//总金额（元）	起步价（元）	行驶里程（公里）	行驶里程费（元）	用车时长（分钟）	用车时长费（元）	实付金额（元）	司机信息	资格证号	服务车企	用车城市
+		//接单时间	开始时间	结束时间	订单状态	支付方式	支付状态	支付渠道	订单来源	用车方式	订单类型	服务车型	用车事由	事由说明	行程备注
+		// 新   费用类型
+		//          变
+		//总金额（元）=====>订单金额(元)	起步价（元）	行驶里程（公里）	行驶里程费（元）	用车时长（分钟）	用车时长费（元）	实付金额（元）
+		// 新  处罚金额(元)
+		//司机信息	资格证号	服务车企	用车城市
 		List<String> colName = new ArrayList<String>();
 		colName.add("订单号");
 		colName.add("下单人姓名");
@@ -482,7 +500,8 @@ public class OrgIndexController extends BaseController {
 		colName.add("用车事由");
 		colName.add("事由说明");
 		colName.add("行程备注");
-		colName.add("总金额（元）");
+		colName.add("费用类型");
+		colName.add("订单金额(元)");
 		colName.add("起步价（元）");
 		colName.add("行驶里程（公里）");
 		colName.add("行驶里程费（元）");
@@ -491,6 +510,7 @@ public class OrgIndexController extends BaseController {
 		colName.add("空驶费（元）");
 		colName.add("夜间费（元）");
 		colName.add("实付金额（元）");
+		colName.add("处罚金额(元)");
 		colName.add("司机信息");
 		colName.add("资格证号");
 		colName.add("服务车企");
@@ -522,7 +542,8 @@ public class OrgIndexController extends BaseController {
 		colData.put("用车事由", colData14);
 		colData.put("事由说明", colData15);
 		colData.put("行程备注", colData16);
-		colData.put("总金额（元）", colData20);
+		colData.put("费用类型",colData40);
+		colData.put("订单金额(元)", colData20);
 		colData.put("起步价（元）", colData21);
 		colData.put("行驶里程（公里）", colData22);
 		colData.put("行驶里程费（元）", colData23);
@@ -531,6 +552,7 @@ public class OrgIndexController extends BaseController {
 		colData.put("空驶费（元）", colData38);
 		colData.put("夜间费（元）", colData39);
 		colData.put("实付金额（元）", colData26);
+		colData.put("处罚金额(元)",colData41);
 		colData.put("司机信息",colData36);
 		colData.put("资格证号",colData37);
 		colData.put("服务车企", colData17);

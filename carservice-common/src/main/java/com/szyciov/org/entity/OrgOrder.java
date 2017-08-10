@@ -63,8 +63,27 @@ public class OrgOrder extends AbstractOrder {
 	public String plateno;//车牌号
     private String manualDriver; // 手动选择司机 0: 否    1:是
     private String usetimeShow;
+    private String expensetypeShow; //费用类型(1-行程服务,2-取消处罚)  显示值
+    private Integer cancelamount;// 取消费用
+    private Integer cancelnature;
     
-    public String getUsetimeShow() {
+    public Integer getCancelnature() {
+		return cancelnature;
+	}
+
+	public void setCancelnature(Integer cancelnature) {
+		this.cancelnature = cancelnature;
+	}
+
+	public String getExpensetypeShow() {
+		return expensetypeShow;
+	}
+
+	public void setExpensetypeShow(String expensetypeShow) {
+		this.expensetypeShow = expensetypeShow;
+	}
+
+	public String getUsetimeShow() {
 		return usetimeShow;
 	}
 
@@ -307,6 +326,14 @@ public class OrgOrder extends AbstractOrder {
 
 	public void setCumulativeTime(String cumulativeTime) {
 		this.cumulativeTime = cumulativeTime;
+	}
+
+	public Integer getCancelamount() {
+		return cancelamount;
+	}
+
+	public void setCancelamount(Integer cancelamount) {
+		this.cancelamount = cancelamount;
 	}
 
 }

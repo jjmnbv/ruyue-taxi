@@ -1,6 +1,7 @@
 package com.szyciov.entity.coupon;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 抵用券实体
@@ -33,7 +34,7 @@ public class PubCoupon {
     /**
      * 优惠券持有人
      */
-    private String useid;
+    private String userid;
     /**
      * 优惠券金额
      */
@@ -56,11 +57,11 @@ public class PubCoupon {
     /**
      * 有效期开始时间
      */
-    private Date outimestart;
+    private LocalDate outimestart;
     /**
      * 有效期结束时间
      */
-    private Date outtimeend;
+    private LocalDate outtimeend;
     /**
      * 租赁公司
      */
@@ -73,11 +74,11 @@ public class PubCoupon {
     /**
      * 创建时间
      */
-    private Date createtime;
+    private LocalDateTime createtime;
     /**
      * 更新时间
      */
-    private Date updatetime;
+    private LocalDateTime updatetime;
     /**
      * 创建人
      */
@@ -131,12 +132,12 @@ public class PubCoupon {
         this.target = target;
     }
 
-    public String getUseid() {
-        return useid;
+    public String getUserid() {
+        return userid;
     }
 
-    public void setUseid(String useid) {
-        this.useid = useid;
+    public void setUserid(String userid) {
+        this.userid = userid;
     }
 
     public Double getMoney() {
@@ -171,22 +172,6 @@ public class PubCoupon {
         this.couponstatus = couponstatus;
     }
 
-    public Date getOutimestart() {
-        return outimestart;
-    }
-
-    public void setOutimestart(Date outimestart) {
-        this.outimestart = outimestart;
-    }
-
-    public Date getOuttimeend() {
-        return outtimeend;
-    }
-
-    public void setOuttimeend(Date outtimeend) {
-        this.outtimeend = outtimeend;
-    }
-
     public String getLecompanyid() {
         return lecompanyid;
     }
@@ -201,22 +186,6 @@ public class PubCoupon {
 
     public void setPlatformtype(Integer platformtype) {
         this.platformtype = platformtype;
-    }
-
-    public Date getCreatetime() {
-        return createtime;
-    }
-
-    public void setCreatetime(Date createtime) {
-        this.createtime = createtime;
-    }
-
-    public Date getUpdatetime() {
-        return updatetime;
-    }
-
-    public void setUpdatetime(Date updatetime) {
-        this.updatetime = updatetime;
     }
 
     public String getCreater() {
@@ -241,6 +210,38 @@ public class PubCoupon {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public LocalDate getOutimestart() {
+        return outimestart;
+    }
+
+    public void setOutimestart(LocalDate outimestart) {
+        this.outimestart = outimestart;
+    }
+
+    public LocalDate getOuttimeend() {
+        return outtimeend;
+    }
+
+    public void setOuttimeend(LocalDate outtimeend) {
+        this.outtimeend = outtimeend;
+    }
+
+    public LocalDateTime getCreatetime() {
+        return createtime;
+    }
+
+    public void setCreatetime(LocalDateTime createtime) {
+        this.createtime = createtime;
+    }
+
+    public LocalDateTime getUpdatetime() {
+        return updatetime;
+    }
+
+    public void setUpdatetime(LocalDateTime updatetime) {
+        this.updatetime = updatetime;
     }
 }
  

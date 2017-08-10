@@ -102,7 +102,8 @@
                                     <c:if test="${organCompanyRef.actualBalance gt 0}">
                                           <button class="btn_red" onclick="withdraw('${organCompanyRef.companyId}','${organCompanyRef.organId}')">提现</button>
                                     </c:if>
-                                    <button class="btn_red" onclick="searchExpensesDetail('${organCompanyRef.companyId}','${organCompanyRef.organId}')">交易明细</button>                                   
+                                    <button class="btn_red" onclick="searchExpensesDetail('${organCompanyRef.companyId}','${organCompanyRef.organId}')">交易明细</button>
+                                    <button class="btn_red" onclick="couponDetail('${organCompanyRef.companyId}','${organCompanyRef.organId}')">抵用券</button>                                   
                                 </div>
                                 <span class="edu" style="display: ${organCompanyRef.balance ge 100?'none':'block'};">额度不足</span>
                             </li>   
