@@ -1,10 +1,15 @@
 package com.szyciov.supervision.api;
 
-import com.supervision.api.operation.*;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
+
+import com.szyciov.supervision.api.operation.OperationArrival;
+import com.szyciov.supervision.api.operation.OperationDeparture;
+import com.szyciov.supervision.api.operation.OperationPay;
+import com.szyciov.supervision.api.operation.VehicleOperationOffline;
+import com.szyciov.supervision.api.operation.VehicleOperationOnline;
 
 /**
  * 3.4	经营信息数据

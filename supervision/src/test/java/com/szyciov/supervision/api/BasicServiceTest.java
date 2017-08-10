@@ -1,18 +1,34 @@
 package com.szyciov.supervision.api;
 
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.supervision.api.basic.*;
-import com.szyciov.supervision.util.FileUtil;
 import org.junit.Test;
 import org.springframework.util.ResourceUtils;
+
+import com.szyciov.supervision.api.basic.CompanyBaseInfo;
+import com.szyciov.supervision.api.basic.CompanyConcactInfo;
+import com.szyciov.supervision.api.basic.CompanyInvestorInfo;
+import com.szyciov.supervision.api.basic.CompanyOperateInfo;
+import com.szyciov.supervision.api.basic.CompanyOperatingPermit;
+import com.szyciov.supervision.api.basic.CompanyPayInfo;
+import com.szyciov.supervision.api.basic.CompanyServiceOrgan;
+import com.szyciov.supervision.api.basic.CompanyValuationWay;
+import com.szyciov.supervision.api.basic.DriverCntractInfo;
+import com.szyciov.supervision.api.basic.DriverInfo;
+import com.szyciov.supervision.api.basic.DriverMobileTerminalInfo;
+import com.szyciov.supervision.api.basic.DriverStatistics;
+import com.szyciov.supervision.api.basic.DriverTrainingInfo;
+import com.szyciov.supervision.api.basic.EnterpriseAccessInfo;
+import com.szyciov.supervision.api.basic.PassengerInfo;
+import com.szyciov.supervision.api.basic.PassengerStatus;
+import com.szyciov.supervision.api.basic.VehicleInsuranceInfo;
+import com.szyciov.supervision.api.basic.VehicleMileageLnfo;
+import com.szyciov.supervision.api.basic.Vehiclelnfo;
+import com.szyciov.supervision.util.FileUtil;
 
 /**
  * 基础数据从测试

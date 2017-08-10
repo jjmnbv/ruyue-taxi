@@ -1,33 +1,27 @@
 package com.szyciov.supervision.api.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.supervision.api.BaseApi;
-import com.supervision.api.basic.CompanyOperateInfo;
-import com.supervision.api.order.OrderSupplementsRequest;
-import com.supervision.enums.CommandEnum;
-import com.supervision.enums.InterfaceType;
-import com.szyciov.supervision.dao.PubSupervisionLogDao;
-import com.szyciov.supervision.entity.PubSupervisionLog;
-import com.szyciov.supervision.mq.MessageSender;
-import com.szyciov.supervision.util.HttpContent;
-import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
+import com.szyciov.supervision.api.BaseApi;
+import com.szyciov.supervision.api.order.OrderSupplementsRequest;
+import com.szyciov.supervision.enums.CommandEnum;
+import com.szyciov.supervision.enums.InterfaceType;
 import com.szyciov.supervision.enums.RequestType;
+import com.szyciov.supervision.mq.MessageSender;
 import com.szyciov.supervision.token.service.TokenService;
 import com.szyciov.supervision.util.BasicRequest;
 import com.szyciov.supervision.util.EntityInfoList;
 import com.szyciov.supervision.util.GzwycApi;
+import com.szyciov.supervision.util.HttpContent;
+import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
 /**
  * Created by admin on 2017/7/10.

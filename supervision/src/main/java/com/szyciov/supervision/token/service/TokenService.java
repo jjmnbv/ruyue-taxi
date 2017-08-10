@@ -2,9 +2,14 @@ package com.szyciov.supervision.token.service;
 
 import java.io.IOException;
 
-import com.supervision.enums.CommandEnum;
-import com.supervision.enums.InterfaceType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.szyciov.supervision.config.CacheHelper;
+import com.szyciov.supervision.enums.CommandEnum;
+import com.szyciov.supervision.enums.InterfaceType;
 import com.szyciov.supervision.enums.RequestType;
 import com.szyciov.supervision.token.request.TokenRequest;
 import com.szyciov.supervision.util.BasicRequest;
@@ -12,10 +17,6 @@ import com.szyciov.supervision.util.GzwycApi;
 import com.szyciov.supervision.util.HttpContent;
 import com.szyciov.supervision.util.Token;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * Created by admin on 2017/7/6.

@@ -1,9 +1,10 @@
 package com.szyciov.supervision.util;
 
 
-import com.supervision.enums.CommandEnum;
-import com.supervision.enums.InterfaceType;
+import com.szyciov.supervision.enums.CommandEnum;
+import com.szyciov.supervision.enums.InterfaceType;
 import com.szyciov.supervision.enums.RequestType;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

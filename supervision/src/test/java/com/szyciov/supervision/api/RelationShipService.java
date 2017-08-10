@@ -1,11 +1,11 @@
 package com.szyciov.supervision.api;
 
-import com.supervision.api.relationship.HumanVehicleInfo;
-import com.szyciov.supervision.util.HttpUtil;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
+
+import com.szyciov.supervision.api.relationship.HumanVehicleInfo;
 
 /**
  * 3.7	人车对应关系信息数据

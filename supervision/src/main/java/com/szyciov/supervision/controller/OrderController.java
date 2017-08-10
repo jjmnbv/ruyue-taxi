@@ -1,32 +1,33 @@
 package com.szyciov.supervision.controller;
 
 
-import com.supervision.api.order.OrderSupplementsRequest;
-import com.supervision.enums.CommandEnum;
-import com.supervision.enums.InterfaceType;
+import java.util.Date;
+import java.util.HashMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.szyciov.supervision.api.order.OrderSupplementsRequest;
 import com.szyciov.supervision.api.service.BaseService;
 import com.szyciov.supervision.dao.PubSupervisionLogDao;
 import com.szyciov.supervision.entity.PubSupervisionLog;
+import com.szyciov.supervision.enums.CommandEnum;
+import com.szyciov.supervision.enums.InterfaceType;
 import com.szyciov.supervision.token.service.TokenService;
 import com.szyciov.supervision.util.EntityInfoList;
 import com.szyciov.supervision.util.FileUtil;
 import com.szyciov.supervision.util.GzwycApi;
 import com.szyciov.supervision.util.HttpContent;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
-import okhttp3.internal.http.HttpHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.zip.GZIPInputStream;
 
 /**
  * 订单补传协议

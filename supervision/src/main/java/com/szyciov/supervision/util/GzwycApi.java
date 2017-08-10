@@ -3,21 +3,15 @@ package com.szyciov.supervision.util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.supervision.api.BaseApi;
-import com.szyciov.supervision.dao.PubSupervisionLogDao;
-import com.szyciov.supervision.entity.PubSupervisionLog;
-import com.szyciov.util.HttpRequest;
-import lombok.Cleanup;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.Consts;
 import org.apache.http.Header;
@@ -26,17 +20,16 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.szyciov.supervision.TaxiExecption;
-import com.szyciov.supervision.config.CacheHelper;
-import com.xunxintech.ruyue.coach.io.json.JSONUtil;
-import com.xunxintech.ruyue.coach.io.network.httpclient.HttpClientUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
+import com.szyciov.supervision.TaxiExecption;
+import com.szyciov.supervision.config.CacheHelper;
+import com.szyciov.supervision.dao.PubSupervisionLogDao;
+import com.szyciov.supervision.entity.PubSupervisionLog;
+import com.xunxintech.ruyue.coach.io.json.JSONUtil;
+
+import lombok.Cleanup;
 
 /**
  * 网约车接口类

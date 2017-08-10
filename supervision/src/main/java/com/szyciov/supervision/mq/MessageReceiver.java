@@ -1,8 +1,5 @@
 package com.szyciov.supervision.mq;
 
-import com.supervision.api.basic.CompanyOperateInfo;
-import com.szyciov.supervision.util.EntityInfoList;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 

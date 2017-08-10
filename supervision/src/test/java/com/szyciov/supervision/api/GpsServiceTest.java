@@ -1,12 +1,12 @@
 package com.szyciov.supervision.api;
 
-import com.sun.org.apache.bcel.internal.generic.DREM;
-import com.supervision.api.gps.DriverLocationInfo;
-import com.supervision.api.gps.PassengerLocationInfo;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
+
+import com.szyciov.supervision.api.gps.DriverLocationInfo;
+import com.szyciov.supervision.api.gps.PassengerLocationInfo;
 
 /**
  * Created by 林志伟 on 2017/7/16.
