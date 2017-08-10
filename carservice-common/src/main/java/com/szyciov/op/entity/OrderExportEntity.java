@@ -11,6 +11,7 @@ public class OrderExportEntity extends QueryParam {
 	public String driver;//司机
 	public String ordertype;//用车类型
 	public String organid;//所属机构
+	public String leasescompany;//服务车企
 	
 	public String getUsetype() {
 		return usetype;
@@ -60,6 +61,13 @@ public class OrderExportEntity extends QueryParam {
 	}
 	public void setDriver(String driver) {
 		this.driver = driver;
+	}
+	
+	public String getLeasescompany() {
+		return leasescompany;
+	}
+	public void setLeasescompany(String leasescompany) {
+		this.leasescompany = leasescompany;
 	}
 	@Override
 	public String toString() {

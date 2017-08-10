@@ -7,6 +7,7 @@ import com.szyciov.driver.param.OrderListParam;
 import com.szyciov.entity.OrderCost;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.PubJpushlog;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.entity.PubSendrules;
 import com.szyciov.entity.PubUserToken;
 import com.szyciov.entity.TaxiOrderCost;
@@ -178,4 +179,7 @@ public interface OrderApiMapper {
     
     void createPeUserAccount(PeUseraccount account);
     
+    public PubOrderCancel getOrderCancelInfo(@Param("orderno")String orderno,@Param("ordertype") int ordertype);
+    
+    public void saveOrUpdateOrderCancelInfo(PubOrderCancel cancelInfo,@Param("ordertype") int ordertype);
 }

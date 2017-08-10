@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -11,13 +12,12 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.szyciov.driver.enums.OrderState;
 import com.szyciov.driver.enums.PayState;
 import com.szyciov.entity.OrderCost;
-
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 
 public class StringUtil {
 	/**
@@ -514,6 +514,7 @@ public class StringUtil {
 	 * @return
 	 */
 	public static Date addDate(Date source, int second) {
+		if(source == null) source = new Date();
 		long courceTime = source.getTime();
 		Date date = new Date();
 		date.setTime(courceTime + second * 1000);
@@ -631,9 +632,40 @@ public class StringUtil {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T parseJSONToBean(String json,Class<?> clazz){
+		if(json==null || !json.startsWith("{")) return null;
 		JSONObject obj = JSONObject.fromObject(json);
 		return (T)JSONObject.toBean(obj, clazz);
 //		return (T)GsonUtil.fromJson(json, clazz);
+	}
+
+    /**
+     * 将json转换为JavaBean集合
+     * @param json
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    public static <T> List<T> parseJSONToBeans(String json, Class<?> clazz) {
+        JSONArray array = JSONArray.fromObject(json);
+        if(null != array && !array.isEmpty()) {
+            List<T> objs = new ArrayList<T>();
+            for (int m = 0; m < array.size(); m++) {
+                JSONObject object = array.getJSONObject(m);
+                objs.add((T) JSONObject.toBean(object, clazz));
+            }
+            return objs;
+        }
+        return null;
+    }
+	
+	/**
+	 * 将JavaBean转换成json字符串
+	 * @param obj
+	 * @return
+	 */
+	public static String parseBeanToJSON(Object obj){
+		if(obj == null) return null;
+		return JSONObject.fromObject(obj).toString();
 	}
 	
 	/**

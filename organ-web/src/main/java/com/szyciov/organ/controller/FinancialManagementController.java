@@ -103,7 +103,31 @@ public class FinancialManagementController extends BaseController {
 		mav.setViewName("resource/financialManagement/expensesDetail");
 		return mav;
 	}
-
+	
+	@RequestMapping("FinancialManagement/CouponDetail")
+	@ResponseBody
+	public ModelAndView couponDetail(
+			@RequestParam(value = "leasesCompanyId", required = true) String leasesCompanyId,
+			@RequestParam(value = "organId", required = true) String organId, HttpServletRequest request,
+			HttpServletResponse response) {
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("leasesCompanyId", leasesCompanyId);
+		mav.addObject("organId", organId);
+		mav.setViewName("resource/financialManagement/couponDetail");
+		return mav;
+	}
+	
+	@RequestMapping("FinancialManagement/GetPubCouponDetailByQuery")
+	@ResponseBody
+	public PageBean getPubCouponDetailByQuery(@RequestBody OrganAccountQueryParam queryParam, HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		response.setContentType("text/html;charset=utf-8");
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		queryParam.setOrganId(this.getLoginOrgUser(request).getOrganId());
+		return templateHelper.dealRequestWithToken("/FinancialManagement/GetPubCouponDetailByQuery", HttpMethod.POST, userToken,
+				queryParam,PageBean.class);
+	}
+	
 	@RequestMapping("FinancialManagement/GetOrganExpensesByQuery")
 	@ResponseBody
 	public PageBean getOrganExpensesByQuery(
@@ -230,7 +254,7 @@ public class FinancialManagementController extends BaseController {
 		rowData.add("账单名称：" + orgOrganBill.getName() + " 账单金额：" + orgOrganBill.getMoney() + "元");
 		DateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");  
         String createTime = format1.format(orgOrganBill.getCreateTime());
-		rowData.add("出账时间：" + createTime + " 租赁公司：" + orgOrganBill.getShortName());
+		rowData.add("出账时间：" + createTime + " 服务车企：" + orgOrganBill.getShortName());
 		
 		Map<String, List<Object>> colData = new HashMap<String, List<Object>>();
 		List<Object> colData1 = new ArrayList<Object>();
@@ -246,6 +270,7 @@ public class FinancialManagementController extends BaseController {
 		List<Object> colData11 = new ArrayList<Object>();
 		List<Object> colData12 = new ArrayList<Object>();
 		List<Object> colData13 = new ArrayList<Object>();
+		List<Object> colData14 = new ArrayList<Object>();
 		
 		List<Map> OrgOrder = templateHelper.dealRequestWithToken(
 				"/FinancialManagement/GetOrgOrderListExport?billsId={billsId}&organId={organId}", HttpMethod.POST,
@@ -261,23 +286,41 @@ public class FinancialManagementController extends BaseController {
 				colData4.add((String) OrgOrder.get(i).get("deptname"));
 			}
 			colData5.add((String) OrgOrder.get(i).get("passengers"));
-			colData6.add((String) OrgOrder.get(i).get("onaddress"));
-			colData7.add((String) OrgOrder.get(i).get("offaddress"));
-			colData8.add(OrgOrder.get(i).get("starttime").toString().replace("-", "/").substring(0, 16));
-			colData9.add(OrgOrder.get(i).get("endtime").toString().replace("-", "/").substring(0, 16));
-			colData10.add("¥" + String.valueOf(OrgOrder.get(i).get("orderamount")));
+			// 行程结束
+			if ("7".equals(OrgOrder.get(i).get("orderstatus").toString())) {
+				colData6.add((String) OrgOrder.get(i).get("onaddress"));
+				colData7.add((String) OrgOrder.get(i).get("offaddress"));
+				colData8.add(OrgOrder.get(i).get("starttime").toString().replace("-", "/").substring(0, 16));
+				colData9.add(OrgOrder.get(i).get("endtime").toString().replace("-", "/").substring(0, 16));
+				colData10.add(String.valueOf(OrgOrder.get(i).get("orderamount")));
+				colData14.add("/");
+			} else {
+				// 已取消
+				colData6.add("/");
+				colData7.add("/");
+				colData8.add("/");
+				colData9.add("/");
+				colData10.add("/");
+				if (OrgOrder.get(i).get("cancelamount") != null) {
+					colData14.add(String.valueOf(OrgOrder.get(i).get("cancelamount")));
+				} else {
+					colData14.add("/");
+				}
+			}
+			
+			
 			if (OrgOrder.get(i).get("tripremark") == null) {
-				colData11.add("");
+				colData11.add("/");
 			} else {
 				colData11.add((String) OrgOrder.get(i).get("tripremark"));
 			}
 			if (OrgOrder.get(i).get("vehiclessubjecttype") == null) {
-				colData12.add("");
+				colData12.add("/");
 			} else {
 				colData12.add((String) OrgOrder.get(i).get("vehiclessubjecttype"));
 			}
 			if (OrgOrder.get(i).get("vehiclessubject") == null) {
-				colData13.add("");
+				colData13.add("/");
 			} else {
 				colData13.add((String) OrgOrder.get(i).get("vehiclessubject"));
 			}
@@ -295,7 +338,8 @@ public class FinancialManagementController extends BaseController {
 		colName.add("目的地");
 		colName.add("上车时间");
 		colName.add("下车时间");
-		colName.add("金额");
+		colName.add("订单金额（元）");
+		colName.add("取消费用（元）");
 		colName.add("用车事由");
 		colName.add("事由说明");
 		colName.add("行程备注");
@@ -310,7 +354,8 @@ public class FinancialManagementController extends BaseController {
 		colData.put("目的地", colData7);
 		colData.put("上车时间", colData8);
 		colData.put("下车时间", colData9);
-		colData.put("金额", colData10);
+		colData.put("订单金额（元）", colData10);
+		colData.put("取消费用（元）", colData14);
 		colData.put("用车事由", colData12);
 		colData.put("事由说明", colData13);
 		colData.put("行程备注", colData11);

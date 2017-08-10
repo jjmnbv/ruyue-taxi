@@ -55,6 +55,11 @@ public class OrganBillQueryParam extends QueryParam  {
 	 * 账号（手机号）
 	 */
 	public String account;
+	
+	/**
+	 * 费用类型
+	 */
+	public Integer expensetype;
 
 	public String getLeasesCompanyId() {
 		return leasesCompanyId;
@@ -134,5 +139,13 @@ public class OrganBillQueryParam extends QueryParam  {
 
 	public void setAccount(String account) {
 		this.account = account;
+	}
+
+	public Integer getExpensetype() {
+		return expensetype;
+	}
+
+	public void setExpensetype(Integer expensetype) {
+		this.expensetype = expensetype;
 	}
 }

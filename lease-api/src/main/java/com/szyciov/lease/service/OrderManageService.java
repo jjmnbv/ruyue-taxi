@@ -2,7 +2,6 @@ package com.szyciov.lease.service;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,15 +10,25 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.entity.OrderInfoMessage;
+import com.szyciov.driver.enums.DriverState;
+import com.szyciov.driver.enums.OrderState;
+import com.szyciov.driver.enums.PayState;
 import com.szyciov.driver.enums.ReviewState;
 import com.szyciov.driver.param.OrderCostParam;
+import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.OrderCost;
 import com.szyciov.entity.OrderMessageFactory;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.UserNews;
+import com.szyciov.enums.DriverEnum;
+import com.szyciov.enums.OrderReviewEnum;
+import com.szyciov.enums.PubOrdercancelEnum;
 import com.szyciov.enums.SendRulesEnum;
 import com.szyciov.lease.dao.OrderManageDao;
+import com.szyciov.lease.dao.OrgOrdercancelDao;
 import com.szyciov.lease.dao.SendRulesDao;
 import com.szyciov.lease.entity.LeAccountRules;
 import com.szyciov.lease.entity.OrgDriverchanges;
@@ -27,6 +36,7 @@ import com.szyciov.lease.entity.OrgOrdercomment;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
 import com.szyciov.lease.entity.OrgSendrecord;
 import com.szyciov.lease.entity.OrgUserRefund;
+import com.szyciov.lease.entity.PubCityAddr;
 import com.szyciov.lease.entity.PubDriver;
 import com.szyciov.lease.param.GetSendInfoParam;
 import com.szyciov.lease.param.OrderManageQueryParam;
@@ -35,11 +45,13 @@ import com.szyciov.op.entity.PubSendRules;
 import com.szyciov.org.entity.OrgOrder;
 import com.szyciov.org.entity.OrgOrderReview;
 import com.szyciov.param.BaiduApiQueryParam;
+import com.szyciov.param.OrderApiParam;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.Constants;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.StringUtil;
 import com.szyciov.util.SystemConfig;
@@ -47,26 +59,26 @@ import com.szyciov.util.TemplateHelper;
 import com.szyciov.util.latlon.LatLonUtil;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 @Service("orderManageService")
 public class OrderManageService {
+
+    private static final Logger LOGGER = Logger.getLogger(OrderManageService.class);
+
 	private TemplateHelper templateHelper = new TemplateHelper();
-	
+
+    @Resource(name = "orderManageDao")
 	private OrderManageDao orderManageDao;
-	
+
+    @Resource(name = "SendRulesDao")
 	private SendRulesDao sendRulesDao;
 
-	@Resource(name = "orderManageDao")
-	public void setOrderDao(OrderManageDao orderManageDao) {
-		this.orderManageDao = orderManageDao;
-	}
-	@Resource(name = "SendRulesDao")
-	public void setSendRulesDao(SendRulesDao sendRulesDao) {
-		this.sendRulesDao = sendRulesDao;
-	}
-	
+    @Resource(name = "OrgOrdercancelDao")
+    private OrgOrdercancelDao orgOrdercancelDao;
+
 	/**
 	 * 查询订单列表数据
 	 * @param queryParam
@@ -103,13 +115,17 @@ public class OrderManageService {
 				iTotalRecords = getOrgWasabnormalOrderCountByQuery(queryParam);
 				break;
 			case 5:
-				list = getOrgCompleteOrderListByQuery(queryParam);
-				iTotalRecords = getOrgCompleteOrderCountByQuery(queryParam);
-				break;
-			case 6:
 				list = getOrgWaitgatheringOrderListByQuery(queryParam);
 				iTotalRecords = getOrgWaitgatheringOrderCountByQuery(queryParam);
 				break;
+            case 6:
+                list = getOrgCompleteOrderListByQuery(queryParam);
+                iTotalRecords = getOrgCompleteOrderCountByQuery(queryParam);
+                break;
+            case 7:
+                list = getOrgCancelOrderListByQuery(queryParam);
+                iTotalRecords = getOrgCancelOrderCountByQuery(queryParam);
+                break;
 		}
 		int iTotalDisplayRecords = iTotalRecords;
 		pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
@@ -150,14 +166,6 @@ public class OrderManageService {
 		return this.orderManageDao.getOrgWasabnormalOrderCountByQuery(queryParam);
 	}
 	
-	public List<Map<String, Object>> getOrgCompleteOrderListByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgCompleteOrderListByQuery(queryParam);
-	}
-	
-	public int getOrgCompleteOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgCompleteOrderCountByQuery(queryParam);
-	}
-	
 	public List<Map<String, Object>> getOrgWaitgatheringOrderListByQuery(OrderManageQueryParam queryParam) {
 		return this.orderManageDao.getOrgWaitgatheringOrderListByQuery(queryParam);
 	}
@@ -165,6 +173,22 @@ public class OrderManageService {
 	public int getOrgWaitgatheringOrderCountByQuery(OrderManageQueryParam queryParam) {
 		return this.orderManageDao.getOrgWaitgatheringOrderCountByQuery(queryParam);
 	}
+
+    public List<Map<String, Object>> getOrgCompleteOrderListByQuery(OrderManageQueryParam queryParam) {
+        return this.orderManageDao.getOrgCompleteOrderListByQuery(queryParam);
+    }
+
+    public int getOrgCompleteOrderCountByQuery(OrderManageQueryParam queryParam) {
+        return this.orderManageDao.getOrgCompleteOrderCountByQuery(queryParam);
+    }
+
+    public List<Map<String, Object>> getOrgCancelOrderListByQuery(OrderManageQueryParam queryParam) {
+        return this.orderManageDao.getOrgCancelOrderListByQuery(queryParam);
+    }
+
+    public int getOrgCancelOrderCountByQuery(OrderManageQueryParam queryParam) {
+        return this.orderManageDao.getOrgCancelOrderCountByQuery(queryParam);
+    }
 	
 	/**
 	 * 获取订单详情(订单费用)
@@ -172,13 +196,14 @@ public class OrderManageService {
 	 * @return
 	 */
 	public Map<String, Object> getOrgOrderByOrderno(String orderno) {
-		Map<String, Object> ret = this.orderManageDao.getOrgOrderByOrderno(orderno);
+		Map<String, Object> ret = orderManageDao.getOrgOrderByOrderno(orderno);
 		OrderCostParam param = new OrderCostParam();
 		param.setHasunit(false);
 		param.setOrderno(orderno);
 		param.setUsetype(ret.get("usetype").toString());
 		param.setOrdertype(ret.get("ordertype").toString());
-		JSONObject json = (JSONObject) this.templateHelper.dealRequestWithFullUrlToken(
+        param.setOrderprop(0);
+		JSONObject json = this.templateHelper.dealRequestWithFullUrlToken(
 				SystemConfig.getSystemProperty("carserviceApi") + "/OrderApi/GetOrderCost", HttpMethod.POST, null,
 				param, JSONObject.class);
 		ret.put("cost", json.containsKey("cost") ? json.get("cost") : Integer.valueOf(0));
@@ -241,6 +266,11 @@ public class OrderManageService {
 		queryParam.setOrganId(order.getOrganid());
 		queryParam.setUsetype(order.getUsetype());
 		queryParam.setUserId(order.getUserid());
+        queryParam.setIsusenow(order.isIsusenow() ? 1 : 0);
+        queryParam.setUsetime(order.getUsetime());
+        queryParam.setEstimatedEndtime(StringUtil.addDate(order.getUsetime(), (order.getEstimatedtime() + 60) * 60));
+        queryParam.setUserId(order.getUserid());
+
 		if (queryParam.getDistance() > 0) {
 			double[] around = LatLonUtil.getAround(queryParam.getOrderLat(), queryParam.getOrderLon(),
 					queryParam.getDistance());
@@ -259,7 +289,7 @@ public class OrderManageService {
             sendRules.setUseType(0);
         }
 		List<PubSendRules> sendRulesList = this.sendRulesDao.getSendRulesList(sendRules);
-		if ((sendRulesList != null) && (!sendRulesList.isEmpty())) {
+		if (null != sendRulesList && !sendRulesList.isEmpty()) {
 			models = sendRulesList.get(0).getVehicleUpgrade() + "";
 		} else {
 			models = "0";
@@ -306,86 +336,128 @@ public class OrderManageService {
 	
 	/**
 	 * 人工派单
-     *
-     * 此方法于2017/05/25搬迁至 carservice-api 中
-     * 具体访问地址： api/OrderManage/ManualSendOrder
-     * 后请求请直接走carservice-api
-     *
 	 * @param orgOrder 订单
 	 * @return 状态
 	 */
-    @Deprecated
-	public Map<String, Object> manualSendOrder(OrgOrder orgOrder) {
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		try {
-			OrgOrder order = getOrgOrder(orgOrder.getOrderno());
-			if ("8".equals(order.getOrderstatus())) {
-				resultMap.put("status", "fail");
-				resultMap.put("message", "人工派单超时，订单已取消");
-				return resultMap;
-			}
-			if (!"1".equals(order.getOrderstatus())) {
-				resultMap.put("status", "fail");
-				resultMap.put("message", "该订单已被其他客服处理");
-				return resultMap;
-			}
-			String chargemodel = orgOrder.getPricecopy();
-			Map<String, Object> pricecopyMap = new HashMap<String, Object>();
-			pricecopyMap.put("leasescompanyid", order.getCompanyid());
-			pricecopyMap.put("city", order.getOncity());
-			pricecopyMap.put("rulestype", order.getOrdertype());
-			pricecopyMap.put("type", orgOrder.getUsetype());
-			pricecopyMap.put("organid", order.getOrganid());
-			if (chargemodel.equals("0")) {
-				orgOrder.setPricemodel(order.getSelectedmodel());
-				pricecopyMap.put("cartype", order.getSelectedmodel());
-				orgOrder.setPricecopy(order.getPricecopy());
-			} else {
-				orgOrder.setPricemodel(orgOrder.getFactmodel());
-				pricecopyMap.put("cartype", orgOrder.getFactmodel());
-				orgOrder.setPricecopy(findModelPriceByModels(pricecopyMap, order.getPricecopy()));
-			}
-			if (StringUtils.isBlank(orgOrder.getPricecopy())) {
-				resultMap.put("status", "fail");
-				resultMap.put("message", "所指派服务车型计费规则不存在，建议选择“按下单车型计费”或指派其他司机");
-				return resultMap;
-			}
-			Boolean isusenow = getOrderIsUseNow(order);
-			if (isusenow == null) {
-				orgOrder.setIsusenow(order.isIsusenow());
-			}
-			orgOrder.setIsusenow(isusenow.booleanValue());
-			int orderResult = this.orderManageDao.manualSendOrder(orgOrder);
-			PubDriver driver = this.orderManageDao.getPubDriver(orgOrder.getDriverid());
-			//更新车辆基本信息
-			updateOrgOrderVehicleInfo(orgOrder.getOrderno(),null);
-			
-			OrgSendrecord sendrecord = new OrgSendrecord();
-			sendrecord.setId(GUIDGenerator.newGUID());
-			sendrecord.setOrderno(orgOrder.getOrderno());
-			sendrecord.setOperator(orgOrder.getOperator());
-			sendrecord.setChargemodel(chargemodel);
-			sendrecord.setReason(orgOrder.getOrderreason());
-			sendrecord.setDriverid(orgOrder.getDriverid());
-			int recordRsult = this.orderManageDao.insertOrgSendrecord(sendrecord);
-			order = getOrgOrder(orgOrder.getOrderno());
-			createDriverNews(order, 0.0D, OrderMessageFactory.OrderMessageType.MANTICORDER);
-			if ((orderResult == 1) && (recordRsult == 1)) {
-				OrderMessage message = new OrderMessage(order, "人工指派订单");
-				MessageUtil.sendMessage(message);
-				resultMap.put("status", "success");
-				resultMap.put("message", "派单成功");
-			} else {
-				resultMap.put("status", "fail");
-				resultMap.put("message", "派单失败");
-			}
-		} catch (Exception e) {
-			resultMap.put("status", "fail");
-			resultMap.put("message", "派单失败");
-			resultMap.put("exmessage", e.getMessage());
-		}
-		return resultMap;
-	}
+    public Map<String, Object> manualSendOrder(OrgOrder orgOrder) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        try {
+            OrgOrder order = getOrgOrder(orgOrder.getOrderno());
+            if ("8".equals(order.getOrderstatus())) {
+                resultMap.put("status", "fail");
+                resultMap.put("message", "人工派单超时，订单已取消");
+                return resultMap;
+            }
+            if (!"1".equals(order.getOrderstatus()) && !"0".equals(order.getOrderstatus())) {
+                resultMap.put("status", "fail");
+                resultMap.put("message", "该订单已被其他客服处理");
+                return resultMap;
+            }
+            //校验司机是否符合条件
+            if(checkDriver(order, orgOrder.getDriverid())) {
+                resultMap.put("status", "fail");
+                resultMap.put("message", "该司机已接其他订单，请更换司机指派");
+                return resultMap;
+            }
+
+            String chargemodel = orgOrder.getPricecopy();
+            Map<String, Object> pricecopyMap = new HashMap<String, Object>();
+            pricecopyMap.put("leasescompanyid", order.getCompanyid());
+            pricecopyMap.put("city", order.getOncity());
+            pricecopyMap.put("rulestype", order.getOrdertype());
+            pricecopyMap.put("type", orgOrder.getUsetype());
+            pricecopyMap.put("organid", order.getOrganid());
+            if (chargemodel.equals("0")) {
+                orgOrder.setPricemodel(order.getSelectedmodel());
+                pricecopyMap.put("cartype", order.getSelectedmodel());
+                orgOrder.setPricecopy(order.getPricecopy());
+            } else {
+                orgOrder.setPricemodel(orgOrder.getFactmodel());
+                pricecopyMap.put("cartype", orgOrder.getFactmodel());
+                orgOrder.setPricecopy(findModelPriceByModels(pricecopyMap, order.getPricecopy()));
+            }
+            if (StringUtils.isBlank(orgOrder.getPricecopy())) {
+                resultMap.put("status", "fail");
+                resultMap.put("message", "所指派服务车型计费规则不存在，建议选择“按下单车型计费”或指派其他司机");
+                return resultMap;
+            }
+            //更新订单数据
+            orderManageDao.manualSendOrder(orgOrder);
+            PubDriver driver = orderManageDao.getPubDriver(orgOrder.getDriverid());
+            //更新车辆基本信息
+            updateOrgOrderVehicleInfo(orgOrder.getOrderno(),driver.getBelongleasecompany());
+
+            OrgSendrecord sendrecord = new OrgSendrecord();
+            sendrecord.setId(GUIDGenerator.newGUID());
+            sendrecord.setOrderno(orgOrder.getOrderno());
+            sendrecord.setOperator(orgOrder.getOperator());
+            sendrecord.setChargemodel(chargemodel);
+            sendrecord.setReason(orgOrder.getOrderreason());
+            sendrecord.setDriverid(orgOrder.getDriverid());
+            orderManageDao.insertOrgSendrecord(sendrecord);
+
+            order = orderManageDao.getOrgOrder(orgOrder.getOrderno());
+            addDriverTravelReminder(order);
+            createDriverNews(order, 0.0D, OrderMessageFactory.OrderMessageType.MANTICORDER);
+
+            OrderMessage message = new OrderMessage(order, "人工指派订单");
+            MessageUtil.sendMessage(message);
+            resultMap.put("status", "success");
+            resultMap.put("message", "派单成功");
+        } catch (Exception e) {
+            resultMap.put("status", "fail");
+            resultMap.put("message", "派单失败");
+            resultMap.put("exmessage", e.getMessage());
+        }
+        return resultMap;
+    }
+
+    /**
+     * 校验司机是否符合条件
+     * @return
+     */
+    private boolean checkDriver(OrgOrder order, String driverid) {
+        OrderManageQueryParam queryParam = new OrderManageQueryParam();
+        queryParam.setOrderLon(order.getOnaddrlng());
+        queryParam.setOrderLat(order.getOnaddrlat());
+        queryParam.setOncity(order.getOncity());
+        queryParam.setOffcity(order.getOffcity());
+        queryParam.setOrderNo(order.getOrderno());
+        queryParam.setIsusenow(order.isIsusenow() ? 1 : 0);
+        queryParam.setDriverState(order.isIsusenow() ? DriverEnum.WORK_STATUS_LEISURE.code : null);
+        queryParam.setUsetime(order.getUsetime());
+        queryParam.setEstimatedEndtime(StringUtil.addDate(order.getUsetime(), (order.getEstimatedtime() + 60) * 60));
+        queryParam.setSelectdriverid(driverid);
+        queryParam.setDriverid(order.getDriverid());
+        queryParam.setUsetype(order.getUsetype());
+        queryParam.setOrderSelectedmodel(order.getSelectedmodel());
+        queryParam.setUserId(order.getUserid());
+        queryParam.setLeasescompanyid(order.getCompanyid());
+
+        //查询当前派单规则
+        String models = "0";
+        PubSendRules sendRules = new PubSendRules();
+        sendRules.setLeasesCompanyId(order.getCompanyid());
+        sendRules.setCity(order.getOncity());
+        if(order.isIsusenow()) {
+            sendRules.setUseType(1);
+        } else {
+            sendRules.setUseType(0);
+        }
+        List<PubSendRules> sendRulesList = this.sendRulesDao.getSendRulesList(sendRules);
+        if ((sendRulesList != null) && (!sendRulesList.isEmpty())) {
+            models = sendRulesList.get(0).getVehicleUpgrade() + "";
+        } else {
+            models = "0";
+        }
+        queryParam.setModels(models);
+
+        if (orderManageDao.getOrgDriverCountByQuery(queryParam) > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 	
 	/**
 	 * 取消订单
@@ -463,156 +535,158 @@ public class OrderManageService {
 		return this.orderManageDao.getOrgOrderReviewListCountRecord(queryParam);
 	}
 	
-	
 	/**
 	 * 订单复核
 	 * @param params
 	 * @return
 	 */
-	public Map<String, Object> orgOrderReview(Map<String, Object> params) {
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		String orderno = (String) params.get("orderno");
-		Double mileage = Double.valueOf(params.get("mileage").toString());
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd hh:mm");
-		
-		OrgOrder order = getOrgOrder(orderno);
-		//判断当前订单状态
-		if(!"1".equals(order.getReviewstatus()) || "1".equals(order.getPaymentstatus())) {
-			resultMap.put("status", "fail");
-			resultMap.put("message", "当前订单状态无法复核");
-			return resultMap;
-		}
-		try {
-			Date starttime = sdf.parse(params.get("starttime").toString());
-			Date endtime = sdf.parse(params.get("endtime").toString());
-			double counttimes = 0;
-			if (StringUtils.isNotBlank(params.get("counttimes").toString())) {
-				counttimes = Double.valueOf(params.get("counttimes").toString());
-			} else {
-				counttimes = Double.valueOf(0.0D);
-			}
-			String reviewperson = (String) params.get("reviewperson");
-			String reason = (String) params.get("opinion");
-			String operator = (String) params.get("operator");
-			String leasescompanyid = (String) params.get("leasescompanyid");
-            int times = (int) Math.ceil((endtime.getTime() - starttime.getTime()) / 1000.0D / 60.0D);
+	public Map<String, Object> orgOrderReview(OrgOrderReview review) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        //查询订单信息
+        OrgOrder order = getOrgOrder(review.getOrderno());
+        if(!"1".equals(order.getReviewstatus()) || "9".equals(order.getPaymentstatus())) {
+            resultMap.put("status", "fail");
+            resultMap.put("message", "当前订单状态无法复核");
+            return resultMap;
+        }
 
-            String pricecopy = order.getPricecopy();
-            if (StringUtils.isBlank(pricecopy)) {
-                resultMap.put("status", "fail");
-                resultMap.put("message", "操作失败");
-                return resultMap;
+        String pricecopy = order.getPricecopy();
+        if (StringUtils.isBlank(pricecopy)) {
+            resultMap.put("status", "fail");
+            resultMap.put("message", "操作失败");
+            return resultMap;
+        }
+        OrderCost orderCost = StringUtil.parseJSONToBean(pricecopy, OrderCost.class);
+        int slowtimes = orderCost.getSlowtimes();
+
+        //填充复核数据
+        review.setId(GUIDGenerator.newGUID());
+        review.setReviewstatus("1");
+        review.setReason(order.getOrderreason());
+        review.setStatus(1);
+        review.setRawstarttime(order.getStarttime());
+        review.setRawendtime(order.getEndtime());
+        review.setRawmileage(Double.valueOf(order.getMileage()));
+        review.setRawtimes((double) slowtimes);
+        review.setRawpricecopy(pricecopy);
+        review.setRaworderamount(order.getOriginalorderamount());
+
+        try {
+            //查询最近一次复核记录
+            OrgOrderReview orderReview = orderManageDao.getOrgOrderreviewLastByOrderno(review.getOrderno());
+            if(null != orderReview) {
+                review.setRaworderamount(orderReview.getReviewedprice());
+                review.setRawstarttime(orderReview.getStarttime());
+                review.setRawendtime(orderReview.getEndtime());
+                review.setRawtimes(orderReview.getCounttimes());
+                review.setRawmileage(orderReview.getMileage());
+                review.setRawpricecopy(orderReview.getPricecopy());
+            } else {
+                review.setRaworderamount(order.getOrderamount());
+                review.setRawstarttime(order.getStarttime());
+                review.setRawendtime(order.getEndtime());
+                review.setRawtimes((double) slowtimes);
+                review.setRawmileage(order.getMileage());
+                review.setRawpricecopy(pricecopy);
             }
-            OrderCost orderCost = StringUtil.parseJSONToBean(pricecopy, OrderCost.class);
-            int slowtimes = orderCost.getSlowtimes();
-            orderCost.setMileage(mileage * 1000);
-            orderCost.setTimes(times * 60);
-            orderCost.setSlowtimes((int) counttimes);
-            orderCost = StringUtil.countCost(orderCost, starttime, false);
-            StringUtil.formatOrderCost2Int(orderCost);
 
-            //保存复核信息
-			OrgOrderReview orderReview = new OrgOrderReview();
-			orderReview.setId(GUIDGenerator.newGUID());
-			orderReview.setOrderno(orderno);
-			orderReview.setTimesubsidies(orderCost.getTimecost());
-			orderReview.setMileage(formatDouble(mileage.doubleValue() * 1000.0D, 1));
-			orderReview.setTimes(times * 60);
-			orderReview.setStarttime(starttime);
-			orderReview.setEndtime(endtime);
-			orderReview.setCounttimes(formatDouble(counttimes, 0));
-			orderReview.setMileageprices(formatDouble(orderCost.getRangecost(), 1));
-			orderReview.setReviewperson(reviewperson);
-			orderReview.setReviewstatus("1");
-			orderReview.setOpinion(reason);
-			orderReview.setReason(order.getOrderreason());
-			orderReview.setOperator(operator);
-			orderReview.setStatus(1);
-			orderReview.setReviewedprice(orderCost.getCost());
-			orderReview.setRawstarttime(order.getStarttime());
-			orderReview.setRawendtime(order.getEndtime());
-			orderReview.setRawmileage(Double.valueOf(order.getMileage()));
-			orderReview.setRawtimes((double) slowtimes);
-            orderReview.setPricecopy(JSONObject.fromObject(orderCost).toString());
-			order.setReviewstatus(ReviewState.REVIEWED.state);
-			Double actualpayamount = order.getActualpayamount();
-			if (actualpayamount == null) {
-				actualpayamount = Double.valueOf(order.getOrderamount());
-			}
-			double price = orderCost.getCost();
-			if ((price < actualpayamount.doubleValue()) || (order.getPaymethod().equals("2"))) {
-				order.setActualpayamount(Double.valueOf(price));
-			}
-			order.setShouldpayamount(Double.valueOf(price));
-			double differPrice = actualpayamount.doubleValue() - price;
-			if ((StringUtils.isBlank(order.getPaymentstatus())) || (order.getPaymentstatus().equals("0"))
-					|| (order.getPaymethod().equals("2"))) {
-				order.setOrderamount(orderReview.getReviewedprice().doubleValue());
-				order.setActualpayamount(order.getOrderamount());
-				order.setMileage(formatDouble(mileage.doubleValue() * 1000.0D, 1));
-				order.setStarttime(starttime);
-				order.setEndtime(endtime);
-				order.setPricecopy(JSONObject.fromObject(orderCost).toString());
-			}
-			//查询最近一次复核记录
-			OrgOrderReview review = orderManageDao.getOrgOrderreviewLastByOrderno(orderno);
-			if(null != review) {
-				orderReview.setRawstarttime(review.getStarttime());
-				orderReview.setRawendtime(review.getEndtime());
-				orderReview.setRawtimes(review.getCounttimes());
-				orderReview.setRawmileage(review.getMileage());
-				orderReview.setRaworderamount(review.getReviewedprice());
-                orderReview.setRawpricecopy(review.getPricecopy());
-			} else {
-				orderReview.setRaworderamount(order.getOriginalorderamount());
-                orderReview.setRawpricecopy(pricecopy);
-			}
-			orderReview.setPrice(StringUtil.formatNum(order.getShouldpayamount() - order.getActualpayamount(), 1));
-			int result = this.orderManageDao.applyOrgOrderReview(orderReview);
-			result += this.orderManageDao.updateOrderState(order);
-			order.setOrderamount(orderReview.getReviewedprice().doubleValue());
-			order.setMileage(formatDouble(mileage.doubleValue() * 1000.0D, 1));
-			order.setStarttime(starttime);
-			order.setEndtime(endtime);
-			order.setPricecopy(JSONObject.fromObject(orderCost).toString());
-			if ("1".equals(orderReview.getReviewperson())) {
-				createDriverNews(order, differPrice, OrderMessageFactory.OrderMessageType.REVIEWORDER);
-			}
-			if(order.getPaymentstatus().equals("4")) {
-				updateOrganCompanyRef(order, differPrice);
-			}
-			if (order.getPaymentstatus().equals("1") && differPrice > 0.0D) {
-				OrgUserRefund userRefund = new OrgUserRefund();
-				userRefund.setId(GUIDGenerator.newGUID());
-				userRefund.setUserId(order.getUserid());
-				userRefund.setLeasesCompanyId(leasescompanyid);
-				userRefund.setOrderNo(orderno);
-				userRefund.setAmount(BigDecimal.valueOf(differPrice));
-				userRefund.setRefundStatus("0");
-				userRefund.setRemark(orderReview.getOpinion());
-				userRefund.setCreater(operator);
-				userRefund.setUpdater(operator);
-				userRefund.setStatus(1);
-				this.orderManageDao.insertOrgUserrefund(userRefund);
-			}
-			if (!order.getPaymethod().equals("2")) {
-				Map<String, Object> smsParams = new HashMap<String, Object>();
-				smsParams.put("reviewperson", orderReview.getReviewperson());
-				smsParams.put("price", Double.valueOf(differPrice));
-				OrderMessage message = new OrderMessage(order, "订单复核", smsParams);
-				MessageUtil.sendMessage(message);
-			}
-			if (result == 2) {
-				resultMap.put("status", "success");
-				resultMap.put("message", "操作成功");
-			} else {
-				resultMap.put("status", "fail");
-				resultMap.put("message", "操作失败");
-			}
-		} catch (Exception e) {
-			resultMap.put("status", "fail");
-			resultMap.put("message", "操作失败");
-		}
+            int reviewtype = review.getReviewtype();
+            if(OrderReviewEnum.REVIEWTYPE_COST.icode == reviewtype) { //按固定金额
+                OrderCost rawOrderCost = StringUtil.parseJSONToBean(review.getRawpricecopy(), OrderCost.class);
+                review.setTimesubsidies(rawOrderCost.getTimecost());
+                review.setMileageprices(rawOrderCost.getRangecost());
+                review.setMileage(review.getRawmileage());
+                review.setCounttimes(review.getRawtimes());
+                review.setStarttime(review.getRawstarttime());
+                review.setEndtime(review.getRawendtime());
+                int rawtimes = (int) Math.ceil((review.getEndtime().getTime() - review.getStarttime().getTime()) / 1000.0d / 60);
+                review.setTimes(rawtimes * 60);
+                rawOrderCost.setCost(review.getReviewedprice());
+                review.setPricecopy(StringUtil.parseBeanToJSON(rawOrderCost));
+            } else { //按里程时长
+                int times = (int) Math.ceil((review.getEndtime().getTime() - review.getStarttime().getTime()) / 1000.0d / 60);
+                orderCost.setMileage(review.getMileage() * 1000);
+                orderCost.setTimes(times * 60);
+                orderCost.setSlowtimes((int) review.getCounttimes());
+                orderCost = StringUtil.countCost(orderCost, review.getStarttime(), false);
+                StringUtil.formatOrderCost2Int(orderCost);
+
+                review.setTimesubsidies(orderCost.getTimecost());
+                review.setMileage(formatDouble(review.getMileage() * 1000.0d, 1));
+                review.setTimes(times * 60);
+                review.setMileageprices(formatDouble(orderCost.getRangecost(), 1));
+                review.setReviewedprice(orderCost.getCost());
+                review.setPricecopy(JSONObject.fromObject(orderCost).toString());
+            }
+
+            //费用计算
+            Double actualpayamount = order.getActualpayamount();
+            double price = review.getReviewedprice();
+            if((price < actualpayamount.doubleValue()) || (order.getPaymethod().equals("2"))) { //复核后金额小于实付金额或机构支付时修改实付金额
+                order.setActualpayamount(price);
+            }
+            order.setShouldpayamount(price);
+            review.setPrice(0); //待修改
+            //请求接口，获取实际抵扣金额
+            JSONObject json = new JSONObject(); //待修改
+            double differPrice = 0; //待修改
+            if ((StringUtils.isBlank(order.getPaymentstatus())) || (order.getPaymentstatus().equals("0"))
+                || (order.getPaymethod().equals("2"))) {
+                order.setOrderamount(review.getReviewedprice());
+                order.setActualpayamount(review.getReviewedprice());
+                order.setMileage(review.getMileage());
+                order.setStarttime(review.getStarttime());
+                order.setEndtime(review.getEndtime());
+                order.setPricecopy(review.getPricecopy());
+            }
+            if(review.getReviewedprice() == 0) { //待修改，复核后金额或实付金额为0时，订单金额改为已关闭
+                order.setPaymentstatus(PayState.CLOSE.state);
+            }
+            order.setReviewstatus(ReviewState.REVIEWED.state);
+
+            orderManageDao.applyOrgOrderReview(review);
+            orderManageDao.updateOrderState(order);
+
+            order.setOrderamount(review.getReviewedprice());
+            order.setMileage(review.getMileage());
+            order.setStarttime(review.getStarttime());
+            order.setEndtime(review.getEndtime());
+            order.setPricecopy(review.getPricecopy());
+            if ("1".equals(review.getReviewperson())) {
+                createDriverNews(order, differPrice, OrderMessageFactory.OrderMessageType.REVIEWORDER);
+            }
+            if(order.getPaymentstatus().equals("4")) {
+                updateOrganCompanyRef(order, differPrice);
+            }
+            if (order.getPaymentstatus().equals("1") && differPrice > 0.0D) {
+                OrgUserRefund userRefund = new OrgUserRefund();
+                userRefund.setId(GUIDGenerator.newGUID());
+                userRefund.setUserId(order.getUserid());
+                userRefund.setLeasesCompanyId(review.getLeasescompanyid());
+                userRefund.setOrderNo(review.getOrderno());
+                userRefund.setAmount(BigDecimal.valueOf(differPrice));
+                userRefund.setRefundStatus("0");
+                userRefund.setRemark(review.getOpinion());
+                userRefund.setCreater(review.getOperator());
+                userRefund.setUpdater(review.getOperator());
+                userRefund.setStatus(1);
+                orderManageDao.insertOrgUserrefund(userRefund);
+            }
+            if (!order.getPaymethod().equals("2")) {
+                Map<String, Object> smsParams = new HashMap<String, Object>();
+                smsParams.put("reviewperson", review.getReviewperson());
+                smsParams.put("price", Double.valueOf(differPrice));
+                OrderMessage message = new OrderMessage(order, "订单复核", smsParams);
+                MessageUtil.sendMessage(message);
+            }
+            resultMap.put("status", "success");
+            resultMap.put("message", "操作成功");
+
+        } catch (Exception e) {
+            LOGGER.error("订单复核异常", e);
+            resultMap.put("status", "fail");
+            resultMap.put("message", "操作失败");
+        }
 		return resultMap;
 	}
 	
@@ -649,17 +723,25 @@ public class OrderManageService {
 		try {
 			String orderno = (String) params.get("orderno");
 			OrgOrder order = getOrgOrder(orderno);
-			if ((order.getOrderstatus().equals("6")) || (order.getOrderstatus().equals("7"))
-					|| (order.getOrderstatus().equals("8"))) {
+			if (order.getOrderstatus().equals("6") || order.getOrderstatus().equals("7")
+					|| order.getOrderstatus().equals("8")) {
 				resultMap.put("status", "fail");
 				resultMap.put("message", "当前订单状态无法更换司机");
 				return resultMap;
 			}
+
 			Date currentTime = new Date();
 			String chargemodel = params.get("pricecopy").toString();
 			String newdriverid = params.get("newdriverid").toString();
 			String companyId = params.get("leasescompanyid").toString();
 			String modelsId = params.get("modelsid").toString();
+
+            if(checkDriver(order, newdriverid)) {
+                resultMap.put("status", "fail");
+                resultMap.put("message", "该司机已接其他订单，请更换司机指派");
+                return resultMap;
+            }
+
 			Map<String, Object> pricecopyMap = new HashMap<String, Object>();
 			pricecopyMap.put("organid", order.getOrganid());
 			pricecopyMap.put("leasescompanyid", companyId);
@@ -682,11 +764,6 @@ public class OrderManageService {
 				resultMap.put("message", "所指派服务车型计费规则不存在，建议选择“按下单车型计费”或指派其他司机");
 				return resultMap;
 			}
-			Boolean isusenow = order.isIsusenow();
-			if (isusenow == null) {
-				params.put("isusenow", order.isIsusenow());
-			}
-			params.put("isusenow", isusenow);
 			OrgDriverchanges driverchanges = new OrgDriverchanges();
 			driverchanges.setId(GUIDGenerator.newGUID());
 			driverchanges.setOrderno(orderno);
@@ -716,7 +793,9 @@ public class OrderManageService {
 				driver.setWorkStatus("0");
 				updatePubDriverWorkstatus(driver);
 			}
+
 			order = getOrgOrder(orderno);
+            addDriverTravelReminder(order);
 			createDriverNews(order, 0.0D, OrderMessageFactory.OrderMessageType.MANTICORDER);
 			if (result == 1) {
 				OrderMessage message = new OrderMessage(order, "更改司机", params);
@@ -741,10 +820,10 @@ public class OrderManageService {
 	 */
 	public Map<String, String> applyRecheckOrder(Map<String, String> params) {
 		Map<String, String> resultMap = new HashMap<String, String>();
-		OrgOrder order = getOrgOrder((String) params.get("orderno"));
+		OrgOrder order = getOrgOrder(params.get("orderno"));
 		if (!"7".equals(order.getOrderstatus()) || "2".equals(order.getPaymentstatus())
 				|| "3".equals(order.getPaymentstatus()) || "1".equals(order.getReviewstatus())
-				|| "1".equals(order.getPaymentstatus())) {
+				|| "9".equals(order.getPaymentstatus())) {
 			resultMap.put("status", "fail");
 			resultMap.put("message", "当前订单状态不允许申请复核");
 			return resultMap;
@@ -790,7 +869,7 @@ public class OrderManageService {
 	public LeAccountRules getOrderAccountRulesByOrderno(Map<String, Object> params) {
 		List<LeAccountRules> accountRuleList = this.orderManageDao.findModelPriceByModels(params);
 		if ((accountRuleList != null) && (!accountRuleList.isEmpty())) {
-			return (LeAccountRules) accountRuleList.get(0);
+			return accountRuleList.get(0);
 		}
 		return null;
 	}
@@ -1035,10 +1114,179 @@ public class OrderManageService {
 		updateOrgOrderVehicleByOrderno(order);
 	}
 
-
-    public List<Map<String, Object>> getBelongLeaseCompanySelect(Map<String, Object> params) {
-        return orderManageDao.getBelongLeaseCompanySelect(params);
+    /**
+     * 查询列表中所有的服务车企
+     * @param params
+     * @return
+     */
+    public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam params) {
+        return orderManageDao.getBelongCompanySelect(params);
     }
 
+    /**
+     * 查询订单取消规则明细
+     * @param param
+     * @return
+     */
+    public Map<String, Object> getCancelPriceDetail(Map<String, String> param) {
+        //查询订单取消规则信息
+        Map<String, Object> ret = templateHelper.dealRequestWithTokenCarserviceApiUrl("/OrderCancelRule/GetCancelPriceDetail", HttpMethod.POST, null, param, Map.class);
+        if(null == ret || ret.isEmpty() || !ret.get("status").equals(Retcode.OK.code)) {
+            return ret;
+        }
+
+        //查询订单取消信息是否已存在
+        PubOrderCancel orderCancel = new PubOrderCancel();
+        orderCancel.setOrderno(param.get("orderno"));
+        orderCancel = orgOrdercancelDao.getOrgOrdercancel(orderCancel);
+        if(null == orderCancel) {
+            orderCancel = new PubOrderCancel();
+            orderCancel.setId(GUIDGenerator.newGUID());
+            orderCancel.setOrderno(param.get("orderno"));
+        }
+        orderCancel.setCancelamount((int) ret.get("price"));
+        int pricereason = (int) ret.get("pricereason");
+        orderCancel.setCancelnature(PubOrdercancelEnum.getCancelnature(pricereason).code);
+        orderCancel.setCancelrule(ret.get("ordercancelrule").toString());
+        orderCancel.setIdentifying(GUIDGenerator.newGUID());
+        orgOrdercancelDao.updateOrgOrdercancelById(orderCancel);
+
+        ret.put("identifying", orderCancel.getIdentifying());
+        return ret;
+    }
+
+    /**
+     * 免责处理
+     * @param object
+     * @return
+     */
+    public Map<String, Object> exemptionOrder(PubOrderCancel object) {
+        Map<String, Object> ret = new HashMap<String, Object>();
+
+        OrgOrder order = getOrgOrder(object.getOrderno());
+        PubOrderCancel orderCancel = orgOrdercancelDao.getOrgOrdercancel(object);
+        if(null == order || null == orderCancel) {
+            ret.put("status", "fail");
+            ret.put("message", "订单不存在");
+            return ret;
+        }
+        if((!PayState.NOTPAY.state.equals(order.getPaymentstatus()) && !PayState.MENTED.state.equals(order.getPaymentstatus()))
+            || PubOrdercancelEnum.CANCELNATURE_NODUTY.code == orderCancel.getCancelnature()) {
+            ret.put("status", "fail");
+            ret.put("message", "当前订单状态无法免责处理");
+            return ret;
+        }
+        //设置订单支付状态为已关闭
+        order.setPaymentstatus(PayState.CLOSE.state);
+        orderManageDao.updateOrderState(order);
+
+        //修改取消信息
+        orderCancel.setExemption(object.getExemption());
+        orderCancel.setExemptionoperator(object.getExemptionoperator());
+        orgOrdercancelDao.updateOrgOrdercancelById(orderCancel);
+
+        //机构支付订单，修改机构账户
+        updateOrganCompanyRef(order, orderCancel.getCancelamount());
+
+        ret.put("status", "success");
+        ret.put("message", "操作成功");
+        return ret;
+    }
+
+    /**
+     * 结束订单
+     * @param orderno
+     * @return
+     */
+    public Map<String, Object> endOrder(String orderno) {
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("status", Retcode.OK.code);
+        result.put("message", Retcode.OK.msg);
+
+        OrderInfoDetail infoDetail = orderManageDao.getOrgOrderInfoByOrderno(orderno);
+        if(null == infoDetail) {
+            result.put("status", Retcode.ORDERNOTEXIT.code);
+            result.put("message", Retcode.ORDERNOTEXIT.msg);
+            return result;
+        }
+        //校验订单状态(只有服务中的订单才可以结束)
+        if(!OrderState.INSERVICE.state.equals(infoDetail.getStatus())) {
+            result.put("status", Retcode.INVALIDORDERSTATUS.code);
+            result.put("message", Retcode.INVALIDORDERSTATUS.msg);
+            return result;
+        }
+        //查询司机信息
+        PubDriver driver = orderManageDao.getPubDriver(infoDetail.getDriverid());
+        if(null == driver) {
+            result.put("status", Retcode.INVALIDORDERSTATUS.code);
+            result.put("message", Retcode.INVALIDORDERSTATUS.msg);
+            return result;
+        }
+        //更新订单结束位置信息
+        if(null != driver.getLng() && driver.getLng() > 0 && null != driver.getLat() && driver.getLat() > 0) {
+            BaiduApiQueryParam baiduParam = new BaiduApiQueryParam();
+            baiduParam.setOrderStartLng(driver.getLng());
+            baiduParam.setOrderStartLat(driver.getLat());
+            JSONObject baiduJson = templateHelper.dealRequestWithTokenCarserviceApiUrl("/BaiduApi/GetAddress", HttpMethod.POST, null, baiduParam, JSONObject.class);
+            if(baiduJson.getInt("status") != Retcode.OK.code) {
+                LOGGER.info("经纬度反查失败,仅保存APP上传经纬度");
+                infoDetail.setLng(driver.getLng());
+                infoDetail.setLat(driver.getLat());
+            } else {
+                PubCityAddr cityAddr = orderManageDao.getPubCityByName(baiduJson.getString("city"));
+                infoDetail.setLng(baiduJson.getDouble("lng"));
+                infoDetail.setLat(baiduJson.getDouble("lat"));
+                infoDetail.setCityintime(cityAddr == null ? null : cityAddr.getId());
+                infoDetail.setAddressintime(baiduJson.getString("address").isEmpty() ? null : baiduJson.getString("address"));
+            }
+            orderManageDao.updateOrgOrderInfo(infoDetail);
+        }
+
+        //更新订单相关数据
+        OrderApiParam orderParam = new OrderApiParam();
+        orderParam.setOrderid(infoDetail.getOrderno());
+        orderParam.setUsetype(infoDetail.getUsetype());
+        orderParam.setOrdertype(infoDetail.getType());
+        orderParam.setOrderstate(OrderState.SERVICEDONE.state);
+        orderParam.setOrderprop(infoDetail.getOrderprop());
+        JSONObject orderJson = templateHelper.dealRequestWithTokenCarserviceApiUrl("/OrderApi/ChangeOrderState", HttpMethod.POST, null, orderParam, JSONObject.class);
+        if(Retcode.OK.code != orderJson.getInt("status")) {
+            return result;
+        }
+        //更新司机信息
+        infoDetail = orderManageDao.getOrgOrderInfoByOrderno(orderno);
+        driver.setOrderCount(driver.getOrderCount()+1);
+        driver.setWorkStatus(DriverState.IDLE.code);
+        orderManageDao.updatePubDriver(driver);
+
+        //更新redis中司机服务的订单数据
+        String key = "OBD_MILGES_CURRENT_ORDER_" + driver.getId() + "_" + infoDetail.getOrderno();
+        try{
+            JSONObject json = new JSONObject();
+            json.put("orderno", infoDetail.getOrderno());
+            json.put("driverid", driver.getId());
+            json.put("vehicleid", infoDetail.getVehicleid());
+            json.put("starttime", StringUtil.formatDate(infoDetail.getStarttime(), StringUtil.DATE_TIME_FORMAT));
+            json.put("orderstatus", infoDetail.getStatus());
+            int second = 60 * 10; //十分钟
+            json.put("endtime", StringUtil.formatDate(infoDetail.getEndtime(), StringUtil.DATE_TIME_FORMAT));
+            JedisUtil.delKey(key);
+            JedisUtil.setString(key, json.toString(),second);
+        }catch(Exception e){
+            LOGGER.error("保存OBD轨迹失败",e);
+            JedisUtil.delKey(key);
+        }
+        return result;
+    }
+
+    /**
+     * 添加订单提醒信息到redis
+     * @param order
+     */
+    private void addDriverTravelReminder(AbstractOrder order) {
+        order.setLastsendtime(StringUtil.addDate(new Date(), 20));
+        JedisUtil.delKey("DRIVER_TRAVEL_REMINDER_" + order.getOrderno() + "_" + order.getUsetype());
+        JedisUtil.setString("DRIVER_TRAVEL_REMINDER_" + order.getOrderno() + "_" + order.getUsetype(), StringUtil.parseBeanToJSON(order));
+    }
 
 }

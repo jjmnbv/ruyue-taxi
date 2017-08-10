@@ -86,6 +86,23 @@ public class OrderExportController {
 				orderExportEntity, List.class);
 	}
 	/**
+	 * 服务车企
+	 * @param leasescompany
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/OrderExport/GetLeasescompany")
+	@ResponseBody
+	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> getLeasescompany(@RequestParam String leasescompany, HttpServletRequest request) {
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		OrderExportEntity orderExportEntity = new OrderExportEntity();
+//		User user = getLoginLeUser(request);
+		orderExportEntity.setLeasescompany(leasescompany);
+		return templateHelper.dealRequestWithToken("/OrderExport/GetLeasescompany", HttpMethod.POST, userToken,
+				orderExportEntity, List.class);
+	}
+	/**
 	 * 所属机构
 	 */
 	@RequestMapping(value = "/OrderExport/GetAllOrganid")
@@ -126,6 +143,7 @@ public class OrderExportController {
 			@RequestParam(value = "ordertype", required = false) String ordertype,
 			@RequestParam(value = "organid", required = false) String organid,
 			@RequestParam(value = "startTime", required = false) String startTime,
+			@RequestParam(value = "leasescompany", required = false) String leasescompany,
 			@RequestParam(value = "endTime", required = false) String endTime, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
@@ -165,6 +183,7 @@ public class OrderExportController {
 		queryParam.setPaymentstatus(paymentstatus);
 		queryParam.setUsetype(usetype);
 		queryParam.setStarttime(startTime);
+		queryParam.setLeasescompany(leasescompany);
 		List<Map> orgOrganExpenses = templateHelper.dealRequestWithToken("/OrderExport/ExportOrders",
 				HttpMethod.POST, userToken, queryParam, List.class);
 		for (int i = 0; i < orgOrganExpenses.size(); i++) {
@@ -185,7 +204,7 @@ public class OrderExportController {
 			colData15.add((String) orgOrganExpenses.get(i).get("name"));
 			colData16.add((String) orgOrganExpenses.get(i).get("phone"));
 			colData17.add((String) orgOrganExpenses.get(i).get("plateno"));
-			colData18.add((String) orgOrganExpenses.get(i).get("companyid"));
+			colData18.add((String) orgOrganExpenses.get(i).get("belongleasecompany"));
 			colData19.add((String) orgOrganExpenses.get(i).get("cartype"));
 			colData20.add((String) orgOrganExpenses.get(i).get("passengerphone"));
 			colData21.add((String) orgOrganExpenses.get(i).get("passengers"));
@@ -217,7 +236,7 @@ public class OrderExportController {
 		colName.add("司机姓名");
 		colName.add("司机电话");
 		colName.add("车牌号");
-		colName.add("车企名称");
+		colName.add("服务车企");
 		colName.add("服务车型");
 		colName.add("乘客账号");
 		colName.add("乘客名称");
@@ -244,7 +263,7 @@ public class OrderExportController {
 		colData.put("司机姓名", colData15);
 		colData.put("司机电话", colData16);
 		colData.put("车牌号", colData17);
-		colData.put("车企名称", colData18);
+		colData.put("服务车企", colData18);
 		colData.put("服务车型", colData19);
 		colData.put("乘客账号", colData20);
 		colData.put("乘客名称", colData21);

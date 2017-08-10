@@ -397,6 +397,20 @@ public class AccountService extends BaseService{
         return new JSONObject();
 	}
 	
+	/**
+	 * 校验短信验证码
+	 * @param param
+	 * @return
+	 */
+	public JSONObject authSMSCode(LoginParam param){
+		String[] require = new String[]{"password"};
+		if(!checkeParam(param,getExceptElement(param, require))) return errorResult.get();
+		JSONObject result = new JSONObject();
+		if(!doCompairSMSCode(param)) {
+			return errorResult.get();
+		}
+		return result;
+	}
 	/**********************************************************内部方法***************************************************************/
 	/**
 	 * 保存极光推送ID逻辑
@@ -535,8 +549,11 @@ public class AccountService extends BaseService{
 	 * @param param
 	 */
 	private void doSaveErrorTimes(LoginParam param){
-		String account = driver.get().getPhone();
 		try{
+			if(driver.get() == null){
+				driver.set(dao.getPubDriverByPhone(param.getMobile()));
+			}
+			String account = driver.get().getPhone();
 			boolean shouldsetexpire = false;
 			if(StringUtils.isBlank(JedisUtil.getString(RedisKeyEnum.SMS_DRIVER_LOGIN_ERRORTIMES.code+account))){
 				shouldsetexpire = true;

@@ -13,24 +13,25 @@
          (case when paymentstatus = '0' then '未支付' when paymentstatus = '1' then '已支付' when paymentstatus = '2' then '结算中' when paymentstatus = '3' then '已结算' when paymentstatus = '4' then '未结算' when paymentstatus = '8' then '已付结' else '未付结' end)paymentstatus,
           ifnull(ROUND(mileage/1000,1),0.0) mileage,driverid,jobnum,name,phone,plateno,(select l.name from le_leasescompany l where l.id = companyid)companyid,passengerphone,passengers,userid,ifnull(ROUND(orderamount,1),0.0) orderamount,
          (case when orderstatus = '7' then '行程结束' else '已取消' end) orderstatus,
+         (select text from pub_dictionary where pub_dictionary.id = aa.belongleasecompany) as belongleasecompany,
           ifnull(ROUND((UNIX_TIMESTAMP(endtime)-UNIX_TIMESTAMP(starttime))/60+0.49),0) runtime,cartype,(case when usetype = '0' then '机构因公' when usetype = '1' then '机构因私' else '个人' end) as usetype
 				     from(select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,vehicleid,
 				             plateno,companyid,passengerphone,passengers,userid,paymentstatus,shouldpayamount orderamount,orderstatus ,departuretime,arrivaltime,
-                  pricemodelname cartype,organid,
+                  pricemodelname cartype,organid,belongleasecompany,
                    ordersource,usetype
                  from org_order
 						     WHERE orderstatus in ('7','8') and status = '1'
 						     UNION ALL
 						     select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,vehicleid,
 						         plateno,companyid,passengerphone,passengers,userid,paymentstatus,shouldpayamount orderamount,orderstatus,departuretime,arrivaltime,
-                  pricemodelname cartype ,'' organid,
+                  pricemodelname cartype ,'' organid,belongleasecompany,
                   ordersource ,'2' usetype
 						     from op_order
 						     WHERE orderstatus in ('7','8')  and status = '1'
 						     UNION ALL
 						     select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,vehicleid,
 						         plateno,companyid,passengerphone,passengers,userid,paymentstatus,shouldpayamount orderamount,orderstatus,departuretime,arrivaltime,
-                  '' cartype,''organid,
+                  '' cartype,''organid,belongleasecompany,
                   ordersource,'2' usetype
 						     from op_taxiorder
 						     WHERE orderstatus in ('7','8')  and status = '1')aa LEFT JOIN pub_driver d on aa.driverid = d.id
@@ -59,22 +60,25 @@
          <if test="organid != null and organid != ''">
 	       and aa.organid = #{organid}
         </if>
+        <if test="leasescompany != null and leasescompany != ''">
+	       and aa.belongleasecompany = #{leasescompany}
+        </if>
 		 ORDER BY aa.usetime DESC,aa.paymentstatus,ordertype)t
 		LIMIT ${iDisplayStart},${iDisplayLength}
 	</select>
 	<select id="getOrderExportDataCount" parameterType="OrderExportEntity" resultType="int">
-		select count(*) from(select * from(select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,
-				             plateno,companyid,passengerphone,passengers,userid,paymentstatus,orderamount,orderstatus,usetype,organid
+		select count(*) from(select aa.* from(select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,
+				             plateno,companyid,passengerphone,passengers,userid,paymentstatus,orderamount,orderstatus,usetype,organid,belongleasecompany
 						from org_order
 						WHERE  orderstatus in ('7','8') and status = '1'
 						UNION ALL
 						select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,
-						       plateno,companyid,passengerphone,passengers,userid,paymentstatus,orderamount,orderstatus,'2'usetype,''organid
+						       plateno,companyid,passengerphone,passengers,userid,paymentstatus,orderamount,orderstatus,'2'usetype,''organid,belongleasecompany
 						from op_order
 						WHERE orderstatus in ('7','8')  and status = '1'
 						UNION ALL
 						select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,
-						       plateno,companyid,passengerphone,passengers,userid,paymentstatus,orderamount,orderstatus,'2'usetype,''organid
+						       plateno,companyid,passengerphone,passengers,userid,paymentstatus,orderamount,orderstatus,'2'usetype,''organid,belongleasecompany
 						from op_taxiorder
 						WHERE orderstatus in ('7','8')  and status = '1')aa LEFT JOIN pub_driver d on aa.driverid = d.id
 						where 1=1
@@ -102,6 +106,9 @@
          <if test="organid != null and organid != ''">
 	       and aa.organid = #{organid}
         </if>
+        <if test="leasescompany != null and leasescompany != ''">
+	       and aa.belongleasecompany = #{leasescompany}
+        </if>
 		 ORDER BY aa.usetime,aa.paymentstatus,ordertype)t
 	</select>
 	<select id="getDriver" resultType="Map" parameterType="OrderExportEntity">
@@ -117,6 +124,20 @@
 				like "%"#{driver}"%"
 		        </if> 
 		    ORDER BY CONCAT(NAME, ' ', phone)
+	</select>
+	<select id="getLeasescompany" resultType="Map" parameterType="OrderExportEntity">
+			SELECT
+				id,
+				text
+			FROM
+				pub_dictionary
+			where Status = 1 and type = '租赁公司'
+				<if test="leasescompany != null and leasescompany != '' ">
+					and 
+					text
+				like "%"#{leasescompany}"%"
+		        </if> 
+		    ORDER BY text
 	</select>
 	<select id="getPassage" resultType="Map" parameterType="OrderExportEntity">
 			select * from (select id, if(isnull(nickname) || nickname = '', account, concat(nickname, " ", account)) text
@@ -149,25 +170,26 @@
          (case when ordertype = '1' then '约车' when ordertype ='2' then '接机' when ordertype = '3' then '送机' else '出租车'end) ordertype,organid,
          (case when ordersource in ('00','01','02') then '乘客端' when ordersource = '10' then '租赁端' when ordersource = '20' then '机构端' else '运管端' end) as ordersource,
          (case when paymentstatus = '0' then '未支付' when paymentstatus = '1' then '已支付' when paymentstatus = '2' then '结算中' when paymentstatus = '3' then '已结算' when paymentstatus = '4' then '未结算' when paymentstatus = '8' then '已付结' else '未付结' end)paymentstatus,
+         (select text from pub_dictionary where pub_dictionary.id = aa.belongleasecompany) as belongleasecompany,
           ifnull(ROUND(mileage/1000,1),0.0) mileage,driverid,jobnum,name,phone,plateno,(select l.name from le_leasescompany l where l.id = companyid)companyid,passengerphone,passengers,userid,ifnull(ROUND(orderamount,1),0) orderamount,(case when orderstatus = '7' then '行程结束' else '已取消' end) orderstatus,
           ifnull(ROUND((UNIX_TIMESTAMP(endtime)-UNIX_TIMESTAMP(starttime))/60+0.49),0) runtime,cartype,(case when usetype = '0' then '机构因公' when usetype = '1' then '机构因私' else '个人' end) as usetype
 				     from(select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,vehicleid,
 				             plateno,companyid,passengerphone,passengers,userid,paymentstatus,shouldpayamount orderamount,orderstatus ,departuretime,arrivaltime,
-                   pricemodelname cartype,organid,
+                   pricemodelname cartype,organid,belongleasecompany,
                    ordersource,usetype
                  from org_order
 						     WHERE  orderstatus in ('7','8')  and status = '1'
 						     UNION ALL
 						     select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,vehicleid,
 						         plateno,companyid,passengerphone,passengers,userid,paymentstatus,shouldpayamount orderamount,orderstatus,departuretime,arrivaltime,
-               pricemodelname cartype,'' organid,
+               pricemodelname cartype,'' organid,belongleasecompany,
                   ordersource ,'2' usetype
 						     from op_order
 						     WHERE orderstatus in ('7','8') and  status = '1'
 						     UNION ALL
 						     select orderno,onaddress,offaddress,estimatedtime,estimatedmileage,undertime,usetime,ordertime,starttime,endtime,ordertype,mileage,driverid,vehicleid,
 						         plateno,companyid,passengerphone,passengers,userid,paymentstatus,shouldpayamount orderamount,orderstatus,departuretime,arrivaltime,
-                  '' cartype,''organid,
+                  '' cartype,''organid,belongleasecompany,
                   ordersource,'2' usetype
 						     from op_taxiorder
 						     WHERE orderstatus in ('7','8') and status = '1')aa LEFT JOIN pub_driver d on aa.driverid = d.id
@@ -195,6 +217,9 @@
         </if>
          <if test="organid != null and organid != ''">
 	       and aa.organid = #{organid}
+        </if>
+         <if test="leasescompany != null and leasescompany != ''">
+	       and aa.belongleasecompany = #{leasescompany}
         </if>
 		 ORDER BY aa.usetime DESC,aa.paymentstatus,ordertype)t
 	</select>

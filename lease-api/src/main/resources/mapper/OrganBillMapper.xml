@@ -257,20 +257,22 @@
 	<select id="getOrgOrderListByQuery" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
 	    select t.* from 
 	    (select (@rownum := @rownum + 1) as rownum,t1.* from
-	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,TIMESTAMPDIFF(MINUTE,org_order.starttime,org_order.endtime) as cumulativeTime,org_order.starttime,org_order.pricecopy, 
+	    (select org_order.orderno,org_order.orderamount,org_order.mileage,TIMESTAMPDIFF(MINUTE,org_order.starttime,org_order.endtime) as cumulativeTime,org_order.starttime,org_order.pricecopy,org_order.expensetype,org_order.orderstatus, 
 	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
 	       (case org_order.paymentstatus when '4' then (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end)
-	                                     when '2' then '结算中' when '3' then '已结算' end) as orderstatus,
+	                                     when '2' then '结算中' when '3' then '已结算' end) as paymentstatus,
 	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
 	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers,
-	       (select CONCAT(pub_driver.name,' ',pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid and pub_driver.leasescompanyid = org_order.companyid) as driverid
+	       (select CONCAT(pub_driver.name,' ',pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid and pub_driver.leasescompanyid = org_order.companyid) as driverid,
+	       (case org_order.orderstatus when '7' then org_order.endtime when '8' then org_order.canceltime end) as endtime,
+	       (select org_ordercancel.cancelamount from org_ordercancel where org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1) as cancelamount
 	    from org_order,org_organbilldetails
-	    where org_order.orderno = org_organbilldetails.orderid
+	    where org_order.orderno = org_organbilldetails.orderid   
 	      and org_organbilldetails.status = 1
 	      and org_organbilldetails.billsid = #{billsId}
 	      and org_order.companyid = #{leasesCompanyId}
 	      and org_order.status = 1
-	    order by org_order.endtime desc ) t1, (select @rownum := 0) r ) t
+	    order by endtime desc ) t1, (select @rownum := 0) r ) t
 	    <![CDATA[
 	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
 	    ]]>
@@ -287,37 +289,40 @@
 	</select>
 	
 	<select id="getOrgOrderListExport" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
-	    select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,TIMESTAMPDIFF(MINUTE,org_order.starttime,org_order.endtime) as cumulativeTime,org_order.starttime,org_order.pricecopy, 
+	    select org_order.orderno,org_order.orderamount,org_order.mileage,TIMESTAMPDIFF(MINUTE,org_order.starttime,org_order.endtime) as cumulativeTime,org_order.starttime,org_order.pricecopy,org_order.expensetype,org_order.orderstatus, 
 	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
 	       (case org_order.paymentstatus when '4' then (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end)
-	                                     when '2' then '结算中' when '3' then '已结算' end) as orderstatus,
+	                                     when '2' then '结算中' when '3' then '已结算' end) as paymentstatus,
 	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
 	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers,
 	       (select CONCAT(pub_driver.name,' ',pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid and pub_driver.leasescompanyid = org_order.companyid) as driverid,
-	       (select pub_dictionary.value from pub_dictionary where pub_dictionary.id = org_order.vehiclessubjecttype) as vehiclessubjecttype,org_order.vehiclessubject
+	       (select pub_dictionary.value from pub_dictionary where pub_dictionary.id = org_order.vehiclessubjecttype) as vehiclessubjecttype,org_order.vehiclessubject,
+	       (select org_ordercancel.cancelamount from org_ordercancel where org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1) as cancelamount,
+	       (case org_order.orderstatus when 7 then org_order.endtime when 8 then org_order.canceltime end) as endtime
 	    from org_order,org_organbilldetails
 	    where org_order.orderno = org_organbilldetails.orderid
 	      and org_organbilldetails.status = 1
 	      and org_organbilldetails.billsid = #{billsId}
 	      and org_order.companyid = #{leasesCompanyId}
 	      and org_order.status = 1
-	    order by org_order.endtime desc 
+	    order by endtime desc 
 	</select>
 	
 	<select id="getManualOrgOrderListByQuery" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
 	    select t.* from 
 	    (select (@rownum := @rownum + 1) as rownum,t4.* from
-	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,org_order.reviewstatus,
+	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.reviewstatus,org_order.expensetype,org_order.orderstatus,
 	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
-	       (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end) as orderstatus,
 	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
-	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers
+	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers,
+	       (select org_ordercancel.cancelamount from org_ordercancel where org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1) as cancelamount,
+	       (case org_order.orderstatus when 7 then org_order.endtime when 8 then org_order.canceltime end) as endtime
 	    from org_order
 	    where org_order.companyid = #{leasesCompanyId}
 	      and org_order.usetype = 0
 	      and org_order.paymethod = 2
 	      and org_order.status = 1
-	      and org_order.orderstatus = 7
+	      and (org_order.orderstatus = 7 or org_order.orderstatus = 8)
 	      and org_order.paymentstatus = 4
 	    <if test="organId != null and organId != ''">
 	        and org_order.organid IN (
@@ -347,6 +352,9 @@
 	    </if>
 	    <if test="billState == null or billState == ''">
 	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    <if test="expensetype != null and expensetype != ''">
+	        and org_order.expensetype = #{expensetype}
 	    </if>
 	    and NOT EXISTS (
 	    select * from 
@@ -369,7 +377,7 @@
 	      and org_organbilldetails.status = 1) t3
 	    where org_order.orderno = t3.orderid
 	    )
-	    order by org_order.endtime desc ) t4, (select @rownum := 0) r ) t
+	    order by endtime desc ) t4, (select @rownum := 0) r ) t
 	    <![CDATA[
 	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
 	    ]]>
@@ -382,7 +390,7 @@
 	      and org_order.usetype = 0
 	      and org_order.paymethod = 2
 	      and org_order.status = 1
-	      and org_order.orderstatus = 7
+	      and (org_order.orderstatus = 7 or org_order.orderstatus = 8)
 	      and org_order.paymentstatus = 4
 	    <if test="organId != null and organId != ''">
 	        and org_order.organid IN (
@@ -412,6 +420,9 @@
 	    </if>
 	    <if test="billState == null or billState == ''">
 	        and (org_order.reviewstatus = 0 or org_order.reviewstatus = 2)
+	    </if>
+	    <if test="expensetype != null and expensetype != ''">
+	        and org_order.expensetype = #{expensetype}
 	    </if>
 	    and NOT EXISTS (
 	    select * from 
@@ -506,17 +517,19 @@
 	<select id="getOrgOrderListById" resultType="OrgOrder" parameterType="OrganBillQueryParam">	    
 	    select t.* from 
 	    (select (@rownum := @rownum + 1) as rownum,t1.* from
-	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.endtime,   
+	    (select org_order.orderno,org_order.orderamount,org_order.mileage,org_order.expensetype,org_order.orderstatus,   
 	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
 	       (case org_order.paymentstatus when '4' then (case org_order.reviewstatus when '0' then '未结算' when '2' then '已复核' end) 
-	                                     when '2' then '结算中' when '3' then '已结算' end) as orderstatus,
+	                                     when '2' then '结算中' when '3' then '已结算' end) as paymentstatus,
 	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
-	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers
+	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers,
+	       (case org_order.orderstatus when '7' then org_order.endtime when '8' then org_order.canceltime end) as endtime,
+	       (select org_ordercancel.cancelamount from org_ordercancel where org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1) as cancelamount
 	    from org_order
 	    where org_order.orderno in (${orderNo})
 	      and org_order.companyid = #{leasesCompanyId}
 	      and org_order.status = 1
-	    order by org_order.endtime desc ) t1, (select @rownum := 0) r ) t
+	    order by endtime desc ) t1, (select @rownum := 0) r ) t
 	    <![CDATA[
 	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
 	    ]]>

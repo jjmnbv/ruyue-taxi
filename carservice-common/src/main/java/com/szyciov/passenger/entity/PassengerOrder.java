@@ -92,6 +92,11 @@ public class PassengerOrder extends AbstractOrder {
 	private String orderstyle;
 	
 	private Map<String,Object> costinfo;
+	
+	/**
+	 * 取消费
+	 */
+	private double cancelfee;
 
     /**
      * "0"表示机构订单，"1"表示个人订单
@@ -289,4 +294,12 @@ public class PassengerOrder extends AbstractOrder {
     public void setType(String type) {
         this.type = type;
     }
+
+	public double getCancelfee() {
+		return cancelfee;
+	}
+
+	public void setCancelfee(double cancelfee) {
+		this.cancelfee = cancelfee;
+	}
 }

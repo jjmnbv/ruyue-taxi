@@ -272,4 +272,18 @@ public class AccountController extends ApiExceptionHandle {
 		releaseResource(as);
 		return checkResult(result);
 	}
+	
+	/**
+	 * 校验短信验证码
+	 * @param param
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value="Driver/AuthSMSCode")
+	public JSONObject authSMSCode(@RequestBody LoginParam param){
+		starttime.set(System.currentTimeMillis());
+		JSONObject result = as.authSMSCode(param);
+		releaseResource(as);
+		return checkResult(result);
+	}
 }

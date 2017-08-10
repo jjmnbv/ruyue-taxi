@@ -400,4 +400,88 @@ public class UserDao {
 	public List<Map<String,Object>> getBalanceDetail4OpThird(Map<String, Object> param) {
 		return mapper.getBalanceDetail4OpThird(param);
 	}
+
+	public int getCouponCount(Map<String, Object> params) {
+		return mapper.getCouponCount(params);
+	}
+
+	public List<Map<String, Object>> getCouponDetail(Map<String, Object> params) {
+		return mapper.getCouponDetail(params);
+	}
+
+	public List<Map<String, Object>> getCouponUseCitys(String couponid) {
+		return mapper.getCouponUseCitys(couponid);
+	}
+
+	public Map<String, Object> getInviteInfoByInvitee(String inviteephone) {
+		return mapper.getInviteInfoByInvitee(inviteephone);
+	}
+
+	public void updateExpireInviteInfos() {
+		mapper.updateExpireInviteInfos();
+	}
+
+	public void addInviteInfo(Map<String, Object> pp) {
+		mapper.addInviteInfo(pp);
+	}
+
+	public void updateInviteState(Map<String, Object> params) {
+		mapper.updateInviteState(params);
+	}
+
+	public List<Map<String, Object>> getTocCompanysNew() {
+		return mapper.getTocCompanysNew();
+	}
+
+	public List<String> getValiableCompanys(Map<String, Object> params) {
+		return mapper.getValiableCompanys(params);
+	}
+
+	public List<Map<String, Object>> getOrganServiceCompany(Map<String, Object> params) {
+		return mapper.getOrganServiceCompany(params);
+	}
+
+	public List<Map<String, Object>> getAbleCoupons(Map<String, Object> params) {
+		return mapper.getAbleCoupons(params);
+	}
+
+	public Map<String, Object> getOrderCouponUseInfo(Map<String, Object> params) {
+		return mapper.getOrderCouponUseInfo(params);
+	}
+
+	public Map<String, Object> getCouponInfo(String couponid) {
+		return mapper.getCouponInfo(couponid);
+	}
+
+	public void addCouponUseOrder(Map<String, Object> usecouponp) {
+		mapper.addCouponUseOrder(usecouponp);
+	}
+
+	public void updateCouponUseOrder(Map<String, Object> usecouponp) {
+		mapper.updateCouponUseOrder(usecouponp);
+	}
+
+	public void doComplaint(Map<String, Object> params) {
+		mapper.doComplaint(params);
+	}
+
+	public Map<String, Object> getComplaintbyOrderno(String orderno) {
+		return mapper.getComplaintbyOrderno(orderno);
+	}
+
+	public Map<String, Object> getHighestAbleCoupon(Map<String, Object> couponp) {
+		return mapper.getHighestAbleCoupon(couponp);
+	}
+
+	public void updateCouponDiscountamount(Map<String, Object> useinfo) {
+		mapper.updateCouponDiscountamount(useinfo);
+	}
+
+	public void addCouponDetail(Map<String, Object> params) {
+		mapper.addCouponDetail(params);
+	}
+
+	public void useCoupon(Map<String, Object> useinfo) {
+		mapper.useCoupon(useinfo);
+	}
 }

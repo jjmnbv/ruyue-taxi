@@ -572,7 +572,7 @@ function mouseleaveFn(obj){
  * 初始化多文本框
  * @param content
  */
-function initUeditor(content, length) {
+function initUeditor(content, length,flag) {
 	var ue = UE.getEditor(content, {
 		toolbars:[
 			[
@@ -614,6 +614,7 @@ function initUeditor(content, length) {
 		allHtmlEnabled: true, //提交到后台的数据是否包含整个html字符串
 		maximumWords: length, //允许的最大字数
 		elementPathEnabled: false, //是否启用元素路径
+		readonly:flag ? flag : false,
 		wordOverFlowMsg: "协议内容最多只能输入" + length + "个字符" //超出字数限制提示
 	});
 	return ue;

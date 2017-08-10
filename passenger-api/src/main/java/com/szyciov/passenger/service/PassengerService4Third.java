@@ -3751,6 +3751,14 @@ public class PassengerService4Third {
 					JSONObject jsonres = carserviceapi.dealRequestWithToken("/OrderApi/ChangeOrderState", HttpMethod.POST, usertoken, orderparam, JSONObject.class);
 					res.put("status", jsonres.get("status"));
 					res.put("message", jsonres.get("message"));
+					if(Retcode.OK.code==(int)res.get("status")){
+						//取消成功
+						if(jsonres.has("cancelnature")&&jsonres.has("cancelcost")){
+							int cancelnature = jsonres.getInt("cancelnature");
+							res.put("paystate", cancelnature==1?"1":"0");
+							res.put("cancelcost", jsonres.get("cancelcost"));
+						}
+					}
 				}else{
 					try{
 						orderdao.updateOrderState4Org(updateparam);
@@ -3781,6 +3789,14 @@ public class PassengerService4Third {
 					JSONObject jsonres = carserviceapi.dealRequestWithToken("/OrderApi/ChangeOrderState", HttpMethod.POST, usertoken, orderparam, JSONObject.class);
 					res.put("status", jsonres.get("status"));
 					res.put("message", jsonres.get("message"));
+					if(Retcode.OK.code==(int)res.get("status")){
+						//取消成功
+						if(jsonres.has("cancelnature")&&jsonres.has("cancelcost")){
+							int cancelnature = jsonres.getInt("cancelnature");
+							res.put("paystate", cancelnature==1?"1":"0");
+							res.put("cancelcost", jsonres.get("cancelcost"));
+						}
+					}
 				}else{
 					try{
 						if(istaxiorder){

@@ -61,9 +61,45 @@ public class PubCooagreement {
     /**
     协议内容
      */
-    private String content;
-
+    private String coocontent;
     /**
+	 * 协议文本
+	 */
+	private String content;
+    /**
+     * 服务车企名称
+     * */
+    private String companyName;
+    /**
+     * 操作人
+     * **/
+    private String operator;
+    
+    public String getOperator() {
+		return operator;
+	}
+
+	public void setOperator(String operator) {
+		this.operator = operator;
+	}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	/**
      * get 主键
      */
     public String getId() {
@@ -231,15 +267,15 @@ public class PubCooagreement {
     /**
      * get 协议内容
      */
-    public String getContent() {
-        return content;
+    public String getCoocontent() {
+        return coocontent;
     }
 
     /**
      *
      * set 协议内容
      */
-    public void setCoocontent(String content) {
-        this.content = content == null ? null : content.trim();
+    public void setCoocontent(String coocontent) {
+        this.coocontent = coocontent == null ? null : coocontent.trim();
     }
 }

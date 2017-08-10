@@ -169,5 +169,46 @@
 	    </if>
 	    order by pe_userexpenses.expensetime desc) t1, (select @rownum := 0) r ) t
 	</select>
-
+	<select id="admoney" resultType="PeUser" parameterType="PeUser">
+	    select pe_user.id,account,ifnull(balance,0) as balance from pe_user,pe_useraccount where pe_user.id = pe_useraccount.userid and pe_user.id =#{id}
+	</select>
+	<update id="admoneyOk" parameterType="PeUser">
+	UPDATE pe_useraccount b set balance = (select * from(select a.balance from pe_useraccount a where a.userid = #{id} )c) +#{balance}
+    where b.userid =#{id}
+	</update >
+	<insert id="addPeuserexpenses" parameterType="PeUserExpenses">
+	 INSERT INTO `pe_userexpenses`
+	 (id,userid,expensetype,expensetime,amount,balance,remark,createtime,updatetime,creater,updater,status,tradetype,detailtype,operateresult)
+   VALUES
+	(
+		#{id},
+		#{userid},
+		'3',
+		now(),
+		#{amount},
+		#{balance},
+		'返回积分',
+		#{createtime},
+		#{updatetime},
+		#{creater},
+		#{updater},
+		1,
+		4,
+		1,
+		0
+	);
+	</insert>
+	<insert id="insertAccount" parameterType="PeUseraccount">
+	 INSERT INTO `pe_useraccount`
+	 (id,userid,balance,createtime,updatetime,status)
+   VALUES
+	(
+		#{id},
+		#{userid},
+		#{balance},
+		now(),
+		now(),
+		1
+	);
+	</insert>
 </mapper>

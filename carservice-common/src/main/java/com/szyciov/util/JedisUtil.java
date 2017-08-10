@@ -191,6 +191,61 @@ public class JedisUtil {
         }
         return val;
     }
+    /**
+     * 设置map 值
+     * @param key
+     * @return
+     */
+    public static void hSet(String key,String filed,String val){
+        Jedis jedis = RedisUtil.getJedis();
+        try{
+            jedis.hset(key,filed,val);
+        }catch (Exception e){
+            logger.error("redis hSet 失败---key:{}",key,e);
+        }finally {
+            jedis.close();
+        }
+    }
+
+    /**
+     * 删除map 值
+     * @param key
+     * @return
+     */
+    public static void hDel(String key,String... filed){
+        Jedis jedis = RedisUtil.getJedis();
+        try{
+            jedis.hdel(key,filed);
+        }catch (Exception e){
+            logger.error("redis hDel 失败---key:{}",key,e);
+        }finally {
+            jedis.close();
+        }
+    }
+
+
+    /**
+     * 返回哈希表 key 中，指定域 值
+     * @param key
+     * @return
+     */
+    public static String hGet(String key,String filed){
+        Jedis jedis = RedisUtil.getJedis();
+        String val = null;
+        try{
+            val = jedis.hget(key,filed);
+        }catch (Exception e){
+            logger.error("redis hget 失败---key:{}",key,e);
+        }finally {
+            jedis.close();
+        }
+
+        return val;
+    }
+
+
+
+
 
     /**
      * 消息发布

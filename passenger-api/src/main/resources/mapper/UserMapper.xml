@@ -385,7 +385,7 @@
 	</select>
 	
 	<!-- 获取当前用户钱包有余额的那些租赁公司 -->
-	<select id="getSelfCompanys" parameterType="HashMap" resultType="LeasesCompany">
+	<select id="getSelfCompanys" parameterType="HashMap" resultType="String">
 		SELECT
 			le_leasescompany.id,
 			le_leasescompany.name
@@ -1177,6 +1177,23 @@
 			)
 	</select>
 	
+	<!-- getTocCompanysNew -->
+	<select id="getTocCompanysNew" resultType="Map">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			(
+				tocstate = '2'
+				AND le_leasescompany.STATUS = 1
+			)
+			OR 
+			(
+				le_leasescompany.platformtype = '0'
+			)
+	</select>
 	
 	<!-- ##########################################二期的接口############################################## -->
 	<!-- 获取加入toc的租赁公司列表，只有需要的信息不包括其他 -->
@@ -2253,4 +2270,412 @@
 		AND pub_driveraccount.status = 1
 		LIMIT 0,1
 	</insert>
+	
+	
+	<!-- 四期 -->
+	<!-- 获取可用优惠券数目 -->
+	<select id="getCouponCount" parameterType="Map" resultType="int">
+		select count(*) from pub_coupon where pub_coupon.status=1 and pub_coupon.couponstatus=0 and pub_coupon.platformtype=0 and pub_coupon.userid=#{userid}
+	</select>
+	
+	<!-- 获取可用优惠券的明细 -->
+	<select id="getCouponDetail" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							*
+						FROM
+							pub_coupon
+						WHERE
+							pub_coupon.status = 1
+						AND pub_coupon.couponstatus = 0
+						AND pub_coupon.platformtype = 0
+						AND pub_coupon.userid = #{userid}
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.createtime DESC
+			) t
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 获取优惠券使用的限制城市 -->
+	<select id="getCouponUseCitys" parameterType="String" resultType="Map">
+		SELECT
+			DISTINCT(pub_cityaddr.id) id,
+			pub_cityaddr.city city
+		FROM
+			pub_coupon_use_city,
+			pub_cityaddr
+		WHERE
+			pub_coupon_use_city.status = 1
+		AND pub_cityaddr.status = 1
+		AND pub_coupon_use_city.city = pub_cityaddr.id
+		AND pub_coupon_use_city.couponidref = #{couponid}
+	</select>
+	
+	<!-- 获取被邀请人的邀请信息 -->
+	<select id="getInviteInfoByInvitee" parameterType="String" resultType="Map">
+		select * from pub_inviteinfo where pub_inviteinfo.status=1 and pub_inviteinfo.invitestate=0 and pub_inviteinfo.inviteephone=#{inviteephone}
+	</select>
+	
+	<!-- 重置已过期的邀请信息 -->
+	<update id="updateExpireInviteInfos">
+		UPDATE pub_inviteinfo
+		SET pub_inviteinfo.invitestate = 2,
+		 	pub_inviteinfo.updatetime = now()
+		WHERE
+			pub_inviteinfo.status=1
+		<![CDATA[
+			and	pub_inviteinfo.invitetime < date_add(now(), INTERVAL - 7 DAY)
+			and pub_inviteinfo.invitestate=0
+		]]>
+	</update>
+	
+	<!-- 添加邀请信息 -->
+	<insert id="addInviteInfo" parameterType="Map">
+		INSERT INTO pub_inviteinfo(
+			id,
+			inviterphone,
+			inviteephone,
+			invitestate,
+			createtime,
+			updatetime,
+			status,
+			invitetime,
+			invitecode
+		)
+		VALUES
+			(
+				#{id},
+				#{inviterphone},
+				#{inviteephone},
+				'0',
+				now(),
+				now(),
+				'1',
+				now(),
+				#{invitecode}
+			)
+	</insert>
+	
+	<!-- 更新邀请状态 -->
+	<update id="updateInviteState" parameterType="Map">
+		UPDATE pub_inviteinfo
+		SET 
+			pub_inviteinfo.invitecode=#{invitecode},
+			pub_inviteinfo.updatetime=now()
+		WHERE
+			pub_inviteinfo.status=1
+		AND pub_inviteinfo.invitestate=0
+		AND	pub_inviteinfo.inviteephone=#{inviteephone}
+	</update>
+	
+	<!-- 机构订单获取服务车企获取签约的服务车企 -->
+	<select id="getValiableCompanys" parameterType="Map" resultType="String">
+		SELECT
+			org_organ_company_ref.companyid
+		FROM
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND (
+			org_organ_company_ref.mainaccount = '0'
+			OR org_organ_company_ref.bindstate = '1'
+		)
+		AND org_organ_company_ref.organid IN (
+			SELECT
+				org_organ.id
+			FROM
+				org_organ
+			WHERE
+				org_organ.creditcode IN (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organid}
+				)
+			AND org_organ.customertype!=1
+		)
+	</select>
+	
+	<!-- 获取为某个机构提供某个服务的租赁公司信息(只有因公的) -->
+	<select id="getOrganServiceCompany" parameterType="Map" resultType="Map">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany. STATUS = 1
+		AND le_leasescompany.id IN (
+			SELECT
+				le_accountrules.leasescompanyid
+			FROM
+				le_accountrules,
+				le_company_rules_ref
+			WHERE
+				le_accountrules. STATUS = 1
+			AND le_company_rules_ref. STATUS = 1
+			AND le_company_rules_ref.id = le_accountrules.rulesrefid
+			AND le_accountrules.rulesstate = '0'
+			AND le_accountrules.type = '1'
+			AND le_accountrules.rulestype = #{ordertype}
+			AND le_accountrules.leasescompanyid = le_company_rules_ref.leasescompanyid
+			AND le_company_rules_ref.rulestate = '1'
+			<![CDATA[
+				AND le_company_rules_ref.starttime <= now()
+				AND le_company_rules_ref.endtime >= now()
+			]]>
+			AND le_company_rules_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype != 1
+			)
+		)
+	</select>
+	
+	<!-- 获取可用的优惠券列表，选择优惠券使用 -->
+	<select id="getAbleCoupons" parameterType="Map" resultType="Map">
+		SELECT
+			pub_coupon.*,
+		  	case when (select count(*) from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.couponidref=pub_coupon.id and pub_coupon_use.usestate=0 and pub_coupon_use.billingorderid=#{orderno})>0 THEN '1' ELSE '0' end as isselect
+		FROM
+			pub_coupon
+		WHERE
+			pub_coupon.status = 1
+		AND pub_coupon.couponstatus = 0
+		AND pub_coupon.id NOT IN (
+			SELECT
+				pub_coupon_use.couponidref
+			FROM
+				pub_coupon_use
+			WHERE
+				pub_coupon_use.status = 1
+			<![CDATA[
+		 		AND pub_coupon_use.billingorderid <> #{orderno}
+		 	]]>
+		)
+		and pub_coupon.servicetype=#{servicetype}
+		<![CDATA[
+			and (
+	          	pub_coupon.usetype=2
+		       or
+		       (select count(*) from pub_coupon_use_city where pub_coupon_use_city.status=1 and pub_coupon_use_city.couponidref=pub_coupon.id and pub_coupon_use_city.city in(#{city}))>0
+		    )
+	    ]]>
+	    and pub_coupon.userid=#{userid}
+		ORDER BY pub_coupon.money
+	</select>
+	
+	<!-- 获取订单使用优惠券的信息 -->
+	<select id="getOrderCouponUseInfo" parameterType="Map" resultType="Map">
+		select * from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.billingorderid=#{orderno} and pub_coupon_use.usestate=0
+	</select>
+	
+	<!-- 获取优惠券的信息 -->
+	<select id="getCouponInfo" parameterType="String" resultType="Map">
+		select * from pub_coupon where pub_coupon.status=1 and pub_coupon.id=#{couponid}
+	</select>
+	
+	<!-- 添加优惠券锁定信息 -->
+	<insert id="addCouponUseOrder" parameterType="Map">
+		INSERT INTO pub_coupon_use(
+			id,
+			couponidref,
+			billingorderid,
+			couponmoney,
+			discountamount,
+			usetype,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status,
+			usestate
+		)
+		VALUES
+			(
+				#{id},
+				#{couponidref},
+				#{billingorderid},
+				#{couponmoney},
+				#{discountamount},
+				#{usetype},
+				now(),
+				now(),
+				#{userid},
+				#{userid},
+				1,
+				#{usestate}
+			)
+	</insert>
+	
+	<!-- 更新优惠券锁定信息 -->
+	<select id="updateCouponUseOrder" parameterType="Map">
+		UPDATE pub_coupon_use
+		SET 
+		 couponidref = #{couponidref},
+		 couponmoney = #{couponidref},
+		 updatetime = now(),
+		 updater = #{userid}
+		WHERE
+			billingorderid = #{billingorderid}
+	</select>
+	
+	<!-- 投诉 -->
+	<insert id="doComplaint" parameterType="Map">
+		INSERT INTO pub_complaint(
+			id,
+			platformtype,
+			leasecompanyid,
+			usertype,
+			ordertype,
+			userid,
+			orderno,
+			complainttype,
+			complaintcontent,
+			processstatus,
+			processresult,
+			processrecord,
+			processtime,
+			processor,
+			createtime,
+			updatetime,
+			status,
+			creater,
+			updater
+		)
+		VALUES
+			(
+				#{id},
+				#{platformtype},
+				#{leasecompanyid},
+				#{usertype},
+				#{ordertype},
+				#{userid},
+				#{orderno},
+				null,
+				#{complaintcontent},
+				#{processstatus},
+				null,
+				null,
+				null,
+				null,
+				now(),
+				now(),
+				1,
+				#{userid},
+				#{userid}
+			)
+	</insert>
+	
+	<!-- 根据订单号获取投诉信息 -->
+	<select id="getComplaintbyOrderno" parameterType="String" resultType="Map">
+		select * from pub_complaint where pub_complaint.status=1 and pub_complaint.orderno=#{orderno}
+	</select>
+	
+	<!-- 获取用户拥有的可用的最大面值的优惠券信息 -->
+	<select id="getHighestAbleCoupon" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+			pub_coupon
+		WHERE
+			pub_coupon.status = 1
+		AND pub_coupon.couponstatus=0
+		AND pub_coupon.userid = #{userid}
+		AND pub_coupon.servicetype=#{servicetype}
+		AND pub_coupon.lecompanyid=#{lecompanyid}
+		AND pub_coupon.platformtype=#{platformtype}
+		<![CDATA[
+			AND (
+			  pub_coupon.usetype=2
+			or (
+			   (select count(*) from pub_coupon_use_city where pub_coupon_use_city.status=1 and pub_coupon_use_city.couponidref=pub_coupon.id and pub_coupon_use_city.city in(#{city}))>0
+			 )
+			)
+			AND pub_coupon.id not in(
+				select pub_coupon_use.couponidref from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.usestate=0 and pub_coupon_use.billingorderid=#{userid}
+			)
+		]]>
+		ORDER BY pub_coupon.money desc
+		LIMIT 0,1
+	</select>
+	
+	<!-- 优惠券使用 -->
+	<update id="useCoupon" parameterType="Map">
+		UPDATE pub_coupon
+		SET 
+		  couponstatus = 1,
+		  updatetime = now()
+		WHERE
+			id = #{couponidref}
+	</update>
+	
+	<!-- 更新优惠券实际抵用金额 -->
+	<select id="updateCouponDiscountamount" parameterType="Map">
+		UPDATE pub_coupon_use
+		SET 
+		 discountamount = #{discountamount},
+		 actualamount = #{discountamount},
+		 usestate = 1,
+		 updatetime = now()
+		WHERE
+			billingorderid = #{billingorderid}
+	</select>
+	
+	<!-- 添加优惠券使用明细 -->
+	<insert id="addCouponDetail" parameterType="Map">
+	INSERT INTO pub_coupon_detail(
+		id,
+		userid,
+		couponidref,
+		usetype,
+		amount,
+		balance,
+		remark,
+		updatetime,
+		createtime,
+		status
+	)
+	VALUES
+		(
+			#{id},
+			#{userid},
+			#{couponidref},
+			#{usetype},
+			#{amount},
+			(select sum(pub_coupon.money) from pub_coupon where pub_coupon.status=1 and pub_coupon.couponstatus=0 and pub_coupon.userid='07423FBA-CE1B-4ED0-8A0C-333A920BEB0C'),
+			#{remark},
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
 </mapper>

@@ -1,7 +1,10 @@
 package com.szyciov.org.entity;
 
-
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
   * @ClassName OrgOrderReview
@@ -145,6 +148,16 @@ public class OrgOrderReview{
      */
     private String rawpricecopy;
 
+    /**
+     * 复核类型(1-按里程时长,2-按固定金额)
+     */
+    private Integer reviewtype;
+
+    /**
+     * 租赁公司id
+     */
+    private String leasescompanyid;
+
 	/**
 	  *设置id
 	  */
@@ -218,8 +231,21 @@ public class OrgOrderReview{
 	/**
 	  *设置服务开始时间
 	  */
-	public void setStarttime(Date starttime){
-		this.starttime=starttime;
+	public void setStarttime(Object starttime){
+        if(starttime instanceof Date){
+            this.starttime = (Date) starttime;
+        }else if(starttime instanceof String){
+            try {
+                if(StringUtils.isNotBlank((String) starttime)){
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                    this.starttime = format.parse((String)starttime);
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }else if(starttime instanceof Long){
+            this.starttime = new Date((long)starttime);
+        }
 	}
 
 	/**
@@ -232,8 +258,21 @@ public class OrgOrderReview{
 	/**
 	  *设置服务结束时间
 	  */
-	public void setEndtime(Date endtime){
-		this.endtime=endtime;
+	public void setEndtime(Object endtime){
+        if(endtime instanceof Date){
+            this.endtime = (Date) endtime;
+        }else if(endtime instanceof String){
+            try {
+                if(StringUtils.isNotBlank((String) endtime)){
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                    this.endtime = format.parse((String)endtime);
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }else if(endtime instanceof Long){
+            this.endtime = new Date((long)endtime);
+        }
 	}
 
 	/**
@@ -461,5 +500,21 @@ public class OrgOrderReview{
 
     public void setRawpricecopy(String rawpricecopy) {
         this.rawpricecopy = rawpricecopy;
+    }
+
+    public Integer getReviewtype() {
+        return reviewtype;
+    }
+
+    public void setReviewtype(Integer reviewtype) {
+        this.reviewtype = reviewtype;
+    }
+
+    public String getLeasescompanyid() {
+        return leasescompanyid;
+    }
+
+    public void setLeasescompanyid(String leasescompanyid) {
+        this.leasescompanyid = leasescompanyid;
     }
 }

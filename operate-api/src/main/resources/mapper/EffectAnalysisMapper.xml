@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.EffectAnalysisMapper">
+
+      <select id="getCouponUsageSendCitys" resultType="java.util.Map">
+         select DISTINCT pc.id as id,pc.city as text from pub_coupon_activity_use_city pcauc
+           inner join pub_cityaddr pc on pcauc.city=pc.id 
+         where EXISTS (
+            select coupon.couponactivyidref from pub_coupon coupon where coupon.couponactivyidref in 
+            (select id from pub_coupon_activity where platformtype=0 and status=1) 
+            and coupon.couponactivyidref=pcauc.couponactivityidref and coupon.status=1)
+            <if test="city != null and city != ''">
+            and pc.city like concat('%',#{city},'%')
+            </if>
+      </select>
+      
+      <select id="queryCouponUsageList" parameterType="couponusagequeryparam" resultType="couponusagedto">
+          select pc.id,pc.city,count(*) as totalcount from pub_coupon_activity_use_city pcauc
+          INNER join pub_cityaddr pc on pcauc.city=pc.id 
+          INNER join pub_coupon coupon on coupon.couponactivyidref=pcauc.couponactivityidref
+          where pcauc.couponactivityidref in 
+            (select id from pub_coupon_activity where platformtype=0 and status=1)
+            <if test="usedstarttime != null and usedstarttime != ''">
+              and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{usedstarttime}
+            </if>
+            <if test="usedendtime != null and usedendtime != ''">
+              and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{usedendtime}
+            </if>
+             <if test="city != null and city != ''">
+              and pc.id=#{city}
+            </if>
+            group by pcauc.city
+      </select>
+      
+      <select id="queryCouponUsageListCount" parameterType="couponusagequeryparam" resultType="Integer">
+          select count(*) from (
+            select pc.id from pub_coupon_activity_use_city pcauc
+              INNER join pub_cityaddr pc on pcauc.city=pc.id 
+              INNER join pub_coupon coupon on coupon.couponactivyidref=pcauc.couponactivityidref
+            where pcauc.couponactivityidref in 
+              (select id from pub_coupon_activity where platformtype=0 and status=1)
+              <if test="usedstarttime != null and usedstarttime != ''">
+              and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{usedstarttime}
+              </if>
+              <if test="usedendtime != null and usedendtime != ''">
+              and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{usedendtime}
+              </if>
+              <if test="city != null and city != ''">
+              and pc.id=#{city}
+              </if>
+              group by pcauc.city) v
+      </select>
+      
+      <select id="queryUsedCouponList" resultType="java.util.Map">
+          select oo.oncity as city, ifnull(count(*),0) as total From pub_coupon_use pcu inner join op_order oo on pcu.billingorderid=oo.orderno
+          where pcu.usetype=2 
+            and EXISTS 
+            (select couponactivyidref from pub_coupon pc where pc.couponactivyidref in 
+            (select id from pub_coupon_activity where platformtype=0 and sendservicetype=2 and status=1) 
+            and pc.id=pcu.id and pc.couponstatus=1 and pc.status=1)
+            and pcu.status=1 group by oo.oncity
+       union all
+          select oo.oncity as city,ifnull(count(*),0) as total From pub_coupon_use pcu inner join op_taxiorder oo on pcu.billingorderid=oo.orderno
+          where pcu.usetype=2 
+            and EXISTS 
+            (select couponactivyidref from pub_coupon pc where pc.couponactivyidref in 
+            (select id from pub_coupon_activity where platformtype=0 and sendservicetype=1 and status=1) 
+            and pc.id=pcu.id and pc.couponstatus=1 and pc.status=1)
+            and pcu.status=1 group by oo.oncity
+      </select>
+      
+      <select id="queryRegisterCount" parameterType="UserRechargeQueryParam" resultType="Integer">
+          select ifnull(count(*),0) from pe_user 
+          where 
+            status='1'
+            <if test="starttime != null and starttime != ''">
+            and date_format(registertime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{starttime}
+            </if>
+            <if test="endtime != null and endtime != ''"> 
+            and date_format(registertime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{endtime}
+            </if>
+      </select>
+      
+      <select id="queryRechargeCount" parameterType="UserRechargeQueryParam" resultType="Integer">
+           select ifnull(COUNT(DISTINCT ex.userid),0) from pe_userexpenses ex
+          where exists (
+             select pu.id from pe_user pu
+              where ex.userid=pu.id
+              <if test="starttime != null and starttime != ''">
+              and date_format(registertime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{starttime}
+              </if>
+              <if test="endtime != null and endtime != ''"> 
+              and date_format(registertime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{endtime}
+              </if>
+              and status='1'
+          ) and ex.tradetype='0'
+            and ex.operateresult='0' 
+      </select>
+      
+</mapper>

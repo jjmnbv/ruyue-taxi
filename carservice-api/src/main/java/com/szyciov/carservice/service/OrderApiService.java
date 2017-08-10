@@ -1,5 +1,15 @@
 package com.szyciov.carservice.service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
 import com.szyciov.carservice.dao.AwardPassengerDao;
 import com.szyciov.carservice.dao.DriverDao;
 import com.szyciov.carservice.dao.OrderApiDao;
@@ -40,6 +50,7 @@ import com.szyciov.entity.PayMethod;
 import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.PubJpushlog;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.entity.PubSendrules;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.TaxiOrderCost;
@@ -49,6 +60,8 @@ import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.OrderVarietyEnum;
 import com.szyciov.enums.PlatformTypeByDb;
 import com.szyciov.enums.PubJpushLogEnum;
+import com.szyciov.enums.PubOrdercancelEnum;
+import com.szyciov.enums.PubPremiumRuleEnum;
 import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.enums.SendRulesEnum;
 import com.szyciov.enums.VehicleEnum;
@@ -76,6 +89,7 @@ import com.szyciov.org.entity.OrgUser;
 import com.szyciov.org.param.OrgUserParam;
 import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.param.OrderApiParam;
+import com.szyciov.param.PremiumRuleParam;
 import com.szyciov.param.PubPushLogParam;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
@@ -98,15 +112,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 @Service("OrderApiService")
 public class OrderApiService {
 	private Logger logger = LoggerFactory.getLogger(OrderApiService.class);
@@ -123,7 +128,9 @@ public class OrderApiService {
 	
 	@Autowired
     private UserNewsService userNewsService;
-
+	
+	private OrderCancelRuleService orderCancelRuleService;
+	
     @Autowired
     private OpOrderApiService opOrderApiService;
 
@@ -132,7 +139,20 @@ public class OrderApiService {
 
     private RabbitService rabbitService;
     
-    @Resource(name="AwardPassengerDao")
+    private PremiumRuleService premiumRuleService;
+    
+    @Resource(name="PremiumRuleService")
+    public void setPremiumRuleService(PremiumRuleService premiumRuleService) {
+    	this.premiumRuleService = premiumRuleService;
+    }
+    
+    @Resource(name="OrderCancelRuleService")
+	public void setOrderCancelRuleService(OrderCancelRuleService orderCancelRuleService) {
+		this.orderCancelRuleService = orderCancelRuleService;
+	}
+	
+
+	@Resource(name="AwardPassengerDao")
 	public void setAwardDao(AwardPassengerDao awardDao) {
 		this.awardDao = awardDao;
 	}
@@ -984,6 +1004,7 @@ public class OrderApiService {
 			orderInfo.setPricemodelname(vehiclemodels.getName());
 		}
 		int minute = oc.getTimes() % 60 > 0 ? oc.getTimes() / 60 + 1 : oc.getTimes() / 60;
+		int expensetype = parseInt(OrderEnum.EXPENSETYPE_SERVICE_DONE.code);
 		orderInfo.setEstimatedmileage(StringUtil.formatNum(oc.getMileage()/1000, 1));
 		orderInfo.setEstimatedtime((int)StringUtil.formatNum(minute,1));
 		orderInfo.setEstimatedcost(oc.getCost());
@@ -992,6 +1013,7 @@ public class OrderApiService {
 		orderInfo.setReviewstatus(ReviewState.NOTREVIEW.state);
 		orderInfo.setStatus(1);               //数据生效
 		orderInfo.setUserhidden("1");   //消息未读
+		orderInfo.setExpensetype(expensetype);   //创建订单时默认为1-行程服务
         if("1".equals(orderInfo.getManualDriver())){
             orderInfo.setOrdertime(new Date());
             orderInfo.setOrderstatus(OrderState.WAITSTART.state);
@@ -1026,6 +1048,7 @@ public class OrderApiService {
 			orderInfo.setPricemodelname(vehiclemodels.getName());
 		}
 		int minute = oc.getTimes() % 60 > 0 ? oc.getTimes() / 60 + 1 : oc.getTimes() / 60;
+		int expensetype = parseInt(OrderEnum.EXPENSETYPE_SERVICE_DONE.code);
 		orderInfo.setEstimatedmileage(StringUtil.formatNum(oc.getMileage()/1000, 1));
 		orderInfo.setEstimatedtime((int)StringUtil.formatNum(minute,1));
 		orderInfo.setEstimatedcost(oc.getCost());
@@ -1034,6 +1057,7 @@ public class OrderApiService {
 		orderInfo.setReviewstatus(ReviewState.NOTREVIEW.state);
 		orderInfo.setStatus(1);               //数据生效
 		orderInfo.setUserhidden("1");   //消息未读
+		orderInfo.setExpensetype(expensetype);   //创建订单时默认为1-行程服务
 		OrderApiParam oap = new OrderApiParam();
 		oap.setOrderid(orderInfo.getOrderno());
 		oap.setOrderprop(OrderVarietyEnum.OPERATING_NET.icode);
@@ -1076,6 +1100,7 @@ public class OrderApiService {
 		}
 		//预估时间向上取整
 		int minute = oc.getTimes() % 60 > 0 ? oc.getTimes() / 60 + 1 : oc.getTimes() / 60;
+		int expensetype = parseInt(OrderEnum.EXPENSETYPE_SERVICE_DONE.code);
 		orderInfo.setEstimatedmileage(StringUtil.formatNum(oc.getMileage()/1000, 1));
 		orderInfo.setEstimatedtime((int)StringUtil.formatNum(minute,1));
 		orderInfo.setEstimatedcost(oc.getCost());
@@ -1084,6 +1109,7 @@ public class OrderApiService {
 		orderInfo.setReviewstatus(ReviewState.NOTREVIEW.state);
 		orderInfo.setStatus(1);               //数据生效
 		orderInfo.setUserhidden("1");   //消息未读
+		orderInfo.setExpensetype(expensetype);   //创建订单时默认为1-行程服务
 		OrderApiParam oap = new OrderApiParam();
 		oap.setOrderid(orderInfo.getOrderno());
 		oap.setOrderprop(OrderVarietyEnum.OPERATING_NET.icode);
@@ -1469,7 +1495,9 @@ public class OrderApiService {
 		//计算价格
 		Date starttime = oid != null ? oid.getStarttime() : null;
 		oc = StringUtil.countCost(oc, starttime, oid == null,param.isIsusenow());
-		doDiscount(oc,param.getOrderprop() == 0);
+		doPremium(oid,oc);    //获取溢价倍率
+//		doDiscount(oc,param.getOrderprop() == 0);
+		
 		if(param.isHasunit()){
 			result = convertOrderCost(oc);
 		}else{
@@ -1479,8 +1507,43 @@ public class OrderApiService {
 	}
 	
 	/**
+	 * 计算溢价倍率后金额
+	 * @param oid
+	 * @param orderCost
+	 */
+	private void doPremium(OrderInfoDetail oid,OrderCost oc){
+		PremiumRuleParam prp = new PremiumRuleParam();
+		PubPremiumRuleEnum platform = oid.getOrderprop() == 0 ? PubPremiumRuleEnum.PLATFORMTYPE_LEASE
+				: PubPremiumRuleEnum.PLATFORMTYPE_OPERATE;
+		prp.setCartype(PubPremiumRuleEnum.CARTYPE_NET.code);
+		prp.setCitycode(oid.getCityid());
+		prp.setLeasescompanyid(oid.getCompanyid());
+		prp.setPlatformtype(platform.code);
+		prp.setUsetime(oid.getUsetime());
+		Map<String,Object> result = premiumRuleService.getPremiumrate(prp);
+		if((int)result.get("status") != Retcode.OK.code) return;
+		oc.setPremiumrate((double)result.get("premiumrate"));
+	}
+	
+	/**
+	 * 锁定优惠券
+	 */
+	private void doLockCoupon(OrderInfoDetail oid,OrderCost oc,String couponId){
+//		templateHelper.dealRequestWithFullUrl(url, method, entity, responseType, uriVariables)
+		
+	}
+	
+	/**
+	 * 
+	 */
+	private void doGetCanUseCounpon(){
+		
+	}
+	
+	/**
 	 * 费用打折
 	 */
+	@SuppressWarnings("unused")
 	private void doDiscount(OrderCost oc,boolean isorg){
 		boolean takeOff = checkCanTakeOff();
 		if(takeOff){  //如果折扣开关开启,使用折扣价
@@ -1687,51 +1750,83 @@ public class OrderApiService {
 	 * 取消订单处理逻辑
 	 * @param order
 	 */
-	private OrderMessage orderCancel(OrderInfoDetail order,OrderApiParam param,PubDriver pd){
+	private OrderMessage orderCancel(OrderInfoDetail order,OrderApiParam param,PubDriver pd,JSONObject result){
 		//取消需要发消息通知
 		OrderMessage cancellorder = null;
+		PubOrderCancel  poc = null;
+		if(CancelParty.LEASE.code.equals(param.getReqsrc()) 
+		|| CancelParty.OPERATOR.code.equals(param.getReqsrc())){  //客服取消
+			poc = saveOrUpdateCancelInfo(order,param,null,result);
+			if(poc == null) return cancellorder;
+		}else{   //乘客(机构端算乘客)取消
+			Map<String,Object> map = doCancelPunish(order);
+			poc = saveOrUpdateCancelInfo(order,param,map,result);
+		}
 		if(order.getOrderprop() == OrderVarietyEnum.LEASE_NET.icode){
-			OrgOrder orgOrder = dao.getOrgOrder(order.getOrderno());
-			orgOrder.setPaymentstatus(PayState.PAYED.state);  //取消订单改成已支付
-			orgOrder.setOrderstatus(OrderState.CANCEL.state);
-			orgOrder.setCanceltime(new Date());
-			orgOrder.setCancelparty(param.getReqsrc());
-			cancellorder = new OrderMessage(orgOrder, OrderMessage.CANCELORDER);	
+			cancellorder = doCancelOrgOrder(order,param);
 		} else if(order.getOrderprop() == OrderVarietyEnum.OPERATING_NET.icode) {
-			OpOrder opOrder = dao.getOpOrder(order.getOrderno());
-			opOrder.setPaymentstatus(PayState.PAYED.state);  //取消订单改成已支付
-			opOrder.setOrderstatus(OrderState.CANCEL.state);
-			opOrder.setCanceltime(new Date());
-			opOrder.setCancelparty(param.getReqsrc());
-			cancellorder = new OrderMessage(opOrder, OrderMessage.CANCELORDER);	
+			cancellorder = doCancelOpOrder(order, param);
 		} else {
-			OpTaxiOrder opTaxiOrder = dao.getOpTaxiOrder(order.getOrderno());
-			if(PayMethod.OFFLINE.code.equals(param.getPaymethod())){  
-				//如果是线下支付,订单状态如果调度费不为0,改为已付结
-				if(opTaxiOrder.getSchedulefee() > 0){
-					opTaxiOrder.setPaymentstatus(PayState.PAYOVER.state);
-				}else{ //如果不存在调度费,改为已结算
-					opTaxiOrder.setPaymentstatus(PayState.STATEMENTED.state);
-				}
-			}else{  //如果是线上支付,订单支付状态需要改为已支付
-				opTaxiOrder.setPaymentstatus(PayState.PAYED.state);
-			}
-			opTaxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.CANCEL.state));
-			opTaxiOrder.setOrderstatus(OrderState.CANCEL.state);
-			opTaxiOrder.setCanceltime(new Date());
-			opTaxiOrder.setCancelparty(param.getReqsrc());
-			cancellorder = new TaxiOrderMessage(opTaxiOrder, TaxiOrderMessage.TAXI_CANCELORDER);	
+			cancellorder = doCancelOpTaxiOrder(order, param);
 		}
-		//如果已有司机接单,还需新记录一条司机消息(入库,app需要列出)
-		if(pd != null){
-			createDriverNews(order,param);
-			if(DriverState.INSERVICE.code.equals(pd.getWorkstatus())){
-				//还需将司机置回空闲(司机服务中状态才置回空闲,其他状态不变)
-				pd.setWorkstatus(DriverState.IDLE.code);
-				pd.setUpdateTime(new Date());
-				dao.updatePubDriver(pd);
-			}
+		handleDriverStatus(order,param,pd);
+		rollbackUserBalance(order);
+		
+		order.setStatus(OrderState.CANCEL.state);
+		order.setCanceltime(new Date());
+		order.setCancelparty(param.getReqsrc());
+		
+		result.clear();
+		result.put("status", Retcode.OK.code);
+		result.put("cancelcost", poc.getCancelamount());    //返回的取消费用(0也可以表示免责取消)
+		result.put("cancelnature", poc.getCancelnature());  //返回的取消性质(1-有责,2-免责)
+		return cancellorder;
+	}
+
+	/**
+	 * 保存取消详情
+	 * @param order
+	 * @param param
+	 * @param cancelrule
+	 */
+	private PubOrderCancel saveOrUpdateCancelInfo(OrderInfoDetail order,OrderApiParam param,Map<String, Object> cancelrule,JSONObject result){
+		int ordertype = order.getOrderprop() == 0 ? 1 : 
+									order.getOrderprop() == 1 ? 2 : 
+									order.getOrderprop() == 2 ? 3 : 1;
+		PubOrderCancel poc = dao.getOrderCancelInfo(order.getOrderno(),ordertype);
+		if(poc == null) {
+			poc = new PubOrderCancel();
+			poc.setId(GUIDGenerator.newGUID());
+			poc.setStatus(DataStatus.OK.code);
 		}
+		if(CancelParty.PASSENGER.code.equals(param.getReqsrc()) 
+		|| CancelParty.ORGAN.code.equals(param.getReqsrc())){  //乘客取消(机构端属于乘客取消)
+			int cancelnature = PubOrdercancelEnum.getCancelnature((int)cancelrule.get("pricereason")).code;
+			poc.setOrderno(order.getOrderno());
+			poc.setCancelamount((int)cancelrule.get("price"));
+			poc.setCancelnature(cancelnature);
+			poc.setCancelreason(param.getCancelreason());
+			poc.setDutyparty(param.getDutyparty());	
+			poc.setCancelrule((String)cancelrule.get("ordercancelrule"));
+		}else{     //客服取消
+			if(!poc.getIdentifying().equals(param.getIdentifying())){  //如果唯一标识不相同,则表示被其他客服操作了
+				result.clear();
+//				result.put("status", Retcode.ANOTHEREXCUTE.code);
+//				result.put("message", Retcode.ANOTHEREXCUTE.msg);
+				return null;
+			}
+			poc.setDutyparty(param.getDutyparty());	
+			poc.setCancelreason(param.getCancelreason());
+		}
+		dao.saveOrUpdateOrderCancelInfo(poc, ordertype);
+		return poc;
+	}
+	
+	/**
+	 * 退回下单人预扣款
+	 * @param order
+	 */
+	private void rollbackUserBalance(OrderInfoDetail order){
 		if(order.getOrderprop() == OrderVarietyEnum.LEASE_NET.icode){ //如果是机构订单,并且是机构支付,还需退回预扣款
 			OrgOrder orgOrder = dao.getOrgOrder(order.getOrderno());
 			if(PayMethod.ORGAN.code.equals(orgOrder.getPaymethod())){
@@ -1743,12 +1838,95 @@ public class OrderApiService {
 				dao.updateOrgBalance(oocr);
 			}
 		}
-		order.setStatus(OrderState.CANCEL.state);
-		order.setCanceltime(new Date());
-		order.setCancelparty(param.getReqsrc());
-		return cancellorder;
 	}
-
+	
+	/**
+	 * 还原司机状态
+	 * @param order
+	 * @param param
+	 * @param pd
+	 */
+	private void handleDriverStatus(OrderInfoDetail order,OrderApiParam param,PubDriver pd){
+		if(pd != null){ //如果已有司机接单
+			createDriverNews(order,param); //还需新记录一条司机消息(入库,app需要列出)
+			if(DriverState.INSERVICE.code.equals(pd.getWorkstatus())){ //如果司机已经出发
+				//还需将司机置回空闲(司机服务中状态才置回空闲,其他状态不变)
+				pd.setWorkstatus(DriverState.IDLE.code);
+				pd.setUpdateTime(new Date());
+				dao.updatePubDriver(pd);
+			}
+		}
+	}
+	
+	/**
+	 * 机构订单取消
+	 * @param order
+	 * @param param
+	 * @return
+	 */
+	private OrderMessage doCancelOrgOrder(OrderInfoDetail order,OrderApiParam param){
+		OrgOrder orgOrder = dao.getOrgOrder(order.getOrderno());
+		orgOrder.setPaymentstatus(PayState.PAYED.state);  //取消订单改成已支付
+		orgOrder.setOrderstatus(OrderState.CANCEL.state);
+		orgOrder.setCanceltime(new Date());
+		orgOrder.setCancelparty(param.getReqsrc());
+		orgOrder.setExpensetype(parseInt(OrderEnum.EXPENSETYPE_CANCEL_PUNISH.code));
+		return new OrderMessage(orgOrder, OrderMessage.CANCELORDER);	
+	}
+	
+	/**
+	 * 个人订单取消
+	 * @param order
+	 * @param param
+	 * @return
+	 */
+	private OrderMessage doCancelOpOrder(OrderInfoDetail order,OrderApiParam param){
+		OpOrder opOrder = dao.getOpOrder(order.getOrderno());
+		opOrder.setPaymentstatus(PayState.PAYED.state);  //取消订单改成已支付
+		opOrder.setOrderstatus(OrderState.CANCEL.state);
+		opOrder.setCanceltime(new Date());
+		opOrder.setCancelparty(param.getReqsrc());
+		opOrder.setExpensetype(parseInt(OrderEnum.EXPENSETYPE_CANCEL_PUNISH.code));
+		return new OrderMessage(opOrder, OrderMessage.CANCELORDER);
+	}
+	
+	/**
+	 * 个人出租车取消
+	 * @param order
+	 * @param param
+	 * @return
+	 */
+	private TaxiOrderMessage doCancelOpTaxiOrder(OrderInfoDetail order,OrderApiParam param){
+		OpTaxiOrder opTaxiOrder = dao.getOpTaxiOrder(order.getOrderno());
+		if(PayMethod.OFFLINE.code.equals(param.getPaymethod())){  
+			//如果是线下支付,订单状态如果调度费不为0,改为已付结
+			if(opTaxiOrder.getSchedulefee() > 0){
+				opTaxiOrder.setPaymentstatus(PayState.PAYOVER.state);
+			}else{ //如果不存在调度费,改为已结算
+				opTaxiOrder.setPaymentstatus(PayState.STATEMENTED.state);
+			}
+		}else{  //如果是线上支付,订单支付状态需要改为已支付
+			opTaxiOrder.setPaymentstatus(PayState.PAYED.state);
+		}
+		opTaxiOrder.setOrdersortcolumn(Integer.valueOf(OrdersortColumn.CANCEL.state));
+		opTaxiOrder.setOrderstatus(OrderState.CANCEL.state);
+		opTaxiOrder.setCanceltime(new Date());
+		opTaxiOrder.setCancelparty(param.getReqsrc());
+		opTaxiOrder.setExpensetype(parseInt(OrderEnum.EXPENSETYPE_CANCEL_PUNISH.code));
+		return new TaxiOrderMessage(opTaxiOrder, TaxiOrderMessage.TAXI_CANCELORDER);	
+	}
+	
+	/**
+	 * 获取取消处罚规则
+	 */
+	private Map<String, Object> doCancelPunish(OrderInfoDetail order){
+		Map<String, String> param = new HashMap<>();
+		param.put("orderno", order.getOrderno());
+		param.put("ordertype", order.getType());
+		param.put("usetype", order.getUsetype());
+		return orderCancelRuleService.getCancelPrice(param, true);
+	}
+	
 	/**
 	 * 订单完成处理逻辑
 	 */
@@ -1855,8 +2033,9 @@ public class OrderApiService {
 			if(order.getDriverid() != null && !order.getDriverid().isEmpty()){
 				pd = dao.getPubDriverById(order.getDriverid());
 			}
-			ordermessage = orderCancel(order,param,pd);
+			ordermessage = orderCancel(order,param,pd,result);
 			removeDriverMessage(param,pd);
+            removeDriverTravelReminder(order.getOrderno(), order.getUsetype());
 		}else if(OrderState.SERVICEDONE.state.equals(param.getOrderstate())){
 			ordermessage = orderDone(order,param,result);
 			if(ordermessage == null) return result;
@@ -1869,15 +2048,18 @@ public class OrderApiService {
  			    rmf = orderTaken(order);
             }
 		}else{
+			result.clear();
 			result.put("status", Retcode.INVALIDORDERSTATUS.code);
 			result.put("message", Retcode.INVALIDORDERSTATUS.msg);
-			return result;
 		}
-		dao.updateOrderInfo(order);
-		if(ordermessage != null) MessageUtil.sendMessage(ordermessage);
-		if(rmf != null && param.isRemind()){
-			rmf.createMessage(this);
-			rmf.sendMessage();
+		//所有操作正确才更新和推送
+		if(result == null || result.isEmpty() || result.getInt("status") == Retcode.OK.code){
+			dao.updateOrderInfo(order);
+			if(ordermessage != null) MessageUtil.sendMessage(ordermessage);
+			if(rmf != null && param.isRemind()){
+				rmf.createMessage(this);
+				rmf.sendMessage();
+			}
 		}
 		return result;
 	}
@@ -2150,6 +2332,7 @@ public class OrderApiService {
 			orgOrder.setUpdatetime(new Date());
 			orgOrder.setOrderstatus(OrderState.SERVICEDONE.state);
 			orgOrder.setCosttype(oc.getCosttype());
+			orgOrder.setExpensetype(parseInt(OrderEnum.EXPENSETYPE_SERVICE_DONE.code));
 			doOrgPayOrder(order,orgOrder,ocp);    //机构支付
 			dao.updateOrgOrder(orgOrder);
 			completeOrder = new OrderMessage(orgOrder, OrderMessage.FINISHORDER);
@@ -2163,6 +2346,7 @@ public class OrderApiService {
 			opOrder.setUpdatetime(new Date());
 			opOrder.setOrderstatus(OrderState.SERVICEDONE.state);
 			opOrder.setCosttype(oc.getCosttype());
+			opOrder.setExpensetype(parseInt(OrderEnum.EXPENSETYPE_SERVICE_DONE.code));
 			doOpPayOrder(order,opOrder);      //个人订单值重写费用
 			dao.updateOpOrder(opOrder);
 			completeOrder = new OrderMessage(opOrder, OrderMessage.FINISHORDER);	
@@ -2286,6 +2470,7 @@ public class OrderApiService {
 						dao.updateOrgOrganCompanyRef(companyRef);
 					}
 				}
+                removeDriverTravelReminder(order.getOrderno(), order.getUsetype());
 				//发送消息
 				OrderMessage message = new OrderMessage(order, OrderMessage.SENDORDERFAIL);
 				MessageUtil.sendMessage(message);
@@ -2300,6 +2485,7 @@ public class OrderApiService {
 				order.setOrderstatus("8");
 				order.setCancelparty(CancelParty.SYSTEM.code);
 				dao.cancelOverTimeOpOrder(order);
+                removeDriverTravelReminder(order.getOrderno(), order.getUsetype());
 				//发送消息
 				OrderMessage message = new OrderMessage(order, OrderMessage.SENDORDERFAIL);
 				MessageUtil.sendMessage(message);
@@ -2315,6 +2501,7 @@ public class OrderApiService {
 				opTaxiOrder.setCancelparty(CancelParty.SYSTEM.code);
 				opTaxiOrder.setOrdersortcolumn(OrdersortColumn.CANCEL.state);
 				dao.cancelOverTimeOpTaxiOrder(opTaxiOrder);
+                removeDriverTravelReminder(opTaxiOrder.getOrderno(), opTaxiOrder.getUsetype());
 				//发送消息
 //				OrderMessage message = new TaxiOrderMessage(opTaxiOrder, TaxiOrderMessage.TAXI_SENDORDERFAIL);
 //				MessageUtil.sendMessage(message);
@@ -2648,6 +2835,10 @@ public class OrderApiService {
             sendrecord.setDriverid(orgOrder.getDriverid());
             int recordRsult = this.dao.insertOrgSendrecord(sendrecord);
             order = this.dao.getOrgOrder(orgOrder.getOrderno());
+
+            order.setLastsendtime(StringUtil.addDate(new Date(), 20));
+            addDriverTravelReminder(order);
+
             createDriverNews(order, 0.0D, OrderMessageFactory.OrderMessageType.MANTICORDER);
             if ((orderResult == 1) && (recordRsult == 1)) {
                 OrderMessage message = new OrderMessage(order, "人工指派订单");
@@ -2840,4 +3031,22 @@ public class OrderApiService {
 		logger.info("保存司机抢单推送完成");
 		return result;
 	}
+
+    /**
+     * 清除redis中订单的提醒信息
+     * @param orderno
+     */
+    private void removeDriverTravelReminder(String orderno, String usetype) {
+        JedisUtil.delKey("DRIVER_TRAVEL_REMINDER_" + orderno + "_" + usetype);
+    }
+
+    /**
+     * 添加订单提醒信息到redis
+     * @param order
+     */
+    private void addDriverTravelReminder(AbstractOrder order) {
+        removeDriverTravelReminder(order.getOrderno(), order.getUsetype());
+        JedisUtil.setString("DRIVER_TRAVEL_REMINDER_" + order.getOrderno() + "_" + order.getUsetype(), StringUtil.parseBeanToJSON(order));
+    }
+
 }

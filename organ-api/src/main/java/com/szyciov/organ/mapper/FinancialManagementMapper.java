@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import com.szyciov.entity.PubCouponDetail;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.entity.OrgOrganBill;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
@@ -84,4 +85,8 @@ public interface FinancialManagementMapper {
 	Map<String, Object> getPubWithdraw(String id);
 	
 	List<String> getLeasesCompanyUserById(String leasesCompanyId);
+	
+	List<PubCouponDetail> getPubCouponDetailList(OrganAccountQueryParam organAccountQueryParam);
+	
+	int getPubCouponDetailListCount(OrganAccountQueryParam organAccountQueryParam);
 }

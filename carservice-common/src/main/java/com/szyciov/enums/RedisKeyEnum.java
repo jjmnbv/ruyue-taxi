@@ -33,6 +33,7 @@ public enum RedisKeyEnum {
 
     /*************订单处理start********/
     MESSAGE_ORDER("order#","订单消息"),
+    DRIVER_TRAVEL_REMINDER("DRIVER_TRAVEL_REMINDER_","最后提醒"),
     /*************订单处理End********/
 
 
@@ -65,7 +66,7 @@ public enum RedisKeyEnum {
 
 
     /*************行程提醒start********/
-
+	ORDER_FORCESEND_REMINDER("DRIVER_TRAVEL_REMINDER_","强派订单行程提醒"),
     MESSAGE_TRAVEL_REMINDER_PREFIX("TRAVEL_REMINDER_", "行程提醒消息前缀"),
     MESSAGE_TRAVEL_REMINDER_ORG("TRAVEL_REMINDER_ORG_", "机构网约车行程提醒"),
     MESSAGE_TRAVEL_REMINDER_OP("TRAVEL_REMINDER_OP_", "运管网约车行程提醒"),
@@ -96,18 +97,33 @@ public enum RedisKeyEnum {
 
     /**********************抵用券相关start***************************/
 
-    /**
-     * Map类型
-     * COUPON_RULE_租赁公司ID_规则对象(数字)_派发类别(数字)
-     */
-    COUPON_RULE("COUPON_RULE_","抵用券规则"),
+
 
     /**
      * Map类型
-     * COUPON_ACTIVY_规则ID
+     * COUPON_ACTIVY_租赁公司ID_规则对象(数字)_派发类别(数字)
      */
     COUPON_ACTIVY("COUPON_ACTIVY_","抵用券活动"),
 
+    /**
+     * 存储已经获取抵用券的用户ID
+     * COUPON_HAVE_用户ID
+     */
+    COUPON_HAVE("COUPON_HAVE_","已经获得抵用券"),
+
+    /**
+     * 存储订单次数累计用户
+     * MAP类型
+     * COUPON_ORDER_COUNT_活动ID
+     */
+    COUPON_ORDER_COUNT("COUPON_ORDER_COUNT_","已经获得抵用券"),
+
+    /**
+     * 存储金额累计用户
+     * Map类型
+     * COUPON_ORDER_MONEY_活动ID
+     */
+    COUPON_ORDER_MONEY("COUPON_ORDER_MONEY_","已经获得抵用券"),
     /**********************抵用券相关end*************************/
 
 
@@ -116,6 +132,7 @@ public enum RedisKeyEnum {
 	SMS_DRIVER_LOGIN_ERRORTIMES("SMS_DRIVER_LOGIN_ERRORTIMES_","登录验证码失败次数"),
 	SMS_DRIVER_LOGIN("SMS_DRIVER_LOGIN_","登录短信验证码");
 	/**********************司机端验证码验证信息end*************************/
+
     public String code;
     public String msg;
 
@@ -123,11 +140,5 @@ public enum RedisKeyEnum {
         this.code = code;
         this.msg = msg;
     }
-
-
-
-
-
-
 
 }

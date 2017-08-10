@@ -14,6 +14,7 @@ import javax.annotation.Resource;
 import com.szyciov.driver.entity.OrderInfoMessage;
 import com.szyciov.driver.enums.ReviewState;
 import com.szyciov.driver.param.OrderCostParam;
+import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.OrderCost;
 import com.szyciov.entity.OrderMessageFactory;
 import com.szyciov.entity.OrderMessageFactory.OrderMessageType;
@@ -39,6 +40,7 @@ import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.Constants;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.StringUtil;
 import com.szyciov.util.SystemConfig;
@@ -385,6 +387,10 @@ public class OrderManageService {
 			
 			//发送司机消息
 			order = getOpOrder(orderno);
+
+            order.setLastsendtime(StringUtil.addDate(new Date(), 20));
+            addDriverTravelReminder(order);
+
 			createDriverNews(order, 0, OrderMessageType.MANTICORDER);
 			
 			if(result == 1) {
@@ -1049,4 +1055,14 @@ public class OrderManageService {
 		order.setBelongleasecompany(belongleasecompany);
 		updateOpOrderVehicleByOrderno(order);
 	}
+
+    /**
+     * 添加订单提醒信息到redis
+     * @param order
+     */
+    private void addDriverTravelReminder(AbstractOrder order) {
+        JedisUtil.delKey("DRIVER_TRAVEL_REMINDER_" + order.getOrderno() + "_" + order.getUsetype());
+        JedisUtil.setString("DRIVER_TRAVEL_REMINDER_" + order.getOrderno() + "_" + order.getUsetype(), StringUtil.parseBeanToJSON(order));
+    }
+
 }

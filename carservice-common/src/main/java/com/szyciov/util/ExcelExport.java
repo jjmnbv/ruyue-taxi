@@ -48,13 +48,18 @@ public class ExcelExport {
 	
 	public ExcelExport(Excel excel) {
 		this.excel = excel;
-		
+		if(excel.getSheetMaxRow() != -1){
+			this.sheetMaxRow = excel.getSheetMaxRow();
+		}
 	}
 	
 	public ExcelExport(HttpServletRequest request,HttpServletResponse response,Excel excel){
 		this.request = request;
 		this.response = response;
 		this.excel = excel;
+		if(excel.getSheetMaxRow() != -1){
+			this.sheetMaxRow = excel.getSheetMaxRow();
+		}
 	}
 	
 	/**
@@ -362,8 +367,8 @@ public class ExcelExport {
 		excel.setTitle(name);
 		excel.setColName(colName);
 		excel.setColData(colData);
+		excel.setSheetMaxRow(6);
 		ExcelExport ee = new ExcelExport(excel);
-		ee.setSheetMaxRow(6);
 		ee.createExcel(new File("D:/test11.xls"));
 	}
 }

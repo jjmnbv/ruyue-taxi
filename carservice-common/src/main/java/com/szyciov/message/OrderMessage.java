@@ -1,6 +1,16 @@
 package com.szyciov.message;
 
-import cn.jpush.api.push.model.PushPayload;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.szyciov.driver.entity.OrderInfo;
@@ -8,13 +18,13 @@ import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.enums.PayState;
 import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.CancelParty;
+import com.szyciov.entity.PayMethod;
 import com.szyciov.enums.DriverEnum;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.VehicleEnum;
 import com.szyciov.op.entity.OpOrder;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.org.entity.OrgOrder;
-import com.szyciov.org.entity.OrgUser;
 import com.szyciov.param.OrderInfoParam;
 import com.szyciov.passenger.entity.LeasesCompany;
 import com.szyciov.passenger.entity.PassengerOrder;
@@ -24,16 +34,8 @@ import com.szyciov.util.SMMessageUtil;
 import com.szyciov.util.SMSTempPropertyConfigurer;
 import com.szyciov.util.SendOrderUtil;
 import com.szyciov.util.StringUtil;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import cn.jpush.api.push.model.PushPayload;
 
 /**
  * 订单类消息
@@ -54,6 +56,8 @@ public class OrderMessage extends BaseMessage {
 	public static final String FINISHORDER = "订单行程结束";
 	
 	public static final String TAKEORDER = "已接单";
+	
+	public static final String TASKORDER = "新的任务";
 	
 	public static final String EXCEPTIONORDER = "订单复核";
 	
@@ -157,6 +161,9 @@ public class OrderMessage extends BaseMessage {
 		}else if(TAKEORDER.equalsIgnoreCase(messagetype)){
 			//已接单
 			takeOrder();
+		}else if(TASKORDER.equalsIgnoreCase(messagetype)){
+			//新任务推送
+			taskOrder();
 		}else if(EXCEPTIONORDER.equalsIgnoreCase(messagetype)){
 			//订单复核
 			exceptionOrder();
@@ -358,10 +365,7 @@ public class OrderMessage extends BaseMessage {
 	private void cancelOrder(){
 		//我自己知道推送谁
 		//调用appmessageutil,smmeesageutil
-		SendOrderUtil s = new SendOrderUtil();
-		OrderInfoParam param = new OrderInfoParam();
-		param.setOrder(order);
-		OrderInfoDetail orderinfo = s.getOrder(param);
+		OrderInfoDetail orderinfo = convert2OrderInfoDetail(order);
 		
 		Map<String,Object> driverinfo = MessageAPIUtil.getDriverInfo(order.getDriverid());
 		String driverphone = null;
@@ -456,10 +460,7 @@ public class OrderMessage extends BaseMessage {
 	 * 行程提醒消息
 	 */
 	private void remindOrder(){
-		SendOrderUtil s = new SendOrderUtil();
-		OrderInfoParam param = new OrderInfoParam();
-		param.setOrder(order);
-		OrderInfoDetail orderinfo = s.getOrder(param);
+		OrderInfoDetail orderinfo = convert2OrderInfoDetail(order);
 		Map<String,Object> driverinfo = MessageAPIUtil.getDriverInfo(order.getDriverid());
 		if(driverinfo==null){
 			logger.info("订单没有司机，无法发送提醒");
@@ -472,6 +473,25 @@ public class OrderMessage extends BaseMessage {
 		PushPayload  pushobj4android = PushObjFactory.createRemindOrderObj4Android(orderinfo, userids);
 		AppMessageUtil.send(pushobj4ios,pushobj4android, AppMessageUtil.APPTYPE_DRIVER);
 		logger.info("这里是行程提醒消息，已实现");
+	}
+	
+	/**
+	 * 系统强派or人工指派
+	 */
+	private void taskOrder(){
+		OrderInfoDetail orderinfo = convert2OrderInfoDetail(order);
+		Map<String,Object> driverinfo = MessageAPIUtil.getDriverInfo(order.getDriverid());
+		if(driverinfo==null){
+			logger.info("未找到司机信息,强派司机推送失败");
+			return ;
+		}
+		String phone = (String) driverinfo.get("phone");
+		List<String> userids = new ArrayList<String>();
+		userids.add(phone);
+		PushPayload  pushobj4ios = PushObjFactory.createTaskOrderObj4IOS(orderinfo, userids);
+		PushPayload  pushobj4android = PushObjFactory.createTaskOrderObj4Android(orderinfo, userids);
+		AppMessageUtil.send(pushobj4ios,pushobj4android, AppMessageUtil.APPTYPE_DRIVER);
+		logger.info("这里是强派司机推送，已实现");
 	}
 	
 	/**
@@ -493,12 +513,11 @@ public class OrderMessage extends BaseMessage {
 		
 		//先发送apphint消息
 		orderhint();
-		//订单详细信息
-		SendOrderUtil s = new SendOrderUtil();
-		OrderInfoParam param = new OrderInfoParam();
-		param.setOrder(order);
-		OrderInfoDetail orderinfo = s.getOrder(param);
-		
+		//订单详细信息(需要重新获取)
+		SendOrderUtil sou = new SendOrderUtil();
+		OrderInfoParam oip = new OrderInfoParam();
+		oip.setOrder(order);
+		OrderInfoDetail orderinfo = sou.getOrder(oip);
 		List<String> phones = new ArrayList<String>();
 		Date usetime = order.getUsetime();
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -816,10 +835,7 @@ public class OrderMessage extends BaseMessage {
 	 */
 	private void changeDriver(){
 		//订单详细信息
-		SendOrderUtil s = new SendOrderUtil();
-		OrderInfoParam param = new OrderInfoParam();
-		param.setOrder(order);
-		OrderInfoDetail orderinfo = s.getOrder(param);
+		OrderInfoDetail orderinfo = convert2OrderInfoDetail(order);
 				
 		//发送给旧司机的信息
 		if(extrainfo!=null){
@@ -975,10 +991,7 @@ public class OrderMessage extends BaseMessage {
 	 * 人工指派消息
 	 */
 	private void manticOrder(){
-		SendOrderUtil s = new SendOrderUtil();
-		OrderInfoParam param = new OrderInfoParam();
-		param.setOrder(order);
-		OrderInfoDetail orderinfo = s.getOrder(param);
+		OrderInfoDetail orderinfo = convert2OrderInfoDetail(order);
 		//只有已接单的订单才需要发送消息
 		if(StringUtils.isNotBlank(order.getDriverid())){
 			Map<String,Object> driverinfo = MessageAPIUtil.getDriverInfo(order.getDriverid());
@@ -1182,17 +1195,38 @@ public class OrderMessage extends BaseMessage {
 		OrderInfoDetail order = new OrderInfoDetail();
 		order.setOrderno(orderinfo.getOrderno());
 		order.setType(orderinfo.getOrdertype());
+		order.setUsetype(orderinfo.getUsetype());
+		order.setOnaddress(orderinfo.getOnaddress());
+		order.setOffaddress(orderinfo.getOffaddress());
+		order.setOnlat(orderinfo.getOnaddrlat());
+		order.setOnlng(orderinfo.getOnaddrlng());
+		order.setOfflat(orderinfo.getOffaddrlat());
+		order.setOfflng(orderinfo.getOffaddrlng());
+		order.setEstimatedtime(orderinfo.getEstimatedtime());
+		order.setEstimatedmileage(orderinfo.getEstimatedmileage());
+		order.setEstimatedcost(orderinfo.getEstimatedcost());
+		if (orderinfo instanceof OrgOrder) {
+			order.setPaymethod(((OrgOrder)orderinfo).getPaymethod());
+		}else {
+			order.setPaymethod(PayMethod.PERSONAL.code);
+		}
+		order.setOrderamount(orderinfo.getOrderamount());
+		order.setUsetime(orderinfo.getUsetime());
+		order.setIsusenow(orderinfo.isIsusenow());
+		order.setPassengers(orderinfo.getPassengers());
+		order.setPassengerphone(orderinfo.getPassengerphone());
 		order.setCartype(orderinfo.getSelectedmodelname());
 		order.setStatus(orderinfo.getOrderstatus());
 		order.setCityid(orderinfo.getOncity());
 		order.setCompanyid(orderinfo.getCompanyid());
 		order.setOrderprop(0);
-		order.setPaymethod(((OrgOrder)orderinfo).getPaymethod());
-		order.setUsetime(orderinfo.getUsetime());
-		order.setPassengers(orderinfo.getPassengers());
-		order.setPassengerphone(orderinfo.getPassengerphone());
+		order.setRemark(orderinfo.getTripremark());
 		//车辆类型 网约车
 		order.setOrderstyle(VehicleEnum.VEHICLE_TYPE_CAR.code);
+		//订单剩余时间
+		int lasttime = (int)Math.ceil((double)(order.getUsetime().getTime()-System.currentTimeMillis())/1000/60);
+		lasttime = lasttime < 0?0:lasttime;
+		order.setLasttime(StringUtil.formatCostTime(lasttime));
 		return order;
 	}
 	

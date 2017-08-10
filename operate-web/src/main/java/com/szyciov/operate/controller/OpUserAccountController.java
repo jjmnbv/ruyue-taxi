@@ -2,6 +2,7 @@ package com.szyciov.operate.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,10 +23,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.szyciov.entity.Excel;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
+import com.szyciov.op.entity.OpUser;
+import com.szyciov.op.entity.PeUser;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.Constants;
 import com.szyciov.util.ExcelExport;
-import com.szyciov.util.ExcelExport2;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.TemplateHelper;
 
@@ -201,4 +203,42 @@ public class OpUserAccountController extends BaseController {
 		ee.setSheetName("个人账户");
 		ee.createExcel(tempFile);
 	}
+	//添加积分
+	@RequestMapping("/OpUserAccount/Admoney")
+	@ResponseBody
+	@SuppressWarnings("unchecked")
+	public PeUser admoney(@RequestParam(value = "id", required = false) String id,
+			@RequestParam(value = "account", required = false) String account,
+			@RequestParam(value = "nickname", required = false) String nickname,
+			@RequestParam(value = "balance", required = false)  BigDecimal balance,
+			HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		response.setContentType("text/html;charset=utf-8");
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		PeUser peUser = new PeUser();
+		peUser.setId(id);
+		peUser.setAccount(account);
+		peUser.setNickname(nickname);
+		peUser.setBalance(balance);
+		return templateHelper.dealRequestWithToken("/OpUserAccount/Admoney", HttpMethod.POST, userToken, peUser,
+				PeUser.class);
+	}
+	@RequestMapping("/OpUserAccount/AdmoneyOk")
+	@ResponseBody
+	@SuppressWarnings("unchecked")
+	public Map<String,String> admoneyOk(@RequestParam(value = "id", required = false) String id, 
+			@RequestParam(value = "balance", required = false) BigDecimal balance,
+			HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		response.setContentType("text/html;charset=utf-8");
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		OpUser opUser = getLoginOpUser(request);
+		PeUser peUser = new PeUser();
+		peUser.setId(id);
+		peUser.setBalance(balance);
+		peUser.setAccount(opUser.getId());
+		return templateHelper.dealRequestWithToken("/OpUserAccount/AdmoneyOk", HttpMethod.POST, userToken, peUser,
+				Map.class);
+	}
+	
 }

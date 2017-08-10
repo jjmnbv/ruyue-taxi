@@ -58,7 +58,7 @@
 	<body>
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs">
-			<a href="javascript:void(0);" onclick="homeHref()" class="breadcrumb">首页</a> > <a href="CompanyAgreement/Index" class="breadcrumb">加盟服务协议</a> > <span id="pubCooagreement">查看协议</span>
+			<a href="javascript:void(0);" onclick="homeHref()" class="breadcrumb">首页</a> > <a href="CompanyAgreement/Index" class="breadcrumb">合作协议管理</a> > <span id="pubCooagreement">查看协议</span>
 			<button class="SSbtn blue back" onclick="window.history.go(-1);">返回</button>
 		</div>
 		
@@ -73,7 +73,7 @@
 					</select>
 				</div>
 				<div class="col-4">
-					<label>业务类型<em class="asterisk"></em></label>
+					<label>服务类型<em class="asterisk"></em></label>
 					<select id="servicetype" name="servicetype" disabled="disabled">
 						<c:choose>
 							<c:when test="${pubCooagreement.servicetype == 0}">
@@ -97,9 +97,10 @@
 			</div>
 		  </form>
 		</div>
-		<script type="text/javascript" src="js/pubCooagreement/editPubCooagreement.js"></script>
+		<!-- <script type="text/javascript" src="js/pubCooagreement/detailPubCooagreement.js"></script> -->
 		<script type="text/javascript">
 			$(function() {
+				ue = initUeditor("content", 10000,true);
 				ue.ready(function() {
 					ue.setContent($("#dataHtml").html());
 				});

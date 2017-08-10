@@ -28,25 +28,6 @@ function initForm() {
             }
         }
     });
-
-    $("#leasescompanyid").select2({
-        placeholder: "服务车企",
-        minimumInputLength: 0,
-        allowClear: true,
-        ajax: {
-            url: $("#baseUrl").val() + "OrderManage/GetBelongLeaseCompanySelect",
-            dataType: 'json',
-            data: function (term, page) {
-                $(".datetimepicker").hide();
-                return {
-                    shortname: term
-                };
-            },
-            results: function (data, page) {
-                return { results: data };
-            }
-        }
-    });
 }
 
 /**
@@ -63,7 +44,7 @@ function manualOrderdataGrid() {
         	sEmptyTable: "暂无服务订单信息"
         },
         columns: [
-        	/*{
+        	{
                 //自定义操作列
                 "mDataProp": "ZDY",
                 "sClass": "center",
@@ -72,13 +53,13 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                	var html = [];
-                    if(full.paymentstatus == '4' && full.orderstatus == '7') {
-                    	html.push("<button type=\"button\" class=\"SSbtn red\" onclick=\"applyReview('" + full.orderno + "')\"><i class=\"fa fa-paste\"></i>申请复核</button>");
+                    if(full.reviewedprice > 0 && full.actualpayamount > 0 && full.paymentstatus != "9") {
+                        return "<button type='button' class='SSbtn red' onclick='applyReview(\"" + full.orderno + "\")'><i class='fa fa-paste'></i>申请复核</button>";
+                    } else {
+                        return "";
                     }
-                    return html.join("");
                 }
-            },*/
+            },
             {
                 "mDataProp": "DDLY",
                 "sClass": "center",
@@ -102,13 +83,8 @@ function manualOrderdataGrid() {
                 "sTitle": "订单号",
                 "sWidth": 200,
                 "mRender": function (data, type, full) {
-                   var htmlArr = [];
-                   htmlArr.push("<a href=\"" + $("#baseUrl").val() + "OrderManage/OrgOrderDetailIndex?orderno=");
-                   htmlArr.push(full.orderno);
-                   htmlArr.push("\">");
-                    htmlArr.push(full.orderno);
-                   htmlArr.push("</a>");
-                   return htmlArr.join("");
+                    return "<a href='" + $("#baseUrl").val() + "OrderManage/OrgOrderDetailIndex?orderno="
+                        + full.orderno + "'>" + full.orderno + "</a>";
                 }
             },
 	        {
@@ -120,7 +96,7 @@ function manualOrderdataGrid() {
                    	case "1": return "约车"; break;
                    	case "2": return "接机"; break;
                    	case "3": return "送机"; break;
-                   	default: return "";
+                   	default: return "/";
                    }
                 }
             },
@@ -130,9 +106,10 @@ function manualOrderdataGrid() {
                 "sTitle": "订单状态",
                 "mRender": function (data, type, full) {
                 	switch(full.paymentstatus) {
-						case "2": return "结算中"; break;
-						case "3": return "已结算"; break;
+                        case "0": return "未支付"; break;
+                        case "1": return "已支付"; break;
 						case "4": return "未结算"; break;
+                        case "9": return "已关闭"; break;
 						default: return "/";
                 	}
                 }
@@ -144,19 +121,30 @@ function manualOrderdataGrid() {
                 "mRender": function (data, type, full) {
                 	switch(full.reviewperson) {
 		               	case "1": return "司机"; break;
-						case "2": return "下单人"; break;
+						case "2": return "乘客"; break;
 						default: return "/";
                    }
                 }
             },
-	        {mDataProp: "organname", sTitle: "所属机构", sClass: "center", sortable: true },
+            {
+                mDataProp : "organname",
+                sTitle : "所属机构",
+                sClass : "center",
+                sortable : true,
+                "mRender" : function(data, type, full) {
+                    if(full.userstatus == 1) {
+                        return full.organname;
+                    }
+                    return "/";
+                }
+            },
 	        {mDataProp: "price", sTitle: "差异金额(元)", sClass: "center", sortable: true,
             	"mRender": function(data, type, full) {
             		var shouldpayamount = full.shouldpayamount;
             		var actualpayamount = full.actualpayamount;
             		var orderamount = full.orderamount;
             		if(null == shouldpayamount) {
-            			shouldpayamount = orderamount
+            			shouldpayamount = orderamount;
             		}
             		if(null == actualpayamount) {
             			actualpayamount = orderamount;
@@ -164,7 +152,18 @@ function manualOrderdataGrid() {
             		return (shouldpayamount - actualpayamount).toFixed(1);
             	}
             },
-	        {mDataProp: "cost", sTitle: "原订单金额(元)", sClass: "center", sortable: true,
+            {mDataProp: "reviewtype", sTitle: "复核类型", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 1) {
+                        return "按里程时长";
+                    } else if(full.reviewtype == 2) {
+                        return "按固定金额";
+                    } else {
+                        return "/";
+                    }
+                }
+            },
+	        /*{mDataProp: "cost", sTitle: "原订单金额(元)", sClass: "center", sortable: true,
 	        	"mRender": function(data, type, full) {
 	        		return full.originalorderamount.toFixed(1);
 	        	}
@@ -213,15 +212,48 @@ function manualOrderdataGrid() {
 	        	"mRender": function(data, type, full) {
 	        		return full.reviewedprice.toFixed(1);
 	        	}
-	        },
-	        {mDataProp: "mileage", "sClass": "center", "sTitle": "复核后里程(公里)", sortable: true,
+	        },*/
+            {mDataProp: "shouldpayamount", sTitle: "订单金额(元)", sClass: "center", sortable: true },
+            {mDataProp: "actualpayamount", "sClass": "center", "sTitle": "实付金额(元)", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.paymethod == "1" && full.paymentstatus == "1") {
+                        var actualamount = full.actualamount;
+                        if(null == actualamount) {
+                            actualamount = 0;
+                        }
+                        return full.shouldpayamount - actualamount;
+                    } else {
+                        return "/";
+                    }
+                }
+            },
+            {mDataProp: "actualamount", "sClass": "center", "sTitle": "优惠金额(元)", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.paymethod == "1" && full.paymentstatus == "1") {
+                        if(null == full.actualamount) {
+                            return "0";
+                        } else {
+                            return full.actualamount;
+                        }
+                    } else {
+                        return "/";
+                    }
+                }
+            },
+	        {mDataProp: "mileage", "sClass": "center", "sTitle": "里程(公里)", sortable: true,
 	        	"mRender": function(data, type, full) {
-	        		return (full.reviewmileage/1000).toFixed(1);
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    return (full.reviewmileage/1000).toFixed(1);
 	        	}
 	        },
-	        {mDataProp: "reviewtime", "sClass": "center", "sTitle": "复核后计费时长(分钟)", sortable: true,
+	        {mDataProp: "reviewtime", "sClass": "center", "sTitle": "计费时长(分钟)", sortable: true,
 	        	"mRender": function(data, type, full) {
-	        		if(null != full.pricecopy) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    if(null != full.pricecopy) {
 	        			var timetype = JSON.parse(full.pricecopy).timetype;
 	        			if(timetype == 0) {
 	        				return Math.ceil(full.reviewtimes/60);
@@ -233,25 +265,37 @@ function manualOrderdataGrid() {
 	        		}
 	        	}
 	        },
-            {mDataProp: "FHHKSF", sTitle: "复核后空驶费（元）", sClass: "center",
-                mRender: function(data, type, full) {
-                    if(null != full.pricecopy) {
-                        var pricecopy = JSON.parse(full.pricecopy);
-                        return pricecopy.deadheadcost == null ? "0.0" : pricecopy.deadheadcost;
+            {
+                "mDataProp": "ordernature",
+                "sClass": "center",
+                "sTitle": "订单性质",
+                "mRender": function (data, type, full) {
+                    if(full.companyid == full.belongleasecompany) {
+                        return "自营单";
+                    } else {
+                        return "联盟单";
                     }
-                    return "0.0";
                 }
             },
-            {mDataProp: "FHHYJF", sTitle: "复核后夜间费（元）", sClass: "center",
-                mRender: function(data, type, full) {
-                    if(null != full.pricecopy) {
-                        var pricecopy = JSON.parse(full.pricecopy);
-                        return pricecopy.nightcost == null ? "0.0" : pricecopy.nightcost;
-                    }
-                    return "0.0";
-                }
-            },
-            {mDataProp: "shortname", sTitle: "服务车企", sClass: "center", sortable: true}
+            // {mDataProp: "FHHKSF", sTitle: "复核后空驶费（元）", sClass: "center",
+            //     mRender: function(data, type, full) {
+            //         if(null != full.pricecopy) {
+            //             var pricecopy = JSON.parse(full.pricecopy);
+            //             return pricecopy.deadheadcost == null ? "0.0" : pricecopy.deadheadcost;
+            //         }
+            //         return "0.0";
+            //     }
+            // },
+            // {mDataProp: "FHHYJF", sTitle: "复核后夜间费（元）", sClass: "center",
+            //     mRender: function(data, type, full) {
+            //         if(null != full.pricecopy) {
+            //             var pricecopy = JSON.parse(full.pricecopy);
+            //             return pricecopy.nightcost == null ? "0.0" : pricecopy.nightcost;
+            //         }
+            //         return "0.0";
+            //     }
+            // },
+            {mDataProp: "belongcompanyname", sTitle: "服务车企", sClass: "center", sortable: true}
         ],
         userHandle: function(oSettings, result) {
         	if(null == result.aaData || result.aaData.length == 0) {
@@ -277,14 +321,9 @@ function search() {
 		{"name":"orderType", "value":$("#ordertype").val()},
 		{"name":"organId", "value":$("#organName").val()},
 		{"name":"reviewperson", "value":$("#reviewperson").val()},
-		{"name":"ordersource", "value":$("#ordersource").val()},
-        {"name":"belongleasecompany", "value":$("#leasescompanyid").val()}
+		{"name":"ordersource", "value":$("#ordersource").val()}
 	];
 	dataGrid.fnSearch(conditionArr);
-}
-
-function review(orderno) {
-	window.location.href = $("#baseUrl").val() + "OrderManage/OrgOrderReviewIndex?orderno=" + orderno + "&usetype=0";
 }
 
 /**
@@ -292,11 +331,10 @@ function review(orderno) {
  * @param {} orderno
  */
 function applyReview(orderno) {
-	$("#orderno").val(orderno);
-	
 	$("#cancelpartyFormDiv").show();
 	
 	showObjectOnForm("cancelpartyForm", null);
+    $("#ordernoHide").val(orderno);
 	
 	var editForm = $("#cancelpartyForm").validate();
 	editForm.resetForm();
@@ -311,7 +349,7 @@ function save() {
 	if(!form.valid()) return;
 	
 	var formData = {
-		orderno: $("#orderno").val(),
+		orderno: $("#ordernoHide").val(),
 		orderreason: $("#reasonTextarea").val(),
 		reviewperson: $("#reviewpersonAgain").val()
 	}
@@ -376,12 +414,11 @@ function canel() {
  * 初始化查询
  */
 function initSearch() {
-	$("#orderno").val("");
-	$("#ordertype").val("");
-	$("#organName").select2("val", "");
-	$("#reviewperson").val("");
-	$("#ordersource").val("");
-    $("#leasescompanyid").select2("val", "");
+    $("#ordersource").val("");
+    $("#reviewperson").val("");
+    $("#organName").select2("val", "");
+    $("#ordertype").val("");
+    $("#orderno").val("");
 	search();
 }
 

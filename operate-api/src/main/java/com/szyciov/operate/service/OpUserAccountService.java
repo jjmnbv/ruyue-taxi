@@ -3,6 +3,8 @@ package com.szyciov.operate.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Resource;
 
@@ -11,7 +13,10 @@ import org.springframework.stereotype.Service;
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
 import com.szyciov.op.entity.PeUser;
+import com.szyciov.op.entity.PeUserExpenses;
+import com.szyciov.op.entity.PeUseraccount;
 import com.szyciov.operate.dao.OpUserAccountDao;
+import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.PageBean;
 
 @Service("opUserAccountService")
@@ -73,5 +78,41 @@ public class OpUserAccountService {
 	
     public List<OrgUserExpenses> getUserExpensesListExport(OrganUserAccountQueryParam organUserAccountQueryParam) {
 		return dao.getUserExpensesListExport(organUserAccountQueryParam);
+	}
+    public PeUser admoney(PeUser peUser) {
+    	PeUser aa  = dao.admoney(peUser);
+    	if(aa == null){
+    		//增加一个账户
+    		PeUseraccount peUseraccount = new PeUseraccount();
+    		peUseraccount.setUserid(peUser.getId());
+    		peUseraccount.setBalance(peUser.getBalance().doubleValue());
+    		peUseraccount.setId(GUIDGenerator.newGUID());
+    		dao.insertAccount(peUseraccount);
+    		aa.setBalance(peUser.getBalance());
+    		aa.setAccount(peUser.account);
+    		return aa;
+    	}
+		return dao.admoney(peUser);
+	}
+    public Map<String,String> admoneyOk(PeUser peUser) {
+    	Map<String,String> ret = new HashMap<>();
+    	ret.put("ResultSign", "Successful");
+		ret.put("MessageKey", "保存成功");
+		//后台判断传过来的值
+		Pattern pattern = Pattern.compile("^[+]?\\d*([.]\\d{0,1})?$",Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(peUser.balance.toString());
+		if(matcher.matches() && peUser.balance.floatValue() <=10000){
+		  dao.admoneyOk(peUser);
+		  PeUserExpenses peUserExpenses = new PeUserExpenses();
+		  PeUser peUserA = dao.admoney(peUser);
+		  peUserExpenses.setId(GUIDGenerator.newGUID());
+		  peUserExpenses.setBalance(peUserA.getBalance());
+		  peUserExpenses.setUserid(peUser.id);
+		  peUserExpenses.setCreater(peUser.getAccount());
+		  peUserExpenses.setUpdater(peUser.getAccount());
+		  peUserExpenses.setAmount(peUser.getBalance());
+		  dao.addPeuserexpenses(peUserExpenses);
+		}
+		 return ret;
 	}
 }

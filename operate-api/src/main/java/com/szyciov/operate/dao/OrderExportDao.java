@@ -37,5 +37,8 @@ public class OrderExportDao {
 	public List<OrderExportParam> exportOrders(OrderExportEntity orderExportEntity)  {
 		return mapper.exportOrders(orderExportEntity);
 	}
+	public List<Map<String, Object>> getLeasescompany(OrderExportEntity orderExportEntity){
+		return mapper.getLeasescompany(orderExportEntity);
+	}
 
 }

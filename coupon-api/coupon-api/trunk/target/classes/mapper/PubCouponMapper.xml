@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.coupon.mapper.PubCouponMapper">
+
+    <insert id="savePubCoupon" parameterType="PubCoupon">
+        insert into pub_coupon
+        (`id` ,`name` ,`couponactivyidref` ,`servicetype` ,`target` ,`userid` ,
+        `money` ,`usetype` ,`couponstatus` ,`outimestart` ,`outtimeend` ,`lecompanyid` ,
+        `platformtype` ,`createtime` ,`updatetime` ,`creater` ,`updater` ,`status` )
+        values
+        (#{id},#{name},#{couponactivyidref},#{servicetype},#{target},#{userid},#{money},
+        #{usetype},#{couponstatus},#{outimestart},#{outtimeend},#{lecompanyid},#{platformtype},
+        #{createtime},#{updatetime},#{creater},#{updater},#{status})
+    </insert>
+
+    <select id="listAllScopeCoupon" resultType="CouponInfoDTO" parameterType="PubCouponQueryParam">
+        SELECT
+            t.id,t.name,t.money,t.servicetype,t.outimestart,
+            t.outtimeend,t.usetype,' ' cityStr
+        FROM
+            pub_coupon t
+        WHERE
+            #{nowDt} BETWEEN outimestart and outtimeend
+            and not exists (select 1 from pub_coupon_use_city a where a.couponidref = t.id)
+            AND t. STATUS = '1'
+            AND t.couponstatus = #{couponstatus}
+            <if test="servicetype!=null and servicetype!=''">
+              and t.servicetype = #{servicetype}
+            </if>
+            and not exists (select 1 from pub_coupon_use a where a.couponidref = t.id and a.status='1')
+            AND t.lecompanyid = #{companyid}
+            order by t.money desc,t.outtimeend asc,t.servicetype desc
+            limit #{IDisplayStart},#{IDisplayLength}
+    </select>
+
+
+    <select id="listCityScopeCoupon" resultType="CouponInfoDTO" parameterType="PubCouponQueryParam">
+        SELECT
+          t.id,t.name,t.money,t.servicetype,t.outimestart,
+          t.outtimeend,t.usetype,
+          (select  GROUP_CONCAT(getCityStr(city)) from pub_coupon_use_city a where a.couponidref = t.id) cityStr
+        FROM
+          pub_coupon t
+        WHERE
+          #{nowDt} BETWEEN outimestart and outtimeend
+		  and exists (select 1 from pub_coupon_use_city a where a.couponidref = t.id
+              <if test="city!=null and city!=''">
+                and a.city = #{city}
+              </if>
+		  )
+          <if test="servicetype!=null and servicetype!=''">
+            and t.servicetype = #{servicetype}
+          </if>
+          AND t. STATUS = '1'
+          and not exists (select 1 from pub_coupon_use a where a.couponidref = t.id and a.status='1')
+          AND t.couponstatus = #{couponstatus}
+          AND t.lecompanyid = #{companyid}
+          order by CONVERT (cityStr USING gbk) COLLATE gbk_chinese_ci ,t.money desc,t.outtimeend asc,t.servicetype desc
+          limit #{IDisplayStart},#{IDisplayLength}
+    </select>
+
+
+    <select id="listCoupon" resultType="CouponInfoDTO" parameterType="PubCouponQueryParam">
+        SELECT
+          t.id,t.name,t.money,t.servicetype,t.outimestart,
+          t.outtimeend,t.usetype
+        FROM
+          pub_coupon t
+        WHERE
+          #{nowDt} BETWEEN outimestart and outtimeend
+        and
+        ((usetype = 1 and exists (select 1 from pub_coupon_use_city a where a.couponidref = t.id and a.city = #{city}))
+        or usetype = 2)
+        and not exists (select 1 from pub_coupon_use a where a.couponidref = t.id and a.status='1')
+        and t.servicetype = #{servicetype}
+        AND t.STATUS = '1'
+        and t.target = #{target}
+        AND t.couponstatus = #{couponstatus}
+        AND t.lecompanyid = #{companyid}
+    </select>
+
+
+
+    <select id="getCouponById" resultType="PubCoupon" parameterType="String">
+        SELECT
+          t.id,t.name,t.money,t.servicetype,t.outimestart,
+          t.outtimeend,t.usetype
+        FROM
+          pub_coupon t
+        WHERE
+         t.id = #{id} and t.status ='1'
+    </select>
+
+    <update id="updateState" parameterType="PubCoupon">
+        update pub_coupon t
+        set
+          t.couponstatus = #{couponstatus} ,
+          updatetime = #{updatetime},
+          updater = #{updater}
+        where t.id = #{id}
+    </update>
+
+    <update id="removeCouponByUserId" parameterType="PubCoupon">
+        update pub_coupon t
+        set t.status = '0',
+          updatetime = #{updatetime},
+          updater = #{updater}
+        where t.userid = #{userid}
+        and t.couponstatus = #{couponstatus}
+    </update>
+
+
+</mapper>

@@ -34,6 +34,7 @@ import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.config.AlipayConfig;
 import com.szyciov.entity.OrderSource4WithdrawNO;
+import com.szyciov.entity.PubCouponDetail;
 import com.szyciov.entity.UserNews;
 import com.szyciov.enums.MessageTypeEnum;
 import com.szyciov.lease.entity.LeLeasescompany;
@@ -915,5 +916,15 @@ public class FinancialManagementService {
 	public Map<String, Object> getPubWithdraw(String id) {
 		return dao.getPubWithdraw(id);
 	}
-	
+	public PageBean getPubCouponDetailByQuery(OrganAccountQueryParam queryParam) {
+		PageBean pageBean = new PageBean();
+		pageBean.setsEcho(queryParam.getsEcho());
+		List<PubCouponDetail> list = dao.getPubCouponDetailList(queryParam);
+		int iTotalRecords = dao.getPubCouponDetailListCount(queryParam);
+		int iTotalDisplayRecords = iTotalRecords;
+		pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
+		pageBean.setiTotalRecords(iTotalRecords);
+		pageBean.setAaData(list);
+		return pageBean;
+	}
 }

@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.CouponDistributeMapper">
+
+      <insert id="addCouponActivity" parameterType="pubcouponactivity">
+          INSERT INTO pub_coupon_activity (id, name, sendservicetype,sendruletype,sendcount, sendruletarget, sendruleidref, activystate, sendmoneytype, sendfixedmoney, sendlowmoney, sendhighmoney, sendstarttime, sendendtime, usetype, outimetype, sendtimeinday, fixedstarttime, fixedendtime, lecompanyid, platformtype, createtime,creater,status) 
+          VALUES (#{id}, #{name}, #{sendservicetype},#{sendruletype},#{sendcount}, #{sendruletarget}, #{sendruleidref}, #{activystate}, #{sendmoneytype}, #{sendfixedmoney}, #{sendlowmoney}, #{sendhighmoney}, #{sendstarttime}, #{sendendtime}, #{usetype}, #{outimetype}, #{sendtimeinday}, #{fixedstarttime}, #{fixedendtime}, #{lecompanyid}, 1, now(),#{creater},'1');
+      </insert>
+      
+      <select id="getCouponActivityByQuery" parameterType="pubcouponactivityqueryparam" resultType="pubcouponactivitydto">
+             select t.* from
+           (select (@rownum := @rownum + 1) as rownum,t1.* from
+           (select pca.id,
+              pca.name,
+              pca.sendservicetype,
+              pca.sendruletype,
+              pca.sendruletarget,
+              pca.activystate,
+              pca.sendmoneytype,
+              pca.sendfixedmoney,
+              pca.sendlowmoney,
+              pca.sendhighmoney,
+              pca.sendcount,
+              pca.usetype,
+              pca.outimetype,
+              pca.sendtimeinday,
+              pcr.name as rulename,
+              date_format(pca.createtime,'%Y-%m-%d %H:%i') as createtime,
+              date_format(pca.sendstarttime,'%Y-%m-%d') as sendstarttime,
+              date_format(pca.sendendtime,'%Y-%m-%d') as sendendtime,
+              date_format(pca.fixedstarttime,'%Y-%m-%d') as fixedstarttime,
+              date_format(pca.fixedendtime,'%Y-%m-%d') as fixedendtime,
+              group_concat(pc.city SEPARATOR '、') as citys 
+              from pub_coupon_activity pca 
+              inner join pub_coupon_rule pcr on pca.sendruleidref=pcr.id 
+              inner join pub_coupon_activity_use_city pcauc on pca.id=pcauc.couponactivityidref
+              inner join pub_cityaddr pc on pcauc.city=pc.id 
+              where pca.lecompanyid=#{lecompanyid}
+                and pcr.lecompanyid=#{lecompanyid}
+                and pca.platformtype=1
+                and pcr.platformtype=1
+              <if test="querysendservicetype != null and querysendservicetype != ''">
+	            and pca.sendservicetype = #{querysendservicetype}
+	          </if> 
+	          <if test="querysendruletarget != null and querysendruletarget != ''">
+	            and pca.sendruletarget = #{querysendruletarget}
+	          </if>
+	          <if test="queryruletype != null and queryruletype != ''">
+	            and pcr.ruletype = #{queryruletype}
+	          </if> 
+	          <if test="queryactivystate != null">
+	            and pca.activystate = #{queryactivystate}
+	          </if>
+	          <if test="queryusetype != null and queryusetype != ''">
+	            and pca.usetype = #{queryusetype}
+	          </if>
+	          <if test="queryname != null and queryname != ''">
+	            and pca.id=#{queryname}
+	          </if>
+	           <if test="querysendruleidref != null and querysendruleidref != ''">
+	            and pca.sendruleidref=#{querysendruleidref}
+	          </if>
+	           <if test="querysendstarttime != null and querysendstarttime != ''">
+	            and date_format(pca.sendstarttime,'%Y-%m-%d')  <![CDATA[   >=  ]]> #{querysendstarttime}
+	          </if>
+	           <if test="querysendendtime != null and querysendendtime != ''">
+	            and date_format(pca.sendendtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{querysendendtime}
+	          </if>
+                and pca.status='1'
+                and pcr.status='1'
+                and pcauc.status='1'
+                and pc.status='1'
+                group by pca.id
+                order by pca.createtime desc
+                ) t1, (select @rownum := 0) r )t
+                <![CDATA[
+	            where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	            ]]>
+      </select>
+      
+      <select id="getCouponActivityListCountByQuery" parameterType="pubcouponactivityqueryparam" resultType="Integer">
+           select count(*) from pub_coupon_activity pca 
+              inner join pub_coupon_rule pcr on pca.sendruleidref=pcr.id 
+              where pca.lecompanyid=#{lecompanyid}
+                and pcr.lecompanyid=#{lecompanyid}
+                and pca.platformtype=1
+                and pcr.platformtype=1
+              <if test="querysendservicetype != null and querysendservicetype != ''">
+	            and pca.sendservicetype = #{querysendservicetype}
+	          </if> 
+	          <if test="querysendruletarget != null and querysendruletarget != ''">
+	            and pca.sendruletarget = #{querysendruletarget}
+	          </if>
+	          <if test="queryruletype != null and queryruletype != ''">
+	            and pcr.ruletype = #{queryruletype}
+	          </if> 
+	          <if test="queryactivystate != null">
+	            and pca.activystate = #{queryactivystate}
+	          </if>
+	          <if test="queryusetype != null and queryusetype != ''">
+	            and pca.usetype = #{queryusetype}
+	          </if>
+	          <if test="queryname != null and queryname != ''">
+	            and pca.id=#{queryname}
+	          </if>
+	           <if test="querysendruleidref != null and querysendruleidref != ''">
+	            and pca.sendruleidref=#{querysendruleidref}
+	          </if>
+	           <if test="querysendstarttime != null and querysendstarttime != ''">
+	            and date_format(pca.sendstarttime,'%Y-%m-%d')  <![CDATA[   >=  ]]> #{querysendstarttime}
+	          </if>
+	           <if test="querysendendtime != null and querysendendtime != ''">
+	            and date_format(pca.sendendtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{querysendendtime}
+	          </if>
+                and pca.status='1'
+                and pcr.status='1'
+      </select> 
+      
+      <insert id="addCouponActivityCitys" parameterType="java.util.List">
+          INSERT INTO pub_coupon_activity_use_city (id, couponactivityidref, city, createtime, creater,status) 
+          VALUES
+          <foreach collection="list" item="city" separator=",">
+           (#{city.id}, #{city.couponactivityidref},#{city.city},now(),#{city.creater},'1')
+           </foreach>
+      </insert>
+      
+      <select id="checkCouponActivity" parameterType="String" resultType="Boolean">
+          select count(*) from pub_coupon_activity 
+              where lecompanyid=#{lecompanyid}
+                and name=#{name}
+                and activystate in (1,2) 
+                and platformtype=1 and status='1'
+      </select>
+      
+      <select id="editCoupon" parameterType="String" resultType="pubcouponactivitydto">
+          select pca.id,
+                 pca.name,
+                 pca.sendservicetype,
+                 pca.sendruletype,
+                 pca.sendruleidref,
+                 pca.sendruletarget,
+                 pcr.name as rulename,
+                 pca.activystate,
+                 pca.sendmoneytype,
+                 pca.sendfixedmoney,
+                 pca.sendlowmoney,
+                 pca.sendhighmoney,
+                 pca.sendcount,
+                 pca.usetype,
+                 pca.outimetype,
+                 pca.sendtimeinday,
+              date_format(pca.createtime,'%Y-%m-%d %H:%i') as createtime,
+              date_format(pca.sendstarttime,'%Y-%m-%d') as sendstarttime,
+              date_format(pca.sendendtime,'%Y-%m-%d') as sendendtime,
+              date_format(pca.fixedstarttime,'%Y-%m-%d') as fixedstarttime,
+              date_format(pca.fixedendtime,'%Y-%m-%d') as fixedendtime 
+              from pub_coupon_activity pca
+              left join pub_coupon_rule pcr on pca.sendruleidref=pcr.id
+               where pca.id=#{id} and pca.platformtype=1 and pca.status='1'
+      </select>
+      
+      <select id="getCouponActivityCitys" parameterType="String" resultType="PubCityAddr">
+          select id,city from pub_cityaddr where id in
+          (select city From pub_coupon_activity_use_city 
+           where couponactivityidref=#{id}
+             and status='1' )
+             and status='1'
+      </select>
+ 
+      <update id="updateCouponActivity" parameterType="pubcouponactivity">
+          update pub_coupon_activity 
+              set 
+                  sendmoneytype=#{sendmoneytype},
+                  sendfixedmoney=#{sendfixedmoney},
+                  sendlowmoney=#{sendlowmoney},
+                  sendhighmoney=#{sendhighmoney},
+                  sendstarttime=#{sendstarttime},
+                  sendendtime=#{sendendtime},
+                  outimetype=#{outimetype},
+                  sendtimeinday=#{sendtimeinday},
+                  fixedstarttime=#{fixedstarttime},
+                  fixedendtime=#{fixedendtime},
+                  updater=#{updater},
+                  updatetime=now()
+               where id=#{id} and activystate=1 and platformtype=1 and status=1
+      </update>
+      
+      <delete id="delCouponActivity" parameterType="String">
+          delete from pub_coupon_activity where id=#{id} and activystate=1 and platformtype=1 and status='1'
+      </delete>
+      
+      <delete id="delCouponActivityCitys" parameterType="String">
+          delete from pub_coupon_activity_use_city where couponactivityidref=(select id from pub_coupon_activity where id=#{id} and activystate=1 and status='1')  and status='1'
+      </delete>
+      
+      <update id="invalidCouponActivity" parameterType="pubcouponactivity">
+          update pub_coupon_activity
+              set activystate=#{activystate}
+              where id=#{id} and activystate=2 and platformtype=1 and status='1'
+      </update>
+      
+      <select id="getCouponActivityNames" resultType="java.util.Map">
+          select distinct id,name as text from pub_coupon_activity 
+          where lecompanyid=#{lecompanyid}
+            and platformtype=1 and status=1
+            <if test="name != null and name != ''">
+	            and name like concat('%',#{name},'%')
+	        </if>
+      </select>
+      
+      <select id="getAlreadyCouponRuleNames" resultType="java.util.Map">
+          select distinct pcr.id,pcr.name as text from pub_coupon_activity pca,pub_coupon_rule pcr 
+              where pca.sendruleidref=pcr.id
+                and pca.lecompanyid=#{lecompanyid}
+                and pcr.lecompanyid=#{lecompanyid}
+                <if test="rulename != null and rulename != ''">
+	            and pcr.name like concat('%',#{rulename},'%')
+	            </if>
+                and pca.platformtype=1
+                and pcr.platformtype=1
+                and pca.status=1
+                and pcr.status=1
+      </select>
+      
+      <select id="getCouponRuleNames" resultType="java.util.Map">
+          select distinct pcr.id,pcr.name as text from pub_coupon_rule pcr 
+              where pcr.lecompanyid=#{lecompanyid}
+                and pcr.ruletarget=#{sendruletarget} 
+                and pcr.platformtype=1
+                and pcr.status=1
+      </select>
+      
+      <select id="getBusinessCitys" resultType="PubCityAddr" statementType="STATEMENT">
+          select * from pub_cityaddr where id in 
+          (select distinct ps.city from ${sendrule} ps,${accountrule} oa
+             where ps.city=oa.city 
+               <if test='sendservicetype != null and sendservicetype == "0"'>
+               and ps.leasescompanyid=${lecompanyid}
+               and oa.leasescompanyid=${lecompanyid}
+               and ps.vehicletype=${sendservicetype}
+               and ps.platformtype=1
+               </if> 
+               and ps.rulesstate='0'
+               and oa.rulesstate='0'
+               and ps.status=1 
+               and oa.status=1 )
+      </select>
+      
+      <select id="getReceivedCouponUsers" parameterType="java.util.Map" resultType="java.util.Map">
+          select distinct account as id,account as text from pe_user pu
+          where pu.id in (
+              select userid from pub_coupon pc
+              where pc.couponactivyidref=#{id}
+                and pc.platformtype=1 
+                and pc.status='1'
+          )  
+              <if test="account != null and account != ''">
+	            and pu.account like concat('%',#{account},'%')
+	          </if>
+             
+             and pu.status='1'
+      </select>
+      
+      <select id="GetOrganReceivedCouponList" parameterType="pubreceivedcouponqueryparam" resultType="pubcouponreceivedto">
+           select t.* from
+           (select (@rownum := @rownum + 1) as rownum,t1.* from
+           (select org.shortname as organname,
+            pc.money,
+            date_format(pc.createtime,'%Y-%m-%d %H:%i') as createtime
+            from pub_coupon pc
+          inner join org_organ org on pc.userid=org.id
+          where pc.couponactivyidref=#{id}
+            and pc.status='1'
+            and org.status='1') t1, (select @rownum := 0) r )t
+                <![CDATA[
+	            where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	            ]]>
+      </select>
+      
+      <select id="GetOrganReceivedCouponListCount" parameterType="pubreceivedcouponqueryparam" resultType="Integer">
+           select ifnull(count(*),0)
+            from pub_coupon pc
+          inner join org_organ org on pc.userid=org.id
+          where pc.couponactivyidref=#{id}
+            and pc.status='1'
+            and org.status='1'
+      </select>
+      
+       <select id="GetOrganUserReceivedCouponList" parameterType="pubreceivedcouponqueryparam" resultType="Integer">
+          select t.* from
+           (select (@rownum := @rownum + 1) as rownum,t1.* from
+           (select nickname as account,org.shortname as belongorgan,pc.money,pc.couponstatus,
+            date_format(pc.outimestart,'%Y-%m-%d %H:%i') as outimestart,
+            date_format(pc.outtimeend,'%Y-%m-%d %H:%i') as outtimeend,
+            date_format(pc.createtime,'%Y-%m-%d %H:%i') as createtime from pub_coupon pc
+          inner join org_user orguser on pc.userid=orguser.id
+          left join org_organ org on org.id=orguser.organid
+            where pc.couponactivyidref='1'
+              and pc.platformtype=1
+              and pc.status='1'
+              and orguser.status='1'
+	           <if test="couponstatus != null and couponstatus != ''">
+	            and pc.couponstatus=#{couponstatus}
+	          </if>
+	          ) t1, (select @rownum := 0) r )t
+                <![CDATA[
+	            where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	            ]]>
+      </select>
+      
+      <select id="GetOrganUserReceivedCouponListCount" parameterType="pubreceivedcouponqueryparam" resultType="Integer">
+          select count(*) from pub_coupon pc
+          inner join pe_user pu on pc.userid=pu.id
+          where pc.couponactivyidref=#{id}
+            and pc.platformtype=1
+            and pc.status='1'
+            and pu.status='1'
+            <if test="account != null and account != ''">
+	            and pu.account=#{account}
+	          </if>
+	           <if test="couponstatus != null and couponstatus != ''">
+	            and pc.couponstatus=#{couponstatus}
+	          </if>
+	           <if test="sendstarttime != null and sendstarttime != ''">
+	            and pc.createtime <![CDATA[   >=  ]]> #{sendstarttime}
+	           </if>
+	           <if test="sendendtime != null and sendendtime != ''">
+	            and pc.createtime <![CDATA[   <=  ]]> #{sendendtime}
+	           </if>
+      </select>
+      
+      
+      <select id="organUserRecord" parameterType="String" resultType="java.util.Map">
+          select couponstatus,ifnull(count(*),0) as totalcount,ifnull(sum(money),0.0) as totalmoney from pub_coupon 
+             where couponactivyidref=#{id} 
+               and platformtype=1     
+               and status='1'    
+               group by couponstatus
+      </select>
+      
+      	<!-- 修改时，根据id查找优惠券规则 -->
+	<select id="getPubCouponRuleById" resultType="PubCouponRule" parameterType="String">
+	    select * from pub_coupon_rule where id = #{id}
+	</select>
+</mapper>

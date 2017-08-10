@@ -150,7 +150,14 @@ public class PubVehicle {
 	private String belongleasecompany;
 	//服务车企
 	private String belongleasecompanyName;
+	private String  identitytype;//特殊司机
 	
+	public String getIdentitytype() {
+		return identitytype;
+	}
+	public void setIdentitytype(String identitytype) {
+		this.identitytype = identitytype;
+	}
 	public String getBelongleasecompany() {
 		return belongleasecompany;
 	}

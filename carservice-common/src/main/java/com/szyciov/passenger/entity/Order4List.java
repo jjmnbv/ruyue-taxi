@@ -102,6 +102,16 @@ public class Order4List {
 	private String cancelparty;
 	
 	private double schedulefee;
+	
+	/**
+	 * 费用类型
+	 */
+	private int expensetype;
+	
+	/**
+	 * 取消费
+	 */
+	private double cancelfee;
 
 	public String getOrderno() {
 		return orderno;
@@ -365,5 +375,21 @@ public class Order4List {
 
 	public void setSchedulefee(double schedulefee) {
 		this.schedulefee = schedulefee;
+	}
+
+	public int getExpensetype() {
+		return expensetype;
+	}
+
+	public void setExpensetype(int expensetype) {
+		this.expensetype = expensetype;
+	}
+
+	public double getCancelfee() {
+		return cancelfee;
+	}
+
+	public void setCancelfee(double cancelfee) {
+		this.cancelfee = cancelfee;
 	}
 }

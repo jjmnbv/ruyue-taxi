@@ -1,7 +1,5 @@
 package com.szyciov.org.param;
 
-import java.util.List;
-
 import com.szyciov.param.QueryParam;
 
 public class OrgOrderQueryParam extends QueryParam{
@@ -25,7 +23,16 @@ public class OrgOrderQueryParam extends QueryParam{
 	
 	private String querySearch;
 	
+	private String queryExpensetype;
 	
+	public String getQueryExpensetype() {
+		return queryExpensetype;
+	}
+
+	public void setQueryExpensetype(String queryExpensetype) {
+		this.queryExpensetype = queryExpensetype;
+	}
+
 	public String getQuerySearch() {
 		return querySearch;
 	}

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.CouponActivityStatusMapper">
+
+    <select id="getAllNotStartCouponActivity" resultType="pubcouponactivitydto">
+        select   
+                 pca.id,
+                 pca.name,
+                 pca.sendservicetype,
+                 pca.sendruletype,
+                 pca.sendruleidref,
+                 pca.sendruletarget,
+                 pca.activystate,
+                 pca.sendmoneytype,
+                 pca.sendfixedmoney,
+                 pca.sendlowmoney,
+                 pca.sendhighmoney,
+                 pca.sendcount,
+                 pca.lecompanyid,
+                 pca.usetype,
+                 pca.outimetype,
+                 pca.sendtimeinday,
+                 pca.couponrule,
+              date_format(pca.createtime,'%Y-%m-%d %H:%i') as createtime,
+              date_format(pca.sendstarttime,'%Y-%m-%d') as sendstarttime,
+              date_format(pca.sendendtime,'%Y-%m-%d') as sendendtime,
+              date_format(pca.fixedstarttime,'%Y-%m-%d') as fixedstarttime,
+              date_format(pca.fixedendtime,'%Y-%m-%d') as fixedendtime, 
+              GROUP_CONCAT(pc.city SEPARATOR ',') citys,
+              GROUP_CONCAT(pcs.phone SEPARATOR ',') users 
+              From pub_coupon_activity pca 
+        inner join pub_coupon_activity_use_city pcauc on pcauc.couponactivityidref=pca.id
+        inner join pub_cityaddr pc on pc.id=pcauc.city 
+        left join pub_coupon_senduser pcs on pcs.couponactivityidref=pca.id
+        where pca.activystate=1 and date_format(pca.sendstarttime,'%Y-%m-%d')<![CDATA[   <=  ]]>#{sendstarttime} and pca.status='1'
+        group by pca.id;
+    </select>
+
+    <select id="getAllExpiredCouponActivity" resultType="pubcouponactivitydto">
+        select   
+                 pca.id,
+                 pca.name,
+                 pca.sendservicetype,
+                 pca.sendruletype,
+                 pca.sendruleidref,
+                 pca.sendruletarget,
+                 pca.activystate,
+                 pca.sendmoneytype,
+                 pca.sendfixedmoney,
+                 pca.sendlowmoney,
+                 pca.sendhighmoney,
+                 pca.sendcount,
+                 pca.lecompanyid,
+                 pca.usetype,
+                 pca.outimetype,
+                 pca.sendtimeinday,
+              date_format(pca.createtime,'%Y-%m-%d %H:%i') as createtime,
+              date_format(pca.sendstarttime,'%Y-%m-%d') as sendstarttime,
+              date_format(pca.sendendtime,'%Y-%m-%d') as sendendtime,
+              date_format(pca.fixedstarttime,'%Y-%m-%d') as fixedstarttime,
+              date_format(pca.fixedendtime,'%Y-%m-%d') as fixedendtime, 
+              GROUP_CONCAT(pc.city SEPARATOR ',') citys,
+              GROUP_CONCAT(pcs.phone SEPARATOR ',') users 
+              From pub_coupon_activity pca 
+        inner join pub_coupon_activity_use_city pcauc on pcauc.couponactivityidref=pca.id
+        inner join pub_cityaddr pc on pc.id=pcauc.city 
+        left join pub_coupon_senduser pcs on pcs.couponactivityidref=pca.id
+              where pca.activystate=2 
+                and date_format(sendendtime,'%Y-%m-%d')<![CDATA[   <  ]]>#{sendendtime} 
+                and pca.status='1'
+        group by pca.id;
+    </select>
+
+    <update id="updateAllNotStartCouponActivity" parameterType="java.util.List">
+        update pub_coupon_activity
+          set activystate='2',
+          updatetime=now()
+         where id in 
+        <foreach collection="list" item="act" open="(" separator="," close=")">
+            #{act.id}
+        </foreach>
+    </update>
+    
+    <update id="updateExpiredCouponActivity" parameterType="java.util.List">
+         update pub_coupon_activity
+         set activystate='3',
+         updatetime=now()
+          where id in 
+        <foreach collection="list" item="act" open="(" separator="," close=")">
+            #{act.id}
+        </foreach>
+    </update>
+
+</mapper>

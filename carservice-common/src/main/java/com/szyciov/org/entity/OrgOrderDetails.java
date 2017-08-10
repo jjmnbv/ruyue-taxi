@@ -40,7 +40,25 @@ public class OrgOrderDetails{
 	private Date canceltime;
 	private String canceltimeShow;
 	private String usetype;
+	private Integer cancelnature;
+	private Integer cancelamount;
 	
+	public Integer getCancelamount() {
+		return cancelamount;
+	}
+
+	public void setCancelamount(Integer cancelamount) {
+		this.cancelamount = cancelamount;
+	}
+
+	public Integer getCancelnature() {
+		return cancelnature;
+	}
+
+	public void setCancelnature(Integer cancelnature) {
+		this.cancelnature = cancelnature;
+	}
+
 	public String getUserid() {
 		return userid;
 	}

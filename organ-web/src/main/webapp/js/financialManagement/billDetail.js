@@ -45,16 +45,20 @@ function initGrid() {
 				  "bSearchable": false,
 				  "sortable": false,
 				  "mRender": function (data, type, full) {
-					  var starttime = full.starttime;
-					  var endtime = full.endtime;
-					  var xcsj = "";
-					  if (starttime) {
-						  xcsj += "起：" + changeToDate(starttime) + "<br>";
+					  if (full.orderstatus == '7') {
+						  var starttime = full.starttime;
+						  var endtime = full.endtime;
+						  var xcsj = "";
+						  if (starttime) {
+							  xcsj += "起：" + changeToDate(starttime) + "<br>";
+						  }
+						  if (endtime) {
+							  xcsj += "终：" + changeToDate(endtime);
+						  }
+						  return xcsj;
+					  } else {
+						  return "/";
 					  }
-					  if (endtime) {
-						  xcsj += "终：" + changeToDate(endtime);
-					  }
-					  return xcsj;
 				  }
             },
 	        //{mDataProp: "onaddress", sTitle: "行程起止", sClass: "center", sortable: true },
@@ -66,23 +70,70 @@ function initGrid() {
 				  "bSearchable": false,
 				  "sortable": false,
 				  "mRender": function (data, type, full) {
-					  var onaddress = full.onaddress;
-					  var offaddress = full.offaddress;
-					  var xcqz = "";
-					  if (onaddress) {
-						  xcqz += "起：" + showToolTips(onaddress,3) + "<br>";
+					  if (full.orderstatus == '7') {
+						  var onaddress = full.onaddress;
+						  var offaddress = full.offaddress;
+						  var xcqz = "";
+						  if (onaddress) {
+							  xcqz += "起：" + showToolTips(onaddress,3) + "<br>";
+						  }
+						  if (offaddress) {
+							  xcqz += "止：" + showToolTips(offaddress,3);
+						  }
+						  return xcqz;
+					  } else {
+						  return "/";
 					  }
-					  if (offaddress) {
-						  xcqz += "止：" + showToolTips(offaddress,3);
-					  }
-					  return xcqz;
 				  }
             },
-	        {mDataProp: "orderamount", sTitle: "金额", sClass: "center", sortable: true },
+	        {mDataProp: "orderamount", sTitle: "订单金额（元）", sClass: "center", sortable: true, 
+            	"mRender": function (data, type, full) {
+            		  if (full.orderstatus == '7') {
+            			  return full.orderamount;
+            		  } else {
+            			  return "/";
+            		  }
+				 }
+	        },
+	        {mDataProp: "cancelamount", sTitle: "取消费用（元）", sClass: "center", sortable: true, 
+            	"mRender": function (data, type, full) {
+            		if (data != null) {
+            			if (full.orderstatus == '8') {
+            				return full.cancelamount;
+            			} else {
+            				return "/";
+            			}
+            		} else {
+            			return "/";
+            		}
+				 }
+	        },
+	        {mDataProp: "vehiclessubjecttype", sTitle: "用车事由", sClass: "center", sortable: true, 
+	        	"mRender": function (data, type, full) {
+					if (data != null) {
+						return data;
+					} else {
+						return "/";
+					}
+				  }
+	        },
+	        {mDataProp: "vehiclessubject", sTitle: "事由说明", sClass: "center", sortable: true, 
+	        	"mRender": function (data, type, full) {
+	        		if (data != null) {
+						return showToolTips(data,4);
+					} else {
+						return "/";
+					}
+				  }
+	        },
 	        {mDataProp: "tripremark", sTitle: "行程备注", sClass: "center", sortable: true, 
 	        	"mRender": function (data, type, full) {
-					  return showToolTips(full.tripremark,4);
-				  }
+					if (data != null) {
+						return showToolTips(full.tripremark,4);
+					} else {
+						return "/";
+					}
+				}
 	        }
         ]
     };

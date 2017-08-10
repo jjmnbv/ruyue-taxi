@@ -50,6 +50,6 @@
 		<typeAlias type="com.szyciov.org.entity.PubWithdraw" alias="PubWithdraw"/>
 		<typeAlias type="com.szyciov.org.entity.OrgInformation" alias="OrgInformation"/>
 		<typeAlias type="com.szyciov.lease.entity.PubCityAddr" alias="PubCityAddr"/>
-		
+		<typeAlias type="com.szyciov.entity.PubCouponDetail" alias="PubCouponDetail"/>
 	</typeAliases>
 </configuration>

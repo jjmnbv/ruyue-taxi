@@ -61,76 +61,89 @@
 	</select>
 	
 	<select id="getMostContactCount" resultType="int" parameterType="Map">
-		select count(*) from (SELECT 
-			fav.*,CONCAT(fav.name,fav.phone) namephone 
+		SELECT COUNT(aa.id) from (SELECT
+			fav.*,CONCAT(fav.name,fav.phone) namephone
 		FROM(
-			SELECT
-				pu.id,
-				pu.id userid,
-				pu.nickname `name`,
-				pu.account phone,
-				pu.createtime,
-				pu.updatetime,
-				pu.id creater,
-				pu.id updater,
-				pu.`Status`
-			FROM
-				pe_user pu
-			WHERE 1=1
-			AND pu.`status` = 1
-			AND pu.account = #{userid}
+			(
+				SELECT
+					pu.id,
+					pu.id userid,
+					pu.nickname `name`,
+					pu.account phone,
+					pu.createtime,
+					pu.updatetime,
+					pu.id creater,
+					pu.id updater,
+					pu.`Status`
+				FROM
+					pe_user pu
+				WHERE 1=1
+				AND pu.`status` = 1
+				AND pu.id = #{userid}
+			)
 			UNION
-			SELECT
-				pm.*
-			FROM
-				pub_mostcontact pm,
-				pe_user pu
-			WHERE 1=1
-			AND pu.`status` = 1
-			AND pm.`status` = 1
-			AND pm.userphone = #{userid}
+			(
+				SELECT
+					pm.*
+				FROM
+					pub_mostcontact pm,
+					pe_user pu
+				WHERE 1=1
+				AND pu.`status` = 1
+				AND pm.`status` = 1
+				AND pm.userphone = pu.account
+				AND pm.phone != pu.account
+				AND pu.id = #{userid}
+			)
 		) fav 
 		<if test="sSearch != null and sSearch != ''">
 		WHERE
 			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
 		</if>
-		group by CONCAT(fav.name,fav.phone))aa
+		GROUP BY CONCAT(fav.name,fav.phone))aa
 	</select>
 	
 	<select id="getMostContact" resultType="PeMostContact" parameterType="Select2Param">
-	select * from (SELECT 
-			fav.*,CONCAT(fav.name,fav.phone) namephone 
+		SELECT 
+			fav.*,CONCAT(fav.name,fav.phone) namephone
 		FROM(
-			SELECT
-				pu.id,
-				pu.id userid,
-				pu.nickname `name`,
-				pu.account phone,
-				pu.createtime,
-				pu.updatetime,
-				pu.id creater,
-				pu.id updater,
-				pu.`Status`
-			FROM
-				pe_user pu
-			WHERE 1=1
-			AND pu.`status` = 1
-			AND pu.account = #{userid}
+			(
+				SELECT
+					pu.id,
+					pu.id userid,
+					pu.nickname `name`,
+					pu.account phone,
+					pu.createtime,
+					pu.updatetime,
+					pu.id creater,
+					pu.id updater,
+					pu.`Status`
+				FROM
+					pe_user pu
+				WHERE 1=1
+				AND pu.`status` = 1
+				AND pu.id = #{userid}
+			)
 			UNION
-			SELECT
-				pm.*
-			FROM
-				pub_mostcontact pm,
-				pe_user pu
-			WHERE 1=1
-			AND pu.`status` = 1
-			AND pm.`status` = 1
-			AND pm.userphone = #{userid}
+			(
+				SELECT
+					pm.*
+				FROM
+					pub_mostcontact pm,
+					pe_user pu
+				WHERE 1=1
+				AND pu.`status` = 1
+				AND pm.`status` = 1
+				AND pm.userphone = pu.account
+				AND pm.phone != pu.account
+				AND pu.id = #{userid}
+			)
 		) fav
 		<if test="sSearch != null and sSearch != ''">
 		WHERE
 			(fav.phone LIKE '%${sSearch}%' OR fav.name LIKE '%${sSearch}%')
-		</if>)aa group by namephone
+		</if>
+		GROUP BY CONCAT(fav.name,fav.phone)
 		LIMIT ${iDisplayStart},${iDisplayLength}
 	</select>
 	

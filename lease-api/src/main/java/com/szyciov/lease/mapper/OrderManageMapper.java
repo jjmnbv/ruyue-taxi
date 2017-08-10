@@ -1,5 +1,9 @@
 package com.szyciov.lease.mapper;
 
+import java.util.List;
+import java.util.Map;
+
+import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.entity.PubDriverNews;
 import com.szyciov.lease.entity.LeAccountRules;
 import com.szyciov.lease.entity.OrgDriverchanges;
@@ -7,6 +11,7 @@ import com.szyciov.lease.entity.OrgOrdercomment;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
 import com.szyciov.lease.entity.OrgSendrecord;
 import com.szyciov.lease.entity.OrgUserRefund;
+import com.szyciov.lease.entity.PubCityAddr;
 import com.szyciov.lease.entity.PubDriver;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.PubSendRules;
@@ -14,9 +19,6 @@ import com.szyciov.org.entity.OrgOrder;
 import com.szyciov.org.entity.OrgOrderReview;
 import com.szyciov.param.OrdercommentQueryParam;
 import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
-import java.util.Map;
 
 public interface OrderManageMapper {
 	List<Map<String, Object>> getOrgLabourOrderListByQuery(OrderManageQueryParam queryParam);
@@ -35,13 +37,17 @@ public interface OrderManageMapper {
 	
 	int getOrgWasabnormalOrderCountByQuery(OrderManageQueryParam queryParam);
 	
-	List<Map<String, Object>> getOrgCompleteOrderListByQuery(OrderManageQueryParam queryParam);
-	
-	int getOrgCompleteOrderCountByQuery(OrderManageQueryParam queryParam);
-	
 	List<Map<String, Object>> getOrgWaitgatheringOrderListByQuery(OrderManageQueryParam queryParam);
 	
 	int getOrgWaitgatheringOrderCountByQuery(OrderManageQueryParam queryParam);
+
+    List<Map<String, Object>> getOrgCompleteOrderListByQuery(OrderManageQueryParam queryParam);
+
+    int getOrgCompleteOrderCountByQuery(OrderManageQueryParam queryParam);
+
+    List<Map<String, Object>> getOrgCancelOrderListByQuery(OrderManageQueryParam queryParam);
+
+    int getOrgCancelOrderCountByQuery(OrderManageQueryParam queryParam);
 	
 	Map<String, Object> getOrgOrderByOrderno(String orderno);
 	
@@ -122,8 +128,16 @@ public interface OrderManageMapper {
 	void orderReject(OrgOrder object);
 	public PubDriver getPubDriver(@Param("id") String id);
 
-    List<Map<String, Object>> getBelongLeaseCompanySelect(Map<String, Object> params);
+    List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam params);
 
     void updatePubDriverLeisure(String driverid);
+
+    OrderInfoDetail getOrgOrderInfoByOrderno(String orderno);
+
+    void updateOrgOrderInfo(OrderInfoDetail infoDetail);
+
+    PubCityAddr getPubCityByName(String cityname);
+
+    void updatePubDriver(PubDriver object);
 
 }

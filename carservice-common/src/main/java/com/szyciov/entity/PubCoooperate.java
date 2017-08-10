@@ -4,167 +4,179 @@ import java.util.Date;
 
 public class PubCoooperate {
     /**
-    主键
+     * 主键
      */
     private String id;
 
     /**
-    所属租赁,数据归属
+     * 所属租赁,数据归属
      */
     private String companyid;
 
     /**
-    租赁公司(合作方)
+     * 租赁公司(合作方)
      */
     private String leasecompanyid;
 
     /**
-    合作编号
+     * 合作编号
      */
     private String coono;
 
     /**
-    合作类型(0-B2B联盟，1-B2C联营)
+     * 合作类型(0-B2B联盟，1-B2C联营)
      */
     private Integer cootype;
 
     /**
-    加盟业务(0-网约车,1-出租车)
+     * 加盟业务(0-网约车,1-出租车)
      */
     private Integer servicetype;
 
     /**
-    合作状态(0-审核中,1-合作中,2-未达成,3-已终止,4-已过期)
+     * 合作状态(0-审核中,1-合作中,2-未达成,3-已终止,4-已过期)
      */
     private Integer coostate;
 
     /**
-    合作开始时间
+     * 合作开始时间
      */
     private Date coostarttime;
 
     /**
-    合作截止时间
+     * 合作截止时间
      */
     private Date cooendtime;
 
     /**
-    申请时间
+     * 申请时间
      */
     private Date applicationtime;
 
     /**
-    数据所属平台(0-运管端，1-租赁端)
+     * 数据所属平台(0-运管端，1-租赁端)
      */
     private Integer platformtype;
 
     /**
-    审核时间
+     * 审核时间
      */
     private Date reviewtime;
 
     /**
-    审核意见
+     * 审核意见
      */
     private String reviewtext;
 
     /**
-    创建时间
+     * 创建时间
      */
     private Date createtime;
 
     /**
-    更新时间
+     * 更新时间
      */
     private Date updatetime;
 
     /**
-    创建人
+     * 创建人
      */
     private String creater;
 
     /**
-    更新人
+     * 更新人
      */
     private String updater;
 
     /**
-    数据状态
+     * 数据状态
      */
     private Integer status;
     /**
      * 战略伙伴 name
-     * */
+     */
     private String companyName;
     /**
      * 开放资源个数
-     * */
+     */
     private int allCount;
     /**
      * 可用资源个数
-     * */
+     */
     private int availableCount;
-    
+
     /**
      * 车牌号
-     * */
+     */
     private String plateno;
     /**
-     * 司机信息 
-     * */
+     * 司机信息
+     */
     private String driverInformation;
     /**
      * 资格证号
-     * */
+     */
     private String jobnum;
-    
+    /**
+     * 合作协议id
+     */
+    private String cooagreementid;
+
+    public String getCooagreementid() {
+        return cooagreementid;
+    }
+
+    public void setCooagreementid(String cooagreementid) {
+        this.cooagreementid = cooagreementid;
+    }
+
     public String getPlateno() {
-		return plateno;
-	}
+        return plateno;
+    }
 
-	public void setPlateno(String plateno) {
-		this.plateno = plateno;
-	}
+    public void setPlateno(String plateno) {
+        this.plateno = plateno;
+    }
 
-	public String getDriverInformation() {
-		return driverInformation;
-	}
+    public String getDriverInformation() {
+        return driverInformation;
+    }
 
-	public void setDriverInformation(String driverInformation) {
-		this.driverInformation = driverInformation;
-	}
+    public void setDriverInformation(String driverInformation) {
+        this.driverInformation = driverInformation;
+    }
 
-	public String getJobnum() {
-		return jobnum;
-	}
+    public String getJobnum() {
+        return jobnum;
+    }
 
-	public void setJobnum(String jobnum) {
-		this.jobnum = jobnum;
-	}
+    public void setJobnum(String jobnum) {
+        this.jobnum = jobnum;
+    }
 
-	public int getAllCount() {
-		return allCount;
-	}
+    public int getAllCount() {
+        return allCount;
+    }
 
-	public void setAllCount(int allCount) {
-		this.allCount = allCount;
-	}
+    public void setAllCount(int allCount) {
+        this.allCount = allCount;
+    }
 
-	public int getAvailableCount() {
-		return availableCount;
-	}
+    public int getAvailableCount() {
+        return availableCount;
+    }
 
-	public void setAvailableCount(int availableCount) {
-		this.availableCount = availableCount;
-	}
+    public void setAvailableCount(int availableCount) {
+        this.availableCount = availableCount;
+    }
 
-	public String getCompanyName() {
-		return companyName;
-	}
+    public String getCompanyName() {
+        return companyName;
+    }
 
-	public void setCompanyName(String companyName) {
-		this.companyName = companyName;
-	}
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
 
     /**
      * get 主键
@@ -174,7 +186,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 主键
      */
     public void setId(String id) {
@@ -189,7 +200,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 所属租赁,数据归属
      */
     public void setCompanyid(String companyid) {
@@ -204,7 +214,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 租赁公司(合作方)
      */
     public void setLeasecompanyid(String leasecompanyid) {
@@ -219,7 +228,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 合作编号
      */
     public void setCoono(String coono) {
@@ -234,7 +242,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 合作类型(0-B2B联盟，1-B2C联营)
      */
     public void setCootype(Integer cootype) {
@@ -249,7 +256,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 加盟业务(0-网约车,1-出租车)
      */
     public void setServicetype(Integer servicetype) {
@@ -264,7 +270,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 合作状态(0-审核中,1-合作中,2-未达成,3-已终止,4-已过期)
      */
     public void setCoostate(Integer coostate) {
@@ -279,7 +284,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 合作开始时间
      */
     public void setCoostarttime(Date coostarttime) {
@@ -294,7 +298,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 合作截止时间
      */
     public void setCooendtime(Date cooendtime) {
@@ -309,7 +312,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 申请时间
      */
     public void setApplicationtime(Date applicationtime) {
@@ -324,7 +326,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 数据所属平台(0-运管端，1-租赁端)
      */
     public void setPlatformtype(Integer platformtype) {
@@ -339,7 +340,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 审核时间
      */
     public void setReviewtime(Date reviewtime) {
@@ -354,7 +354,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 审核意见
      */
     public void setReviewtext(String reviewtext) {
@@ -369,7 +368,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 创建时间
      */
     public void setCreatetime(Date createtime) {
@@ -384,7 +382,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 更新时间
      */
     public void setUpdatetime(Date updatetime) {
@@ -399,7 +396,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 创建人
      */
     public void setCreater(String creater) {
@@ -414,7 +410,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 更新人
      */
     public void setUpdater(String updater) {
@@ -429,7 +424,6 @@ public class PubCoooperate {
     }
 
     /**
-     *
      * set 数据状态
      */
     public void setStatus(Integer status) {

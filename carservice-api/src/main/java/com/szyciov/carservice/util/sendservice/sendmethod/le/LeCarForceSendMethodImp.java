@@ -39,6 +39,7 @@ import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.enums.DriverEnum;
 import com.szyciov.enums.OrderEnum;
+import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.enums.SendRulesEnum;
 import com.szyciov.lease.entity.LeVehiclemodels;
 import com.szyciov.lease.param.PubDriverInBoundParam;
@@ -482,6 +483,10 @@ public class LeCarForceSendMethodImp implements SendMethodHelper {
 		String lasttime = StringUtil.formatOrderStatus(orderinfo.getUsetime(), OrderState.WAITSTART.state);
 		order.setLasttime(lasttime);
 		pushNotify(order,dirphone,orderinfo,driver);
+		
+		//设置最后一次发送时间
+		orderinfo.setLastsendtime(StringUtil.addDate(null, 20));
+		JedisUtil.setString(RedisKeyEnum.DRIVER_TRAVEL_REMINDER.code+orderinfo.getOrderno() + "_" + orderinfo.getUsetype(),StringUtil.parseBeanToJSON(orderinfo));
 	}
 	
 	/**

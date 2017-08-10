@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.szyciov.op.entity.OrderExportEntity;
 import com.szyciov.op.param.OrderExportParam;
@@ -49,6 +50,9 @@ public class OrderExportService {
 	}
 	public List<OrderExportParam> exportOrders(OrderExportEntity orderExportEntity)  {
 		return dao.exportOrders(orderExportEntity);
+	}
+	public List<Map<String, Object>> getLeasescompany(OrderExportEntity orderExportEntity)  {
+		return dao.getLeasescompany(orderExportEntity);
 	}
 
 }

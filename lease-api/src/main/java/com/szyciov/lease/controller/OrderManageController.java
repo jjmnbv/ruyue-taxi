@@ -1,11 +1,20 @@
 package com.szyciov.lease.controller;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.lease.entity.LeAccountRules;
 import com.szyciov.lease.entity.OrgOrdercomment;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.lease.service.OrderManageService;
 import com.szyciov.op.entity.PubSendRules;
 import com.szyciov.org.entity.OrgOrder;
+import com.szyciov.org.entity.OrgOrderReview;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.PageBean;
@@ -16,12 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import javax.annotation.Resource;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Controller
 public class OrderManageController extends BaseController {
@@ -193,8 +196,8 @@ public class OrderManageController extends BaseController {
 	 */
 	@RequestMapping(value = "api/OrderManage/OrgOrderReview", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Object> orgOrderReview(@RequestBody Map<String, Object> params) {
-		return this.orderManageService.orgOrderReview(params);
+	public Map<String, Object> orgOrderReview(@RequestBody OrgOrderReview review) {
+		return this.orderManageService.orgOrderReview(review);
 	}
 	
 	/**
@@ -315,10 +318,43 @@ public class OrderManageController extends BaseController {
      * @param params 查询参数
      * @return 车企list
      */
-    @RequestMapping(value = "api/OrderManage/GetBelongLeaseCompanySelect", method = RequestMethod.POST)
+    @RequestMapping(value = "api/OrderManage/GetBelongCompanySelect", method = RequestMethod.POST)
     @ResponseBody
-    public List<Map<String, Object>> getBelongLeaseCompanySelect(@RequestBody Map<String, Object> params) {
-        return orderManageService.getBelongLeaseCompanySelect(params);
+    public List<Map<String, Object>> getBelongCompanySelect(@RequestBody OrderManageQueryParam params) {
+        return orderManageService.getBelongCompanySelect(params);
+    }
+
+    /**
+     * 查询订单取消规则明细
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "api/OrderManage/GetCancelPriceDetail")
+    @ResponseBody
+    public Map<String, Object> getCancelPriceDetail(@RequestBody Map<String, String> param) {
+        return orderManageService.getCancelPriceDetail(param);
+    }
+
+    /**
+     * 免责处理
+     * @param object
+     * @return
+     */
+    @RequestMapping(value = "api/OrderManage/ExemptionOrder")
+    @ResponseBody
+    public Map<String, Object> exemptionOrder(@RequestBody PubOrderCancel object) {
+        return orderManageService.exemptionOrder(object);
+    }
+
+    /**
+     * 结束订单
+     * @param orderno
+     * @return
+     */
+    @RequestMapping(value = "api/OrderManage/EndOrder/{orderno}", method = RequestMethod.GET)
+    @ResponseBody
+    public Map<String, Object> endOrder(@PathVariable String orderno) {
+        return orderManageService.endOrder(orderno);
     }
 
 }

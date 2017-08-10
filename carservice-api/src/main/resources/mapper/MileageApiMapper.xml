@@ -143,5 +143,23 @@
     <select id="getBaiduOffset" parameterType="PubOrdergpsdata" resultType="PubOrdergpsdata">
       select latitudeoffset lat, longitudeOffSet lng from eqp_baiduoffset where latitude=floor(#{lat}*100)*10000 and longitude=floor(#{lng}*100)*10000 limit 1
     </select>
+
+    <!-- 里程计算方式统计 -->
+    <select id="getOrderMileageCalctypeCount" parameterType="map" resultType="map">
+        select
+          calctype, count(*) typecount
+        from
+          pub_ordermileagecalc_log
+        where
+          createtime &gt;= date_format(#{starttime}, '%Y-%m-%d %T') and createtime &lt;= date_format(#{endtime}, '%Y-%m-%d %T')
+          and status = 1
+        group by
+          calctype
+    </select>
+
+    <!-- 查询字典表中下发短信的号码 -->
+    <select id="getOrderMileageCalctypePhone" resultType="string">
+        select value from pub_dictionary where type = '里程计算短信号码' and status = 1 limit 1
+    </select>
     
 </mapper>

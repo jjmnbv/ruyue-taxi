@@ -29,6 +29,7 @@ import com.szyciov.entity.PubDriver;
 import com.szyciov.enums.DriverEnum;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.PlatformTypeByDb;
+import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.enums.SendRulesEnum;
 import com.szyciov.enums.VehicleEnum;
 import com.szyciov.op.entity.PeUser;
@@ -571,6 +572,11 @@ public class OpForceSendMethodImp extends AbstractSendMethod  {
 		AppMessageUtil.send(pushobj4ios,pushobj4android,AppMessageUtil.APPTYPE_DRIVER);
 
 		this.sendSMMessage(orderinfo,order,driver,dirphone);
+
+
+		//设置最后一次发送时间
+		orderinfo.setLastsendtime(new Date(System.currentTimeMillis()+(20*1000)));
+		JedisUtil.setString(RedisKeyEnum.DRIVER_TRAVEL_REMINDER.code+orderinfo.getOrderno()+"_"+orderinfo.getUsetype(),StringUtil.parseBeanToJSON(orderinfo));
 	}
 
 	/**

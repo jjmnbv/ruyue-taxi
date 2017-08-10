@@ -327,6 +327,8 @@ public class OrderService extends BaseService{
 		result.put("orderno", oid.getOrderno());
 		result.put("usetype", oid.getUsetype());
 		result.put("ordertype", oid.getType());
+		
+		removeOrderMessage(oap); //无论改变什么状态都做一次提醒任务删除
 		return result;
 	}
 	
@@ -918,6 +920,7 @@ public class OrderService extends BaseService{
 					param, 
 					JSONObject.class);
 		}
+		removeOrderMessage(param);
 		return result;
 	}
 	
@@ -944,6 +947,16 @@ public class OrderService extends BaseService{
 	}
 
 	/**********************************************************内部方法***************************************************************/
+	/**
+	 * 取消订单提醒时删除redis中的订单提醒信息
+	 * @param param
+	 * @return
+	 */
+	private boolean removeOrderMessage(OrderApiParam param){
+		String key = "DRIVER_TRAVEL_REMINDER_" + param.getOrderno() + "*";
+		JedisUtil.delKey(key);
+		return true;
+	}
 	/**
 	 * 网约车获取订单消息
 	 * @param param

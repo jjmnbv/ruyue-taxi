@@ -37,9 +37,18 @@ public class VehicleIndexVo {
     private String scopeStr;
     //服务车型
     private String serviceCars;
+    //车型级别
+    private String level;
 
+    public String getLevel() {
+		return level;
+	}
 
-    public String getId() {
+	public void setLevel(String level) {
+		this.level = level;
+	}
+
+	public String getId() {
         return id;
     }
 

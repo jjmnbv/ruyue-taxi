@@ -156,7 +156,12 @@ $(".btn_grey").click(function(){
 function searchExpensesDetail(leasesCompanyId,organId) {
 	window.location.href = document.getElementsByTagName("base")[0].getAttribute("href") + "FinancialManagement/ExpensesDetail?leasesCompanyId=" + leasesCompanyId + "&organId=" + organId;
 }
-
+/**
+ * 抵用券
+ */
+function couponDetail(leasesCompanyId,organId) {
+	window.location.href = document.getElementsByTagName("base")[0].getAttribute("href") + "FinancialManagement/CouponDetail?leasesCompanyId=" + leasesCompanyId + "&organId=" + organId;
+}
 /**
  * 充值
  */

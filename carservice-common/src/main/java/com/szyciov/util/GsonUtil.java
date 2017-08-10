@@ -26,7 +26,9 @@ public class GsonUtil {
      * @return
      */
     public static String toJson(Object obj){
-
+        if(obj==null){
+            return "";
+        }
         return GsonHolder.gson.toJson(obj);
     }
 

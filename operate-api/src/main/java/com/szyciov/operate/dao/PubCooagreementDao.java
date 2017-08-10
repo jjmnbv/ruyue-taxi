@@ -1,6 +1,7 @@
 package com.szyciov.operate.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -26,8 +27,8 @@ public class PubCooagreementDao {
 		return mapper.getPubCooagreementListCount(queryParam);
 	};
 	
-	public List<LeLeasescompany> getLeLeasescompanyList(){
-		return mapper.getLeLeasescompanyList();
+	public List<Map<String, Object>> getLeLeasescompanyList(Map<String, String> map){
+		return mapper.getLeLeasescompanyList(map);
 	};
 	
 	public void createPubCooagreement(PubCooagreement pubCooagreement){
@@ -44,5 +45,9 @@ public class PubCooagreementDao {
 	
 	public void deletePubCooagreement(String id){
 		mapper.deletePubCooagreement(id);
+	};
+	
+	public int checkCreatePubCooagreement(PubCooagreement pubCooagreement){
+		return mapper.checkCreatePubCooagreement(pubCooagreement);
 	};
 }

@@ -45,6 +45,26 @@ public class OrderApiParam extends BaseParam{
 	private String reqsrc;
 	
 	/**
+	 * 取消责任方
+	 */
+	private Integer dutyparty;
+	
+	/**
+	 * 取消原因
+	 */
+	private Integer cancelreason;
+
+    /**
+     * 取消订单操作唯一标识
+     */
+    private String identifying;
+
+    /**
+     * 取消操作人
+     */
+    private String canceloperator;
+	
+	/**
 	 * 下单来源(参考OrderSource枚举类)
 	 * @see {@linkplain OrderSource}
 	 */
@@ -310,5 +330,53 @@ public class OrderApiParam extends BaseParam{
 
     public void setLog(Boolean log) {
         isLog = log;
+    }
+
+	/**  
+	 * 获取取消责任方  
+	 * @return dutyparty 取消责任方  
+	 */
+	public Integer getDutyparty() {
+		return dutyparty;
+	}
+	
+	/**  
+	 * 设置取消责任方  
+	 * @param dutyparty 取消责任方  
+	 */
+	public void setDutyparty(Integer dutyparty) {
+		this.dutyparty = dutyparty;
+	}
+	
+	/**  
+	 * 获取取消原因  
+	 * @return cancelreason 取消原因  
+	 */
+	public Integer getCancelreason() {
+		return cancelreason;
+	}
+
+	/**  
+	 * 设置取消原因  
+	 * @param cancelreason 取消原因  
+	 */
+	public void setCancelreason(Integer cancelreason) {
+		this.cancelreason = cancelreason;
+	}
+
+    public String getIdentifying() {
+        return identifying;
+    }
+
+    public void setIdentifying(String identifying) {
+        this.identifying = identifying;
+    }
+
+    public String getCanceloperator() {
+        return canceloperator;
+    }
+
+    public void setCanceloperator(String canceloperator) {
+        this.canceloperator = canceloperator;
     }
 }

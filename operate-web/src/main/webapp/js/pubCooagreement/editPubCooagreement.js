@@ -1,8 +1,9 @@
 var ue;
 $(function() {
-	ue = initUeditor("content", 5000);
+	ue = initUeditor("content", 10000);
 	validateForm();
 	initData();
+	initSelectGetLeasecompanyid();
 });
 
 /**
@@ -22,6 +23,15 @@ function initData() {
 			data: { id: id },
 			success: function (json) {
 				showObjectOnForm("formss", json);
+				$("#leasecompanyid").select2("data", {
+					id : json.leasecompanyid,
+					text : json.companyName
+				});
+				if(json.servicetype == 0){
+					$("#servicetype").html("<option value='0'>网约车</option>");
+				}else{
+					$("#servicetype").html("<option value='1'>出租车</option>");
+				}
 				$("#dataHtml").html(json.coocontent);
 				ue.ready(function() {
 					ue.setContent($("#dataHtml").html());
@@ -50,13 +60,13 @@ function validateForm() {
 		},
 		messages : {
 			leasecompanyid : {
-				required : "车企名称不能为空"
+				required : "请输入车企名称"
 			},
 			servicetype : {
-				required : "业务类型不能为空"
+				required : "请选择服务类型"
 			},
 			cooname : {
-				required : "协议名称不能为空",
+				required : "请输入协议名称",
 				maxlength : "最大长度30个字符"
 			}
 		}
@@ -84,12 +94,14 @@ function save() {
 	}
 	
 	var id = $("#id").val();
+	var data = form.serializeObject();
 	var url = $("#baseUrl").val() + "PubCooagreement/CreatePubCooagreement";
 	if(null != id && "" != id) {
 		url = $("#baseUrl").val() + "PubCooagreement/UpdatePubCooagreement";
+		data.leasecompanyid = $("#leasecompanyid").val();
+		data.servicetype = $("#servicetype").val();
 	}
-	var data = form.serializeObject();
-//	data.coocontent = content;
+	
 	$.ajax({
 		type : 'POST',
 		dataType : 'json',
@@ -138,4 +150,27 @@ function cancel() {
 	} else {
 		window.location.href = $("#baseUrl").val() + "PubCooagreement/Index";
 	}
+}
+
+function initSelectGetLeasecompanyid() {
+	$("#leasecompanyid").select2({
+		placeholder : "",
+		minimumInputLength : 0,
+		multiple : false, //控制是否多选
+		allowClear : true,
+		ajax : {
+			url : "PubCooagreement/GetLeLeasescompanyList",
+			dataType : 'json',
+			data : function(term, page) {
+				return {
+					text : term
+				};
+			},
+			results : function(data, page) {
+				return {
+					results : data
+				};
+			}
+		}
+	});
 }

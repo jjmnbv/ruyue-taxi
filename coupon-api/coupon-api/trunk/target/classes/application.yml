@@ -1,0 +1,37 @@
+server:
+    port: 8085
+    context-path: /coupon-api/
+
+logging:
+    level: DEBUG
+
+spring:
+    datasource:
+      name: carservicedev
+      url: jdbc:mysql://10.10.10.100:3306/carservicedev_v4.0.0?useUnicode=true&characterEncoding=utf8&autoReconnect=true
+      username: developer
+      password: yc@123456
+      type: com.alibaba.druid.pool.DruidDataSource
+      driver-class-name: com.mysql.jdbc.Driver
+    session:
+      store-type: none
+    freemarker:
+      checkTemplateLocation: false
+    redis:
+      host: 10.10.10.100
+      password:
+      port: 6380
+      pool:
+        max-idle: 100
+        min-idle: 1
+        max-active: 1000
+        max-wait: -1
+mybatis:
+    mapperLocations: classpath:mapper/*.xml
+    config-location: classpath:mybatis-config.xml
+
+security:
+  basic:
+    enabled: false
+
+

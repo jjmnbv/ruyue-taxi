@@ -137,6 +137,35 @@
 		<typeAlias type="com.szyciov.entity.PubCoooperate" alias="PubCoooperate"/>
 		<typeAlias type="com.szyciov.entity.PubCooagreement" alias="PubCooagreement"/>
 		<typeAlias type="com.szyciov.entity.PubCooresource" alias="PubCooresource"/>
-
+		<typeAlias type="com.szyciov.dto.pubCoooperate.DriverInformationDto" alias="DriverInformationDto"/>
+		<typeAlias type="com.szyciov.entity.PubVehicleModelsRef" alias="PubVehicleModelsRef"/>
+		<typeAlias type="com.szyciov.entity.PubVehicleModelsRefHistory" alias="PubVehicleModelsRefHistory"/>
+		
+		<typeAlias type="com.szyciov.lease.param.PubCouponRuleQueryParam" alias="PubCouponRuleQueryParam"/>
+		<typeAlias type="com.szyciov.entity.coupon.PubCouponRule" alias="PubCouponRule"/>
+		<typeAlias type="com.szyciov.entity.coupon.PubCouponRuleHistory" alias="PubCouponRuleHistory"/>
+        <typeAlias type="com.szyciov.entity.PubOrderCancel" alias="PubOrderCancel"/>
+        
+        <typeAlias type="com.szyciov.entity.coupon.PubCouponActivity" alias="pubcouponactivity"/>
+		<typeAlias type="com.szyciov.param.PubCouponActivityQueryParam" alias="pubcouponactivityqueryparam"/>
+		<typeAlias type="com.szyciov.dto.coupon.PubCouponActivityDto" alias="pubcouponactivitydto"/>
+		<typeAlias type="com.szyciov.param.PubReceivedCouponQueryParam" alias="pubreceivedcouponqueryparam"/>
+		<typeAlias type="com.szyciov.dto.coupon.PubCouponReceiveDto" alias="pubcouponreceivedto"/>
+		<typeAlias type="com.szyciov.param.CouponUsageQueryParam" alias="couponusagequeryparam"/>
+		<typeAlias type="com.szyciov.dto.coupon.CouponUsageDto" alias="couponusagedto"/>
+        <typeAlias type="com.szyciov.driver.entity.OrderInfoDetail" alias="OrderInfoDetail"/>
+        <typeAlias type="com.szyciov.lease.dto.balance.BalanceDto" alias="balancedto"/>
+        <typeAlias type="com.szyciov.lease.param.BalanceManageQueryParam" alias="balancemanagequeryparam"/>
+	    <typeAlias type="com.szyciov.param.UserRechargeQueryParam" alias="UserRechargeQueryParam"/>
+	    
+	    <typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumParam" alias="PubPremiumParam"/>
+		
+		<typeAlias type="com.szyciov.entity.PubPremiumRule" alias="PubPremiumRule"/>
+		<typeAlias type="com.szyciov.entity.PubPremiumRuleWeekdetail" alias="PubPremiumRuleWeekdetail"/>
+		<typeAlias type="com.szyciov.entity.PubPremiumRuleDatedetail" alias="PubPremiumRuleDatedetail"/>
+		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumDetail" alias="PubPremiumDetail"/>
+		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumAdd" alias="PubPremiumAdd"/>
+		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumModify" alias="PubPremiumModify"/>
+		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumHistory" alias="PubPremiumHistory"/>
 	</typeAliases>
 </configuration>

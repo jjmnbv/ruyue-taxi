@@ -196,4 +196,46 @@ public interface UserMapper {
     List<Map<String,Object>> getDealDetail4OpThird(Map<String, Object> param);
 
 	List<Map<String,Object>> getBalanceDetail4OpThird(Map<String, Object> param);
+
+	int getCouponCount(Map<String, Object> params);
+
+	List<Map<String, Object>> getCouponDetail(Map<String, Object> params);
+
+	List<Map<String, Object>> getCouponUseCitys(String couponid);
+
+	Map<String, Object> getInviteInfoByInvitee(String inviteephone);
+
+	void updateExpireInviteInfos();
+
+	void addInviteInfo(Map<String, Object> pp);
+
+	void updateInviteState(Map<String, Object> params);
+
+	List<Map<String, Object>> getTocCompanysNew();
+
+	List<String> getValiableCompanys(Map<String, Object> params);
+
+	List<Map<String, Object>> getOrganServiceCompany(Map<String, Object> params);
+
+	List<Map<String, Object>> getAbleCoupons(Map<String, Object> params);
+
+	Map<String, Object> getOrderCouponUseInfo(Map<String, Object> params);
+
+	Map<String, Object> getCouponInfo(String couponid);
+
+	void addCouponUseOrder(Map<String, Object> usecouponp);
+
+	void updateCouponUseOrder(Map<String, Object> usecouponp);
+
+	void doComplaint(Map<String, Object> params);
+
+	Map<String, Object> getComplaintbyOrderno(String orderno);
+
+	Map<String, Object> getHighestAbleCoupon(Map<String, Object> couponp);
+
+	void updateCouponDiscountamount(Map<String, Object> useinfo);
+
+	void addCouponDetail(Map<String, Object> params);
+
+	void useCoupon(Map<String, Object> useinfo);
 }

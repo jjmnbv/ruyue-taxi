@@ -55,6 +55,9 @@
         .DTFC_ScrollWrapper{
 			margin-top:-20px;
 		}
+		#dataGrid_wrapper .DTFC_LeftBodyWrapper tbody tr td:first-child{
+			text-align:left!important;
+		}
 	</style>
 	
 	<body class="opuseraccount_css_body">
@@ -78,7 +81,37 @@
 		    </div>
 			<table id="dataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 		</div>
-		
+		<div class="pop_box" id="editFormDiv" style="display: none;">
+			<div class="tip_box_b">
+	            <h3 id="titleForm">送积分</h3>
+	            <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+	            <div class="w400">
+	            	<form id="editForm" method="get" class="form-horizontal  m-t" id="frmmodal">
+	            		<input type="hidden" id="id" name="id"/>
+	            		<div class="row">
+	            			<div class="col-10">
+	            				<label>用户账号<em class="asterisk"></em></label>
+		               	 		<input id="account" name="account" type="text" readOnly="true"/>
+	            			</div>
+	            		</div>
+	            		<div class="row">
+	            			<div class="col-10">
+	            				<label>当前积分<em class="asterisk"></em></label>
+		               	 		<input id="balance" name="balance" type="text" readOnly="true">
+	            			</div>
+	            		</div>
+	            		<div class="row">
+	            			<div class="col-10">
+	            				<label>赠送积分<em class="asterisk"></em></label>
+		               	 		<input maxlength = "4" id="giveBalance" name="giveBalance" type="text"placeholder="请输入正整数,最大为四位" onBlur="overFormat(this)"onkeydown="if(event.keyCode==13)event.keyCode=9" onKeyPress="if ((event.keyCode<48 || event.keyCode>57)) event.returnValue=false"/>  
+	            			</div>	
+	            		</div>
+	            	</form>
+	                <button class="Lbtn red_q" onclick="addBalance()">完成</button>
+	                <button class="Lbtn grey_w" style="margin-left: 10%;" onclick="canelBalance()">取消</button>
+	            </div>
+	        </div>
+		</div>
 		<script type="text/javascript" src="js/opUserAccount/index.js"></script>
 	</body>
 </html>

@@ -61,4 +61,8 @@ public interface DictionaryMapper {
 	Map<String,Object> getZKInfo(Map<String, Object> params);
 
     Map<String,Object> getYYFJF(Map<String, Object> params);
+
+	List<String> getComplaints();
+
+	List<String> getCancelResons();
 }

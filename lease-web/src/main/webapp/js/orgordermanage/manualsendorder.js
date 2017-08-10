@@ -6,6 +6,13 @@ $(function () {
 		$("#manuTitle").text("更换司机");
 		$("#orderreasonTextareaLabel").text("更换原因");
 		$("#orderreasonTextarea").attr("placeholder", "填写更换原因");
+
+        var html = '<option value="">请选择</option>';
+        html += '<option value="1">乘客</option>';
+        html += '<option value="2">司机</option>';
+        html += '<option value="3">客服</option>';
+        html += '<option value="4">平台</option>';
+        $("#dutyparty").html(html);
 	}
 	
 	initOrder();
@@ -18,7 +25,7 @@ $(function () {
  */
 function initOrder() {
 	var data = {orderno: orderObj.orderno};
-	$.get($("#baseUrl").val() + "OrderManage/GetOrgWaitingOrderByOrderno?datetime=" + new Date().getTime(), data, function (result) {
+	$.get($("#baseUrl").val() + "OrderManage/GetOrgOrderByOrderno?datetime=" + new Date().getTime(), data, function (result) {
 		if (result) {
 			currentOrder = result;
 			
@@ -27,7 +34,7 @@ function initOrder() {
 			} else {
 				$("#xdr").text(result.nickname + " " + result.account);
 			}
-			$("#ycsj").text(timeStamp2String(result.usetime));
+			$("#ycsj").text(dateFtt(result.usetime, "yyyy-MM-dd hh:mm"));
 			$("#xdcx").text(result.selectedmodelname);
 			bindMap(result);
 			$("#sjselect").val("0");
@@ -35,7 +42,6 @@ function initOrder() {
 				$("#sjselect").attr("disabled", true);
 			}
 			initDriverDataGrid();
-			
 		} else {
 			
 		}
@@ -189,10 +195,147 @@ function initDriverDataGrid() {
 				map.addOverlay(marker);
 				initMarker(marker, point, driver, opts);
         	}
+            if(null == result || null == result.aaData || result.aaData.length == 0) {
+                $("#sendFail").show();
+            } else {
+                $("#sendFail").hide();
+            }
         }
     };
     
 	dataGrid = renderGrid(gridObj);
+}
+
+/**
+ * 派单失败
+ */
+function sendFail() {
+    showObjectOnForm("cancelpartyForm", null);
+    //查询取消费用
+    var data = {
+        orderno: currentOrder.orderno,
+        ordertype: currentOrder.ordertype,
+        usetype: currentOrder.usetype
+    };
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: $("#baseUrl").val() + "OrderManage/GetCancelPriceDetail",
+        data: JSON.stringify(data),
+        contentType: "application/json; charset=utf-8",
+        async: false,
+        success: function (result) {
+            if (result.status == 0) {
+                $("#identifyingHide").val(result.identifying);
+                var pricereason = result.pricereason;
+                if(pricereason == 5 || pricereason == 6 || pricereason == 7) {
+                    $("#cancelDetail").html(getCancelShowTable(result));
+                }
+                $("#cancelpartyFormDiv").show();
+            } else {
+                toastr.error(result.message, "提示");
+            }
+        }
+    });
+}
+
+/**
+ * 关闭取消弹框
+ */
+function cancelpartyFormDivCanel() {
+    $("#cancelpartyFormDiv").hide();
+}
+
+function saveCancelparty(){
+    var form = $("#cancelpartyForm");
+    if(!form.valid()) {
+        return;
+    }
+
+    var orderno = $("#ordernoHide").val();
+    var ordertype = $("#ordertypeHide").val();
+    var usetype = $("#usetypeHide").val();
+    var identifying = $("#identifyingHide").val();
+
+    var data = {
+        orderno: orderno,
+        ordertype: ordertype,
+        usetype: usetype,
+        identifying: identifying,
+        dutyparty: $("#dutyparty").val(),
+        cancelreason: $("#cancelreason").val()
+    };
+
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: $("#baseUrl").val() + "OrderManage/CancelOrgOrder",
+        data: JSON.stringify(data),
+        contentType: "application/json; charset=utf-8",
+        async: false,
+        success: function (result) {
+            if (result.status == "success") {
+                toastr.success(message, "提示");
+                var url;
+                if(orderObj.type == "1") {
+                    url = $("#baseUrl").val() + "OrderManage/OrgOrderIndex";
+                } else {
+                    url = $("#baseUrl").val() + "OrderManage/OrgCurrentOrderIndex";
+                }
+                toastr.options.onHidden = function() {
+                    window.location.href = url;
+                }
+            } else {
+                toastr.error(message, "提示");
+            }
+        }
+    });
+}
+
+/**
+ * 根据责任方对应显示取消原因
+ */
+function showCancelreason() {
+    var dutyparty = $("#dutyparty").val();
+
+    var html = '';
+    if(dutyparty == 1) {
+        html += '<option value="">请选择</option>';
+        html += '<option value="1">不再需要用车</option>';
+        html += '<option value="2">乘客迟到违约</option>';
+    } else if(dutyparty == 2) {
+        html += '<option value="">请选择</option>';
+        html += '<option value="3">司机迟到违约</option>';
+        html += '<option value="4">司机不愿接乘客</option>';
+    } else if(dutyparty == 3) {
+        html += '<option value="5">业务操作错误</option>';
+    } else if(dutyparty == 4) {
+        html += '<option value="6">暂停供车服务</option>';
+    } else {
+        html += '<option value="">请选择</option>';
+        html += '<option value="1">不再需要用车</option>';
+        html += '<option value="5">业务操作错误</option>';
+        html += '<option value="6">暂停供车服务</option>';
+    }
+    $("#cancelreason").html(html);
+}
+
+/**
+ * 根据取消原因对应显示责任方
+ */
+function showDutyparty() {
+    var cancelreason = $("#cancelreason").val();
+    if(cancelreason == 1 || cancelreason == 2) {
+        $("#dutyparty").val(1);
+    } else if(cancelreason == 3 || cancelreason == 4) {
+        $("#dutyparty").val(2);
+    } else if(cancelreason == 5) {
+        $("#dutyparty").val(3);
+    } else if(cancelreason == 6) {
+        $("#dutyparty").val(4);
+    }
+    showCancelreason();
+    $("#cancelreason").val(cancelreason);
 }
 
 function initMarker(marker, point, driver, opts) {
@@ -235,10 +378,6 @@ function initMarker(marker, point, driver, opts) {
 		var infoWindow = new BMap.InfoWindow(htmlArr.join(""), opts);
 		this.openInfoWindow(infoWindow, point);
 	});
-}
-
-function renderCarPoint() {
-	
 }
 
 /**

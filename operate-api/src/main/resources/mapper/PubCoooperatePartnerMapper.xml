@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.operate.mapper.PubCoooperatePartnerMapper">
+    <select id="queryPubCoooperateData" parameterType="com.szyciov.op.param.pubCoooperatePartner.QueryPubCoooperateParam" resultType="com.szyciov.op.vo.pubCoooperatePartner.QueryPubCoooperateVo">
+        select
+            t1.id,
+            le.name leasecompanyText,
+            coono,
+            cootype,
+            ifnull((select count(1) from pub_cooresource t2 where t1.id=t2.coooperateid and t2.status=1), 0) openresource,
+            servicetype,
+            coostate,
+            case when ifnull(coostate,2)=0 or ifnull(coostate,2) =2 then '/'
+            else concat(DATE_FORMAT(t1.coostarttime, '%Y.%m.%d'),'-',DATE_FORMAT(t1.cooendtime, '%Y.%m.%d')) end validatetime,
+            DATE_FORMAT(reviewtime, '%Y-%m-%d') reviewtime,
+            case when ifnull(coostate,2)=2 then reviewtext else '/' end reviewtext,
+            DATE_FORMAT(applicationtime, '%Y-%m-%d') applicationtime
+        from pub_coooperate t1
+        inner join le_leasescompany le on le.id=t1.leasecompanyid
+        where 1=1
+            and t1.companyid = #{companyid}
+            and t1.status=1
+            <if test='null != coono and "" != coono'>
+                and instr(t1.coono, #{coono}) > 0
+            </if>
+            <if test='null != leasecompanyid and "" != leasecompanyid'>
+                and t1.leasecompanyid = #{leasecompanyid}
+            </if>
+            <if test='null != servicetype'>
+                and t1.servicetype = #{servicetype}
+            </if>
+            <if test='null != coostate and "" != coostate'>
+                and t1.coostate = #{coostate}
+            </if>
+            <if test='null != applicationtimeStart and "" != applicationtimeStart'>
+                and t1.applicationtime >= #{applicationtimeStart}
+            </if>
+            <if test='null != applicationtimeEnd and "" != applicationtimeEnd'>
+                and t1.applicationtime &#60; #{applicationtimeEnd}
+            </if>
+            order by applicationtime desc
+    </select>
+
+    <select id="queryLeasecompany" parameterType="com.szyciov.op.param.pubCoooperatePartner.QueryPubCoooperatePartnerLeaseCompanyParam" resultType="com.szyciov.entity.Select2Entity">
+      select distinct
+        coo.leasecompanyid id,
+        le.shortname text
+      from pub_coooperate coo
+      inner join le_leasescompany le on coo.leasecompanyid=le.id
+      where coo.status=1 and coo.companyid = #{companyid}
+    <if test='null != keyword and "" != keyword'>
+        and instr(shortname, #{keyword}) > 0
+    </if>
+      order by le.name asc
+    </select>
+    <update id = "reviewLeasecompany" parameterType="com.szyciov.op.param.pubCoooperatePartner.ReviewLeasecompanyParam">
+        update pub_coooperate
+            set coostate=#{coostate},
+                coostarttime=#{coostarttime},
+                cooendtime=#{cooendtime},
+                updater=#{updater},
+                updatetime=#{updatetime},
+                reviewtext=#{reviewtext},
+                reviewtime=#{reviewtime}
+        where id=#{id}
+    </update>
+    <update id = "disableCoooperate" parameterType="com.szyciov.op.param.pubCoooperatePartner.DisableCoooperateParam">
+        update pub_coooperate
+        set coostate=#{coostate},
+        updater=#{updater},
+        updatetime=#{updatetime},
+        cooendtime=#{cooendtime}
+        where id=#{id}
+    </update>
+
+    <select id="queryCooagreementView" parameterType="java.lang.String" resultType="com.szyciov.op.vo.pubCoooperatePartner.QueryCooagreementViewVo">
+        select cooname,
+              coocontent
+        from pub_coooperate t1
+        inner join pub_cooagreement t2 on t1.cooagreementid=t2.id
+        where t2.status=1
+            and t1.id=#{coooperateId}
+            order by t2.updatetime desc
+            limit 1
+    </select>
+    <select id="queryLeaseCompanyAdminByCoooId" parameterType="java.lang.String" resultType="com.szyciov.op.vo.pubCoooperatePartner.QueryLeaseCompanyAdminVo">
+       select le.telphone,
+		le.id leid,cootype,
+        case cooo.servicetype when 0  then '网约车' when 1 then '出租车'  end servicetype,
+        cooo.reviewtext
+        from pub_coooperate cooo
+        inner join le_user le on le.leasescompanyid=cooo.leasecompanyid
+        where 1=1 and specialstate='1' and (le.expirestime > now() or le.expirestime is null) and le.status=1
+        and cooo.id=#{coooid}
+    </select>
+    <insert id="insertLeUserNews" >
+        insert into
+          le_usernews (id, userid, `type`, content, newsstate, createtime, updatetime, status)
+        values
+   ( #{id}, #{userId}, #{type},#{content}, #{newsState}, #{createTime},#{updateTime}, #{status} )
+
+    </insert>
+
+</mapper>

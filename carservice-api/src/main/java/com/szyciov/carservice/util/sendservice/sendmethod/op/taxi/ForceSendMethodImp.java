@@ -31,6 +31,7 @@ import com.szyciov.entity.PubDriver;
 import com.szyciov.enums.DriverEnum;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.PlatformTypeByDb;
+import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.enums.SendRulesEnum;
 import com.szyciov.enums.VehicleEnum;
 import com.szyciov.op.entity.OpOrder;
@@ -40,6 +41,7 @@ import com.szyciov.org.entity.OrgOrder;
 import com.szyciov.param.SendOrderDriverQueryParam;
 import com.szyciov.util.AppMessageUtil;
 import com.szyciov.util.BaiduUtil;
+import com.szyciov.util.GsonUtil;
 import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PushObjFactory;
 import com.szyciov.util.SMMessageUtil;
@@ -601,6 +603,11 @@ public class ForceSendMethodImp extends AbstractSendMethod{
 				//String content = drivername+"师傅，您好！客服为您指派了一个"+usertimestr+"的新订单，请登录司机端查看已接订单或咨询"+servicephone+"("+companyname+")";
 				String content = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.message.ordermessage.changedriver.new", drivername,usertimestr,servicephone);
 				SMMessageUtil.send(dirphone, content);
+
+
+				//设置最后一次发送时间
+				orderinfo.setLastsendtime(new Date(System.currentTimeMillis()+(10*1000)));
+				JedisUtil.setString(RedisKeyEnum.DRIVER_TRAVEL_REMINDER.code+orderinfo.getOrderno()+"_"+orderinfo.getUsetype(),StringUtil.parseBeanToJSON(orderinfo));
 			}
 		}
 	}

@@ -49,5 +49,10 @@ public class OrderExportController {
 	public List<OrderExportParam> exportOrders(@RequestBody OrderExportEntity orderExportEntity)  {
 		return orderExportService.exportOrders(orderExportEntity);
 	}
+	@RequestMapping(value = "api/OrderExport/GetLeasescompany", method = RequestMethod.POST)
+	@ResponseBody
+	public List<Map<String, Object>> getLeasescompany(@RequestBody OrderExportEntity orderExportEntity)  {
+		return orderExportService.getLeasescompany(orderExportEntity);
+	}
 	
 }

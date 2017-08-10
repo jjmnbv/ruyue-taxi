@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.PubPremiumRuleMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+<select id="getPubPremiumRuleByQueryList" resultType="PubPremiumParam" parameterType="PubPremiumParam">
+     select t.*,(@i:=@i+1) as code 
+     from(
+                 select  pub_premium_rule.id,
+                         pub_premium_rule.isoperated,
+                          pub_cityaddr.city as citycode,
+                         IF(pub_premium_rule.cartype='0','网约车','出租车') as cartype ,
+						 IF(STR_TO_DATE(pub_premium_rule.enddt,'%Y-%m-%d')<![CDATA[<]]>STR_TO_DATE(NOW(),'%Y-%m-%d'),"已过期",IF(pub_premium_rule.ruletype = '0','按星期','按日期')) as ruletype,
+						 pub_premium_rule.rulename,
+						 IF(pub_premium_rule.rulestatus='0','禁用','启用') as rulestatus,
+						 (if (pub_premium_rule.ruletype = '0','永久', CONCAT(DATE_FORMAT(pub_premium_rule.startdt,'%Y-%m-%d'),'至',DATE_FORMAT(pub_premium_rule.enddt,'%Y-%m-%d')))) as isperpetual,
+						 (select nickname from op_user where id = pub_premium_rule.updater) as updater
+				from pub_premium_rule,pub_cityaddr 
+				where pub_premium_rule.citycode = pub_cityaddr.id
+				and pub_premium_rule.platformtype = 1
+				AND pub_premium_rule.status = 1
+				and pub_premium_rule.leasescompanyid = #{leasescompanyid}
+			 <if test="startdt != null and startdt != ''">
+	            and STR_TO_DATE(pub_premium_rule.startdt,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startdt},'%Y-%m-%d')
+	         </if>
+		     <if test="enddt != null and enddt != ''">
+		        and STR_TO_DATE(pub_premium_rule.enddt,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{enddt},'%Y-%m-%d')
+		     </if>
+		     <if test="cartype != null and cartype != ''">
+	           and  pub_premium_rule.cartype = #{cartype}
+		     </if>
+		     <if test="ruletype != null and ruletype != ''">
+		        and pub_premium_rule.ruletype = #{ruletype}
+		     </if>
+		     <if test="rulestatus != null and rulestatus != ''">
+		       and pub_premium_rule.rulestatus = #{rulestatus}
+		     </if>
+		     <if test="rulename != null and rulename != ''">
+		       and pub_premium_rule.rulename like "%"#{rulename}"%"
+	         </if>
+	         <if test="citycode != null and citycode != ''">
+		       and pub_premium_rule.citycode = #{citycode}
+	         </if>
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getPubPremiumRuleByQueryCount" resultType="int" parameterType="PubPremiumParam">
+    select count(*) from(
+                   select pub_premium_rule.id,
+                         pub_cityaddr.city as citycode,
+                         IF(pub_premium_rule.cartype='0','网约车','出租车') as cartype ,
+						 IF(pub_premium_rule.ruletype = '0','按星期','按日期') as ruletype,
+						 pub_premium_rule.rulename,
+						 IF(pub_premium_rule.rulestatus='0','禁用','启用') as rulestatus,
+						 if(pub_premium_rule.isperpetual='0',CONCAT(DATE_FORMAT(pub_premium_rule.startdt,'%Y/%m/%d'),'-',DATE_FORMAT(pub_premium_rule.enddt,'%Y/%m/%d')),'永久') as isperpetual,
+						 (select nickname from op_user where id = pub_premium_rule.updater) as updater
+					from pub_premium_rule,pub_cityaddr 
+					where pub_premium_rule.citycode = pub_cityaddr.id
+					and pub_premium_rule.platformtype = 1
+					AND pub_premium_rule.status = 1
+					and pub_premium_rule.leasescompanyid = #{leasescompanyid}
+				<if test="startdt != null and startdt != ''">
+	            and STR_TO_DATE(pub_premium_rule.startdt,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startdt},'%Y-%m-%d')
+	            </if>
+			     <if test="enddt != null and enddt != ''">
+			        and STR_TO_DATE(pub_premium_rule.enddt,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{enddt},'%Y-%m-%d')
+			     </if>
+			     <if test="cartype != null and cartype != ''">
+		           and  pub_premium_rule.cartype = #{cartype}
+			     </if>
+			     <if test="ruletype != null and ruletype != ''">
+			        and pub_premium_rule.ruletype = #{ruletype}
+			     </if>
+			     <if test="rulestatus != null and rulestatus != ''">
+			       and pub_premium_rule.rulestatus = #{rulestatus}
+			     </if>
+			     <if test="rulename != null and rulename != ''">
+			       and pub_premium_rule.rulename = #{rulename}
+		         </if>
+		         <if test="citycode != null and citycode != ''">
+			       and pub_premium_rule.citycode = #{citycode}
+		         </if>
+           )t
+    </select>
+    <select id="getCity" resultType="PubDictionary">
+     select 
+		 distinct(pub_premium_rule.citycode) as id,
+		 pub_cityaddr.city as text
+	from pub_premium_rule,pub_cityaddr 
+	where pub_premium_rule.citycode = pub_cityaddr.id
+	and  pub_premium_rule.platformtype = 1
+    </select>
+     <select id="getById" resultType="PubPremiumParam" parameterType="PubPremiumParam">
+      select * from pub_premium_rule where id = #{id}
+    </select>
+    <select id="ruleConflict" resultType="int" parameterType="PubPremiumParam">
+              SELECT COUNT(*) from ((SELECT *
+				FROM
+					pub_premium_rule
+				WHERE
+					citycode = #{citycode}
+				AND cartype = #{cartype}
+				AND id != #{id}
+				AND status = 1
+				AND STR_TO_DATE(startdt,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{startdt},'%Y-%m-%d')
+				AND STR_TO_DATE(enddt,'%Y-%m-%d') <![CDATA[ >= ]]> STR_TO_DATE(#{startdt},'%Y-%m-%d'))
+                 UNION
+				(SELECT
+					*
+				FROM
+					pub_premium_rule
+				WHERE
+					citycode = #{citycode}
+				AND cartype = #{cartype}
+				AND id != #{id}
+				AND status = 1
+				AND STR_TO_DATE(startdt,'%Y-%m-%d') <![CDATA[ <= ]]> STR_TO_DATE(#{enddt},'%Y-%m-%d')
+				AND STR_TO_DATE(enddt,'%Y-%m-%d') <![CDATA[ >= ]]>STR_TO_DATE(#{enddt},'%Y-%m-%d')))t
+    </select>
+    <update id="updateStatus" parameterType="PubPremiumParam">
+     UPDATE pub_premium_rule SET rulestatus = 1,isoperated = 1 where id = #{id}
+    </update>
+    <update id="ruleConflictOk" parameterType="PubPremiumParam">
+     UPDATE pub_premium_rule SET rulestatus = 0,isoperated = 1 where id = #{id}
+    </update>
+    <insert id="insertIntoHistory" parameterType="PubPremiumHistory">
+      INSERT INTO `pub_premium_rule_operation`
+	 (id,premiumruleid,ruletype,operationtype,createtime,updatetime,creater ,updater,status)
+   VALUES
+	(
+		#{id},
+		#{premiumruleid},
+		#{ruletype},
+		#{operationtype},
+		now(),
+		now(),
+		#{creater},
+		#{updater},
+		1
+	);
+    </insert>
+    <select id="getCityId" parameterType="String" resultType = "String">
+    select id from pub_cityaddr where city = #{cityName}
+    </select >
+    <insert id="insertPubPremiumRule" parameterType="PubPremiumRule">
+    INSERT INTO `pub_premium_rule`
+	 (id,citycode,rulename,cartype,ruletype,rulestatus,startdt,enddt,isperpetual,isoperated,platformtype,leasescompanyid,
+	 createtime,updatetime,creater,updater,status)
+   VALUES
+	(
+		#{id},
+		#{citycode},
+		#{rulename},
+		#{cartype},
+		#{ruletype},
+		#{rulestatus},
+		#{startdt},
+		#{enddt},
+		#{isperpetual},
+		#{isoperated},
+		#{platformtype},
+		#{leasescompanyid},
+		now(),
+		now(),
+		#{creater},
+		#{updater},
+		#{status}
+	);
+    </insert>
+    <insert id="inserWeek" parameterType="PubPremiumRuleWeekdetail">
+     INSERT INTO `pub_premium_rule_weekdetail`
+	 (id,premiumruleid,weekday,startdt,enddt,premiumrate,createtime,updatetime,creater,updater,status)
+   VALUES
+	(
+		#{id},
+		#{premiumruleid},
+		#{weekday},
+		#{startdt},
+		#{enddt},
+		#{premiumrate},
+		 now(),
+		 now(),
+		#{creater},
+		#{updater},
+		#{status}
+	);
+    </insert>
+     <insert id="insertDate" parameterType="PubPremiumRuleDatedetail">
+     INSERT INTO `pub_premium_rule_datedetail`
+	 (id,premiumruleid,startdate,enddate,starttime,endtime,premiumrate,createtime,updatetime,creater,updater,status)
+   VALUES
+	(
+		#{id},
+		#{premiumruleid},
+		#{startdate},
+		#{enddate},
+		#{starttime},
+		#{endtime},
+		#{premiumrate},
+		 now(),
+		 now(),
+		#{creater},
+		#{updater},
+		#{status}
+	);
+    </insert>
+    <select id="getPubPremiumRuleDetail" resultType="PubPremiumDetail" parameterType="PubPremiumDetail">
+     select t.*,(@i:=@i+1) as code 
+     from(
+          SELECT
+	id,premiumruleid,(CASE when weekday = 1 then "星期一" when weekday = 2 then "星期二" when weekday = 3 then "星期三" when weekday = 4 then "星期四" when weekday = 5 then "星期五" when weekday = 6 then "星期六" else  "星期日" end) as weekday,
+   CONCAT(startdt,'-',enddt) as theTime,premiumrate,updatetime
+FROM
+	pub_premium_rule_weekdetail
+WHERE
+	premiumruleid = #{id}
+ORDER BY
+	pub_premium_rule_weekdetail.weekday,
+	startdt 
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getPubPremiumRuleDetailCount" resultType="int" parameterType="PubPremiumDetail">
+    select count(*) from(
+                   select * from pub_premium_rule_weekdetail where premiumruleid = #{id} ORDER BY weekday,startdt
+           )t
+    </select>
+    <select id="getDetailDateDataList" resultType="PubPremiumDetail" parameterType="PubPremiumDetail">
+     select t.*,(@i:=@i+1) as code 
+     from(
+          SELECT
+      id,premiumruleid, CONCAT(starttime,'-',endtime) as theTime,premiumrate,updatetime,
+			CONCAT(DATE_FORMAT(startdate,'%Y/%m/%d'),'-',DATE_FORMAT(enddate,'%Y/%m/%d'))as weekday
+		FROM
+			pub_premium_rule_datedetail
+        WHERE
+	        premiumruleid = #{id}
+        ORDER BY
+	   starttime 
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getDetailDateDataCount" resultType="int" parameterType="PubPremiumDetail">
+    select count(*) from(
+                    SELECT
+      id,premiumruleid, CONCAT(starttime,'-',endtime) as theTime,premiumrate,updatetime,
+			CONCAT(DATE_FORMAT(startdate,'%Y/%m/%d'),'-',DATE_FORMAT(enddate,'%Y/%m/%d'))as weekday
+		FROM
+			pub_premium_rule_datedetail
+        WHERE
+	        premiumruleid = #{id}
+        ORDER BY
+	   starttime 
+           )t
+    </select>
+   <select id="ifHavePremiumRule" resultType="int" parameterType="PubPremiumAdd">
+    select count(*) from pub_premium_rule where citycode = (select pub_cityaddr.id from pub_cityaddr where pub_cityaddr.city = #{cityname}) and cartype = #{cartype} and ruletype = #{ruletype} and pub_premium_rule.status = 1
+    </select>
+    <select id="getHistoryDataList" resultType="PubPremiumHistory" parameterType="PubPremiumHistory">
+     select t.*,(@i:=@i+1) as code 
+     from(
+			SELECT
+			    id,
+				premiumruleid,
+        IF(ruletype = '0','按星期','按日期') as ruletype,
+        DATE_FORMAT(updatetime,'%Y-%m-%d') updatetime,
+        (select nickname from op_user where id = op.creater) as creater,
+        (CASE when operationtype = 0 then '启用' when operationtype = 1 then '禁用'  else '修改' end) operationtype
+			FROM
+				pub_premium_rule_operation op
+			WHERE
+				op.premiumruleid = #{id}
+			AND op.`status` = 1
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getHistoryDataCount" resultType="int" parameterType="PubPremiumHistory">
+    select count(*) from(
+                  SELECT
+				premiumruleid,
+        IF(ruletype = '0','按星期','按日期') as ruletype,
+        DATE_FORMAT(updatetime,'%Y-%m-%d'),
+        creater,
+        (CASE when operationtype = 0 then '启用' when operationtype = 1 then '禁用'  else '修改' end) operationtype
+			FROM
+				pub_premium_rule_operation op
+			WHERE
+				op.premiumruleid = #{id}
+			AND op.`status` = 1
+           )t
+    </select>
+    <select id="getWeek" resultType="PubPremiumDetail" parameterType="String">
+          SELECT
+				id,premiumruleid,weekday,startdt,enddt,premiumrate,updatetime
+			FROM
+				pub_premium_rule_weekdetail
+			WHERE
+				premiumruleid = #{id}
+			ORDER BY
+				pub_premium_rule_weekdetail.weekday,
+				startdt 
+   </select>
+    <select id="getDate" resultType="PubPremiumDetail" parameterType="String">
+          SELECT
+      id,premiumruleid,starttime as startdt,endtime as enddt,premiumrate,updatetime,
+	   DATE_FORMAT(startdate,'%Y-%m-%d') startTime,
+	   DATE_FORMAT(enddate,'%Y-%m-%d') endTime
+		FROM
+			pub_premium_rule_datedetail
+        WHERE
+	        premiumruleid = #{id}
+        ORDER BY
+	   starttime 
+   </select>
+   <select id="modify" resultType="PubPremiumModify" parameterType="PubPremiumParam">
+   select pub_premium_rule.id,city as citycode,rulename,cartype,ruletype,DATE_FORMAT(pub_premium_rule.startdt,'%Y-%m-%d') as startdt,
+	DATE_FORMAT(pub_premium_rule.enddt,'%Y-%m-%d') as enddt 
+   from pub_premium_rule,pub_cityaddr
+   where pub_premium_rule.citycode = pub_cityaddr.id and pub_premium_rule.id = #{id}
+   </select>
+    <insert id="insertWeekHistory" parameterType="PubPremiumDetail">
+     INSERT INTO `pub_premium_rule_weekdetail_history`
+	 (id,operationid,weekday,startdt,enddt,premiumrate,createtime,updatetime,creater,updater,status)
+   VALUES
+	(
+		uuid(),
+		#{id},
+		#{weekday},
+		#{startdt},
+		#{enddt},
+		#{premiumrate},
+		 now(),
+		 now(),
+		#{creater},
+		#{updater},
+		1
+	);
+    </insert>
+      <insert id="insertDateHistory" parameterType="PubPremiumDetail">
+     INSERT INTO `pub_premium_rule_datedetail_history`
+	 (id,operationid,startdate,enddate,starttime,endtime,premiumrate,createtime,updatetime,creater,updater,status)
+   VALUES
+	(
+		uuid(),
+		#{id},
+		#{startTime},
+		#{endTime},
+		#{startdt},
+		#{enddt},
+		#{premiumrate},
+		 now(),
+		 now(),
+		#{creater},
+		#{updater},
+		1
+	);
+    </insert>
+    <select id="getDateSame" resultType="int" parameterType="PubPremiumAdd">
+   select count(*)
+   from pub_premium_rule
+   WHERE citycode = #{cityname} and cartype= #{cartype} and DATE_FORMAT(pub_premium_rule.startdt,'%Y-%m-%d') = DATE_FORMAT(#{startdate},'%Y-%m-%d')
+    and DATE_FORMAT(pub_premium_rule.enddt,'%Y-%m-%d') = DATE_FORMAT(#{enddate},'%Y-%m-%d')
+   </select>
+  <delete id="deleteDate" parameterType="String">
+		delete from pub_premium_rule
+		WHERE
+		id = #{id}
+	</delete>
+	<delete id="deletDateDetail" parameterType="String">
+		delete from pub_premium_rule_datedetail
+		WHERE
+		premiumruleid = #{id}
+	</delete>
+	<select id="getHistorydetailList" resultType="PubPremiumDetail" parameterType="pubPremiumHistory">
+     select t.*,(@i:=@i+1) as code 
+     from(
+          SELECT
+	id,operationid,(CASE when weekday = 1 then "星期一" when weekday = 2 then "星期二" when weekday = 3 then "星期三" when weekday = 4 then "星期四" when weekday = 5 then "星期五" when weekday = 6 then "星期六" else  "星期日" end) as weekday,
+   CONCAT(startdt,'-',enddt) as theTime,premiumrate,DATE_FORMAT(updatetime,'%Y/%m/%d')
+FROM
+	pub_premium_rule_weekdetail_history
+WHERE
+	operationid = #{id}
+ORDER BY
+	pub_premium_rule_weekdetail_history.weekday,
+	startdt 
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getHistorydetailCount" resultType="int" parameterType="pubPremiumHistory">
+    select count(*) from(
+                   select * from pub_premium_rule_weekdetail_history where operationid = #{id} ORDER BY weekday,startdt
+           )t
+    </select>
+    <select id="getHistorydetailDateList" resultType="PubPremiumDetail" parameterType="pubPremiumHistory">
+     select t.*,(@i:=@i+1) as code 
+     from(
+         SELECT
+      id,operationid, CONCAT(starttime,'-',endtime) as theTime,premiumrate,DATE_FORMAT(updatetime,'%Y/%m/%d'),
+			CONCAT(DATE_FORMAT(startdate,'%Y/%m/%d'),'-',DATE_FORMAT(enddate,'%Y/%m/%d'))as weekday
+		FROM
+			pub_premium_rule_datedetail_history
+        WHERE
+	        operationid = #{id}
+        ORDER BY
+	   starttime 
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getHistorydetaiDatelCount" resultType="int" parameterType="pubPremiumHistory">
+    select count(*) from(
+                   SELECT
+      id,operationid, CONCAT(starttime,'-',endtime) as theTime,premiumrate,updatetime,
+			CONCAT(DATE_FORMAT(startdate,'%Y/%m/%d'),'-',DATE_FORMAT(enddate,'%Y/%m/%d'))as weekday
+		FROM
+			pub_premium_rule_datedetail_history
+        WHERE
+	        operationid = #{id}
+        ORDER BY
+	   starttime 
+           )t
+    </select>
+    <delete id="deleteWeek" parameterType="String">
+		delete from pub_premium_rule
+		WHERE
+		id = #{id}
+	</delete>
+	<delete id="deletWeekDetail" parameterType="String">
+		delete from pub_premium_rule_weekdetail
+		WHERE
+		premiumruleid = #{id}
+	</delete>
+</mapper>

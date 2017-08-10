@@ -582,8 +582,10 @@ public class OpCarGrabSingleSendMethodImp extends AbstractSendMethod{
 		List<PubDriver> valiabledrivers = new ArrayList<PubDriver>();
 		for(int i=0;i<alreadydrivers.size();i++){
 			PubDriver driver = alreadydrivers.get(i);
-			if(canPush2Driver(driver, orderinfo)){
-				valiabledrivers.add(driver);
+			if(!driver.getWorkstatus().equals(DriverEnum.WORK_STATUS_SERVICE.code)) {
+				if (canPush2Driver(driver, orderinfo)) {
+					valiabledrivers.add(driver);
+				}
 			}
 		}
 		alreadydrivers.clear();

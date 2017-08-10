@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.PubCouponRuleMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<!-- 查询发放规则信息 -->
+	<select id="getPubCouponRuleListByQuery" resultType="PubCouponRule" parameterType="PubCouponRuleQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pub_coupon_rule.id,pub_coupon_rule.name,pub_coupon_rule.ruletype,pub_coupon_rule.rulecontent,pub_coupon_rule.createtime,pub_coupon_rule.updatetime,
+	           (select count(*) from pub_coupon_rule_history where pub_coupon_rule_history.ruleidref = pub_coupon_rule.id and pub_coupon_rule_history.platformtype = 0 and pub_coupon_rule_history.status = 1) as historycount
+	    from pub_coupon_rule
+	    where pub_coupon_rule.status = 1
+	      and pub_coupon_rule.platformtype = 0
+	    <if test="ruletype != null and ruletype != ''">
+	        <if test="ruletype == '15'.toString()">
+	            and (pub_coupon_rule.ruletype = '1' or pub_coupon_rule.ruletype = '5')
+	        </if> 
+	        <if test="ruletype != '15'.toString()">
+	            and pub_coupon_rule.ruletype = #{ruletype}
+	        </if>
+	    </if>
+	    <if test="lecompanyid != null and lecompanyid != ''">
+	        and pub_coupon_rule.lecompanyid = #{lecompanyid} 
+	    </if>
+	    order by pub_coupon_rule.createtime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getPubCouponRuleListCountByQuery" resultType="int" parameterType="PubCouponRuleQueryParam">
+	    select count(*)
+	    from pub_coupon_rule
+	    where pub_coupon_rule.status = 1
+	      and pub_coupon_rule.platformtype = 0
+	    <if test="ruletype != null and ruletype != ''">
+	        <if test="ruletype == '15'.toString()">
+	            and (pub_coupon_rule.ruletype = '1' or pub_coupon_rule.ruletype = '5')
+	        </if> 
+	        <if test="ruletype != '15'.toString()">
+	            and pub_coupon_rule.ruletype = #{ruletype}
+	        </if>
+	    </if>
+	    <if test="lecompanyid != null and lecompanyid != ''">
+	        and pub_coupon_rule.lecompanyid = #{lecompanyid} 
+	    </if>
+	</select>
+	
+	<!-- 新建发放规则 -->
+	<insert id="createPubCouponRule" parameterType="PubCouponRule">
+		insert into pub_coupon_rule(id,name,ruletype,ruletarget,rechargemoney,consumetype,cycleday,consumefrequencytype,consumehightimes,consumelowtimes,consumemoneysingleable,consumemoneysingelfull,consumemoneycycleable,consumemoneycycletype,consumemoneycyclefull,consumemoneycyclelow,rulecontent,lecompanyid,platformtype,updatetime,createtime,updater,creater,status)
+		values(#{id},#{name},#{ruletype},#{ruletarget},#{rechargemoney},#{consumetype},#{cycleday},#{consumefrequencytype},#{consumehightimes},#{consumelowtimes},#{consumemoneysingleable},#{consumemoneysingelfull},#{consumemoneycycleable},#{consumemoneycycletype},#{consumemoneycyclefull},#{consumemoneycyclelow},#{rulecontent},#{lecompanyid},0,now(),now(),#{updater},#{creater},1)
+	</insert>
+
+	<!-- 修改发放规则 -->
+	<update id="updatePubCouponRule"  parameterType="PubCouponRule">
+		update pub_coupon_rule 
+		set updatetime = now()
+		  , updater = #{updater}
+		<if test="name != null">
+			, name = #{name} 
+		</if>
+		<if test="ruletype != null">
+			, ruletype = #{ruletype} 
+		</if>
+		<if test="ruletarget != null">
+			, ruletarget = #{ruletarget} 
+		</if>
+		<if test="rechargemoney != null">
+			, rechargemoney = #{rechargemoney} 
+		</if>
+		<if test="consumetype != null">
+			, consumetype = #{consumetype} 
+		</if>
+			, cycleday = #{cycleday} 
+		<if test="consumefrequencytype != null">
+			, consumefrequencytype = #{consumefrequencytype} 
+		</if>
+			, consumehightimes = #{consumehightimes} 
+			, consumelowtimes = #{consumelowtimes} 
+		<if test="consumemoneysingleable != null">
+			, consumemoneysingleable = #{consumemoneysingleable} 
+		</if>
+			, consumemoneysingelfull = #{consumemoneysingelfull} 
+		<if test="consumemoneycycleable != null">
+			, consumemoneycycleable = #{consumemoneycycleable} 
+		</if>
+		<if test="consumemoneycycletype != null">
+			, consumemoneycycletype = #{consumemoneycycletype} 
+		</if>
+			, consumemoneycyclefull = #{consumemoneycyclefull} 
+			, consumemoneycyclelow = #{consumemoneycyclelow} 
+		<if test="rulecontent != null">
+			, rulecontent = #{rulecontent} 
+		</if>
+		<if test="lecompanyid != null">
+			, lecompanyid = #{lecompanyid} 
+		</if>
+		where id = #{id}
+	</update>
+	
+	<!-- 新增优惠券规则历史 -->
+	<insert id="createPubCouponRuleHistory" parameterType="PubCouponRuleHistory">
+		insert into pub_coupon_rule_history(id,ruleidref,name,ruletype,ruletarget,rechargemoney,consumetype,cycleday,consumefrequencytype,consumehightimes,consumelowtimes,consumemoneysingleable,consumemoneysingelfull,consumemoneycycleable,consumemoneycycletype,consumemoneycyclefull,consumemoneycyclelow,rulecontent,lecompanyid,platformtype,updatetime,createtime,updater,creater,status)
+		select #{id},id,name,ruletype,ruletarget,rechargemoney,consumetype,cycleday,consumefrequencytype,consumehightimes,consumelowtimes,consumemoneysingleable,consumemoneysingelfull,consumemoneycycleable,consumemoneycycletype,consumemoneycyclefull,consumemoneycyclelow,rulecontent,lecompanyid,0,now(),now(),#{updater},#{updater},1
+		from pub_coupon_rule
+		where id = #{ruleidref}
+	</insert>
+	
+	<!-- 查找历史规则记录 -->
+	<select id="getPubCouponRuleHistoryListByQuery" resultType="PubCouponRuleHistory" parameterType="PubCouponRuleQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pub_coupon_rule_history.rulecontent,pub_coupon_rule_history.updatetime,
+	           (select op_user.nickname from op_user where pub_coupon_rule_history.updater = op_user.id) as updater
+	    from pub_coupon_rule_history
+	    where pub_coupon_rule_history.status = 1
+	      and pub_coupon_rule_history.ruleidref = #{id}
+	    order by pub_coupon_rule_history.updatetime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getPubCouponRuleHistoryListCountByQuery" resultType="int" parameterType="PubCouponRuleQueryParam">
+	    select count(*)
+	    from pub_coupon_rule_history
+	    where pub_coupon_rule_history.status = 1
+	      and pub_coupon_rule_history.ruleidref = #{id}
+	</select>
+	
+	<!-- 查找规则名称是否存在 -->
+	<select id="checkRuleNameExist" resultType="int" parameterType="String">
+	    select count(*)
+	    from pub_coupon_rule
+	    where name = #{name}
+	      and status = 1
+	</select>
+	
+	<!-- 修改时，根据id查找优惠券规则 -->
+	<select id="getPubCouponRuleById" resultType="PubCouponRule" parameterType="String">
+	    select * from pub_coupon_rule where id = #{id}
+	</select>
+	
+</mapper>

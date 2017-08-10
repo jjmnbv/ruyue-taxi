@@ -235,7 +235,9 @@
 	    (select (@rownum := @rownum + 1) as rownum,t1.* from
 	    (select org_order.orderno,org_order.passengers,org_order.starttime,org_order.endtime,org_order.onaddress,org_order.offaddress,org_order.orderamount,org_order.tripremark,
 	      (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
-	      (select org_dept.deptname from org_dept,org_user where org_dept.id = org_user.dpetid and org_dept.organid = org_user.organid and org_dept.organid = org_order.organid and org_user.id = org_order.userid) as deptname
+	      (select org_dept.deptname from org_dept,org_user where org_dept.id = org_user.dpetid and org_dept.organid = org_user.organid and org_dept.organid = org_order.organid and org_user.id = org_order.userid) as deptname,
+	      (select pub_dictionary.value from pub_dictionary where pub_dictionary.id = org_order.vehiclessubjecttype) as vehiclessubjecttype,org_order.vehiclessubject,org_order.orderstatus,
+	      (select org_ordercancel.cancelamount from org_ordercancel where org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1) as cancelamount
 	    from org_order,org_organbilldetails
 	    where org_order.orderno = org_organbilldetails.orderid
 	      and org_organbilldetails.status = 1
@@ -261,7 +263,8 @@
 	    select org_order.orderno,org_order.passengers,org_order.starttime,org_order.endtime,org_order.onaddress,org_order.offaddress,org_order.orderamount,org_order.tripremark,
 	      org_user.nickname,org_user.account,
 	      (select org_dept.deptname from org_dept where org_dept.id = org_user.dpetid and org_dept.organid = org_user.organid and org_dept.organid = org_order.organid) as deptname,
-	      (select pub_dictionary.value from pub_dictionary where pub_dictionary.id = org_order.vehiclessubjecttype and pub_dictionary.status = 1) as vehiclessubjecttype,org_order.vehiclessubject
+	      (select pub_dictionary.value from pub_dictionary where pub_dictionary.id = org_order.vehiclessubjecttype and pub_dictionary.status = 1) as vehiclessubjecttype,org_order.vehiclessubject,org_order.orderstatus,
+	      (select org_ordercancel.cancelamount from org_ordercancel where org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1) as cancelamount
 	    from org_order,org_organbilldetails,org_user
 	    where org_order.orderno = org_organbilldetails.orderid
 	      and org_organbilldetails.status = 1
@@ -532,5 +535,61 @@
 	      and le_user.specialstate = 1
 	      and le_user.status = 1
 	</select>
-	
+	<!-- 查询抵用券的list -->
+	<select id="getPubCouponDetailList" resultType="PubCouponDetail" parameterType="OrganAccountQueryParam">
+		SELECT * FROM pub_coupon_detail WHERE `status`=1 AND userid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				)
+				and organ.customertype!=1
+	      )
+		<if test="startTime != null and startTime != ''">
+			and createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+		</if>
+		<if test="endTime != null and endTime != ''">
+			and createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+		</if>
+		<if test="type != null and type != ''">
+			and usetype = #{type}
+		</if>
+		ORDER BY createtime DESC
+		LIMIT #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<select id="getPubCouponDetailListCount" resultType="int" parameterType="OrganAccountQueryParam">
+		SELECT count(*) FROM pub_coupon_detail WHERE `status`=1 AND userid IN (
+	            select
+					organ.id
+				from
+					org_organ organ
+				where organ.status = 1
+				  and organ.creditcode = (
+					select
+						org_organ.creditcode
+					from
+						org_organ
+					where org_organ.status = 1
+					  and org_organ.id = #{organId}
+				)
+				and organ.customertype!=1
+	      )
+      	<if test="startTime != null and startTime != ''">
+			and createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+		</if>
+		<if test="endTime != null and endTime != ''">
+			and createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+		</if>
+		<if test="type != null and type != ''">
+			and usetype = #{type}
+		</if>
+	</select>
 </mapper>

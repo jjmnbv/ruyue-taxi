@@ -1,12 +1,12 @@
 package com.szyciov.entity;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import org.apache.commons.lang.StringUtils;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.apache.commons.lang.StringUtils;
 
 /**
   * @ClassName AbstractOrder
@@ -465,6 +465,21 @@ public abstract class AbstractOrder{
      * 派单类型(0-系统指派，1-手工指派，默认为0)
      */
     private int sendordertype;
+
+    /**
+     * 责任方(1-乘客,2-司机,3-客服,4-平台)
+     */
+    private Integer dutyparty;
+
+    /**
+     * 费用类型(1-行程服务,2-取消处罚)
+     */
+    private Integer expensetype;
+    
+    /**
+     * 优惠券id
+     */
+    private String couponid;
 
     public String getUsetype() {
 		return usetype;
@@ -1488,5 +1503,29 @@ public abstract class AbstractOrder{
 
 	public void setOrderamountint(int orderamountint) {
 		this.orderamountint = orderamountint;
+	}
+
+    public Integer getDutyparty() {
+        return dutyparty;
+    }
+
+    public void setDutyparty(Integer dutyparty) {
+        this.dutyparty = dutyparty;
+    }
+
+    public Integer getExpensetype() {
+        return expensetype;
+    }
+
+    public void setExpensetype(Integer expensetype) {
+        this.expensetype = expensetype;
+    }
+
+	public String getCouponid() {
+		return couponid;
+	}
+
+	public void setCouponid(String couponid) {
+		this.couponid = couponid;
 	}
 }

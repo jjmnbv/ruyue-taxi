@@ -286,5 +286,15 @@ public class FinancialManagementController extends BaseController {
 		logger.log(Level.INFO, "id:" + id);
 		return financialManagementService.getPubWithdraw(id);
 	}
-	
+	/** 
+	 * <p>分页查询  抵用券</p>
+	 *
+	 * @param queryParam 查询请求对象，封装需要查询的key和页码等信息
+	 * @return 返回一页查询结果
+	 */
+	@RequestMapping(value = "api/FinancialManagement/GetPubCouponDetailByQuery", method = RequestMethod.POST)
+	@ResponseBody
+	public PageBean getPubCouponDetailByQuery(@RequestBody OrganAccountQueryParam queryParam) {
+		return financialManagementService.getPubCouponDetailByQuery(queryParam);
+	}
 }

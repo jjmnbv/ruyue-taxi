@@ -11,7 +11,7 @@ public class PubCouponActivity {
     private String id;
     private String name;
     private Integer sendservicetype;//1-出租车，2网约车
-    private Integer sendruletype;
+    private Integer sendruletype;    
     private Integer sendcount;
     private Integer sendruletarget;//1-机构客户，2-机构用户，3个人用户
     private Integer activystate;//1-待派发，2-派发中，3-已过期，4-已作废
@@ -29,6 +29,7 @@ public class PubCouponActivity {
     private Date fixedendtime;
     private String lecompanyid;
     private Integer platformtype;//0-运管端，1-租赁端
+    private String couponrule;   //优惠券规则  add by xuxxtr
     private Date createtime;
     private Date updatetime;
     private String creater;
@@ -202,5 +203,54 @@ public class PubCouponActivity {
     public void setPlatformtype(Integer platformtype) {
         this.platformtype = platformtype;
     }
+
+	public Date getCreatetime() {
+		return createtime;
+	}
+
+	public void setCreatetime(Date createtime) {
+		this.createtime = createtime;
+	}
+
+	public Date getUpdatetime() {
+		return updatetime;
+	}
+
+	public void setUpdatetime(Date updatetime) {
+		this.updatetime = updatetime;
+	}
+
+	public String getCreater() {
+		return creater;
+	}
+
+	public void setCreater(String creater) {
+		this.creater = creater;
+	}
+
+	public String getUpdater() {
+		return updater;
+	}
+
+	public void setUpdater(String updater) {
+		this.updater = updater;
+	}
+
+	public Integer getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public String getCouponrule() {
+		return couponrule;
+	}
+
+	public void setCouponrule(String couponrule) {
+		this.couponrule = couponrule;
+	}
+    
 }
  

@@ -54,6 +54,21 @@ public class RegisterParam {
 	 * app版本号
 	 */
 	private String appversion;
+	
+	/**
+	 * 接口版本version之前被占用了
+	 */
+	private String vversion;
+	
+	/**
+	 * 邀请码
+	 */
+	private String invitecode;
+	
+	/**
+	 * 注册时的城市
+	 */
+	private String city;
 
 	public String getAppversion() {
 		return appversion;
@@ -133,5 +148,29 @@ public class RegisterParam {
 
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
+	}
+
+	public String getVversion() {
+		return vversion;
+	}
+
+	public void setVversion(String vversion) {
+		this.vversion = vversion;
+	}
+
+	public String getInvitecode() {
+		return invitecode;
+	}
+
+	public void setInvitecode(String invitecode) {
+		this.invitecode = invitecode;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
 	}
 }

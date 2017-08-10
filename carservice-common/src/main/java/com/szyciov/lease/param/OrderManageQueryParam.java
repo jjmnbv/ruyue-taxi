@@ -174,6 +174,34 @@ public class OrderManageQueryParam extends LeBaseQueryParam{
      */
     private String queryTmpBelongleasecompany;
 
+    /**
+     * 订单性质(0-自营单，1-联盟单)
+     */
+    private String ordernature;
+
+    /**
+     * 费用类型(1-行程服务,2-取消处罚)
+     */
+    private Integer expensetype;
+
+    /**
+     * 取消性质(1-有责,2-免责)
+     */
+    private Integer cancelnature;
+
+    /**
+     * 选择的司机
+     */
+    private String selectdriverid;
+
+    public String getSelectdriverid() {
+        return selectdriverid;
+    }
+
+    public void setSelectdriverid(String selectdriverid) {
+        this.selectdriverid = selectdriverid;
+    }
+
     public String getBelongleasecompany() {
         return belongleasecompany;
     }
@@ -564,5 +592,29 @@ public class OrderManageQueryParam extends LeBaseQueryParam{
 
     public void setQueryTmpBelongleasecompany(String queryTmpBelongleasecompany) {
         this.queryTmpBelongleasecompany = queryTmpBelongleasecompany;
+    }
+
+    public String getOrdernature() {
+        return ordernature;
+    }
+
+    public void setOrdernature(String ordernature) {
+        this.ordernature = ordernature;
+    }
+
+    public Integer getExpensetype() {
+        return expensetype;
+    }
+
+    public void setExpensetype(Integer expensetype) {
+        this.expensetype = expensetype;
+    }
+
+    public Integer getCancelnature() {
+        return cancelnature;
+    }
+
+    public void setCancelnature(Integer cancelnature) {
+        this.cancelnature = cancelnature;
     }
 }

@@ -28,9 +28,13 @@
 							org_order.paymentstatus,
 							org_order.reviewstatus,
 							org_order.paymethod,
-							org_order.orderamount
+							org_order.orderamount,
+							org_order.expensetype,
+							t.cancelamount,
+							t.cancelnature
 						FROM
-							org_order,
+							org_order
+							LEFT JOIN org_ordercancel as t ON (org_order.orderno = t.orderno and t.`status` =1),
 							org_user,
 							le_leasescompany,
 							(SELECT @rownum := 0) r
@@ -142,19 +146,28 @@
 						<!-- and m.orderstatus = '7' and m.paymentstatus in ('1','2','3') -->
 					</if>
 					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-2'.toString() ">
-						and m.orderstatus = '7' and m.paymentstatus = '2'
+						and (m.orderstatus = '7' and m.paymentstatus = '2') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '2')
 					</if>
 					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-3'.toString() ">
-						and m.orderstatus = '7' and m.paymentstatus = '3'
+						and (m.orderstatus = '7' and m.paymentstatus = '3') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '3')
 					</if>
 					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-4'.toString() ">
-						and m.orderstatus = '7' and m.paymentstatus = '4'
-					</if> 
+						and (m.orderstatus = '7' and m.paymentstatus = '4') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '4')
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-9'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '9'
+					</if>  
 					<if test="queryVehicleMode != null and queryVehicleMode != '' ">
 						and m.ordertype = #{queryVehicleMode}
 					</if>
 					<if test="queryPaymentMethod != null and queryPaymentMethod != '' ">
 						and m.paymethod = #{queryPaymentMethod}
+					</if>
+					<if test="queryExpensetype != null and queryExpensetype != '' and queryExpensetype == '1'.toString() ">
+						and m.expensetype = #{queryExpensetype}
+					</if>
+					<if test="queryExpensetype != null and queryExpensetype != '' and queryExpensetype == '2'.toString() ">
+						and m.expensetype = #{queryExpensetype} and m.paymentstatus in (2,3,4) and m.cancelnature = 1
 					</if>
 					ORDER BY m.usetime DESC
 			) t
@@ -186,9 +199,13 @@
 							org_order.paymentstatus,
 							org_order.reviewstatus,
 							org_order.paymethod,
-							org_order.orderamount
+							org_order.orderamount,
+							org_order.expensetype,
+							t.cancelamount,
+							t.cancelnature
 						FROM
-							org_order,
+							org_order
+							LEFT JOIN org_ordercancel as t ON (org_order.orderno = t.orderno and t.`status` =1),
 							org_user,
 							le_leasescompany,
 							(SELECT @rownum := 0) r
@@ -300,19 +317,28 @@
 						<!-- and m.orderstatus = '7' and m.paymentstatus in ('1','2','3') -->
 					</if>
 					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-2'.toString() ">
-						and m.orderstatus = '7' and m.paymentstatus = '2'
+						and (m.orderstatus = '7' and m.paymentstatus = '2') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '2')
 					</if>
 					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-3'.toString() ">
-						and m.orderstatus = '7' and m.paymentstatus = '3'
+						and (m.orderstatus = '7' and m.paymentstatus = '3') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '3')
 					</if>
 					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-4'.toString() ">
-						and m.orderstatus = '7' and m.paymentstatus = '4'
-					</if> 
+						and (m.orderstatus = '7' and m.paymentstatus = '4') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '4')
+					</if>
+					<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-9'.toString() ">
+						and m.orderstatus = '7' and m.paymentstatus = '9'
+					</if>   
 					<if test="queryVehicleMode != null and queryVehicleMode != '' ">
 						and m.ordertype = #{queryVehicleMode}
 					</if>
 					<if test="queryPaymentMethod != null and queryPaymentMethod != '' ">
 						and m.paymethod = #{queryPaymentMethod}
+					</if>
+					<if test="queryExpensetype != null and queryExpensetype != '' and queryExpensetype == '1'.toString() ">
+						and m.expensetype = #{queryExpensetype}
+					</if>
+					<if test="queryExpensetype != null and queryExpensetype != '' and queryExpensetype == '2'.toString() ">
+						and m.expensetype = #{queryExpensetype} and m.paymentstatus in (2,3,4) and m.cancelnature = 1
 					</if>
 					ORDER BY m.usetime DESC
 			) t
@@ -477,9 +503,12 @@
 				AND le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
 				AND pub_vehicle.id = org_order.vehicleid
 			) AS modelName -->
-			org_order.factmodelname AS modelName
+			org_order.factmodelname AS modelName,
+			t.cancelnature,
+			t.cancelamount
 		FROM
-			org_order,
+			org_order
+			LEFT JOIN org_ordercancel as t ON (org_order.orderno = t.orderno and t.`status` =1),
 			le_leasescompany
 		WHERE
 			org_order.companyid = le_leasescompany.id
@@ -584,9 +613,16 @@
 							<!-- 复核状态 包括(0-未复核，1-异常待复核，2-已复核) -->
 							org_order.reviewstatus,
 							<!-- 实际金额 -->
-							org_order.orderamount
+							org_order.orderamount,
+							<!-- 费用类型(1-行程服务,2-取消处罚) -->
+							org_order.expensetype,
+							<!-- 取消金额 -->
+							t.cancelamount,
+							<!-- 取消性质(1-有责,2-免责) -->
+							t.cancelnature
 						FROM
-							org_order,
+							org_order
+							LEFT JOIN org_ordercancel as t ON (org_order.orderno = t.orderno and t.`status` =1),
 							org_user,
 							le_leasescompany,
 							(SELECT @rownum := 0) r
@@ -697,19 +733,28 @@
 					<!-- and m.orderstatus = '7' and m.paymentstatus in ('1','2','3') -->
 				</if>
 				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-2'.toString() ">
-					and m.orderstatus = '7' and m.paymentstatus = '2'
+					and (m.orderstatus = '7' and m.paymentstatus = '2') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '2')
 				</if>
 				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-3'.toString() ">
-					and m.orderstatus = '7' and m.paymentstatus = '3'
+					and (m.orderstatus = '7' and m.paymentstatus = '3') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '3')
 				</if>
 				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-4'.toString() ">
-					and m.orderstatus = '7' and m.paymentstatus = '4'
-				</if> 
+					and (m.orderstatus = '7' and m.paymentstatus = '4') or (m.expensetype = 2  and m.cancelnature = 1 and m.paymentstatus = '4')
+				</if>
+				<if test="queryOrderTemp != null and queryOrderTemp != '' and queryOrderTemp == '7-9'.toString() ">
+					and m.orderstatus = '7' and m.paymentstatus = '9'
+				</if>  
 				<if test="queryVehicleMode != null and queryVehicleMode != '' ">
 					and m.ordertype = #{queryVehicleMode}
 				</if>
 				<if test="queryPaymentMethod != null and queryPaymentMethod != '' ">
 					and m.paymethod = #{queryPaymentMethod}
+				</if>
+				<if test="queryExpensetype != null and queryExpensetype != '' and queryExpensetype == '1'.toString() ">
+					and m.expensetype = #{queryExpensetype}
+				</if>
+				<if test="queryExpensetype != null and queryExpensetype != '' and queryExpensetype == '2'.toString() ">
+					and m.expensetype = #{queryExpensetype} and m.paymentstatus in (2,3,4) and m.cancelnature = 1
 				</if>
 				ORDER BY m.usetime DESC
 			) t

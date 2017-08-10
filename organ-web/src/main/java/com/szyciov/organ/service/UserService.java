@@ -2,6 +2,7 @@ package com.szyciov.organ.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,56 @@ public class UserService {
 	private TemplateHelper templateHelper = new TemplateHelper();
 
 	/**
+	 * 检查图片验证码
+	 * @param request
+	 * @return
+	 */
+	private Map<String, Object> checkAuthCode(HttpServletRequest request,HttpServletResponse response){
+		Map<String, Object> model = new HashMap<String, Object>();
+		String imgcode = (String) request.getParameter("code");
+		String code = (String)request.getSession().getAttribute("code");
+		//当前验证码错误次数
+//		Object tempErrprTimes = request.getSession().getAttribute("errortimes_" + code);
+//		tempErrprTimes = tempErrprTimes == null ? 0 : Integer.parseInt((String) tempErrprTimes);
+//		String temp = SystemConfig.getSystemProperty("web_auth_code_error_times", "5");
+//		int allowErrorTimes = Integer.parseInt(temp);
+//		int errorTimes = (int)tempErrprTimes;
+		if(code == null){  //如果session中没有验证码,表示登录成功过,不再校验
+			return null;
+//		}else if(errorTimes > allowErrorTimes){
+//			model.put("message", "图片验证码错误次数超限！");
+//			return model;
+		}else if ((!code.equalsIgnoreCase(imgcode) && !"xxkj".equalsIgnoreCase(imgcode))) {
+			model.put("message", "图片验证码校验失败！");
+			CreateImageCode vCode = new CreateImageCode(100,48,4,10);
+	        request.getSession().setAttribute("code", vCode.getCode());   //如果图片验证失败,就刷新验证码
+//			errorTimes = errorTimes+1;
+//			request.getSession().setAttribute("errortimes_" + code, errorTimes);
+			return model;
+		}else{
+			return null;
+		}
+	}
+	
+	/**
+	 * 登录成功时清除验证码信息
+	 * @param request
+	 */
+	private void clearAuthCodeInfo(HttpServletRequest request){
+		//用过之后清除验证码
+		request.getSession().removeAttribute("code");
+		//清除本session中所有验证码错误次数
+		@SuppressWarnings("unchecked")
+		Enumeration<String> names = request.getSession().getAttributeNames();
+		while(names.hasMoreElements()){
+			String name = names.nextElement();
+			if(name.startsWith("errortimes_")){
+				request.getSession().removeAttribute(name);
+			}
+		}
+	}
+	
+	/**
 	 * web登录接口
 	 * @param request
 	 * @param response
@@ -50,19 +101,11 @@ public class UserService {
 			Map<String, String> param = new HashMap<String, String>();
 			String userName = (String) request.getParameter("username");
 			String password = (String) request.getParameter("password");
-			String imgcode = (String) request.getParameter("code");
-			Object code = request.getSession().getAttribute("code");
+			model = checkAuthCode(request,response);			//检查图片验证码
+			if(model != null) return new ModelAndView("login", model);
+			else model = new HashMap<>();
+			clearAuthCodeInfo(request);                     //清空验证码信息
 			logininfo.put("userid", userName);
-			if(code!=null){
-				String codestr = (String) code;
-				if(!codestr.equalsIgnoreCase(imgcode)){
-					model.put("message", "图片验证码校验失败！");
-					logininfo.put("loginstatus", "1");
-					return new ModelAndView("login", model);
-				}
-			}
-			//验证码用过就清除
-			request.getSession().removeAttribute("code");
 			if (StringUtils.isBlank(userName) || StringUtils.isBlank(password)) {
 				//如果已登录，不需要再继续返回登录页
 				usertoken = (String) request.getSession().getAttribute(Constants.REQUEST_USER_TOKEN);

@@ -1,6 +1,7 @@
 package com.szyciov.operate.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.szyciov.entity.PubCooagreement;
+import com.szyciov.lease.param.PubDriverQueryParam;
 import com.szyciov.op.entity.LeLeasescompany;
 import com.szyciov.op.param.PubCooagreementQueryParam;
 import com.szyciov.util.BaseController;
@@ -58,9 +60,9 @@ public class PubCooagreementController extends BaseController {
 	public ModelAndView edit(@RequestParam(value = "id", required = false) String id,HttpServletRequest request) {
 		ModelAndView mav = new ModelAndView();
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-		List<LeLeasescompany> list = templateHelper.dealRequestWithToken("/PubCooagreement/GetLeLeasescompanyList", HttpMethod.POST, userToken,
-				null,List.class);
-		mav.addObject("list",list);
+//		List<LeLeasescompany> list = templateHelper.dealRequestWithToken("/PubCooagreement/GetLeLeasescompanyList", HttpMethod.POST, userToken,
+//				null,List.class);
+//		mav.addObject("list",list);
 		if(StringUtils.isBlank(id)){
 			mav.addObject("id","");
 		}else{
@@ -69,7 +71,16 @@ public class PubCooagreementController extends BaseController {
 		mav.setViewName("resource/pubCooagreement/editPubCooagreement");
 		return mav;
 	}
-	
+	@RequestMapping(value = "/PubCooagreement/GetLeLeasescompanyList")
+	@ResponseBody
+	public List<Map<String,Object>> getLeLeasescompanyList(@RequestParam String text,HttpServletRequest request) {
+		Map<String, String> map = new HashMap<>();
+		map.put("text",text);
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		List<Map<String,Object>> list = templateHelper.dealRequestWithToken("/PubCooagreement/GetLeLeasescompanyList", HttpMethod.POST	,
+				userToken, map, List.class);
+		return list;
+	}
 	@RequestMapping("/PubCooagreement/CreatePubCooagreement")
 	@ResponseBody
 	public Map<String,String> createPubCooagreement(@RequestBody PubCooagreement pubCooagreement, HttpServletRequest request,
@@ -103,6 +114,8 @@ public class PubCooagreementController extends BaseController {
 		response.setContentType("text/html;charset=utf-8");
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		pubCooagreement.setCompanyid(this.getLoginOpUser(request).getOperateid());
+		pubCooagreement.setPlatformtype(0);
+		pubCooagreement.setCreater(this.getLoginOpUser(request).getId());
 		pubCooagreement.setUpdater(this.getLoginOpUser(request).getId());
 		pubCooagreement.setCoocontent(pubCooagreement.getContent());
 		return templateHelper.dealRequestWithToken("/PubCooagreement/UpdatePubCooagreement", HttpMethod.POST, userToken,

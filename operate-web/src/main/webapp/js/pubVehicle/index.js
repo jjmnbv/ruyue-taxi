@@ -58,6 +58,9 @@ function initGrid() {
 			// 	$(row).css('background-color','green');
 			// 	addid="";
 			// }
+			if(data.level == "3"){
+				row.style.backgroundColor = "#F3DFDF";
+			}
 		},
         columns: [
 	        // {mDataProp: "id", sTitle: "Id", sClass: "center", visible: false},

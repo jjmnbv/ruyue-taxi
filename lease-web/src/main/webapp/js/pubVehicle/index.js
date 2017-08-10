@@ -28,6 +28,11 @@ function initGrid() {
         language: {
         	sEmptyTable: "暂无服务车辆信息"
         },
+        rowCallback: function( row, data, displayIndex, displayIndexFull ) {
+        	if(data.identitytype == "1"){
+        		row.style.backgroundColor = "#F3DFDF";
+        	}
+   		},
         columns: [
 //	        {mDataProp: "id", sTitle: "Id", sClass: "center", visible: false},
 	        {
@@ -39,8 +44,8 @@ function initGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                    var html = "";
-                    html += '<button type="button" class="SSbtn green_q" onclick="edit(' +"'"+ full.id +"'"+ ')"><i class="fa fa-paste"></i>修改</button>';
+                	var html = "";
+        			html += '<button type="button" class="SSbtn green_q" onclick="edit(' +"'"+ full.id +"'"+ ')"><i class="fa fa-paste"></i>修改</button>';
                     html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="del(' +"'"+ full.id +"'"+ ')"><i class="fa fa-times"></i> 删 除</button>';
                     return html;
                 }
@@ -54,7 +59,7 @@ function initGrid() {
 	        		}else{
 	        			html+='<font>出租车</font>';
 	        		}
-	        		return html;
+	        		return html; 
 	        	}	
             },
             {mDataProp: "serviceCars", sTitle: "服务车型", sClass: "center", sortable: true,

@@ -15,7 +15,7 @@ public class PubCouponRule {
     private String name;
     /**
      * 规则类型
-     * 1-注册，2充值，3消费，4活动
+     * 1-注册，2充值，3消费，4活动，5邀请
      */
     private Integer ruletype;
     /**
@@ -56,7 +56,7 @@ public class PubCouponRule {
     /**
      * 单次消费满金额
      */
-    private Integer consumemoneysingelfull;
+    private Double consumemoneysingelfull;
     /**
      * 周期消费可用
      * 0-不可用，1-可用
@@ -75,6 +75,10 @@ public class PubCouponRule {
      * 周期消费金额低值
      */
     private Double consumemoneycyclelow;
+    /**
+	 * 规则内容
+	 */
+	private String rulecontent;
     /**
      * 租赁公司
      */
@@ -103,6 +107,10 @@ public class PubCouponRule {
      * 数据状态
      */
     private Integer status;
+    /**
+	 * 历史记录数量
+	 */
+    private Integer historycount;
 
     public String getId() {
         return id;
@@ -192,11 +200,11 @@ public class PubCouponRule {
         this.consumemoneysingleable = consumemoneysingleable;
     }
 
-    public Integer getConsumemoneysingelfull() {
+    public Double getConsumemoneysingelfull() {
         return consumemoneysingelfull;
     }
 
-    public void setConsumemoneysingelfull(Integer consumemoneysingelfull) {
+    public void setConsumemoneysingelfull(Double consumemoneysingelfull) {
         this.consumemoneysingelfull = consumemoneysingelfull;
     }
 
@@ -232,7 +240,15 @@ public class PubCouponRule {
         this.consumemoneycyclelow = consumemoneycyclelow;
     }
 
-    public String getLecompanyid() {
+    public String getRulecontent() {
+		return rulecontent;
+	}
+
+	public void setRulecontent(String rulecontent) {
+		this.rulecontent = rulecontent;
+	}
+
+	public String getLecompanyid() {
         return lecompanyid;
     }
 
@@ -271,5 +287,29 @@ public class PubCouponRule {
     public void setUpdater(String updater) {
         this.updater = updater;
     }
+
+	public String getCreater() {
+		return creater;
+	}
+
+	public void setCreater(String creater) {
+		this.creater = creater;
+	}
+
+	public Integer getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public Integer getHistorycount() {
+		return historycount;
+	}
+
+	public void setHistorycount(Integer historycount) {
+		this.historycount = historycount;
+	}
 }
  

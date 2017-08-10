@@ -159,7 +159,7 @@
 			    <input name="billStateExport" id="billStateExport" type="hidden">
 				
 				<div class="col-4 organbill_css_col_1">
-					<label>机构</label>
+					<label>机构名称</label>
 					<input id="organId" name="organId" type="text" placeholder="全部">
 					<!-- <select id="organId" name="organId">
 						<option value="" selected="selected">全部</option>
@@ -176,7 +176,7 @@
 				</div>
 				
 				<div class="col-4 organbill_css_col_3">
-					<label>状态</label>
+					<label>账单状态</label>
 					<select id="billState" name="billState">
 						<option value="" selected="selected">全部</option>
 						<option value="2">待核对</option>
@@ -283,13 +283,22 @@
 		                   </div>
 	                    </form> 
 	                    <div class="col-4 organbill_pop_col_2">
-					      <label>机构</label>
+					      <label>机构名称</label>
 					      <input id="organIdManual" name="organIdManual" type="text" placeholder="全部">
 					      <!-- <select id="organIdManual" name="organIdManual">
 						       <c:forEach var="orgOrgan" items="${orgOrgan}">
 							     <option value="${orgOrgan.id}">${orgOrgan.fullName}</option>
 						       </c:forEach>
 					      </select> -->
+				        </div>
+				        
+				        <div class="col-4 organbill_pop_col_4">
+					      <label style="width: 35%;">费用类型</label>
+					      <select id="expensetypeManual" name="expensetypeManual" style="width: 60%;">
+						    <option value="" selected="selected">全部</option>
+						    <option value="1">行程服务</option>
+						    <option value="2">取消处罚</option>
+					      </select>
 				        </div>
 				
 				        <div class="col-4 organbill_pop_col_3">
@@ -298,17 +307,18 @@
 					      <input style="width:30%;" id="endTimeManual" name="endTimeManual" type="text" placeholder="结束日期" value="" class="searchDate" readonly="readonly">					      
 				        </div>
 				
-				        <div class="col-3 organbill_pop_col_4" style="width: 23%;">
+				        <!-- <div class="col-3 organbill_pop_col_4" style="width: 23%;">
 					      <label style="width: 35%;">订单状态</label>
 					      <select id="billStateManual" name="billStateManual" style="width: 60%;">
 						    <option value="" selected="selected">全部</option>
 						    <option value="2">已复核</option>
 						    <option value="0">未结算</option>
 					      </select>
-				        </div>
+				        </div> -->
 
-				        <div class="col-1 organbill_pop_col_5" style="text-align: right;width: 10%;">
+				        <div class="col-12 organbill_pop_col_5" style="text-align: right;">
 					      <button class="Mbtn green_a" onclick="searchManual();">查询</button>
+					      <button class="Mbtn grey" onclick="clearManual();">清空</button>
 				        </div>				      
 	                </div>
 	                <div id="searchDiv">

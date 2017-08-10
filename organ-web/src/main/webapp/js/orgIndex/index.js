@@ -47,6 +47,14 @@
 			dataGrid.fnSearch(conditionArr); */
 			search();
 		});
+		$(".queryExpensetype li").live("click", function(){ 
+			/* var queryPaymentMethod = $("#queryPaymentMethod").attr("data-value");
+			var conditionArr = [
+				{ "name": "queryPaymentMethod", "value": queryPaymentMethod }
+			];
+			dataGrid.fnSearch(conditionArr); */
+			search();
+		});
 	});
 	/**
 	 * 点击账单管理每行数据时，跳转到账单明细
@@ -118,8 +126,18 @@
 				sClass : "center",
 				sortable : true
 			} , {
+				mDataProp : "expensetypeShow",
+				sTitle : "费用类型",
+				sClass : "center",
+				sortable : true
+			},{
 				mDataProp : "orderamount",
-				sTitle : "金额（元）",
+				sTitle : "订单金额（元）",
+				sClass : "center",
+				sortable : true
+			},{
+				mDataProp : "cancelamount",
+				sTitle : "取消费用（元）",
 				sClass : "center",
 				sortable : true
 			}  ]
@@ -149,6 +167,7 @@
 				{ "name": "queryOrderTemp", "value": $("#queryOrder").attr("data-value") },
 				{ "name": "queryVehicleMode", "value": $("#queryVehicleMode").attr("data-value") },
 				{ "name": "queryPaymentMethod", "value": $("#queryPaymentMethod").attr("data-value") },
+				{ "name": "queryExpensetype", "value": $("#queryExpensetype").attr("data-value") }
 			];
 			dataGrid.fnSearch(conditionArr,"没有查询到相关用车信息");
 			$("#queryCompanys").val($("#queryCompany").attr("data-value"));
@@ -159,6 +178,7 @@
 			$("#queryOrders").val($("#queryOrder").attr("data-value"));
 			$("#queryVehicleModes").val($("#queryVehicleMode").attr("data-value"));
 			$("#queryPaymentMethods").val($("#queryPaymentMethod").attr("data-value"));
+			$("#queryExpensetypes").val($("#queryExpensetype").attr("data-value"));
 		}
 	}
 	
@@ -230,8 +250,21 @@
 		$("#queryVehicleMode").attr("data-value","");
 		$("#queryPaymentMethod").val("");
 		$("#queryPaymentMethod").attr("data-value","");
+		$("#queryExpensetype").val("");
+		$("#queryExpensetype").attr("data-value","");
 		emptySearch();
-		dataGrid.fnSearch("","暂无用车订单记录");
+		var conditionArr = [
+		    				{ "name": "queryCompany", "value": $("#queryCompany").attr("data-value") },
+		    				{ "name": "queryOrderNo", "value": $("#queryOrderNo").val() },
+		    				{ "name": "startTime", "value": $("#startTime").val() },
+		    				{ "name": "endTime", "value": addDate($("#endTime").val(),1) },
+		    				{ "name": "queryUserMessage", "value": $("#queryUserMessage").val() },
+		    				{ "name": "queryOrderTemp", "value": $("#queryOrder").attr("data-value") },
+		    				{ "name": "queryVehicleMode", "value": $("#queryVehicleMode").attr("data-value") },
+		    				{ "name": "queryPaymentMethod", "value": $("#queryPaymentMethod").attr("data-value") },
+		    				{ "name": "queryExpensetype", "value": $("#queryExpensetype").attr("data-value") }
+		    			];
+		dataGrid.fnSearch(conditionArr,"暂无用车订单记录");
 	};
 	function empty1(){
 		$("#queryOrder").val("");
@@ -240,8 +273,21 @@
 		$("#queryVehicleMode").attr("data-value","");
 		$("#queryPaymentMethod").val("");
 		$("#queryPaymentMethod").attr("data-value","");
+		$("#queryExpensetype").val("");
+		$("#queryExpensetype").attr("data-value","");
 		emptySearch();
-		dataGrid.fnSearch("","暂无用车订单记录");
+		var conditionArr = [
+		    				{ "name": "queryCompany", "value": $("#queryCompany").attr("data-value") },
+		    				{ "name": "queryOrderNo", "value": $("#queryOrderNo").val() },
+		    				{ "name": "startTime", "value": $("#startTime").val() },
+		    				{ "name": "endTime", "value": addDate($("#endTime").val(),1) },
+		    				{ "name": "queryUserMessage", "value": $("#queryUserMessage").val() },
+		    				{ "name": "queryOrderTemp", "value": $("#queryOrder").attr("data-value") },
+		    				{ "name": "queryVehicleMode", "value": $("#queryVehicleMode").attr("data-value") },
+		    				{ "name": "queryPaymentMethod", "value": $("#queryPaymentMethod").attr("data-value") },
+		    				{ "name": "queryExpensetype", "value": $("#queryExpensetype").attr("data-value") }
+		    			];
+		dataGrid.fnSearch(conditionArr,"暂无用车订单记录");
 	};
 	function emptySearch(){
 		$("#queryCompanys").val("");
@@ -252,6 +298,7 @@
 		$("#queryOrders").val("");
 		$("#queryVehicleModes").val("");
 		$("#queryPaymentMethods").val("");
+		$("#queryExpensetypes").val("");
 	}
 	function exportExcel(){
 		var queryCompany = $("#queryCompanys").val();
@@ -262,8 +309,10 @@
 		var queryOrderTemp = $("#queryOrders").val();
 		var queryVehicleMode = $("#queryVehicleModes").val();
 		var queryPaymentMethod = $("#queryPaymentMethods").val();
+		var queryExpensetype = $("#queryExpensetypes").val();
 		window.location.href = base+'OrgIndex/ExportExcel?queryCompany='+queryCompany+"&queryOrderNo="+queryOrderNo+"&startTime="+startTime+"&endTime="+endTime
-		+"&queryUserMessage="+queryUserMessage+"&queryOrderTemp="+queryOrderTemp+"&queryVehicleMode="+queryVehicleMode+"&queryPaymentMethod="+queryPaymentMethod;
+		+"&queryUserMessage="+queryUserMessage+"&queryOrderTemp="+queryOrderTemp+"&queryVehicleMode="+queryVehicleMode+"&queryPaymentMethod="+queryPaymentMethod
+		+"&queryExpensetype="+queryExpensetype;
 		
 		$("#startTime").blur();
 		$("#endTime").blur();
@@ -273,4 +322,5 @@
 		$("#queryOrder").blur();
 		$("#queryVehicleMode").blur();
 		$("#queryPaymentMethod").blur();
+		$("#queryExpensetype").blur();
 	};

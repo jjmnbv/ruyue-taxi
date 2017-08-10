@@ -202,4 +202,36 @@ public class OrderDao {
 		mapper.setOrderdao4OpNetCar(params);
 	}
 
+	public DriverInfo getDriverInfo4New(Map<String, Object> pp) {
+		return mapper.getDriverInfo4New(pp);
+	}
+
+	public Map<String, Object> getOrderCouponInfo(String orderno) {
+		return mapper.getOrderCouponInfo(orderno);
+	}
+
+	public Map<String, Object> getCancelInfo4Org(String orderno) {
+		return mapper.getCancelInfo4Org(orderno);
+	}
+
+	public Map<String, Object> getCancelInfo4Optaxi(String orderno) {
+		return mapper.getCancelInfo4Optaxi(orderno);
+	}
+
+	public Map<String, Object> getCancelInfo4Opnetcar(String orderno) {
+		return mapper.getCancelInfo4Opnetcar(orderno);
+	}
+
+	public void updateCancelReson4OrgNetCar(Map<String, Object> pp) {
+		mapper.updateCancelReson4OrgNetCar(pp);
+	}
+
+	public void updateCancelReson4OpTaxi(Map<String, Object> pp) {
+		mapper.updateCancelReson4OpTaxi(pp);
+	}
+
+	public void updateCancelReson4OpNetCar(Map<String, Object> pp) {
+		mapper.updateCancelReson4OpNetCar(pp);
+	}
+
 }

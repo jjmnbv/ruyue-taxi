@@ -17,6 +17,8 @@
 		<base href="<%=basePath%>" >
 		<link rel="stylesheet" type="text/css" href="content/css/style.css" />
 		<link rel="stylesheet" type="text/css" href="content/plugins/toastr/toastr.css" />
+		<link rel="stylesheet" type="text/css" href="content/plugins/select2/select2.css" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="content/plugins/select2/select2_metro.css" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="content/plugins/ueditor/themes/default/css/ueditor.css" />
 		
 		<script type="text/javascript" src="content/js/jquery.js"></script>
@@ -31,6 +33,9 @@
 		<script type="text/javascript" charset="utf-8" src="content/plugins/ueditor/ueditor.all.js"></script>
 		<script type="text/javascript" charset="utf-8" src="content/plugins/ueditor/lang/zh-cn/zh-cn.js"></script>
 		<script type="text/javascript" src="js/basecommon.js"></script>
+		<script type="text/javascript" src="content/plugins/select2/select2.js"></script>
+		<script type="text/javascript" src="content/plugins/select2/select2_locale_zh-CN.js"></script>
+		<script type="text/javascript" src="content/plugins/select2/app.js"></script>
 	</head>
 	<style type="text/css">
 		.form select{width:68%;}
@@ -58,7 +63,7 @@
 	<body>
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs">
-			<a href="javascript:void(0);" onclick="homeHref()" class="breadcrumb">首页</a> > <a href="PubCooagreement/Index" class="breadcrumb">加盟服务协议</a> > <span id="pubCooagreement">新增协议</span>
+			<a href="javascript:void(0);" onclick="homeHref()" class="breadcrumb">首页</a> > <a href="PubCooagreement/Index" class="breadcrumb">合作协议管理</a> > <span id="pubCooagreement">新增协议</span>
 			<button class="SSbtn blue back" onclick="window.history.go(-1);">返回</button>
 		</div>
 		
@@ -71,24 +76,25 @@
 			<div class="row form">
 				<div class="col-4">
 					<label>车企名称<em class="asterisk"></em></label>
-					<select id="leasecompanyid" name="leasecompanyid">
+					<%-- <select id="leasecompanyid" name="leasecompanyid">
 						<option value="">请选择车企</option>
 						<c:forEach items="${list}" var="leasesCompany">
 							<option value="${leasesCompany.id}">${leasesCompany.name}</option>
 						</c:forEach>
-					</select>
+					</select> --%>
+					<input id="leasecompanyid" name="leasecompanyid" type="text" placeholder="请选择车企" value=""  style="width: 68%;">
 				</div>
 				<div class="col-4">
-					<label>业务类型<em class="asterisk"></em></label>
+					<label>服务类型<em class="asterisk"></em></label>
 					<select id="servicetype" name="servicetype">
-						<option value="">请选择业务类型</option>
+						<option value="">请选择服务类型</option>
 						<option value="0">网约车</option>
 						<option value="1">出租车</option>
 					</select>
 				</div>
 				<div class="col-4">
 					<label>协议名称<em class="asterisk"></em></label>
-					<input type="text" placeholder="输入简称" id="cooname" maxlength="30" name="cooname">
+					<input type="text" placeholder="请输入" id="cooname" maxlength="30" name="cooname">
 				</div>
 			</div>
 			<div class="row form">

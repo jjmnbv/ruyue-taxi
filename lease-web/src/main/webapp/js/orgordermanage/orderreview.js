@@ -2,10 +2,44 @@
  * 页面默认加载处理
  */
 $(document).ready(function() {
-	initForm();
+    initForm();
     initOrder();
-	validateForm();
+    showByReviewtype();
+    validateForm();
+
+    $("input[name='reviewtype']").change(function () {
+        $("#reviewtype").val($("input[name='reviewtype']:checked").val());
+        showByReviewtype();
+        var editForm = $("#orderReivewForm").validate();
+        editForm.resetForm();
+    });
 });
+
+function showByReviewtype() {
+    $("#reviewedprice").val("");
+    $("#starttime").val("");
+    $("#endtime").val("");
+    $("#mileage").val("");
+    $("#counttimes").val("");
+    var reviewtype = $("#reviewtype").val();
+    if(reviewtype == 1) { //按里程时长
+        $("#reviewedpriceDiv").hide();
+        $("#timeDiv").show();
+        $("#mileageDiv").show();
+        var timetype = $("#timetype").val();
+        if(timetype == 0) {
+            $("#counttimesDiv").hide();
+        } else {
+            $("#counttimesDiv").show();
+        }
+    } else {
+        $("#reviewedpriceDiv").show();
+        $("#timeDiv").hide();
+        $("#mileageDiv").hide();
+        $("#counttimesDiv").hide();
+    }
+    $("#cyjets").text("");
+}
 
 function validateForm() {
 	$("#orderReivewForm").validate({
@@ -32,7 +66,12 @@ function validateForm() {
 			reasonTextarea : {
 				required : true,
 				maxlength : 100
-			}
+			},
+            reviewedprice : {
+                required : true,
+                number : true,
+                limitNum : [4, 1]
+            }
 		},
 		messages : {
 			endtime : {
@@ -57,7 +96,12 @@ function validateForm() {
 			reasonTextarea : {
 				required : "请输入处理意见",
 				maxlength : "处理意见最大为100个字符"
-			}
+			},
+            reviewedprice : {
+                required : "请输入复核后订单金额",
+                number : "复核后金额必须是数字",
+                limitNum : "复核后金额整数最大4位数，小数最大1位数"
+            }
 		}
 	})
 }
@@ -156,15 +200,34 @@ function reviewRecordDataGridInit() {
         scrollX: true,
         columns: [
             {mDataProp: "rownum", sTitle: "序号", sClass: "center", sortable: true },
-	        {mDataProp: "reviewedprice", sTitle: "订单金额(元)", sClass: "center", sortable: true,
-            	"mRender": function(data, type, full) {
-            		return full.reviewedprice.toFixed(1);
-            	}
-	        },
+            {mDataProp: "raworderamount", sTitle: "复核前订单金额(元)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    return full.raworderamount.toFixed(1);
+                }
+            },
+            {mDataProp: "reviewtype", sTitle: "复核类型", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 1) {
+                        return "按里程时长";
+                    } else if(full.reviewtype == 2) {
+                        return "按固定金额";
+                    } else {
+                        return "/";
+                    }
+                }
+            },
 	        {mDataProp: "price", sTitle: "差异金额(元)", sClass: "center", sortable: true },
+            {mDataProp: "reviewedprice", sTitle: "复核后订单金额(元)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    return full.reviewedprice.toFixed(1);
+                }
+            },
 	        {mDataProp: "mileage", sTitle: "服务里程(公里)", sClass: "center", sortable: true,
 	        	"mRender": function(data, type, full) {
-	        		var mileage = (full.mileage/1000).toFixed(1);
+	        		if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    var mileage = (full.mileage/1000).toFixed(1);
 	        		if(full.mileage != full.rawmileage) {
 	        			return "<span class='font_red'>" + mileage + "</span>";
 	        		} else {
@@ -174,6 +237,9 @@ function reviewRecordDataGridInit() {
 	        },
 	        {mDataProp: "times", sTitle: "服务时长(分钟)", sClass: "center", sortable: true,
 	        	"mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
 	        		var starttime = new Date();
 	        		if(null != full.starttime && "" != full.starttime) {
 	        			starttime = new Date(full.starttime);
@@ -190,6 +256,9 @@ function reviewRecordDataGridInit() {
                 "sClass": "center",
                 "sTitle": "服务开始时间",
                 "mRender": function (data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
                 	if(full.starttime != full.rawstarttime) {
                 		return "<span class='font_red'>" + timeStamp2String(full.starttime) + "</span>";
                 	}
@@ -201,6 +270,9 @@ function reviewRecordDataGridInit() {
                 "sClass": "center",
                 "sTitle": "服务结束时间",
                 "mRender": function (data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
                 	if(full.endtime != full.rawendtime) {
                 		return "<span class='font_red'>" + timeStamp2String(full.endtime) + "</span>";
                 	}
@@ -209,6 +281,9 @@ function reviewRecordDataGridInit() {
             },
             {mDataProp: "counttimes", sTitle: "计费时长(分钟)", sClass: "center", sortable: true,
             	"mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
             		if(null != full.pricecopy) {
             			var pricecopy = JSON.parse(full.pricecopy);
             			var timetype = pricecopy.timetype;
@@ -234,6 +309,9 @@ function reviewRecordDataGridInit() {
             },
 	        {mDataProp: "timesubsidies", sTitle: "时间补贴(元)", sClass: "center", sortable: true,
             	"mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
             		if(null != full.pricecopy) {
             			var pricecopy = JSON.parse(full.pricecopy);
             			var timetype = pricecopy.timetype;
@@ -262,6 +340,9 @@ function reviewRecordDataGridInit() {
 	        },
 	        {mDataProp: "mileageprices", sTitle: "里程费(元)", sClass: "center", sortable: true,
 	        	"mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
 	        		if(null != full.pricecopy) {
 	        			var pricecopy = JSON.parse(full.pricecopy);
 	        			var mileage = (full.mileage/1000).toFixed(1);
@@ -276,7 +357,7 @@ function reviewRecordDataGridInit() {
 					if(full.reviewperson == "1") {
 						return "司机";
 					} else if(full.reviewperson == "2") {
-						return "下单人";
+						return "乘客";
 					} else {
 						return "/";
 					}
@@ -297,7 +378,7 @@ function reviewRecordDataGridInit() {
                 "sClass": "center",
                 "sTitle": "复核时间",
                 "mRender": function (data, type, full) {
-                	return timeStamp2String(full.reviewtime);
+                	return dateFtt(full.reviewtime, "yyyy/MM/dd hh:mm");
                 }
             },
 	        {mDataProp: "operatorname", sTitle: "复核人", sClass: "center", sortable: true }
@@ -309,8 +390,8 @@ function reviewRecordDataGridInit() {
         		$("#cyje").text(orderReview.price);
         		$("#fwlc").text((orderReview.mileage/1000).toFixed(1));
         		$("#fwsc").text(Math.ceil(orderReview.times/60));
-        		$("#fwkssj").text(timeStamp2String(orderReview.starttime));
-        		$("#fwjssj").text(timeStamp2String(orderReview.endtime));
+        		$("#fwkssj").text(dateFtt(orderReview.starttime, "yyyy/MM/dd hh:mm:ss"));
+        		$("#fwjssj").text(dateFtt(orderReview.endtime, "yyyy/MM/dd hh:mm:ss"));
         		var timetype = orderObj.orderInfo.timetype;
         		//计费时长
         		if(timetype == 0) {
@@ -347,14 +428,22 @@ function reviewRecordDataGridInit() {
  */
 function review() {
 	$("#cyjets").text("");
+    $("input[name=reviewtype]").get(0).checked = true;
+    $("#reviewtype").val(1);
+    $("#reviewedprice").val("");
+    $("#starttime").val("");
+    $("#endtime").val("");
+    $("#mileage").val("");
+    $("#counttimes").val("");
+    $("#reasonTextarea").val("");
+    showByReviewtype();
+
 	$("#orderReivewFormDiv").show();
-	
-	showObjectOnForm("orderReivewForm", null);
-	
+
 	var editForm = $("#orderReivewForm").validate();
 	editForm.resetForm();
 	editForm.reset();
-	
+
 	$("#reviewperson").val(orderObj.orderInfo.reviewperson);
 }
 
@@ -375,7 +464,9 @@ function reviewPost() {
 		endtime: endTime,
 		counttimes: $("#counttimes").val(),
 		reviewperson: $("#reviewperson").val(),
-		opinion: $("#reasonTextarea").val()
+		opinion: $("#reasonTextarea").val(),
+        reviewtype: $("#reviewtype").val(),
+        reviewedprice: $("#reviewedprice").val()
 	}
 	
 	$.ajax({
@@ -465,10 +556,22 @@ function getPrice() {
 		$("#cyjets").text("");
 		return;
 	}
+
+    var beforeprice = $("#beforeprice").val();
+    var reviewtype = $("#reviewtype").val();
+    if(reviewtype == 2) { //按固定金额
+        var reviewedprice = $("#reviewedprice").val();
+        var balance = (parseFloat(beforeprice) - parseFloat(reviewedprice)).toFixed(1);
+        if(balance > 0) {
+            $("#cyjets").text("退给乘客" + balance + "元");
+        } else {
+            $("#cyjets").text("");
+        }
+        return;
+    }
 	
 	var mileage = $("#mileage").val();
 	var pricecopy = $("#pricecopy").val();
-	var beforeprice = $("#beforeprice").val();
 	var starttime = new Date($("#starttime").val());
 	var endtime = new Date($("#endtime").val());
 	var times = Math.ceil((endtime - starttime)/(1000*60));
@@ -505,7 +608,7 @@ function getPrice() {
         contentType: "application/json; charset=utf-8",
         success: function (result) {
             var price = result.cost;
-            var balance = (parseFloat(beforeprice) - parseFloat(price)).toFixed(2);
+            var balance = (parseFloat(beforeprice) - parseFloat(price)).toFixed(1);
             if(balance > 0) {
                 $("#cyjets").text("退给乘客" + balance + "元");
             } else {

@@ -43,7 +43,7 @@
 	<body class="ordermanage_css_body">
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs">
-			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrderManage/OrgOrderIndex">机构订单</a> > 订单详情
+			<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrderManage/OrgOrderIndex">因公订单</a> > 订单详情
 			<button class="SSbtn blue back" onclick="window.history.go(-1);">返回</button>
 		</div>
 		<div class="content" style="overflow: auto !important;">

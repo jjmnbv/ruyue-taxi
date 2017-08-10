@@ -114,7 +114,7 @@
 			    <input name="billStateHisExport" id="billStateHisExport" type="hidden">
 				
 				<div class="col-4 organbill_css_col_1">
-					<label>机构</label>
+					<label>机构名称</label>
 					<input id="organIdHis" name="organIdHis" type="text" placeholder="全部">
 					<!-- <select id="organIdHis" name="organIdHis">
 						<option value="" selected="selected">全部</option>
@@ -131,7 +131,7 @@
 				</div>
 				
 				<div class="col-4 organbill_css_col_3">
-					<label>状态</label>
+					<label>账单状态</label>
 					<select id="billStateHis" name="billStateHis">
 						<option value="" selected="selected">全部</option>
 						<option value="7">已结算</option>

@@ -1,6 +1,7 @@
 package com.szyciov.entity;
 
 import java.util.Date;
+import java.util.List;
 
 public class PubPremiumRule {
 	private String id; 
@@ -20,6 +21,9 @@ public class PubPremiumRule {
 	private String creater;//创建人
 	private String updater;//更新人
 	private Integer status;//数据状态
+    private List<PubPremiumRuleWeekdetail> weekdetails; //溢价规则星期明细
+    private List<PubPremiumRuleDatedetail> datedetails; //溢价规则日期明细
+
 	public String getId() {
 		return id;
 	}
@@ -123,4 +127,19 @@ public class PubPremiumRule {
 		this.status = status;
 	}
 
+    public List<PubPremiumRuleWeekdetail> getWeekdetails() {
+        return weekdetails;
+    }
+
+    public void setWeekdetails(List<PubPremiumRuleWeekdetail> weekdetails) {
+        this.weekdetails = weekdetails;
+    }
+
+    public List<PubPremiumRuleDatedetail> getDatedetails() {
+        return datedetails;
+    }
+
+    public void setDatedetails(List<PubPremiumRuleDatedetail> datedetails) {
+        this.datedetails = datedetails;
+    }
 }

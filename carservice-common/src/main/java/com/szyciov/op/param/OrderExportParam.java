@@ -29,7 +29,14 @@ public class OrderExportParam extends QueryParam {
 	public String orderstatus;//订单状态
 	public String ordersource;//订单来源
 	public String usetype;//订单类型
+	public String belongleasecompany;//服务车企
 	
+	public String getBelongleasecompany() {
+		return belongleasecompany;
+	}
+	public void setBelongleasecompany(String belongleasecompany) {
+		this.belongleasecompany = belongleasecompany;
+	}
 	public String getUsetype() {
 		return usetype;
 	}

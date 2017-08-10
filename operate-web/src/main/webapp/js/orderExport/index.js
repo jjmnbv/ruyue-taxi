@@ -10,6 +10,7 @@ $(function () {
 	initSelectPassengers();
 	initOrganid();
 	initOrganid1();
+	initLeasescompany();
 });
 function formatDate(now) { 
 	var year=now.getYear(); 
@@ -57,6 +58,26 @@ function dateFormat() {
 	$("#maxUseTime").val(date.format('yyyy-MM-dd'));
 	 date.setDate(1);
 	$("#minUseTime").val(date.format('yyyy-MM-dd'));*/
+}
+function initLeasescompany() {
+	debugger;
+    $("#leasescompany").select2({
+        placeholder: "服务车企",
+        minimumInputLength: 0,
+        allowClear: true,
+        ajax: {
+            url: $("#baseUrl").val() + "OrderExport/GetLeasescompany",
+            dataType: 'json',
+            data: function (term, page) {
+                return {
+                	leasescompany: term
+                };
+            },
+            results: function (data, page) {
+                return { results: data };
+            }
+        }
+    });
 }
 function initDriver() {
     $("#driver").select2({
@@ -196,7 +217,7 @@ function manualOrderdataGrid() {
 	        {mDataProp: "name", sTitle: "司机姓名", sClass: "center", sortable: true },
 	        {mDataProp: "phone", sTitle: "司机电话", sClass: "center", sortable: true },
 	        {mDataProp: "plateno", sTitle: "车牌号码", sClass: "center", sortable: true },
-	        {mDataProp: "companyid", sTitle: "车企名称", sClass: "center", sortable: true },
+	        {mDataProp: "belongleasecompany", sTitle: "服务车企", sClass: "center", sortable: true },
 	        {mDataProp: "cartype", sTitle: "服务车型", sClass: "center", sortable: true },
 	        {mDataProp: "passengerphone", sTitle: "乘客账号", sClass: "center", sortable: true },
 	        {mDataProp: "passengers", sTitle: "乘客名称", sClass: "center", sortable: true },
@@ -248,7 +269,8 @@ function search() {
 		{"name":"starttime", "value":$("#minUseTime").val()},
 		{"name":"endtime", "value":$("#maxUseTime").val()},
 		{"name":"passengers", "value":$("#passengers").val()},
-		{"name":"driver", "value":$("#driver").val()}
+		{"name":"driver", "value":$("#driver").val()},
+		{"name":"leasescompany", "value":$("#leasescompany").val()}
 	];
 	dataGrid.fnSearch(conditionArr);
 }
@@ -263,5 +285,5 @@ function exportExcel() {
 	}else{
 		organid = "";
 	}
-	window.location.href=$("#baseUrl").val()+"OrderExport/ExportOrders?usetype="+$("#usetype").val()+"&organid="+organid+"&ordertype="+$("#ordertype").val()+"&paymentstatus="+$("#paymentstatus").val()+"&passengers="+$("#passengers").val()+"&driver="+$("#driver").val()+"&startTime="+$("#minUseTime").val()+"&endTime="+$("#maxUseTime").val();
+	window.location.href=$("#baseUrl").val()+"OrderExport/ExportOrders?usetype="+$("#usetype").val()+"&organid="+organid+"&ordertype="+$("#ordertype").val()+"&paymentstatus="+$("#paymentstatus").val()+"&passengers="+$("#passengers").val()+"&driver="+$("#driver").val()+"&startTime="+$("#minUseTime").val()+"&endTime="+$("#maxUseTime").val()+"&leasescompany="+$("#leasescompany").val();
 }
