@@ -33,9 +33,9 @@ apply plugin: 'idea'
 
 group = 'com.szyciov'
 version = '0.0.1-SNAPSHOT'
-def artifactId = "supervision"
+def artifactId = "supervision-api"
 
-description = """supervision"""
+description = """supervision-api"""
 
 def paramRelease =  project.properties.get("release")
 if("${paramRelease}" != "null"){
