@@ -136,29 +136,7 @@
 
 	<select id="getDriverInfoById" parameterType="String" resultType="DriverInfo">
 		SELECT
-		CONCAT(
-		(
-		SELECT
-		pub_dictionary.text
-		FROM
-		pub_dictionary
-		WHERE
-		pub_dictionary.type = '车牌省'
-		AND pub_dictionary.`value` = pv.platenoprovince
-		AND pub_dictionary.`status` = 1
-		),
-		(
-		SELECT
-		pub_dictionary.text
-		FROM
-		pub_dictionary
-		WHERE
-		pub_dictionary.type = '车牌市'
-		AND pub_dictionary.`value` = pv.platenocity
-		AND pub_dictionary.`status` = 1
-		),
-		pv.plateno
-		) plateno,
+		pv.fullplateno plateno,
 		pd.id,
 		pd.`name` drivername,
 		pd.phone driverphone,
@@ -408,43 +386,47 @@
 	</select>
 	
 	<select id="getLeDriverInBound" parameterType="PubDriverInBoundParam" resultType="PubDriver">
+		#查询租赁端网约车司机
 		SELECT
 			pd.*,
 			pv.id vehicleid,
-			lv.level vehiclelevel
+			lv.`level` vehiclelevel
 		FROM
-			pub_driver pd,
+			pub_lease_organ_relation plor,
+			pub_vehicle_models_ref pvmr,
 			pub_driver_vehicle_ref pdvr,
 			pub_vehicle pv,
 			pub_vehcline pvc,
 			pub_vehcbrand pvb,
 			pub_vehicle_scope pvs,
-			le_vehcline_models_ref lvmr,
+			pub_driver pd,
 			le_vehiclemodels lv,
 			org_order oo
-		WHERE 1 = 1
+		WHERE 1=1
+		AND pd.`Status` = 1
+		AND pv.`Status` = 1
+		AND lv.`Status` = 1
 		AND oo.`status` = 1
 		AND pvs.`Status` = 1
-		AND pvc.`Status` = 1
 		AND pvb.`Status` = 1
-		AND lv.`Status` = 1
-		AND pv.`Status` = 1
-		AND lvmr.`Status` = 1
-		AND pdvr.`Status` = 1
-		AND pd.`Status` = 1
-		<!-- 指定只推送网约车司机 -->
-		AND pd.vehicletype = #{vehicletype}
-		AND pvs.vehicleid = pv.id
-		AND pdvr.driverId = pd.id
-		AND pdvr.vehicleId = pv.id
-		AND lvmr.vehclineid = pv.vehclineid
-		AND lvmr.vehiclemodelsid = lv.Id
+		AND pvc.`Status` = 1
+		AND pdvr.`status` = 1
+		AND plor.`status` = 1
+		AND pvmr.`status` = 1
+		AND plor.companyid = pvmr.companyid
+		AND pvmr.leasecompanyid = plor.leasecompanyid
+		AND pvmr.vehicleid = pdvr.vehicleid
+		AND pdvr.driverid = pd.id
+		AND pvs.vehicleid = pvmr.vehicleid
+		AND pvmr.vehicleid = pv.id
 		AND pv.vehclineid = pvc.Id
 		AND pvc.vehcBrandID = pvb.Id
 		AND (oo.oncity = pvs.cityid OR oo.offcity = pvs.cityid)
-		AND oo.orderno = #{orderno}
-		AND pd.leasescompanyid = #{companyid}
+		AND pvmr.vehiclemodelsid = lv.Id
+		AND pd.vehicletype = #{vehicletype}  <!-- 指定只推送网约车司机 -->
 		AND pd.workstatus IN(${workstatuslist})
+		AND oo.orderno = #{orderno}
+		AND plor.companyid = #{companyid}
 		<if test="allowgrade == false">
 		AND lv.Id = #{cartype}
 		</if>

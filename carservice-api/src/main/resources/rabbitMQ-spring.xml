@@ -57,10 +57,13 @@
             <entry key="x-dead-letter-routing-key" value="${rabbit.commonReceivePattern}"/>
         </rabbit:queue-arguments>
     </rabbit:queue>
-    <rabbit:topic-exchange id="commonExchange" name="${rabbit.commonExchange}" durable="true">
+    <!-- 生成抵用券队列 -->
+    <rabbit:queue id="couponQueue" name="${rabbit.autoCouponQueuename}" durable="true" auto-delete="false"/>
+    <rabbit:topic-exchange id="commonExchange" name="${rabbit.commonExchange}" durable="true" >
         <rabbit:bindings>
             <rabbit:binding queue="commonQueue" pattern="${rabbit.commonReceivePattern}"></rabbit:binding>
             <rabbit:binding queue="commonDlxQueue" pattern="${rabbit.commonDlxPattern}"></rabbit:binding>
+            <rabbit:binding queue="couponQueue" pattern="${rabbit.couponPattern}"></rabbit:binding>
         </rabbit:bindings>
     </rabbit:topic-exchange>
     <rabbit:listener-container connection-factory="commonConnectionFactory" acknowledge="manual" prefetch="20">

@@ -138,6 +138,10 @@
 					<input id="address" type="text" placeholder="可输入搜索" value="" data-owner="addressHidden" maxlength="100"/>
 					<input id="addressButton" name="" type="button" value="地图" style="width: 50px;height: 30px;"/>
 				</div>
+				<!-- <div class="col-4">
+					<label class="leLeasescompany_css_label_1">信用额度<em class="asterisk"></em></label>
+					<input class="leLeasescompany_css_input_1" id="mail" name="mail" type="text" placeholder="信用额度" value="" maxlength="50">
+				</div> -->
 			</div>
 			<div class="row">
 				<div class="col-12">

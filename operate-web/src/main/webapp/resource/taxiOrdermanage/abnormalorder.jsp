@@ -60,14 +60,12 @@
 		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 出租车订单</div>
 		<div class="content">
 			<ul class="tabmenu" style="padding-top: 10px;">
-				<li><a href="TaxiOrderManage/Index" style="text-decoration: none;">未接订单</a></li>
-				<c:if test="${taxiSendruleCount > 0}">
-					<li><a href="TaxiOrderManage/LabourOrderIndex" style="text-decoration: none;">待人工派单</a></li>
-				</c:if>
+				<li><a href="TaxiOrderManage/Index" style="text-decoration: none;">待接订单</a></li>
 				<li><a href="TaxiOrderManage/CurrentOrderIndex" style="text-decoration: none;">当前订单</a></li>
 				<li class="on">异常订单</li>
 				<li><a href="TaxiOrderManage/WaitgatheringOrderIndex" style="text-decoration: none;">待收款订单</a></li>
 				<li><a href="TaxiOrderManage/HistoryOrderIndex" style="text-decoration: none;">已完成订单</a></li>
+				<li><a href="TaxiOrderManage/CancelOrderIndex" style="text-decoration: none;">已取消订单</a></li>
 			</ul>
 			
 			<ul class="tabbox">
@@ -79,7 +77,40 @@
 					<div class="stabox">
 						<div class="row form" style="margin-top: 40px;">
 							<div class="col-3">
+								<label>订单来源</label>
+								<select id="ordersource">
+									<option value="">全部</option>
+									<option value="CG">乘客端 | 个人</option>
+									<option value="CY">运管端</option>
+								</select>
+							</div>
+							<div class="col-3">
+								<label>服务车企</label><input id="belongleasecompany" type="hidden" placeholder="服务车企">
+							</div>
+							<div class="col-3">
+								<label>付款方式</label>
+								<select id="paymentmethod">
+									<option value="">全部</option>
+									<option value="1">线下付现</option>
+									<option value="0">在线支付</option>
+								</select>
+							</div>
+							<div class="col-3">
+								<label>复核方</label>
+								<select id="reviewperson">
+									<option value="">全部</option>
+									<option value="1">司机</option>
+									<option value="2">乘客</option>
+								</select>
+							</div>
+							<div class="col-3">
 								<label>订单号</label><input id="orderno" type="text" placeholder="订单号">
+							</div>
+							<div class="col-3">
+								<label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
+							</div>
+							<div class="col-3">
+								<label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
 							</div>
 							<div class="col-3">
 								<label>订单状态</label>
@@ -92,39 +123,6 @@
 									<option value="1">已支付</option>
 									<option value="3">已结算</option>
 								</select>
-							</div>
-							<div class="col-3">
-								<label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
-							</div>
-							<div class="col-3">
-								<label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
-							</div>
-							<div class="col-3">
-								<label>复核方</label>
-								<select id="reviewperson">
-									<option value="">全部</option>
-									<option value="1">司机</option>
-									<option value="2">下单人</option>
-								</select>
-							</div>
-							<div class="col-3">
-								<label>付款方式</label>
-								<select id="paymentmethod">
-									<option value="">全部</option>
-									<option value="1">线下付现</option>
-									<option value="0">在线支付</option>
-								</select>
-							</div>
-							<div class="col-3">
-								<label>订单来源</label>
-								<select id="ordersource">
-									<option value="">全部</option>
-									<option value="CG">乘客端 | 个人</option>
-									<option value="CY">运管端</option>
-								</select>
-							</div>
-							<div class="col-3">
-								<label class="ordermanage_css_label_1">服务车企</label><input id="leasescompanyid" type="hidden" placeholder="全部">
 							</div>
 							<div class="col-3 ordermanage_css_col_1">
 								<label>用车时间</label>

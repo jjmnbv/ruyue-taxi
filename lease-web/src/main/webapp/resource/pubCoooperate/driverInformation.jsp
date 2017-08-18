@@ -83,12 +83,13 @@
 			<button class="SSbtn red_q back leLeasescompany_css_back" onclick="callBack();" style="margin-top: -29px;">返回</button>
 		<div class="content">
 			<div class="form" style="padding-top: 30px;margin-bottom:20px;">
-				<input type="hidden" id="leasescompanyid" value="${leasescompanyid}"/>
-				<input type="hidden" id="servicetype" value="${servicetype}"/> 
+				<input type="hidden" id="coooperateid" value="${id}"/>
+				<%-- <input type="hidden" id="leasescompanyid" value="${leasescompanyid}"/>
+				<input type="hidden" id="servicetype" value="${servicetype}"/>  --%>
 				<div class="row">
 					<div class="col-3">
 						<label>车牌号</label>
-						<input id="queryPlateno" name="queryPlateno" type="text" value="" placeholder="车牌号"/>
+						<input id="queryPlateno" name="queryPlateno" type="text" value="" placeholder="车牌号" maxlength="7"/>
 					</div>
 					<div class="col-3">
 						<label>资格证号</label>
@@ -100,11 +101,11 @@
 					</div>
 					<div class="col-3"><label>服务车型</label>
 						<select id="queryModels" name="queryModels">
-							<option value="" selected="selected">未分配</option>
+							<option value="" selected="selected">全部</option>
+							<option value="wfp">未分配</option>
 							<c:forEach var="list" items="${list}">
 								<option value="${list.name}">${list.name}</option>
 							</c:forEach>
-							
 						</select>
 					</div>
 				</div>
@@ -125,7 +126,7 @@
 		
 		<div class="pop_box" id="editFormDiv" style="display: none;">
 			<div class="tip_box_b">
-	            <h3 id="titleForm">修改车型</h3>
+	            <h3 id="titleForm">分配车型</h3>
 	            <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
 	            <div class="w400">
 	            	<form id="editForm" method="get" class="form-horizontal  m-t" id="frmmodal">
@@ -134,8 +135,8 @@
 	            		<input type="hidden" id="id" name="id" value=""/>
 	            		<div class="row">
 	            			<div class="col-12">
-		            			<label>原服务车型</label>
-	            				<input id="oldService" name="" type="text" disabled="disabled" value=""/>
+		            			<label></label>
+	            				<input id="oldService" name="" type="text" disabled="disabled" value="" style="border-left:0px;border-top:0px;border-right:0px;border-bottom:1px"/>
 	            			</div>
             			</div>
             			<div class="row">

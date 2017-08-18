@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.lease.mapper.PubOrderCancelRuleMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+    <select id="getCity" resultType="PubDictionary">
+    select 
+		 distinct(pub_order_cancel_rule.citycode) as id,
+		 pub_cityaddr.city as text
+	from pub_order_cancel_rule,pub_cityaddr 
+	where pub_order_cancel_rule.citycode = pub_cityaddr.id
+	and  pub_order_cancel_rule.platformtype = 1
+    </select>
+    <select id="getPubOrderCancelRuleList" resultType="PubOrderCancelRule" parameterType="PubOrderCancelRule">
+     select t.*,(@i:=@i+1) as code 
+     from(
+                select
+                    pub_order_cancel_rule.id,
+                    (select count(*) from pub_order_cancel_rule_history where pub_order_cancel_rule.id = pub_order_cancel_rule_history.cancelruleid) as ifhistory,
+			       pub_cityaddr.city as citycode,
+			      if(rulestatus = 0,"启用","禁用")rulestatus,
+			       IF(pub_order_cancel_rule.cartype='0','网约车','出租车') as cartype,
+			        cancelcount,latecount,watingcount,price,DATE_FORMAT(pub_order_cancel_rule.createtime,'%Y/%m/%d %H:%i') createtime
+				from pub_order_cancel_rule,pub_cityaddr 
+				where pub_order_cancel_rule.citycode = pub_cityaddr.id
+				and pub_order_cancel_rule.platformtype = 1
+				AND pub_order_cancel_rule.status = 1
+				and pub_order_cancel_rule.leasescompanyid = #{leasescompanyid}
+		     <if test="cartype != null and cartype != ''">
+	           and  pub_order_cancel_rule.cartype = #{cartype}
+		     </if>
+	         <if test="citycode != null and citycode != ''">
+		       and pub_order_cancel_rule.citycode = #{citycode}
+	         </if>
+	         ORDER BY createtime DESC
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getPubOrderCancelRuleCount" resultType="int" parameterType="PubOrderCancelRule">
+    select count(*) from(
+                   select
+                    pub_order_cancel_rule.id,
+			       pub_cityaddr.city as citycode,
+			       IF(pub_order_cancel_rule.cartype='0','网约车','出租车') as cartype,
+			        cancelcount,latecount,watingcount,price,pub_order_cancel_rule.createtime
+				from pub_order_cancel_rule,pub_cityaddr 
+				where pub_order_cancel_rule.citycode = pub_cityaddr.id
+				and pub_order_cancel_rule.platformtype = 1
+				AND pub_order_cancel_rule.status = 1
+				and pub_order_cancel_rule.leasescompanyid = #{leasescompanyid}
+			     <if test="cartype != null and cartype != ''">
+		           and  pub_order_cancel_rule.cartype = #{cartype}
+			     </if>
+		         <if test="citycode != null and citycode != ''">
+			       and pub_order_cancel_rule.citycode = #{citycode}
+		         </if>
+           )t
+    </select>
+     <insert id="aadPubOrderCancelRule" parameterType="PubOrderCancelRule">
+      INSERT INTO `pub_order_cancel_rule`
+	 (id,citycode,cartype,cancelcount,latecount,watingcount,price ,platformtype,leasescompanyid,createtime,updatetime,creater,updater,status,rulestatus)
+   VALUES
+	(
+		#{id},
+		#{citycode},
+		#{cartype},
+		#{cancelcount},
+		#{latecount},
+		#{watingcount},
+		#{price},
+		1,
+		#{leasescompanyid},
+		now(),
+		now(),
+		#{creater},
+		#{updater},
+		1,
+		1
+	);
+	</insert>
+	<update id="modifyPubOrderCancelRule" parameterType="PubOrderCancelRule">
+     UPDATE pub_order_cancel_rule SET cancelcount = #{cancelcount},latecount = #{latecount},watingcount=#{watingcount},
+      price = #{price},leasescompanyid = #{leasescompanyid},updatetime = now(),updater = #{updater} 
+     where id = #{id}
+    </update>
+     <insert id="addHistory" parameterType="PubOrderCancelRuleHistory">
+      INSERT INTO `pub_order_cancel_rule_history`
+	 (id,cancelruleid,operationtype,citycode,cartype,cancelcount,latecount ,watingcount,price,platformtype,leasescompanyid,createtime,updatetime,creater,updater,status)
+   VALUES
+	(
+		#{id},
+		#{cancelruleid},
+		#{operationtype},
+		#{citycode},
+		#{cartype},
+		#{cancelcount},
+		#{latecount},
+		#{watingcount},
+		#{price},
+		#{platformtype},
+		#{leasescompanyid},
+		now(),
+		now(),
+		#{creater},
+		#{updater},
+		#{status}
+	);
+	</insert>
+	<update id="ruleConflictOk" parameterType="pubOrderCancelRule">
+     UPDATE pub_order_cancel_rule SET rulestatus = 1 where id = #{id}
+    </update>
+    <update id="ruleConflict" parameterType="pubOrderCancelRule">
+     UPDATE pub_order_cancel_rule SET rulestatus = 0 where id = #{id}
+    </update>
+    <select id="searchRule" resultType="PubOrderCancelRule" parameterType="PubOrderCancelRule">
+                select * from pub_order_cancel_rule where id=#{id}
+   </select>
+   <select id="getHistoryDataList" resultType="PubOrderCancelRuleHistory" parameterType="PubOrderCancelRuleHistory">
+     select t.*,(@i:=@i+1) as code 
+     from(
+              select    
+                 (CASE when operationtype = 0 then "启用" when operationtype = 1 then "禁用"  else  "修改" end) as operationtype,
+                cancelcount,latecount,watingcount,price,DATE_FORMAT(updatetime,'%Y/%m/%d %H:%i')updatetime,(SELECT nickname from le_user where id = updater) updater
+				from pub_order_cancel_rule_history 
+				where cancelruleid = #{id}
+				ORDER BY updatetime DESC
+           )t,(select @i:=0) a  LIMIT ${iDisplayStart},${iDisplayLength}
+   </select>
+   <select id="getHistoryDataCount" resultType="int" parameterType="PubOrderCancelRuleHistory">
+    select count(*) from(
+                   select    cancelcount,latecount,watingcount,price,updatetime,updater
+				from pub_order_cancel_rule_history 
+				where cancelruleid = #{id}
+           )t
+    </select>
+      <select id="getCityId" parameterType="String" resultType = "String">
+    select id from pub_cityaddr where city = #{cityName}
+    </select >
+    <select id="getRulename" resultType="PubOrderCancelRule" parameterType="String">
+                  select
+			      CONCAT(pub_cityaddr.city ,",",IF(pub_order_cancel_rule.cartype='0','网约车','出租车')) as cartype
+				from pub_order_cancel_rule,pub_cityaddr 
+				where pub_order_cancel_rule.citycode = pub_cityaddr.id
+				and pub_order_cancel_rule.platformtype = 1
+				AND pub_order_cancel_rule.status = 1
+				AND pub_order_cancel_rule.id = #{id}
+    </select>
+    <select id="getRuleById" resultType="PubOrderCancelRule" parameterType="String">
+                  select
+			       *
+				from pub_order_cancel_rule
+				where pub_order_cancel_rule.id = #{id}
+    </select>
+     <select id="ifHaveRule" resultType="int" parameterType="PubOrderCancelRule">
+       select count(*) from pub_order_cancel_rule where citycode = #{citycode} and cartype = #{cartype} and platformtype = 1 and leasescompanyid = #{leasescompanyid}
+    </select>
+</mapper>

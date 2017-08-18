@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.szyciov.lease.entity.OrgOrgan;
 import com.szyciov.lease.entity.PubCityAddr;
+import com.szyciov.lease.entity.PubLeaseOrganRelation;
 import com.szyciov.lease.param.OrgOrganQueryParam;
 import com.szyciov.lease.service.OrgOrganService;
+import com.szyciov.op.param.PubCoooperateQueryParam;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.PageBean;
 
@@ -221,5 +223,52 @@ public class OrgOrganController extends BaseController {
 	@ResponseBody
 	public int checkOrgOrganAccout(@RequestBody OrgOrganQueryParam orgOrganQueryParam) {
 		return orgOrganService.checkOrgOrganAccout(orgOrganQueryParam);
+	}
+	/**
+     * <p>分页查询资源管理</p>
+     *
+     * @param queryParam 查询请求对象，封装需要查询的条件和页码等信息
+     * @return 返回一页查询结果
+     */
+    @RequestMapping(value = "api/OrgOrgan/GetPubCoooperateByQuery", method = RequestMethod.POST)
+    @ResponseBody
+    public PageBean getPubCoooperateByQuery(@RequestBody PubCoooperateQueryParam queryParam) {
+        return orgOrganService.getPubCoooperateByQuery(queryParam);
+    }
+    
+    /** 
+	 * 
+	 *
+	 * @param
+	 */
+	@RequestMapping(value = "api/OrgOrgan/GetPubLeaseOrganRelationById/{id}", method = RequestMethod.GET)
+	@ResponseBody
+	public List<PubLeaseOrganRelation> getPubLeaseOrganRelationById(@PathVariable String id) {
+		return orgOrganService.getPubLeaseOrganRelationById(id);
+	}
+	
+	/** 
+	 * 
+	 *
+	 * @param
+	 */
+	@RequestMapping(value = "api/OrgOrgan/GetIndexList/{id}", method = RequestMethod.GET)
+	@ResponseBody
+	public List<PubLeaseOrganRelation> getIndexList(@PathVariable String id) {
+		return orgOrganService.getIndexList(id);
+	}
+	
+	/**
+	 * <p>
+	 * 
+	 * </p>
+	 *
+	 * @param orgOrgan
+	 * @return
+	 */
+	@RequestMapping(value = "api/OrgOrgan/GetPubCoooperateSelect", method = RequestMethod.POST)
+	@ResponseBody
+	public List<Map<String, Object>> getPubCoooperateSelect(@RequestBody PubCoooperateQueryParam queryParam) {
+		return orgOrganService.getPubCoooperateSelect(queryParam);
 	}
 }

@@ -10,10 +10,10 @@
 	</select>
 	
 	<select id="getOrderCancelInfo" resultType="PubOrderCancel">
-		#保存或更新订单取消信息表
+		#获取订单取消信息
 		SELECT * FROM 
 		<if test="ordertype == 1">
-		org_order
+		op_ordercancel
 		</if>
 		<if test="ordertype == 2">
 		org_ordercancel
@@ -90,26 +90,14 @@
 	
 	<select id="getOrgOrderCost" resultType="OrderCost" parameterType="OrderCostParam">
 		SELECT
-			la.startprice,
-			la.rangeprice,
-			la.timeprice,
-			la.timetype,
-			la.perhour,
-			la.deadheadmileage,
-			la.deadheadprice,
-			la.nightstarttime,
-			la.nightendtime,
-			la.nighteprice,
-			IFNULL(pd1.`value`,0) reversefee,
-			IFNULL(pd2.`value`,1.0) discount
+			la.startprice, la.rangeprice, la.timeprice, la.timetype, la.perhour, la.deadheadmileage,
+			la.deadheadprice, la.nightstarttime, la.nightendtime, la.nighteprice, la.reservationprice reversefee
 		FROM
 			<if test=" usetype == 0 or usetype == '0'.toString()">
 		 	le_company_rules_ref lcrr,
 		 	org_user ou,
 		 	</if>
 			le_accountrules la
-			LEFT JOIN pub_dictionary pd1 ON pd1.`status` = 1 AND pd1.type = '机构用户下单预约附加费用'
-			LEFT JOIN pub_dictionary pd2 ON pd2.`status` = 1 AND pd2.type = '机构用户订单支付折扣比例'
 		WHERE 1=1
 			AND la.`Status` = 1
 			AND la.rulesstate = 0
@@ -159,12 +147,9 @@
 			oa.nightstarttime,
 			oa.nightendtime,
 			oa.nighteprice,
-			IFNULL(pd1.`value`,0) reversefee,
-			IFNULL(pd2.`value`,1.0) discount
+			oa.reservationprice reversefee
 		FROM
 			op_accountrules oa
-		LEFT JOIN pub_dictionary pd1 ON pd1.`status` = 1 AND pd1.type = '个人用户下单预约附加费用'
-		LEFT JOIN pub_dictionary pd2 ON pd2.`status` = 1 AND pd2.type = '个人用户订单支付折扣比例'
 		WHERE 1 = 1
 		AND oa.`status` = 1
 		AND oa.rulesstate = 0
@@ -225,6 +210,66 @@
  		AND psr.platformtype=#{platformtype}
 	</select>
 	
+	<select id="getLastOrders" resultType="OrderInfoDetail" parameterType="String">
+		#获取用户最后5单是否同一城市(返回数超过2表示不再同一城市)
+		SELECT orders.* FROM 
+		(
+			SELECT lastfive.* FROM 
+			(
+				(
+					SELECT
+						oo.orderno,
+						oo.oncity cityid,
+						oo.undertime
+					FROM
+						op_order oo,
+						pe_user pu
+					WHERE 1=1
+					AND oo.`status` = 1
+					AND pu.`status` = 1
+					AND oo.userid = pu.id
+					AND oo.orderstatus = '7'
+					AND pu.account = #{userphone}
+				)
+				UNION
+				(
+					SELECT
+						oo.orderno,
+						oo.oncity cityid,
+						oo.undertime
+					FROM
+						op_taxiorder oo,
+						pe_user pu
+					WHERE 1=1
+					AND oo.`status` = 1
+					AND pu.`status` = 1
+					AND oo.userid = pu.id
+					AND oo.orderstatus = '7'
+					AND pu.account = #{userphone}
+				)
+				UNION
+				(
+					SELECT
+						oo.orderno,
+						oo.oncity cityid,
+						oo.undertime
+					FROM
+						org_order oo,
+						org_user ou
+					WHERE 1=1
+					AND oo.`status` = 1
+					AND ou.`Status` = 1
+					AND oo.userid = ou.id
+					AND oo.orderstatus = '7'
+					AND ou.account = #{userphone}
+				)
+			) lastfive
+			ORDER BY lastfive.undertime DESC
+			LIMIT 5
+		) orders
+		GROUP BY orders.cityid
+	</select>
+	
 	<select id="getOpTaxiSendRule" resultType="OpTaxisendrules" parameterType="GetSendInfoParam">
 		select * from op_taxisendrules where status = 1 and city = #{city} and usetype = #{usevechiletype}
 	</select>
@@ -265,8 +310,8 @@
 	
 	<!-- 获取未支付订单 -->
 	<select id="getNotPayOrgOrder" parameterType="OrgUserParam" resultType="OrgOrder">
-		SELECT
-			oo.*
+		#获取机构未支付订单
+		SELECT oo.orderno, oo.usetype, oo.ordertype
 		FROM
 			org_order oo
 		WHERE
@@ -277,7 +322,20 @@
 			oo.paymentstatus = #{paymentstatus}
 			OR ISNULL(oo.paymentstatus)
 		)
-		limit 1
+		UNION
+		(
+			SELECT oo2.orderno, oo2.usetype, oo2.ordertype
+			FROM
+				org_order oo2,
+				org_ordercancel ooc
+			WHERE oo2.`status` = '1'
+			AND oo2.orderno = ooc.orderno
+			AND oo2.userid = #{userid}
+			AND oo2.orderstatus = '8'
+			AND oo2.paymentstatus = '0'
+			AND ooc.cancelnature = '1'
+		)
+		LIMIT 1
 	</select>
 	
 	<select id="getPeUserById" parameterType="PeUserParam" resultType="PeUser">
@@ -298,7 +356,31 @@
 				)
 			)
 			+
-			(select count(*) from op_taxiorder where op_taxiorder.userid = pu.id and op_taxiorder.orderstatus = "7" and (op_taxiorder.paymentstatus in ("0", "5", "6") or isnull(op_taxiorder.paymentstatus)))
+			(
+				SELECT COUNT(op_taxiorder.orderno)
+				FROM
+					op_taxiorder
+				WHERE op_taxiorder.`status` = 1
+				AND op_taxiorder.userid = pu.id
+				AND op_taxiorder.orderstatus = #{orderstatus}
+				AND (
+					op_taxiorder.paymentstatus IN ("0", "5", "6")
+					OR isnull(op_taxiorder.paymentstatus)
+				)
+			)
+			+
+			(
+				SELECT COUNT(oo2.orderno)
+				FROM
+					op_order oo2,
+					op_ordercancel ooc
+				WHERE oo2.`status` = '1'
+				AND oo2.orderno = ooc.orderno
+				AND oo2.userid = pu.id
+				AND oo2.orderstatus = '8'
+				AND oo2.paymentstatus = #{paymentstatus}
+				AND ooc.cancelnature = '1'
+			)
 		) > 0 notpay,
 		(
 			(
@@ -332,23 +414,48 @@
 	</select>
 	
 	<select id="getNotPayOpOrder" parameterType="PeUserParam" resultType="OpOrder">
-		select * from (
-			select
-				oo.orderno, oo.usetype, oo.ordertype
-			from
+		#获取运管未支付订单
+		SELECT temp.*
+		FROM
+		(
+			SELECT oo.orderno, oo.usetype, oo.ordertype
+			FROM
 				op_order oo
-			where
-				oo.`status` = 1
-			and oo.userid = #{userid}
-			and oo.orderstatus = #{orderstatus}
-			and (
+			WHERE oo.`status` = 1
+			AND oo.userid = #{userid}
+			AND oo.orderstatus = #{orderstatus}
+			AND (
 				oo.paymentstatus = #{paymentstatus}
-				or isnull(oo.paymentstatus)
+				OR isnull(oo.paymentstatus)
 			)
-			union
-			(select orderno, usetype, ordertype from op_taxiorder where op_taxiorder.userid = #{userid} and op_taxiorder.orderstatus = "7" and (op_taxiorder.paymentstatus in ("0", "5", "6") or isnull(op_taxiorder.paymentstatus)))
+			UNION
+			(
+				SELECT orderno, usetype, ordertype
+				FROM
+					op_taxiorder
+				WHERE op_taxiorder.`status` = 1
+				AND op_taxiorder.userid = #{userid}
+				AND op_taxiorder.orderstatus = #{orderstatus}
+				AND (
+					op_taxiorder.paymentstatus IN ("0", "5", "6")
+					OR isnull(op_taxiorder.paymentstatus)
+				)
+			)
+			UNION
+			(
+				SELECT oo2.orderno, oo2.usetype, oo2.ordertype
+				FROM
+					op_order oo2,
+					op_ordercancel ooc
+				WHERE oo2.`status` = '1'
+				AND oo2.orderno = ooc.orderno
+				AND oo2.userid = #{userid}
+				AND oo2.orderstatus = '8'
+				AND oo2.paymentstatus = #{paymentstatus}
+				AND ooc.cancelnature = '1'
+			)
 		) temp
-		limit 1
+		LIMIT 1
 	</select>
 	
 	<select id="getUserTokenByToken" parameterType="OrderApiParam" resultType="PubUserToken">
@@ -361,68 +468,17 @@
 	
 	<select id="getOpOrderInfoById" parameterType="OrderApiParam" resultType="OrderInfoDetail">
 		SELECT
-			1 orderprop,
-			pu.nickname username,
-			pu.account userphone,
-			0 paymethod,
-			opfi.servcietel contact,
-			ov.`name` cartype,
-			ov.logo cartypelogo,
-			NULL organid,
-			TIMESTAMPDIFF(
-				SECOND,
-				oo.starttime,
-				oo.endtime
-			) times,
-			pu.headportraitmin passengericonmin,
-			pu.headportraitmax passengericonmax,
-			pca.city city,
-			oo.isusenow,
-			oo.ordersource,
-			oo.pricecopy,
-			oo.undertime,
-			oo.ordertime,
-			oo.departuretime,
-			oo.arrivaltime,
-			oo.starttime,
-			oo.endtime,
-			oo.completetime,
-			oo.canceltime,
-			oo.cancelparty,
-			oo.mileage,
-			oo.orderno,
-			oo.ordertype type,
-			oo.onaddress,
-			oo.offaddress,
-			oo.usetime usetime,
-			oo.tripremark remark,
-			oo.orderstatus `status`,
-			oo.paymentstatus paystatus,
-			oo.reviewstatus,
-			oo.onaddrlng onlng,
-			oo.onaddrlat onlat,
-			oo.offaddrlng offlng,
-			oo.offaddrlat offlat,
-			oo.passengers passengers,
-			oo.passengerphone passengerphone,
-			oo.estimatedtime,
-			oo.estimatedmileage,
-			oo.estimatedcost,
-			oo.orderamount,
-			oo.fltno,
-			oo.falltime,
-			oo.userrate,
-			oo.usercomment,
-			oo.driverid,
-			oo.vehicleid,
-			oo.companyid,
-			oo.oncity cityid,
-			oo.usetype,
-			oo.costtype,
-			oo.startlng,
-			oo.startllat,
-			oo.endlng,
-			oo.endllat
+			1 orderprop, pu.nickname username, pu.account userphone, 0 paymethod, opfi.servcietel contact,
+			ov.`name` cartype, ov.logo cartypelogo, NULL organid, TIMESTAMPDIFF( SECOND, oo.starttime, oo.endtime ) times,
+			pu.headportraitmin passengericonmin, pu.headportraitmax passengericonmax, pca.city city, oo.isusenow,
+			oo.ordersource, oo.pricecopy, oo.undertime, oo.ordertime, oo.departuretime, oo.arrivaltime, oo.starttime,
+			oo.endtime, oo.completetime, oo.canceltime, oo.cancelparty, oo.mileage, oo.orderno, oo.ordertype type,
+			oo.onaddress, oo.offaddress, oo.usetime usetime, oo.tripremark remark, oo.orderstatus `status`,
+			oo.paymentstatus paystatus, oo.reviewstatus, oo.onaddrlng onlng, oo.onaddrlat onlat, oo.offaddrlng offlng,
+			oo.offaddrlat offlat, oo.passengers passengers, oo.passengerphone passengerphone, oo.estimatedtime,
+			oo.estimatedmileage, oo.estimatedcost, oo.orderamount, oo.fltno, oo.falltime, oo.userrate, oo.usercomment,
+			oo.driverid, oo.vehicleid, oo.companyid, oo.oncity cityid, oo.usetype, oo.costtype, oo.startlng, oo.startllat,
+			oo.endlng, oo.endllat
 		FROM
 			op_order oo
 		LEFT JOIN op_vehiclemodels ov ON ov.`Status` = 1
@@ -439,68 +495,18 @@
 	
 	<select id="getOrgOrderInfoById" parameterType="OrderApiParam" resultType="OrderInfoDetail">
 		SELECT
-			0 orderprop,
-			ou.nickname username,
-			ou.account userphone,
-			ou.headportraitmin passengericonmin,
-			ou.headportraitmax passengericonmax,
-			llc.phone contact,
-			lv.`name` cartype,
-			lv.logo cartypelogo,
-			pca.city city,
-			TIMESTAMPDIFF(
-				SECOND,
-				oo.starttime,
-				oo.endtime
-			) times,
-			oo.paymethod,
-			oo.organid,
-			oo.isusenow,
-			oo.ordersource,
-			oo.pricecopy,
-			oo.undertime,
-			oo.ordertime,
-			oo.departuretime,
-			oo.arrivaltime,
-			oo.starttime,
-			oo.endtime,
-			oo.completetime,
-			oo.canceltime,
-			oo.cancelparty,
-			oo.mileage,
-			oo.orderno,
-			oo.ordertype type,
-			oo.onaddress,
-			oo.offaddress,
-			oo.usetime usetime,
-			oo.tripremark remark,
-			oo.orderstatus `status`,
-			oo.paymentstatus paystatus,
-			oo.reviewstatus,
-			oo.onaddrlng onlng,
-			oo.onaddrlat onlat,
-			oo.offaddrlng offlng,
-			oo.offaddrlat offlat,
-			oo.passengers passengers,
-			oo.passengerphone passengerphone,
-			oo.estimatedtime,
-			oo.estimatedmileage,
-			oo.estimatedcost,
-			oo.orderamount,
-			oo.fltno,
-			oo.falltime,
-			oo.userrate,
-			oo.usercomment,
-			oo.driverid,
-			oo.vehicleid,
-			oo.companyid,
-			oo.oncity cityid,
-			oo.usetype,
-			oo.costtype,
-			oo.startlng,
-			oo.startllat,
-			oo.endlng,
-			oo.endllat
+			0 orderprop, ou.nickname username, ou.account userphone, ou.headportraitmin passengericonmin,
+			ou.headportraitmax passengericonmax, llc.phone contact, lv.`name` cartype, lv.logo cartypelogo,
+			pca.city city, TIMESTAMPDIFF( SECOND, oo.starttime, oo.endtime ) times, oo.paymethod,
+			oo.organid, oo.isusenow, oo.ordersource, oo.pricecopy, oo.undertime, oo.ordertime,
+			oo.departuretime, oo.arrivaltime, oo.starttime, oo.endtime, oo.completetime, oo.canceltime,
+			oo.cancelparty, oo.mileage, oo.orderno, oo.ordertype type, oo.onaddress, oo.offaddress,
+			oo.usetime usetime, oo.tripremark remark, oo.orderstatus `status`, oo.paymentstatus paystatus,
+			oo.reviewstatus, oo.onaddrlng onlng, oo.onaddrlat onlat, oo.offaddrlng offlng,
+			oo.offaddrlat offlat, oo.passengers passengers, oo.passengerphone passengerphone,
+			oo.estimatedtime, oo.estimatedmileage, oo.estimatedcost, oo.orderamount, oo.fltno,
+			oo.falltime, oo.userrate, oo.usercomment, oo.driverid, oo.vehicleid, oo.companyid,
+			oo.oncity cityid, oo.usetype, oo.costtype, oo.startlng, oo.startllat, oo.endlng, oo.endllat
 		FROM
 			org_order oo
 		LEFT JOIN le_vehiclemodels lv ON lv.`Status` = 1
@@ -524,7 +530,7 @@
 			oo.onaddress, oo.offaddress, oo.usetime usetime, oo.tripremark remark, oo.orderstatus `status`, oo.paymentstatus paystatus, oo.reviewstatus, oo.onaddrlng onlng,
 			oo.onaddrlat onlat, oo.offaddrlng offlng, oo.offaddrlat offlat, oo.passengers passengers, oo.passengerphone passengerphone, oo.estimatedtime,
 			oo.estimatedmileage, oo.estimatedcost, oo.orderamount, oo.fltno, oo.falltime, oo.userrate, oo.usercomment, oo.driverid, oo.vehicleid, oo.companyid,
-			oo.oncity cityid, oo.ordersortcolumn, oo.usetype, oo.meterrange, oo.tripremark, oo.costtype, oo.startlng, oo.startllat, oo.endlng, oo.endllat
+			oo.oncity cityid, oo.ordersortcolumn, oo.usetype, oo.meterrange, oo.tripremark, oo.costtype, oo.startlng, oo.startllat, oo.endlng, oo.endllat, oo.meterrange
 		from
 			op_taxiorder oo
 			left join pub_cityaddr pca on pca.`status` = 1
@@ -1215,7 +1221,8 @@
 		oo.mileage=#{mileage},
 		oo.driverid = #{driverid},
 		oo.vehicleid = #{vehicleid},
-		costtype=#{costtype}
+		costtype=#{costtype},
+		expensetype=#{expensetype}
 		WHERE oo.`status` = 1 AND  oo.orderno = #{orderno}
 	</update>
 	
@@ -1257,17 +1264,17 @@
 	
 	<!-- 取消人工派单超时的机构订单 -->
 	<update id="cancelOverTimeOrgOrder" parameterType="OrgOrder">
-		update org_order set orderstatus = #{orderstatus}, cancelparty = #{cancelparty}, updatetime = now(), canceltime = now() where orderno = #{orderno}
+		update org_order set orderstatus = #{orderstatus}, cancelparty = #{cancelparty}, updatetime = now(), canceltime = now(), expensetype = #{expensetype} where orderno = #{orderno}
 	</update>
 	
 	<!-- 取消人工派单超时的个人订单 -->
 	<update id="cancelOverTimeOpOrder" parameterType="OpOrder">
-		update op_order set orderstatus = #{orderstatus}, cancelparty = #{cancelparty}, updatetime = now(), canceltime = now() where orderno = #{orderno}
+		update op_order set orderstatus = #{orderstatus}, cancelparty = #{cancelparty}, updatetime = now(), canceltime = now(), expensetype = #{expensetype} where orderno = #{orderno}
 	</update>
 	
 	<!-- 取消超时的出租车订单 -->
 	<update id="cancelOverTimeOpTaxiOrder" parameterType="OpTaxiOrder">
-		update op_taxiorder set orderstatus = #{orderstatus}, cancelparty = #{cancelparty}, updatetime = now(), canceltime = now(), ordersortcolumn = #{ordersortcolumn} where orderno = #{orderno}
+		update op_taxiorder set orderstatus = #{orderstatus}, cancelparty = #{cancelparty}, updatetime = now(), canceltime = now(), ordersortcolumn = #{ordersortcolumn}, expensetype = #{expensetype} where orderno = #{orderno}
 	</update>
 	
 	<!-- 查询人工派单超时的机构订单 -->
@@ -1474,8 +1481,7 @@
         (select le_vehiclemodels.name from le_vehiclemodels where org_order.factmodel = le_vehiclemodels.id) factmodelname,
         (select le_vehiclemodels.name from le_vehiclemodels where org_order.pricemodel = le_vehiclemodels.id) pricemodelname,
         pub_vehcbrand.name vehcbrandname, pub_vehcline.name vehclinename,
-        concat((select text from pub_dictionary where type = '车牌省' and value = pub_vehicle.platenoprovince),
-        (select text from pub_dictionary where type = '车牌市' and value = pub_vehicle.platenocity), pub_vehicle.plateno) plateno
+        pub_vehicle.fullplateno plateno
         from
         org_order left join pub_vehicle on org_order.vehicleid = pub_vehicle.id
         left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
@@ -1523,13 +1529,13 @@
     <insert id="saveOrUpdateOrderCancelInfo" parameterType="PubOrderCancel">
     	#保存或更新订单取消信息表
 		INSERT INTO 
-		<if test="ordertype == 1">
-		org_order
+		<if test="orderprop == 1">
+		op_ordercancel
 		</if>
-		<if test="ordertype == 2">
+		<if test="orderprop == 2">
 		org_ordercancel
 		</if>
-		<if test="ordertype == 3">
+		<if test="orderprop == 3">
 		op_taxiordercancel
 		</if>
 		(
@@ -1541,11 +1547,10 @@
 			#{canceloperator},#{exemption},#{exemptionoperator},#{cancelrule},#{identifying},NOW(),
 			NOW(),#{status}
 		) ON DUPLICATE KEY UPDATE 
-			id=#{id},orderno=#{orderno},dutyparty=#{dutyparty},
+			orderno=#{orderno},dutyparty=#{dutyparty},
 			cancelamount=#{cancelamount},cancelnature=#{cancelnature},cancelreason=#{cancelreason},
 			canceloperator=#{canceloperator},exemption=#{exemption},exemptionoperator=#{exemptionoperator},
-			cancelrule=#{cancelrule},identifying=#{identifying},createtime=#{createtime},
-			updatetime=#{updatetime},status=#{status}
+			cancelrule=#{cancelrule},identifying=#{identifying},updatetime=NOW()
     </insert>
     
     <!-- 根据机构用户id查找机构用户信息 -->
@@ -1580,4 +1585,9 @@
         and organid in (select id from org_organ where creditcode in (select creditcode from org_organ where id = #{organid}))
         and rulestate in ("1", "3") and status = 1
     </select>
+    
+    <!-- 更新个人用户表(主要更新注册城市) -->
+    <update id="updatePeUserCity"  parameterType="PeUser">
+        update pe_user set registercity = #{registercity} ,updatetime = now() where id=#{id}
+    </update>
 </mapper>

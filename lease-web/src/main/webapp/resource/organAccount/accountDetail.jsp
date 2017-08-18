@@ -53,7 +53,7 @@
 
 	<body>
 		<div class="crumbs">
-		    <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrganAccount/Index">机构账户</a> > 账户往来明细
+		    <a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="OrganAccount/Index">机构账户</a> > 往来明细
 		    <button class="SSbtn blue back" onclick="callBack()">返回</button>
 		</div>
 		<div class="content">
@@ -65,6 +65,11 @@
 			<input name="fullName" id="fullName" value="${fullName}" type="hidden">
 			
 			<div class="row form" style="padding-top: 30px;">
+				<ul class="tabmenu">
+                    <li class="on">账户明细</li>
+                    <li><a href="OrganAccount/CouponDetail?organId=${organId}&fullName=${fullName}" style="text-decoration: none;">抵用券明细</a></li>
+                </ul>
+				
 				<div class="col-4">
 					<label>类型</label>
 					<select id="type" name="type">

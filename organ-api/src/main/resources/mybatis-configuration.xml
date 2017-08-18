@@ -51,5 +51,6 @@
 		<typeAlias type="com.szyciov.org.entity.OrgInformation" alias="OrgInformation"/>
 		<typeAlias type="com.szyciov.lease.entity.PubCityAddr" alias="PubCityAddr"/>
 		<typeAlias type="com.szyciov.entity.PubCouponDetail" alias="PubCouponDetail"/>
+		<typeAlias type="com.szyciov.dto.coupon.MyCouponDTO" alias="MyCouponDTO"/>
 	</typeAliases>
 </configuration>

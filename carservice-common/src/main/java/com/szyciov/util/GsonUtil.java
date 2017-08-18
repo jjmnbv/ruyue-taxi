@@ -1,7 +1,14 @@
 package com.szyciov.util;
 
+import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.szyciov.dto.coupon.CouponInfoDTO;
 import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +48,20 @@ public class GsonUtil {
      */
     public static  <T> T fromJson(String json, Class<T> clss){
         return GsonHolder.gson.fromJson(json,clss);
+    }
+
+    /**
+     * 将json字符串转换成list对象
+     * @param json
+     * @param type
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+
+    public static <T> List<T> fromJson2Array(String json,Type type) throws Exception{
+        List<T> list  = GsonHolder.gson.fromJson(json,type);
+        return list;
     }
 
 }

@@ -164,6 +164,8 @@ public class HomePageService {
 			info.put("payedmoney", compayData.get("payedmoney"));
 			info.put("incomemoney", compayData.get("incomemoney"));
 			info.put("diffmoney", compayData.get("diffmoney"));
+			info.put("cancelmoney", compayData.get("cancelmoney"));
+			info.put("couponmoney", compayData.get("couponmoney"));
 		}
     }
     /**

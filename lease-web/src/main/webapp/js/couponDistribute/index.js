@@ -9,8 +9,7 @@ $(function () {
 	initSelectCoupon();
 	initSelectRule();
 	initDataPicker();
-	//getSelectCitys();
-	//initSelectGetCity();
+ 
 	$(".close").click(function(){
 		$("#editFormDiv").hide();
 		refreshForm("editForm")
@@ -27,13 +26,19 @@ $(function () {
 	})
 	//选择发放业务时联动发放对象
 	$("#sendservicetype").on('change',function(){
-		$("#pubCityaddr .kongjian_list").remove();
-		$("#sendruletarget").empty();
+		$("#pubCityaddr .con").off('click');
+		$("#pubCityaddr .kongjian_list").remove();         //移除城市控件,重新加载
+		$("#sendruletarget").empty();                      //清空发放对象
 		var sendservicetype=$(this).val();
 		if(sendservicetype=='1'){
 			$("#sendruletarget").append('<option value="">请选择</option><option value="2">机构用户</option>');
+			$("#sendruletarget").trigger("change");
 		}else if(sendservicetype=='2'){
 			$("#sendruletarget").append('<option value="">请选择</option><option value="1">机构客户</option><option value="2">机构用户</option>');
+			$("#sendruletarget").trigger("change");
+		}else if(sendservicetype==''){
+			$("#sendruletarget").append('<option value="">请选择</option>');
+			$("#sendruletarget").trigger("change");
 		}
 	})
 	
@@ -70,6 +75,7 @@ $(function () {
 		}else{
 			$(".organuserDiv").hide();//机构客户
 			$("#sendruleidref").empty();
+			$("#sendruleidref").append('<option value="">请选择</option>');
 		}
 	})
 	
@@ -767,7 +773,7 @@ function checkInputs(){
 		}
 		//检测随机派发金额
 		if($("input[name='sendmoneytype']:checked").val()=='2'){
-			if($("#sendlowmoney").val()>=$("#sendhighmoney").val()){
+			if(parseInt($("#sendlowmoney").val())>=parseInt($("#sendhighmoney").val())){
 				toastr.error("随机派发金额参数错误，随机上限须大于下限", "提示");
 				return false;
 			}

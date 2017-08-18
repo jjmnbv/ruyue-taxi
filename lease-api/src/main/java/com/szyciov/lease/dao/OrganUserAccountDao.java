@@ -9,8 +9,10 @@ import org.springframework.stereotype.Repository;
 
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.entity.OrganUserAccountInfo;
+import com.szyciov.lease.entity.OrganUserCouponInfo;
 import com.szyciov.lease.mapper.OrganUserAccountMapper;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
+import com.szyciov.lease.param.OrganUserCouponQueryParam;
 
 @Repository("OrganUserAccountDao")
 public class OrganUserAccountDao {
@@ -50,5 +52,21 @@ public class OrganUserAccountDao {
 	
 	public List<OrgUserExpenses> getUserExpensesListExport(OrganUserAccountQueryParam organUserAccountQueryParam) {
 		return mapper.getUserExpensesListExport(organUserAccountQueryParam);
+	}
+
+	public int getOrganUserCouponInfoListCount(OrganUserCouponQueryParam queryParam) {
+		return mapper.getOrganUserCouponInfoListCount(queryParam);
+	}
+
+	public List<OrganUserCouponInfo> getOrganUserCouponInfoList(OrganUserCouponQueryParam queryParam) {
+		return mapper.getOrganUserCouponInfoList(queryParam);
+	}
+
+	public String getBusinessCitys(String lecompanyid) {
+		return mapper.getBusinessCitys(lecompanyid);
+	}
+
+	public List<String> getActivitysInBusinessCity(List<OrganUserCouponInfo> coupons) {
+		return mapper.getActivitysInBusinessCity(coupons);
 	}
 }

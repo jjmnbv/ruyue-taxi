@@ -54,13 +54,21 @@ String basePath = request.getScheme()+"://" +request.getServerName()+":" +reques
 		                	<span style="vertical-align:text-bottom;margin-left:5px;">总收益金额</span>
 		                </div>
 		                <div class="order_num font_red col-6" id="totalsy">0</div><br>
-		                <div class="col-6" style="border-right:1px solid #ddd;">
+		                <div class="col-3" style="border-right:1px solid #ddd;">
 		                	<strong>￥${totalmoney}</strong>
 		                	总订单金额
 		                </div>
-		                 <div class="col-6">
+		                 <div class="col-3" style="border-right:1px solid #ddd;">
 		                	<strong>￥${cytotalmoney}</strong>
 		                	差异金额
+		                </div>
+		                 <div class="col-3" style="border-right:1px solid #ddd;">
+		                	<strong>￥${couponmoney}</strong>
+		                	优惠金额
+		                </div>
+		                 <div class="col-3">
+		                	<strong>￥${cancelmoney}</strong>
+		                	取消费用
 		                </div>
 	                </div>
             	</div>
@@ -144,7 +152,9 @@ String basePath = request.getScheme()+"://" +request.getServerName()+":" +reques
  	
  	var totalmoney = ${totalmoney};
  	var cytotalmoney = ${cytotalmoney};
- 	var totalsy = "￥"+parseFloat(totalmoney-cytotalmoney).toFixed(1);
+ 	var couponmoney = ${couponmoney};
+ 	var cancelmoney = ${cancelmoney};
+ 	var totalsy = "￥"+parseFloat(totalmoney-cytotalmoney-couponmoney+cancelmoney).toFixed(1);
  	$("#totalsy").html(totalsy);
  </script>
 </html>

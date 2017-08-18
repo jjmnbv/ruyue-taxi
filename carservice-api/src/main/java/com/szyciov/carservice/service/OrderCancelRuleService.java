@@ -14,6 +14,7 @@ import com.szyciov.entity.PubOrderCancelRule;
 import com.szyciov.entity.Retcode;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.PubOrderCancelRuleEnum;
+import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.util.JedisUtil;
 import com.szyciov.util.StringUtil;
 import org.apache.commons.lang.StringUtils;
@@ -58,6 +59,38 @@ public class OrderCancelRuleService {
             ret.put("pricereason", null);
             return ret;
         }
+
+        //校验订单状态
+        if(OrderState.CANCEL.state.equals(order.getOrderstatus())) {
+            LOGGER.warn("订单(" + order.getOrderno() + ")已取消");
+            ret.put("status", Retcode.ORDERISCANCEL.code);
+            ret.put("message", Retcode.ORDERISCANCEL.msg);
+            ret.put("price", null);
+            ret.put("pricereason", null);
+            return ret;
+        }
+        if(OrderState.INSERVICE.state.equals(order.getOrderstatus()) || OrderState.SERVICEDONE.state.equals(order.getOrderstatus())
+            || OrderState.WAITMONEY.state.equals(order.getOrderstatus())) {
+            LOGGER.warn("订单(" + order.getOrderno() + ")状态不正确");
+            ret.put("status", Retcode.INVALIDORDERSTATUS.code);
+            ret.put("message", Retcode.INVALIDORDERSTATUS.msg);
+            ret.put("price", null);
+            ret.put("pricereason", null);
+            return ret;
+        }
+        if((order instanceof OpTaxiOrder)) {
+            OpTaxiOrder taxiOrder = (OpTaxiOrder) order;
+            if((OrderState.START.state.equals(order.getOrderstatus()) || OrderState.ARRIVAL.state.equals(taxiOrder.getOrderstatus()))
+                && taxiOrder.getMeterrange() > 0) {
+                LOGGER.warn("订单(" + order.getOrderno() + ")状态不正确");
+                ret.put("status", Retcode.INVALIDORDERSTATUS.code);
+                ret.put("message", Retcode.INVALIDORDERSTATUS.msg);
+                ret.put("price", null);
+                ret.put("pricereason", null);
+                return ret;
+            }
+        }
+
         //如果接单时间为空，表示没有司机接单，取消不产生费用
         if(null == order.getOrdertime()) {
             LOGGER.info("订单(" + order.getOrderno() + ")没有司机接单，免责取消");

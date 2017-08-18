@@ -354,7 +354,7 @@ public class PubDriverController extends BaseController {
 		List<Object> colData11 = new ArrayList<Object>();
 		List<Object> colData12 = new ArrayList<Object>();
 		List<Object> colData13 = new ArrayList<Object>();
-		List<Object> colData14 = new ArrayList<Object>();
+		/*List<Object> colData14 = new ArrayList<Object>();*/
 		String leasesCompanyId = this.getLoginLeUser(request).getLeasescompanyid();
 		String queryKeyword = request.getParameter("queryKeyword");
 		String queryWorkStatus = request.getParameter("queryWorkStatus");
@@ -461,11 +461,11 @@ public class PubDriverController extends BaseController {
 				colData11.add("");
 			}
 			//归属车企
-			if(pubDriver.get(i).get("belongleasecompanyName") != null){
+			/*if(pubDriver.get(i).get("belongleasecompanyName") != null){
 				colData14.add(pubDriver.get(i).get("belongleasecompanyName"));
 			}else{
 				colData14.add("");
-			}
+			}*/
 		}
 		Excel excel = new Excel();
 		// excel文件
@@ -482,7 +482,7 @@ public class PubDriverController extends BaseController {
 		colName.add("身份证号");
 		colName.add("驾驶类型");
 		colName.add("驾驶工龄");
-		colName.add("归属车企");
+		/*colName.add("归属车企");*/
 		colName.add("登记城市");
 		colName.add("绑定状态");
 		colName.add("在职状态");
@@ -497,7 +497,7 @@ public class PubDriverController extends BaseController {
 		colData.put("身份证号", colData6);
 		colData.put("驾驶类型", colData7);
 		colData.put("驾驶工龄", colData8);
-		colData.put("归属车企", colData14);
+		/*colData.put("归属车企", colData14);*/
 		colData.put("登记城市", colData9);
 		colData.put("绑定状态", colData10);
 		colData.put("在职状态", colData11);

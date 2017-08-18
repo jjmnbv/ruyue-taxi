@@ -13,6 +13,7 @@ public enum CouponRuleTypeEnum {
     EXPENSE(3, "消费"),
     ACTIVITY(4, "活动"),
     INVITE(5, "邀请"),
+    MANUAL(6, "人工"),
     
     /**
      * 规则对象

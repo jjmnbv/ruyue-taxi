@@ -7,14 +7,14 @@
 <!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
 	<!-- 增加 -->
 	<insert id="createPubVehicle" parameterType="PubVehicle">
-		insert into pub_vehicle(id,leasescompanyid,vehclineid,platenoprovince,platenocity,plateno,vin,color,city,loads,CreateTime,UpdateTime,Creater,Updater,Status,vehicletype,vehiclestatus,platformtype,boundstate)
-		values (#{id},#{leasesCompanyId},#{vehclineId},#{plateNoProvince},#{plateNoCity},#{plateNo},#{vin},#{color},#{city},#{loads},now(),now(),#{creater},#{updater},1,#{vehicleType},0,#{platformType},0)
+		insert into pub_vehicle(id,leasescompanyid,vehclineid,platenoprovince,platenocity,plateno,vin,color,city,loads,CreateTime,UpdateTime,Creater,Updater,Status,vehicletype,vehiclestatus,platformtype,boundstate,fullplateno)
+		values (#{id},#{leasesCompanyId},#{vehclineId},#{plateNoProvince},#{plateNoCity},#{plateNo},#{vin},#{color},#{city},#{loads},now(),now(),#{creater},#{updater},1,#{vehicleType},0,#{platformType},0,#{fullplateno})
 	</insert>
 	<!-- 修改 -->
 	<update id="updatePubVehicle" parameterType="PubVehicle">
 		UPDATE pub_vehicle set leasescompanyid=#{leasesCompanyId},vehclineid=#{vehclineId},platenoprovince=#{plateNoProvince},
 		platenocity=#{plateNoCity},plateno=#{plateNo},vin=#{vin},color=#{color},city=#{city},loads=#{loads},updateTime=now(),
-		Updater=#{updater},driverid=#{driverId},vehiclestatus=#{vehicleStatus} where id = #{id}
+		Updater=#{updater},driverid=#{driverId},vehiclestatus=#{vehicleStatus},fullplateno=#{fullplateno} where id = #{id}
 	</update>
 	<!-- 检查 车牌、车架号 是否重复 新增、修改用到 -->
 	<select id="checkPubVehicle" parameterType="PubVehicle" resultType="int">

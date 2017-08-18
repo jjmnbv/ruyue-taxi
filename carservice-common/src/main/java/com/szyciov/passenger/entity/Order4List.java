@@ -112,6 +112,16 @@ public class Order4List {
 	 * 取消费
 	 */
 	private double cancelfee;
+	
+	/**
+	 * 是否有取消规则
+	 */
+	private boolean hascancelrule;
+	
+	/**
+	 * 实际支付金额
+	 */
+	private double realpayamount;
 
 	public String getOrderno() {
 		return orderno;
@@ -391,5 +401,21 @@ public class Order4List {
 
 	public void setCancelfee(double cancelfee) {
 		this.cancelfee = cancelfee;
+	}
+
+	public boolean isHascancelrule() {
+		return hascancelrule;
+	}
+
+	public void setHascancelrule(boolean hascancelrule) {
+		this.hascancelrule = hascancelrule;
+	}
+
+	public double getRealpayamount() {
+		return realpayamount;
+	}
+
+	public void setRealpayamount(double realpayamount) {
+		this.realpayamount = realpayamount;
 	}
 }

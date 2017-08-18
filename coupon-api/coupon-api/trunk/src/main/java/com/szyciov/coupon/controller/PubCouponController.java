@@ -7,15 +7,16 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import com.szyciov.coupon.dto.CouponInfoDTO;
 import com.szyciov.coupon.dto.CouponUseInfoDTO;
 import com.szyciov.coupon.dto.GenerateCouponDTO;
+import com.szyciov.coupon.factory.generate.GenerateCoupon;
 import com.szyciov.coupon.factory.generate.GenerateCouponFactory;
 import com.szyciov.coupon.param.PubCouponQueryParam;
+import com.szyciov.coupon.rabbitMq.coupon.SenderCouponQueue;
 import com.szyciov.coupon.service.PubCouponService;
 import com.szyciov.coupon.service.PubCouponUseService;
 import com.szyciov.coupon.util.ResultData;
-import com.szyciov.enums.CouponRuleTypeEnum;
+import com.szyciov.dto.coupon.CouponInfoDTO;
 import com.szyciov.enums.ServiceState;
 import com.szyciov.enums.coupon.CouponEnum;
 import com.szyciov.param.coupon.CouponExpenseParam;
@@ -24,6 +25,7 @@ import com.szyciov.param.coupon.CouponReserveParam;
 import com.szyciov.param.coupon.CouponUseParam;
 import com.szyciov.param.coupon.GenerateCouponParam;
 import com.szyciov.util.GsonUtil;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,12 +49,15 @@ public class PubCouponController {
 
     @Resource
     private PubCouponUseService couponUseService;
+
+    @Resource
+    private SenderCouponQueue senderCouponQueue;
     /**
-     * 生成抵用券
-     * @param
+     * 同步生成抵用券，并返回结果
+     * @param   jsonStr
      * @return
      */
-    @RequestMapping("/generate")
+    @RequestMapping("/sysn/generate")
     @ResponseBody
     public String generateCoupon(@RequestBody String jsonStr) {
 
@@ -66,24 +71,9 @@ public class PubCouponController {
 
             List<GenerateCouponDTO> dtoList = null;
 
-            //注册、邀请类型
-            if (CouponRuleTypeEnum.REGISTER.value.equals(param.getType()) ||
-                CouponRuleTypeEnum.INVITE.value.equals(param.getType())) {
-                dtoList = GenerateCouponFactory.registerGenerateCoupon().generate(param);
-            }
-
-            //充值类型
-            if (CouponRuleTypeEnum.RECHARGE.value.equals(param.getType())) {
-                dtoList = GenerateCouponFactory.rechargeGenerateCoupon().generate(param);
-            }
-            //消费类型
-            if (CouponRuleTypeEnum.EXPENSE.value.equals(param.getType())) {
-                dtoList = GenerateCouponFactory.expenseGenerateCoupon().generate(param);
-            }
-
-            //活动类型
-            if (CouponRuleTypeEnum.ACTIVITY.value.equals(param.getType())) {
-                dtoList = GenerateCouponFactory.activityGenerateCoupon().generate(param);
+            GenerateCoupon generateCoupon =  GenerateCouponFactory.generateCoupon(param.getType());
+            if(generateCoupon!=null) {
+                dtoList = generateCoupon.generate(param);
             }
 
             if (dtoList != null && dtoList.size() > 0) {
@@ -100,7 +90,61 @@ public class PubCouponController {
         }
         return GsonUtil.toJson(resultData);
     }
+    /**
+     * 自动生成抵用券
+     * @param   jsonStr
+     * @return
+     */
+    @RequestMapping("/generate/auto")
+    @ResponseBody
+    public String autoGenerateCoupon(@RequestBody String jsonStr) {
 
+        ResultData resultData = new ResultData();
+        resultData.setStatus(ServiceState.SUCCESS.code);
+        resultData.setMessage(ServiceState.SUCCESS.msg);
+
+        try {
+
+            couponService.aotuGenerateCoupon(jsonStr);
+
+        }catch (Exception e){
+            resultData.setStatus(ServiceState.EXCEPTION.code);
+            resultData.setMessage(ServiceState.EXCEPTION.msg);
+            logger.error("生成抵用券失败，异常信息：",e);
+        }
+        return GsonUtil.toJson(resultData);
+    }
+
+    /**
+     * 生成抵用券（异步生成）
+     * @param   jsonStr
+     * @return
+     */
+    @RequestMapping("/generate")
+    @ResponseBody
+    public String senderGenerateCoupon(@RequestBody String jsonStr) {
+
+        ResultData resultData = new ResultData();
+        resultData.setStatus(ServiceState.SUCCESS.code);
+        resultData.setMessage(ServiceState.SUCCESS.msg);
+
+        try {
+            senderCouponQueue.pushGenerateMsg(jsonStr);
+
+            senderCouponQueue.pushAutoMsg(jsonStr);
+        }catch (Exception e){
+            resultData.setStatus(ServiceState.EXCEPTION.code);
+            resultData.setMessage(ServiceState.EXCEPTION.msg);
+            logger.error("生成抵用券失败，异常信息：",e);
+        }
+        return GsonUtil.toJson(resultData);
+    }
+
+    /**
+     * 返回当前可用的券
+     * @param jsonStr
+     * @return
+     */
     @RequestMapping("/list")
     @ResponseBody
     public String listCoupon(@RequestBody String jsonStr) {
@@ -141,6 +185,50 @@ public class PubCouponController {
 
     }
 
+    /**
+     * 返回所有未使用的券
+     * @param jsonStr
+     * @return
+     */
+    @RequestMapping("/all/list")
+    @ResponseBody
+    public String allListCoupon(@RequestBody String jsonStr) {
+        ResultData resultData = new ResultData();
+        resultData.setStatus(ServiceState.SUCCESS.code);
+        resultData.setMessage(ServiceState.SUCCESS.msg);
+
+        try {
+
+            CouponRequestParam param = GsonUtil.fromJson(jsonStr, CouponRequestParam.class);
+            PubCouponQueryParam queryParam = new PubCouponQueryParam();
+
+            queryParam.setCity(param.getCityCode());
+            queryParam.setCompanyid(param.getCompanyId());
+            queryParam.setCouponstatus(CouponEnum.COUPON_STATUS_UN_USE.code);
+            queryParam.setUserid(param.getUserId());
+            queryParam.setIDisplayStart(param.getiDisplayStart());
+            queryParam.setIDisplayLength(param.getiDisplayLength());
+
+            List<CouponInfoDTO> dtos = couponService.listAllCoupon(queryParam);
+
+            if(dtos!=null && dtos.size()>0){
+                resultData.setDataType(ResultData.DATA_TYPE_LIST);
+                resultData.setData(GsonUtil.toJson(dtos));
+            }else{
+                resultData.setStatus(ServiceState.FAILED.code);
+                resultData.setMessage(ServiceState.FAILED.msg);
+            }
+
+        }catch (Exception e){
+            resultData.setStatus(ServiceState.EXCEPTION.code);
+            resultData.setMessage(ServiceState.EXCEPTION.msg);
+            logger.error("返回抵用券列表异常，异常信息：",e);
+        }
+
+        return GsonUtil.toJson(resultData);
+
+    }
+
 
     @RequestMapping("/get/max")
     @ResponseBody
@@ -154,6 +242,9 @@ public class PubCouponController {
 
             PubCouponQueryParam queryParam = new PubCouponQueryParam();
 
+            if(StringUtils.isEmpty(queryParam.getUserid())){
+                throw new Exception("用户ID缺失");
+            }
             queryParam.setCity(param.getCityCode());
             queryParam.setCompanyid(param.getCompanyId());
             queryParam.setCouponstatus(CouponEnum.COUPON_STATUS_UN_USE.code);
@@ -313,8 +404,6 @@ public class PubCouponController {
         }
         return GsonUtil.toJson(resultData);
     }
-
-
 
 
 }

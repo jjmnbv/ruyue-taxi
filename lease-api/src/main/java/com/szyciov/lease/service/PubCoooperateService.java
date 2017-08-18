@@ -61,14 +61,8 @@ public class PubCoooperateService {
         pageBean.setsEcho(queryParam.getsEcho());
         List<DriverInformationDto> list = dao.getDriverInformationList(queryParam);
         for(int i = 0;i<list.size();i++){
-            if(list.get(i).getVehicletype().equals("1")){
-                if(list.get(i).getDistributionVel()==null || list.get(i).getDistributionVel().equals("")){
-                    list.get(i).setDistributionVel("/");
-                }
-            }else{
-                if(list.get(i).getDistributionVel()==null || list.get(i).getDistributionVel().equals("")){
-                    list.get(i).setDistributionVel("未分配");
-                }
+            if(list.get(i).getDistributionVel()==null || list.get(i).getDistributionVel().equals("")){
+                list.get(i).setDistributionVel("未分配");
             }
 
         }
@@ -108,18 +102,13 @@ public class PubCoooperateService {
         return map;
     };
 
-//	public PubCooagreement getById(String id){
-//		return dao.getById(id);
-//	};
-//
-//	public Map<String, String> updatePubCooagreement(PubCooagreement pubCooagreement){
-//		Map<String, String> map = new HashMap<>();
-//		dao.updatePubCooagreement(pubCooagreement);
-//		map.put("ResultSign", "Successful");
-//		map.put("MessageKey", "修改成功");
-// 		return map;
-//	};
-//
+    public List<Map<String, Object>> select2QueryJobnum(PubCoooperateQueryParam queryParam){
+    	return dao.select2QueryJobnum(queryParam);
+    };
+    
+    public List<Map<String, Object>> select2QueryDriverInformation(PubCoooperateQueryParam queryParam){
+    	return dao.select2QueryDriverInformation(queryParam);
+    };
 //	public Map<String, String> deletePubCooagreement(String id){
 //		Map<String, String> map = new HashMap<>();
 //		dao.deletePubCooagreement(id);

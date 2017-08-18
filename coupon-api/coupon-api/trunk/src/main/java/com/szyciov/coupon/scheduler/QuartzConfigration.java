@@ -1,5 +1,7 @@
 package com.szyciov.coupon.scheduler;
 
+import javax.annotation.Resource;
+
 import com.szyciov.coupon.scheduler.job.ScheduleJobs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -19,6 +21,9 @@ public class QuartzConfigration implements ApplicationListener<ContextRefreshedE
     @Autowired
     public ScheduleJobs myScheduler;
 
+    @Resource
+    private MyJobFactory myJobFactory;
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         myScheduler.initSchedules();
@@ -35,6 +40,7 @@ public class QuartzConfigration implements ApplicationListener<ContextRefreshedE
         bean.setOverwriteExistingJobs(true);
         // 延时启动，应用启动1秒后
         bean.setStartupDelay(1);
+        bean.setJobFactory(myJobFactory);
         return bean;
     }
 }

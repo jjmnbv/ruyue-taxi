@@ -15,8 +15,10 @@
 	        (case org_user.sex when '0' then '男' when '1' then '女' when '男' then '男' when '女' then '女' else '/' end) as sex,
 	        IFNULL(org_useraccount.balance,0) as balance,
 	        (case org_user.status when '1' then IFNULL(b3.shortname,'/') else '/' end)as shortName,
+	        (select count(*) from pub_coupon where lecompanyid=#{leasesCompanyId} and platformtype=1 and target=2 and userid=org_user.id and couponstatus=0 and status=1) as validCoupon,
 	        (select COUNT(org_userexpenses.id) from org_userexpenses where org_userexpenses.leasescompanyid = #{leasesCompanyId} and org_userexpenses.userid = org_user.id and org_userexpenses.detailtype='0') as balanceCount,
-	        (select COUNT(org_userexpenses.id) from org_userexpenses where org_userexpenses.leasescompanyid = #{leasesCompanyId} and org_userexpenses.userid = org_user.id and (org_userexpenses.detailtype='0' or org_userexpenses.detailtype='1')) as dealCount
+	        (select COUNT(org_userexpenses.id) from org_userexpenses where org_userexpenses.leasescompanyid = #{leasesCompanyId} and org_userexpenses.userid = org_user.id and (org_userexpenses.detailtype='0' or org_userexpenses.detailtype='1')) as dealCount,
+	        (select count(*) from pub_coupon where lecompanyid=#{leasesCompanyId} and platformtype=1 and target=2 and userid=org_user.id and status=1) as couponCount
 	    from org_user inner join
 	    (
 	    select org_user.id,org_user.account
@@ -539,4 +541,75 @@
 	    order by org_userexpenses.expensetime desc
 	</select>
 
+    <select id="getOrganUserCouponInfoList" resultType ="OrganUserCouponInfo" parameterType="OrganUserCouponQueryParam">
+       select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+        (select 
+               pc.couponactivyidref as id,
+               pc.name,
+               pc.couponstatus,
+               DATE_FORMAT(pc.createtime,'%Y-%m-%d %H:%i') as sendtime,
+		       pc.money as amount,
+		       DATE_FORMAT(pc.outimestart,'%Y.%m.%d') as usestarttime,
+		       DATE_FORMAT(pc.outtimeend,'%Y.%m.%d') useendtime,
+			   GROUP_CONCAT(city.city SEPARATOR ',') as usecity
+		from pub_coupon pc
+		left join pub_coupon_activity_use_city pcauc on pc.couponactivyidref=pcauc.couponactivityidref 
+		left join pub_cityaddr city on city.id=pcauc.city
+		where pc.lecompanyid=#{lecompanyid} and pc.platformtype=1
+		  and pc.target=2 and pc.userid=#{userid}
+		  <if test="couponstatus != null">
+		   and pc.couponstatus=#{couponstatus}
+		  </if>
+		  <if test="starttime != null and starttime !=''">
+		   and pc.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+		  </if>
+		  <if test="endtime != null and endtime !=''">
+		   and pc.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+		  </if>
+		  group by pc.id) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+    </select>
+    
+    <select id="getOrganUserCouponInfoListCount" parameterType="OrganUserCouponInfo" resultType="Integer">
+        select count(*)
+		from pub_coupon pc
+		<!-- left join pub_coupon_activity_use_city pcauc on pc.couponactivyidref=pcauc.couponactivityidref 
+		left join pub_cityaddr city on city.id=pcauc.city -->
+		where pc.lecompanyid=#{lecompanyid} and pc.platformtype=1
+		  and pc.target=2 and pc.userid=#{userid} 
+		  <if test="couponstatus != null">
+		   and pc.couponstatus=#{couponstatus}
+		  </if>
+		  <if test="starttime != null and starttime !=''">
+		   and pc.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+		  </if>
+		  <if test="endtime != null and endtime !=''">
+		   and pc.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+		  </if>
+    </select>
+    
+    <select id="getBusinessCitys" resultType="string" parameterType="string">
+            select GROUP_CONCAT(city SEPARATOR ',') from pub_cityaddr where id in 
+          (select distinct ps.city from pub_sendrules ps,le_accountrules oa
+             where ps.city=oa.city 
+               and ps.leasescompanyid=#{lecompanyid}
+               and oa.leasescompanyid=#{lecompanyid}
+               and ps.vehicletype=0
+               and ps.platformtype=1
+               and ps.rulesstate='0'
+               and oa.rulesstate='0'
+               and ps.status=1 
+               and oa.status=1 )
+    </select>
+    
+    <select id="getActivitysInBusinessCity" parameterType="java.util.List" resultType="string">
+          select id from pub_coupon_activity where id in (
+           <foreach collection="list" item="item" separator=",">
+               #{item.id}
+           </foreach>
+          ) and usetype=2
+    </select>
 </mapper>

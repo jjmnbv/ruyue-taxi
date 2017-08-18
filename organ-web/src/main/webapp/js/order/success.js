@@ -108,7 +108,7 @@ function cancelOrder(orderno){
 	    url: "Order/CancelOrder/" +  orderno + "?ordertype=" + $("#ordertype").val() + "?date=" + new Date(),
 	    dataType: "json",
 	    success: function(data){
-	    	if(data.status == 0){
+	    	if(data.status == 0 || data.status == 2003){
 	    		switch ($("#ordertype").val()) {
 				case "1":
 					window.location.href=document.getElementsByTagName("base")[0].getAttribute("href") + "Order/yueche/"+orderno;

@@ -16,7 +16,9 @@ public interface PubPremiumRuleMapper {
 	 List<PubPremiumParam> getPubPremiumRuleByQueryList(PubPremiumParam pubPremiumParam);
 	 int getPubPremiumRuleByQueryCount(PubPremiumParam pubPremiumParam);
 	 List<PubDictionary> getCity();
-	 int ruleConflict(PubPremiumParam pubPremiumParam);
+	 List<PubDictionary> getWeeks(String id);
+	 PubPremiumParam getRulename(String id);
+	 List<PubPremiumParam> ruleConflict(PubPremiumParam pubPremiumParam);
 	 PubPremiumParam getById(PubPremiumParam pubPremiumParam);
 	 void updateStatus(PubPremiumParam pubPremiumParam);
 	 void ruleConflictOk(PubPremiumParam pubPremiumParam);
@@ -46,4 +48,11 @@ public interface PubPremiumRuleMapper {
 	 int getHistorydetaiDatelCount(PubPremiumHistory pubPremiumHistory);
 	 void deleteWeek(String id);
 	 void deletWeekDetail(String id);
+	 PubPremiumRule getRule(String id);
+	 List<PubPremiumRuleWeekdetail> getWeekRule(String id);
+	 List<PubPremiumRuleDatedetail> getDateRule(String id);
+	 List<PubPremiumDetail> getdetailList(PubPremiumHistory pubPremiumHistory);
+	 int getdetailCount(PubPremiumHistory pubPremiumHistory);
+	 List<PubPremiumDetail> getdetailDateList(PubPremiumHistory pubPremiumHistory);
+	 int getdetaiDatelCount(PubPremiumHistory pubPremiumHistory);
 }

@@ -982,6 +982,8 @@
 			updatetime,
 			wdpwdchangestate,
 			customertype,
+			expirestime,
+			registercity,
 			Status
 		) VALUES(
 			#{userid},
@@ -1008,6 +1010,8 @@
 			now(),
 			'0',
 			'0',
+			date_add(now(),interval 1 MONTH),
+			#{registercity},
 			1
 		)
 	</insert>
@@ -1281,7 +1285,9 @@
 	<!-- 根据用户信息更新用户密码 -->
 	<update id="resetPwd" parameterType="HashMap">
 		UPDATE org_user
-		SET org_user.userpassword = #{password}
+		SET org_user.userpassword = #{password},
+		    org_user.expirestime = date_add(now(),interval 1 MONTH),
+		    org_user.updatetime = now()
 		WHERE
 			org_user.status = 1
 		AND org_user.id = #{userid}
@@ -1651,7 +1657,8 @@
 			updatetime,
 			withdrawpwd,
 			status,
-			wdpwdchangestate
+			wdpwdchangestate,
+			registercity
 		)
 		VALUES
 			(
@@ -1676,7 +1683,8 @@
 				now(),
 				NULL,
 				'1',
-				'0'
+				'0',
+				#{registercity}
 			)
 	</insert>
 	<update id="updateUserInfo2PeUserPassword" parameterType="Map">
@@ -1685,4 +1693,47 @@
 	<update id="updateUserInfo2OrgUserPassword" parameterType="Map">
 		update org_user set userpassword = #{password} where account = #{phone}
 	</update>
+	
+	<select id="querySignCompanyByOrganid" resultType="java.util.Map">
+	    select companyid as companyId from org_organ_company_ref 
+	    where organid=#{id} and status=1
+	</select>
+	
+	<select id="queryOperateid" resultType="string">
+	    select operateid from op_user where usertype=1 limit 1;
+	</select>
+	
+	<!-- 重置已过期的邀请信息 -->
+	<update id="updateExpireInviteInfos">
+		UPDATE pub_inviteinfo
+		SET pub_inviteinfo.invitestate = 2,
+		 	pub_inviteinfo.updatetime = now()
+		WHERE
+			pub_inviteinfo.status=1
+		<![CDATA[
+			and	pub_inviteinfo.invitetime < date_add(now(), INTERVAL - 7 DAY)
+			and pub_inviteinfo.invitestate=0
+		]]>
+	</update>
+	
+	<!-- 获取被邀请人的邀请信息 -->
+	<select id="getInviteInfoByInvitee" parameterType="String" resultType="Map">
+		select * from pub_inviteinfo where pub_inviteinfo.status=1 and pub_inviteinfo.invitestate=0 and pub_inviteinfo.inviteephone=#{inviteephone}
+	</select>
+	
+	<!-- 更新邀请状态 -->
+	<update id="updateInviteState" parameterType="Map">
+		UPDATE pub_inviteinfo
+		SET 
+			pub_inviteinfo.invitestate=#{invitestate},
+			pub_inviteinfo.updatetime=now()
+		WHERE pub_inviteinfo.status=1
+		  AND pub_inviteinfo.invitestate=0
+		  AND pub_inviteinfo.inviteephone=#{inviteephone}
+	</update>
+	
+	<!-- 获取运营端的用户信息 -->
+	<select id="getUser4Op" parameterType="String" resultType="PeUser">
+		select * from  pe_user where account = #{account} and status = 1
+	</select>
 </mapper>

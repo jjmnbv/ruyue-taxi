@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
@@ -21,6 +22,7 @@ import com.szyciov.dto.pubCoooperate.DriverInformationDto;
 import com.szyciov.entity.PubCoooperate;
 import com.szyciov.entity.PubVehicleModelsRef;
 import com.szyciov.lease.entity.LeVehiclemodels;
+import com.szyciov.lease.param.PubDriverQueryParam;
 import com.szyciov.op.param.PubCoooperateQueryParam;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.Constants;
@@ -86,15 +88,15 @@ public class PubCoooperateController extends BaseController {
     public ModelAndView driverInformation(HttpServletRequest request) {
         ModelAndView mav = new ModelAndView();
         String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-        String id = request.getParameter("leasescompanyid");
+        String id = request.getParameter("id");
         PubCoooperateQueryParam p = new PubCoooperateQueryParam();
-        p.setKey(this.getLoginLeUser(request).getLeasescompanyid());//companyid
-        p.setLeasescompanyid(id);
+        p.setKey(id);//companyid
+//        p.setLeasescompanyid(id);
         List<DriverInformationDto> list = templateHelper.dealRequestWithToken("/PubCoooperate/GetModelsList", HttpMethod.POST, userToken,
                 p,List.class);
         mav.addObject("list", list);
-        mav.addObject("leasescompanyid", id);
-        mav.addObject("servicetype", request.getParameter("servicetype"));
+        mav.addObject("id", id);
+//        mav.addObject("servicetype", request.getParameter("servicetype"));
         mav.setViewName("resource/pubCoooperate/driverInformation");
         return mav;
     }
@@ -104,23 +106,23 @@ public class PubCoooperateController extends BaseController {
                                                 HttpServletResponse response) throws IOException {
         response.setContentType("text/html;charset=utf-8");
         String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-        queryParam.setKey(this.getLoginLeUser(request).getLeasescompanyid());//companyid
-        queryParam.setLeasescompanyid(request.getParameter("leasescompanyid"));
-        queryParam.setServicetype(request.getParameter("servicetype"));
+//        queryParam.setKey(this.getLoginLeUser(request).getLeasescompanyid());//companyid
+        queryParam.setKey(request.getParameter("coooperateid"));
+//        queryParam.setServicetype(request.getParameter("servicetype"));
         return templateHelper.dealRequestWithToken("/PubCoooperate/GetDriverInformationByQuery", HttpMethod.POST, userToken,
                 queryParam,PageBean.class);
     }
 
     @RequestMapping("/PubCoooperate/GetOriginalModels")
     @ResponseBody
-    public DriverInformationDto getOriginalModels(@RequestParam String vehicleid,@RequestParam String leasescompanyid, HttpServletRequest request,
+    public DriverInformationDto getOriginalModels(@RequestParam String coooperateid,@RequestParam String vehicleid , HttpServletRequest request,
                                                   HttpServletResponse response) throws IOException {
         response.setContentType("text/html;charset=utf-8");
         String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
         Map<String,String> map = new HashMap<String, String>();
         map.put("id",this.getLoginLeUser(request).getLeasescompanyid());
+        map.put("key", coooperateid);
         map.put("vehicleid", vehicleid);
-        map.put("leasescompanyid", leasescompanyid);
         return templateHelper.dealRequestWithToken("/PubCoooperate/GetOriginalModels", HttpMethod.POST, userToken,
                 map,DriverInformationDto.class);
     }
@@ -160,4 +162,34 @@ public class PubCoooperateController extends BaseController {
         }
 
     }
+    /**
+     * <p></p>
+     * @return 
+     */
+    @RequestMapping(value = "/PubCoooperate/Select2QueryJobnum")
+    @ResponseBody
+    public List<Map<String, Object>> select2QueryJobnum( @RequestParam String queryJobnum,HttpServletRequest request,
+            HttpServletResponse response){
+    	String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+    	PubCoooperateQueryParam queryParam = new PubCoooperateQueryParam();
+    	queryParam.setQueryJobnum(queryJobnum);
+    	queryParam.setKey(request.getParameter("coooperateid"));
+    	return templateHelper.dealRequestWithToken("/PubCoooperate/Select2QueryJobnum", HttpMethod.POST, userToken,
+    			queryParam,List.class);
+    };
+    /**
+     * <p></p>
+     * @return 
+     */
+    @RequestMapping(value = "/PubCoooperate/Select2QueryDriverInformation")
+    @ResponseBody
+    public List<Map<String, Object>> select2QueryDriverInformation(@RequestParam String queryDriverInformation, HttpServletRequest request,
+            HttpServletResponse response){
+    	String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+    	PubCoooperateQueryParam queryParam = new PubCoooperateQueryParam();
+    	queryParam.setQueryDriverInformation(queryDriverInformation);
+    	queryParam.setKey(request.getParameter("coooperateid"));
+    	return templateHelper.dealRequestWithToken("/PubCoooperate/Select2QueryDriverInformation", HttpMethod.POST, userToken,
+    			queryParam,List.class);
+    };
 }

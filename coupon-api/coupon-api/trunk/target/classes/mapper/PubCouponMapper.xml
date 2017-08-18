@@ -19,11 +19,13 @@
     <select id="listAllScopeCoupon" resultType="CouponInfoDTO" parameterType="PubCouponQueryParam">
         SELECT
             t.id,t.name,t.money,t.servicetype,t.outimestart,
-            t.outtimeend,t.usetype,' ' cityStr
+            t.outtimeend,t.usetype,' ' cityStr,t.lecompanyid
         FROM
             pub_coupon t
         WHERE
-            #{nowDt} BETWEEN outimestart and outtimeend
+            <if test="nowDt!=null and nowDt!=''">
+                #{nowDt} BETWEEN outimestart and outtimeend
+            </if>
             and not exists (select 1 from pub_coupon_use_city a where a.couponidref = t.id)
             AND t. STATUS = '1'
             AND t.couponstatus = #{couponstatus}
@@ -31,7 +33,12 @@
               and t.servicetype = #{servicetype}
             </if>
             and not exists (select 1 from pub_coupon_use a where a.couponidref = t.id and a.status='1')
-            AND t.lecompanyid = #{companyid}
+            <if test="companyid!=null and companyid!=''">
+              AND t.lecompanyid = #{companyid}
+            </if>
+            <if test="userid!=null and userid!=''">
+                AND t.userid = #{userid}
+            </if>
             order by t.money desc,t.outtimeend asc,t.servicetype desc
             limit #{IDisplayStart},#{IDisplayLength}
     </select>
@@ -40,12 +47,14 @@
     <select id="listCityScopeCoupon" resultType="CouponInfoDTO" parameterType="PubCouponQueryParam">
         SELECT
           t.id,t.name,t.money,t.servicetype,t.outimestart,
-          t.outtimeend,t.usetype,
+          t.outtimeend,t.usetype,t.lecompanyid,
           (select  GROUP_CONCAT(getCityStr(city)) from pub_coupon_use_city a where a.couponidref = t.id) cityStr
         FROM
           pub_coupon t
         WHERE
-          #{nowDt} BETWEEN outimestart and outtimeend
+          <if test="nowDt!=null and nowDt!=''">
+              #{nowDt} BETWEEN outimestart and outtimeend
+          </if>
 		  and exists (select 1 from pub_coupon_use_city a where a.couponidref = t.id
               <if test="city!=null and city!=''">
                 and a.city = #{city}
@@ -57,7 +66,12 @@
           AND t. STATUS = '1'
           and not exists (select 1 from pub_coupon_use a where a.couponidref = t.id and a.status='1')
           AND t.couponstatus = #{couponstatus}
-          AND t.lecompanyid = #{companyid}
+          <if test="companyid!=null and companyid!=''">
+            AND t.lecompanyid = #{companyid}
+          </if>
+          <if test="userid!=null and userid!=''">
+            AND t.userid = #{userid}
+          </if>
           order by CONVERT (cityStr USING gbk) COLLATE gbk_chinese_ci ,t.money desc,t.outtimeend asc,t.servicetype desc
           limit #{IDisplayStart},#{IDisplayLength}
     </select>
@@ -80,6 +94,9 @@
         and t.target = #{target}
         AND t.couponstatus = #{couponstatus}
         AND t.lecompanyid = #{companyid}
+        <if test="userid!=null and userid!=''">
+            AND t.userid = #{userid}
+        </if>
     </select>
 
 
@@ -101,6 +118,18 @@
           updatetime = #{updatetime},
           updater = #{updater}
         where t.id = #{id}
+    </update>
+
+    <update id="timeOutCouponByTime" parameterType="PubCoupon">
+        update pub_coupon t
+        set
+        couponstatus = '2',
+        updatetime = #{updatetime},
+        updater = #{updater}
+        where t.couponstatus = #{couponstatus}
+        <![CDATA[
+             and t.outtimeend < #{outtimeend}
+        ]]>
     </update>
 
     <update id="removeCouponByUserId" parameterType="PubCoupon">

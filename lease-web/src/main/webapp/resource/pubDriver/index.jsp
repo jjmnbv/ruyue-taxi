@@ -139,7 +139,7 @@
 						<input id="queryJobNum" name="queryJobNum" type="text" placeholder="司机资格证号" value="" style="width: 68%;">
 						<input id="queryJobNums" name="queryJobNums" type="hidden" value="">	
 					</div>
-					<div class="col-3"><label>归属车企</label>
+					<div class="col-3" style="display: none;"><label>归属车企</label>
 						<select id="belongleasecompanyQuery" name="belongleasecompanyQuery">
 							<option value="" selected="selected">全部</option>
 							<c:forEach var="belongleasecompany" items="${belongleasecompany}">
@@ -148,7 +148,7 @@
 						</select>
 						<input id="belongleasecompanyQuerys" name="belongleasecompanyQuerys" type="hidden" value="">	
 					</div>
-					<div class="col-6" style="text-align: right;">
+					<div class="col-6" style="text-align: right;float: right;">
 						<button class="Mbtn red_q" onclick="search();">查询</button>
 						<button class="Mbtn grey_w" onclick="emptys();">清空</button>
 					</div>

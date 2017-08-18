@@ -20,6 +20,19 @@ $(document).ready(function() {
         }
     });
 
+    /**
+     * 计费规则点击收缩
+     */
+    $(".e_margin .fr").click(function() {
+        if($(".e_box").css("display")=="none"){
+            $(this).css("background-image","url(img/orgordermanage/btn_up.png)");
+            $(".e_box").show();
+        }else {
+            $(this).css("background-image","url(img/orgordermanage/btn_down.png)");
+            $(".e_box").hide();
+        }
+    });
+
     initOrder();
     rangeNameInit();
     artificialOrderRecord();
@@ -333,6 +346,16 @@ function renderPageByOrder(order) {
         $("#sjbtRule").text(pricecopy.timeprice + "元/分钟");
         $("#yjsdRule").text(pricecopy.nightstarttime + "-" + pricecopy.nightendtime);
         $("#yjfRule").text(pricecopy.nighteprice + "元/公里");
+        if(order.isusenow == 0) {
+            var reversefee = 0;
+            if(null != pricecopy.reversefee && "" != pricecopy.reversefee) {
+                reversefee = pricecopy.reversefee;
+            }
+            $("#yrfRule").text(reversefee + "元");
+            $("#yrfRuleDiv").show();
+        } else {
+            $("#yrfRuleDiv").hide();
+        }
     }
     //实时金额
     var cost = order.cost;

@@ -20,6 +20,7 @@ import com.szyciov.util.SMSTempPropertyConfigurer;
 import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -102,8 +103,11 @@ public class PubCoooperatePartnerService {
      *
      * @param model 禁用所需数据
      */
+    @Transactional(rollbackFor = Exception.class)
     public void disableCoooperate(DisableCoooperateParam model) {
         this.pubCoooperatePartnerDao.disableCoooperate(model);
+        this.pubCoooperatePartnerDao.deleteLeaseOrganRef(model.getId());
+        this.pubCoooperatePartnerDao.deleteVehicleModelRef(model.getId());
     }
 
     /**

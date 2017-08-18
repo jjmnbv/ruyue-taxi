@@ -177,10 +177,18 @@ textarea{width:100%;resize:none;border:1px solid #e4e4e4;border-radius:3px;paddi
 	                    <td></td>
                 	</tr>
 	            </c:if>
-	            <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">
+	            <c:if test="${(orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算')  && orgOrderDetails.cancelnature != 1}">
 	            	<tr>
 	                    <td class="t">实际费用</td>
 	                    <td><span class="bigred">${orgOrderDetails.orderamount}</span><span class="font-blue">费用说明</span> </td>
+	                    <td class="t"></td>
+	                    <td></td>
+                	</tr>
+	            </c:if>
+	            <c:if test="${(orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算')  && orgOrderDetails.cancelnature == 1}">
+	            	<tr>
+	                    <td class="t">取消费用</td>
+	                    <td><span class="bigred">${orgOrderDetails.cancelamount}</span></td>
 	                    <td class="t"></td>
 	                    <td></td>
                 	</tr>
@@ -193,19 +201,19 @@ textarea{width:100%;resize:none;border:1px solid #e4e4e4;border-radius:3px;paddi
 	                    <td></td>
                 	</tr>
 	            </c:if>
-	            <c:if test="${orgOrderDetails.orderStatusShow == '已取消'}">
+	            <%-- <c:if test="${orgOrderDetails.orderStatusShow == '已取消'}">
 	            	<tr>
-	                    <td class="t">预估费用</td>
-	                    <td><span class="bigred">${orgOrderDetails.estimatedcost}</span><span class="font-blue">费用说明</span> </td>
+	                    <td class="t">取消费用</td>
+	                    <td><span class="bigred">${orgOrderDetails.cancelamount}</span></td>
 	                    <td class="t"></td>
 	                    <td></td>
                 	</tr>
-	            </c:if>
+	            </c:if> --%>
             </table>
             <c:if test="${orgOrderDetails.orderStatusShow == '服务中'}">
 	             <div class="trail" data-value = "cheliang" style="width:16%;">查看车辆位置>></div>	
             </c:if>
-            <c:if test="${orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算'}">
+            <c:if test="${(orgOrderDetails.orderStatusShow == '未支付' || orgOrderDetails.orderStatusShow == '未结算' || orgOrderDetails.orderStatusShow == '结算中' || orgOrderDetails.orderStatusShow == '已结算')  && orgOrderDetails.cancelnature != 1}">
             	 <div class="trail" data-value = "xingcheng" style="width:16%;">查看行程轨迹>></div>
             </c:if>
             <c:if test="${orgOrderDetails.orderStatusShow == '已支付'}">

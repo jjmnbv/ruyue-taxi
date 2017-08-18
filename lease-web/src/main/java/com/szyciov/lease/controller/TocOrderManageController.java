@@ -439,7 +439,7 @@ public class TocOrderManageController extends BaseController {
 		}
 		Excel excel = new Excel();
 		// excel文件
-		File tempFile = new File("toC订单-网约车.xls");
+		File tempFile = new File("B2C联营订单-网约车.xls");
 		
 		List<String> colName = new ArrayList<String>();
 		colName.add("订单来源");
@@ -460,7 +460,7 @@ public class TocOrderManageController extends BaseController {
 		colName.add("司机信息");
 		colName.add("资格证号");
 		colName.add("车牌号");
-		colName.add("服务车企");
+//		colName.add("服务车企");
 		colName.add("上车地址");
 		colName.add("下车地址");
 		colName.add("预估行驶时长（分钟）");
@@ -471,7 +471,7 @@ public class TocOrderManageController extends BaseController {
 		colName.add("开始时间");
 		colName.add("结束时间");
 		colName.add("交易流水号");
-        colName.add("服务车企");
+//        colName.add("服务车企");
 		excel.setColName(colName);
 		colData.put("订单来源", colData1);
 		colData.put("订单号", colData2);
@@ -491,7 +491,7 @@ public class TocOrderManageController extends BaseController {
 		colData.put("司机信息", colData14);
 		colData.put("资格证号", colData15);
 		colData.put("车牌号", colData16);
-		colData.put("服务车企", colData17);
+//		colData.put("服务车企", colData17);
 		colData.put("上车地址", colData18);
 		colData.put("下车地址", colData19);
 		colData.put("预估行驶时长（分钟）", colData20);
@@ -789,7 +789,7 @@ public class TocOrderManageController extends BaseController {
 		}
 		Excel excel = new Excel();
 		// excel文件
-		File tempFile = new File("toC订单-出租车.xls");
+		File tempFile = new File("B2C联营订单-出租车.xls");
 		
 		List<String> colName = new ArrayList<String>();
 		colName.add("订单来源");
@@ -806,7 +806,7 @@ public class TocOrderManageController extends BaseController {
 		colName.add("司机信息");
 		colName.add("资格证号");
 		colName.add("车牌号");
-		colName.add("服务车企");
+//		colName.add("服务车企");
 		colName.add("上车地址");
 		colName.add("下车地址");
 		colName.add("预估行驶时长（分钟）");
@@ -819,7 +819,7 @@ public class TocOrderManageController extends BaseController {
 		colName.add("行驶时长（分钟）");
 		colName.add("行驶里程（公里）");
 		colName.add("交易流水号");
-        colName.add("服务车企");
+//        colName.add("服务车企");
 		excel.setColName(colName);
 		colData.put("订单来源", colData1);
 		colData.put("订单号", colData2);
@@ -835,7 +835,7 @@ public class TocOrderManageController extends BaseController {
 		colData.put("司机信息", colData12);
 		colData.put("资格证号", colData13);
 		colData.put("车牌号", colData14);
-		colData.put("服务车企", colData15);
+//		colData.put("服务车企", colData15);
 		colData.put("上车地址", colData16);
 		colData.put("下车地址", colData17);
 		colData.put("预估行驶时长（分钟）", colData18);

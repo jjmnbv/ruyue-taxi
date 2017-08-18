@@ -9,6 +9,8 @@ public interface HomePageMapper {
 	Map<String, Object> getTotalUnPayedInfo(String companyid);
 
 	Object getTotalMoney(String companyid);
+	Object addCancelmoney(String companyid);
+	Object addCouponmoney(String companyid);
 
 	Object getCYTotalMoney(String companyid);
 

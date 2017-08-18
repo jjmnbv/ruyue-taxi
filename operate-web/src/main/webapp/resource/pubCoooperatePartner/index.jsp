@@ -122,7 +122,7 @@
 <div class="pop_box" id="reviewPop" style="display: none;">
     <div class="tip_box_b">
         <h3 id="titleForm">审核</h3>
-        <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+        <img src="content/img/btn_guanbi.png" class="close" alt="关闭"  onclick="closereviewPop()">
         <div class="w400">
             <form method="get" class="form-horizontal  m-t" id="frmmodal">
                 <div class="row">

@@ -59,4 +59,15 @@ response.setDateHeader ("Expires", 0);
 	.DTFC_ScrollWrapper{
 	margin-top:-20px;
 	}
+    #cancelDetail table{
+        width: 100%;
+    }
+    #cancelDetail td{
+        padding-right: 18px;
+        padding-bottom: 5px;
+        color:#9e9e9e;
+    }
+    .form label.error{
+        padding-left: 3%;
+    }
 </style>

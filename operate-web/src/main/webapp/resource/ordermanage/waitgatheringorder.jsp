@@ -24,6 +24,7 @@
 		<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/fixedColumns.css" />
 		<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/dataTables.bootstrap.css"/>
 		<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/fixedColumns.bootstrap.css"/>
+        <link rel="stylesheet" type="text/css" href="content/css/ordermanage_media.css" />
 		
 		<script type="text/javascript" src="content/js/jquery.js"></script>
 		<script type="text/javascript"  src="content/js/bootstrap.min.js"></script>
@@ -55,59 +56,67 @@
 			tbody tr td:first-child{
 				text-align:left;
 			}
-			.col-3{width: 22%;}
-			#s2id_orderperson{width: 50%;}
+			.col-3{width: 23%;}
 		</style>
 	</head>
-	<body>
+	<body class="ordermanage_css_body">
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
 		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 网约车订单</div>
 		<div class="content">
 			<ul class="tabmenu" style="padding-top: 30px;">
-				<li ><a href="OrderManage/OrderIndex" style="text-decoration: none;">待人工派单</a></li>
+				<li ><a href="OrderManage/OrderIndex" style="text-decoration: none;">待接订单</a></li>
 				<li><a href="OrderManage/CurrentOrderIndex" style="text-decoration: none;">当前订单</a></li>
 				<li><a href="OrderManage/AbnormalOrderIndex" style="text-decoration: none;">异常订单</a></li>
 				<li class="on">待收款订单</li>
 				<li><a href="OrderManage/HistoryOrderIndex" style="text-decoration: none;">已完成订单</a></li>
+                <li><a href="OrderManage/CancelOrderIndex" style="text-decoration: none;">已取消订单</a></li>
 			</ul>
 		
 			<div class="row form" style="margin-top: 40px;">
-				<div class="col-3">
-					<label>订单号</label><input id="orderno" type="text" placeholder="订单号">
-				</div>
-				<div class="col-3">
-					<label>订单类型</label>
-					<select id="ordertype">
-						<option value="">全部</option>
-						<option value="1">约车</option>
-						<option value="2">接机</option>
-						<option value="3">送机</option>
-					</select>
-				</div>
-				<div class="col-3" style="width: 34%">
-					<label>下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
-				</div>
-				<div class="col-3">
-					<label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
-				</div>
-				<div class="col-3">
-					<label>订单来源</label>
-					<select id="ordersource">
-						<option value="">全部</option>
-						<option value="CG">乘客端 | 个人</option>
-						<option value="CY">运管端</option>
-					</select>
-				</div>
-				<div class="col-3">
-					<label class="ordermanage_css_label_1">服务车企</label><input id="leasescompanyid" type="hidden" placeholder="全部">
-				</div>
-				<div class="col-3" style="width: 34%">
-					<label>用车时间</label>
-					<input style="width:30%;" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始日期" value="" class="searchDate">
-					至
-            		<input style="width:30%;" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">
-				</div>
-				<div class="col-3" style="text-align: right;">
+                <div class="col-3">
+                    <label>订单来源</label>
+                    <select id="ordersource">
+                        <option value="">全部</option>
+                        <option value="CG">乘客端 | 个人</option>
+                        <option value="CY">运管端</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <label>订单类型</label>
+                    <select id="ordertype">
+                        <option value="">全部</option>
+                        <option value="1">约车</option>
+                        <option value="2">接机</option>
+                        <option value="3">送机</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <label>服务车企</label><input id="belongleasecompany" type="hidden" placeholder="服务车企">
+                </div>
+                <div class="col-3">
+                    <label>费用类型</label>
+                    <select id="expensetype" >
+                        <option value="">全部</option>
+                        <option value="1">行程服务</option>
+                        <option value="2">取消处罚</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <label>订单号</label><input id="orderno" type="text" placeholder="订单号">
+                </div>
+                <div class="col-3">
+                    <label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
+                </div>
+                <div class="col-3">
+                    <label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
+                </div>
+                <div class="col-3 ordermanage_css_col_1">
+                    <label>用车时间</label>
+                    <input style="width:45%;" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始日期" value="" class="searchDate">
+                    至
+                    <input style="width:45%;" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">
+                </div>
+				<div class="col-12" style="text-align: right;">
 					<button class="Mbtn green_a" onclick="search();">查询</button>
 					<button class="Mbtn grey_b" onclick="initSearch();">清空</button>
 				</div>
@@ -122,32 +131,32 @@
 			</div>
 			<table id="manualOrderdataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 		</div>
-		
-		<div class="pop_box" id="cancelpartyFormDiv" style="display: none;">
-			<div class="tip_box_b">
-	            <h3>申请复核</h3>
-	            <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
-	            <div class="w400">
-	            	<input type="hidden" id="orderno" name="orderno">
-	            	<form id="cancelpartyForm" method="get" class="form">
-	            		<div class="row" style="padding-bottom: 18px">
-		                <label style="float: left;">复核方<em class="asterisk"></em></label>
-		            		<select id="reviewpersonAgain" name="reviewpersonAgain" style="width: 60%">
-		            			<option value="">选择复核方</option>
-		            			<option value="1">司机</option>
-		            			<option value="2">下单人</option>
-		            		</select>
-		            	</div>
-		            	<div class="row">
-			                <label style="float: left;">申请原因<em class="asterisk"></em></label>
-			                <textarea id="reasonTextarea" name="reasonTextarea" style="width: 60%" rows="2" cols="3" maxlength="200" placeholder="填写申请复核原因"></textarea>
-			            </div>
-	            	</form>
-	                <button class="Lbtn red" onclick="save()">确定</button>
-	                <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
-	            </div>
-	        </div>
-		</div>
+
+        <div class="pop_box" id="cancelpartyFormDiv" style="display: none;">
+            <div class="tip_box_b">
+                <h3>申请复核</h3>
+                <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+                <div class="w400">
+                    <form id="cancelpartyForm" method="get" class="form">
+                        <input type="hidden" id="ordernoHide">
+                        <div class="row" style="padding-bottom: 18px">
+                            <label style="float: left;">复核方<em class="asterisk"></em></label>
+                            <select id="reviewpersonAgain" name="reviewpersonAgain" style="width: 60%">
+                                <option value="">选择复核方</option>
+                                <option value="1">司机</option>
+                                <option value="2">乘客</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label style="float: left;">申请原因<em class="asterisk"></em></label>
+                            <textarea id="reasonTextarea" name="reasonTextarea" style="width: 60%" rows="2" cols="3" maxlength="200" placeholder="填写申请复核原因"></textarea>
+                        </div>
+                    </form>
+                    <button class="Lbtn red" onclick="save()">确定</button>
+                    <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
+                </div>
+            </div>
+        </div>
 		
 		<script type="text/javascript" src="js/ordermanage/waitgatheringorder.js"></script>
 	</body>

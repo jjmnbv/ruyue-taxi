@@ -5,11 +5,11 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import com.szyciov.lease.dto.VehicleQueryDto;
 import org.springframework.stereotype.Repository;
 
 import com.szyciov.entity.City;
 import com.szyciov.entity.Dictionary;
+import com.szyciov.lease.dto.VehicleQueryDto;
 import com.szyciov.lease.entity.PubCityAddr;
 import com.szyciov.lease.entity.PubDictionary;
 import com.szyciov.lease.entity.PubVehicle;
@@ -100,8 +100,8 @@ public class PubVehicleDao {
 	public String getVehclineId(PubVehicle vehcline) {
 		return mapper.getVehclineId(vehcline);
 	}
-	public List<PubVehicleScope> getVehicleidByVehicleScope(String id){
-		return mapper.getVehicleidByVehicleScope(id);
+	public List<PubVehicleScope> getVehicleidByVehicleScope(List<PubVehicle> list){
+		return mapper.getVehicleidByVehicleScope(list);
 	};
 	public List<VehicleQueryDto> listVehicleAndBindInfo(PubVehicleQueryParam pubVehicleQueryParam){
 		return mapper.listVehicleAndBindInfo(pubVehicleQueryParam);

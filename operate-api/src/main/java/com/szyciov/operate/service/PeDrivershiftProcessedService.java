@@ -66,7 +66,7 @@ public class PeDrivershiftProcessedService {
      * @param processedSaveDto
      * @return
      */
-    @Transactional
+    @Transactional(rollbackFor = {Exception.class})
     public boolean save(ProcessedSaveDto processedSaveDto)throws Exception{
         PeDrivershiftPending paramPend = new PeDrivershiftPending();
         paramPend.setId(processedSaveDto.getPendingId());

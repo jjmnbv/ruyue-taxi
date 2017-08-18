@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpPlatformBusinesslicenseMapper">
+
+    <!-- 经营许可信息 -->
+    <resultMap type="OpPlatformBusinesslicenseVo" id="OpPlatformBusinesslicenseVo">
+        <id property="id" column="id"></id>
+        <collection property="scopes" column="id" ofType="OpPlatformBusinesslicenseScope" select="selectScope">
+
+        </collection>
+    </resultMap>
+
+
+    <!-- 分页查询列表-->
+    <select id="getListByQuery" parameterType="QueryParam" resultMap="OpPlatformBusinesslicenseVo">
+        SELECT *,(SELECT city FROM pub_cityaddr WHERE id=op_platform_businesslicense.address) addressName FROM op_platform_businesslicense
+        WHERE status = 1
+        <if test="address!=null and address!=''">
+            AND address=#{address}
+        </if>
+
+        <if test="state!=null and state!=''">
+            AND state=#{state}
+        </if>
+
+        <if test="certificate!=null and certificate!=''">
+            AND certificate LIKE "%"#{certificate}"%"
+        </if>
+        ORDER BY updatetime DESC
+        limit #{iDisplayStart},#{iDisplayLength}
+    </select>
+
+    <select id="selectScope" resultType="OpPlatformBusinesslicenseScope">
+        select * from op_platform_businesslicense_scope WHERE businesslicenseid=#{id}
+    </select>
+
+
+    <!--查询机构信息-->
+    <select id="getById" resultMap="OpPlatformBusinesslicenseVo" parameterType="string">
+        SELECT *,(SELECT city FROM pub_cityaddr WHERE id=op_platform_businesslicense.address) addressName  FROM op_platform_businesslicense
+        WHERE status = 1 AND id=#{id}
+    </select>
+
+    <!--导出数据-->
+    <select id="exportExcel"  resultMap="OpPlatformBusinesslicenseVo" parameterType="QueryParam">
+        SELECT *,(SELECT city FROM pub_cityaddr WHERE id=op_platform_businesslicense.address) addressName FROM op_platform_businesslicense
+        WHERE status = 1
+        <if test="address!=null and address!=''">
+            AND address=#{address}
+        </if>
+
+        <if test="state!=null and state!=''">
+            AND state=#{state}
+        </if>
+
+        <if test="certificate!=null and certificate!=''">
+            AND certificate LIKE "%"#{certificate}"%"
+        </if>
+        ORDER BY updatetime DESC
+        limit 0,5000
+    </select>
+
+
+    <!--查询数量,用于分页-->
+    <select id="getListCountByQuery" parameterType="QueryParam" resultType="int">
+        SELECT count(*) FROM op_platform_businesslicense
+        WHERE status = 1
+        <if test="address!=null and address!=''">
+            AND address=#{address}
+        </if>
+
+        <if test="state!=null and state!=''">
+            AND state=#{state}
+        </if>
+
+        <if test="certificate!=null and certificate!=''">
+            AND certificate LIKE "%"#{certificate}"%"
+        </if>
+    </select>
+
+
+    <!--删除-->
+    <update id = "delete" parameterType="string"  >
+        UPDATE op_platform_businesslicense SET status=2,updatetime=now(),updater=#{updater}  WHERE id = #{id}
+    </update>
+
+
+    <!--增加-->
+    <insert id="create" parameterType="OpPlatformBusinesslicenseDto">
+        INSERT INTO op_platform_businesslicense(id,platformid,certificate,address,organization,startdate,stopdate,certifydate,state,createtime,updatetime,creater,updater,status)
+        VALUES (#{id},#{platformid},#{certificate},#{address},#{organization},#{startdate},#{stopdate},#{certifydate},#{state},now(),now(),#{creater},#{updater},1)
+    </insert>
+
+    <!--更新-->
+    <update id = "update" parameterType="OpPlatformBusinesslicenseDto">
+        UPDATE op_platform_businesslicense
+        SET
+        platformid=#{platformid},certificate=#{certificate},address=#{address},organization=#{organization},startdate=#{startdate},stopdate=#{stopdate},certifydate=#{certifydate},state=#{state},updatetime=now(),updater=#{updater}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

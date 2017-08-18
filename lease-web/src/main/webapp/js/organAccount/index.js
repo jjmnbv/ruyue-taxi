@@ -68,6 +68,7 @@ function initGrid() {
 					}
 				}
 	        },
+	        {mDataProp: "couponamount", sTitle: "抵用券余额(元)", sClass: "center", sortable: true },
 	        {mDataProp: "lineOfCredit", sTitle: "信用额度(元)", sClass: "center", sortable: true },
 	        {mDataProp: "balance", sTitle: "可用额度(元)", sClass: "center", sortable: true },
 	        {mDataProp: "fullName", sTitle: "机构全称", sClass: "center", sortable: true, 

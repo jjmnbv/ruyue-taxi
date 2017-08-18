@@ -108,6 +108,16 @@ public class OrderApiDao {
 	public List<OrderInfoDetail> listTaxiOrderInfo(OrderListParam param){
 		return mapper.listTaxiOrderInfo(param);
 	}
+	
+	/**
+	 * 获取用户最后5单是否同一城市
+	 * @param param
+	 * @return
+	 */
+	public List<OrderInfoDetail> getLastOrders(String userphone){
+		return mapper.getLastOrders(userphone);
+	}
+	
 	/**
 	 * 获取订单详情(机构,运管通用)
 	 * @param param
@@ -567,7 +577,15 @@ public class OrderApiDao {
      * @param cancelInfo
      * @param ordertype 1-运管网约车单 2-机构网约车单 3-运管出租车单
      */
-   public void saveOrUpdateOrderCancelInfo(PubOrderCancel cancelInfo,int ordertype){
-	   mapper.saveOrUpdateOrderCancelInfo(cancelInfo,ordertype);
+   public void saveOrUpdateOrderCancelInfo(PubOrderCancel cancelInfo){
+	   mapper.saveOrUpdateOrderCancelInfo(cancelInfo);
+   }
+   
+   /**
+    * 更新个人用户的注册城市
+    * @param user
+    */
+   public void updatePeUserCity(PeUser user){
+	   mapper.updatePeUserCity(user);
    }
 }

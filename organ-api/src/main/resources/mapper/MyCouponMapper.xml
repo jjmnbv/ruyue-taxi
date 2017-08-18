@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.organ.mapper.MyCouponMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+<!-- 查询  租赁公司name-->
+<select id="getMyCouponDTOList" resultType="MyCouponDTO" parameterType="string">
+	SELECT le_leasescompany.shortname as lecompanyname FROM le_leasescompany WHERE `Status` = 1 AND id = #{id}
+</select>
+</mapper>

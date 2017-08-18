@@ -10,7 +10,7 @@ var leasecompanySet;
 $(function () {
 	manualOrderdataGrid();
 	initForm();
-	initBelongLeasecompany();
+	// initBelongLeasecompany();
 });
 
 function initForm() {
@@ -134,7 +134,7 @@ function manualOrderdataGrid() {
 			{mDataProp: "vinStr", sTitle: "车架号", sClass: "center", sortable: true },
 			{mDataProp: "name", sTitle: "姓名", sClass: "center", sortable: true },
 			{mDataProp: "phone", sTitle: "手机号", sClass: "center", sortable: true },
-			{mDataProp: "belongLeasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true },
+			// {mDataProp: "belongLeasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true },
 			{mDataProp: "bindstate", sTitle: "操作类型", sClass: "center", sortable: true },
 			{mDataProp: "createtimeStr", sTitle: "操作时间", sClass: "center", sortable: true },
 			{mDataProp: "unbindreason", sTitle: "操作原因", sClass: "center", sortable: true,

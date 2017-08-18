@@ -212,8 +212,8 @@ public class OrderApiParam extends BaseParam{
 	}
 
 	/**  
-	 * 获取订单属性(0-机构1-个人)  
-	 * @return orderprop 订单属性(0-机构1-个人)  
+	 * 获取订单属性(0-机构1-个人2-个人出租车)  
+	 * @return orderprop 订单属性(0-机构1-个人2-个人出租车)  
 	 */
 	public int getOrderprop() {
 		return orderprop;
@@ -260,8 +260,8 @@ public class OrderApiParam extends BaseParam{
 	}
 
 	/**  
-	 * 获取订单支付方式(0-线上1-线下)  
-	 * @return paymethod 订单支付方式(0-线上1-线下)  
+	 * 获取订单支付方式(0-线上1-线下) 对于网约车来说 0-个人支付，1-个人垫付，2-机构支付
+	 * @return paymethod 订单支付方式(0-线上1-线下)  对于网约车来说 0-个人支付，1-个人垫付，2-机构支付
 	 */
 	public String getPaymethod() {
 		return paymethod;

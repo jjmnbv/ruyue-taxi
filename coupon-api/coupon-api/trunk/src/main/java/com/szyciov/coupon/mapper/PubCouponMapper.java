@@ -2,10 +2,9 @@ package com.szyciov.coupon.mapper;
 
 import java.util.List;
 
-import com.szyciov.coupon.dto.CouponInfoDTO;
 import com.szyciov.coupon.param.PubCouponQueryParam;
+import com.szyciov.dto.coupon.CouponInfoDTO;
 import com.szyciov.entity.coupon.PubCoupon;
-import org.apache.ibatis.annotations.Param;
 
 /**
  * 抵用券处理mapper
@@ -29,6 +28,9 @@ public interface PubCouponMapper {
     PubCoupon getCouponById(String id);
 
     void removeCouponByUserId(PubCoupon pubCoupon);
+
+
+    void timeOutCouponByTime(PubCoupon pubCoupon);
 
 }
  

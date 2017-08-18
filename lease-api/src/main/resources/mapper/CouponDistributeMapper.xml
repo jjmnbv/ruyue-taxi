@@ -6,8 +6,8 @@
 <mapper namespace="com.szyciov.lease.mapper.CouponDistributeMapper">
 
       <insert id="addCouponActivity" parameterType="pubcouponactivity">
-          INSERT INTO pub_coupon_activity (id, name, sendservicetype,sendruletype,sendcount, sendruletarget, sendruleidref, activystate, sendmoneytype, sendfixedmoney, sendlowmoney, sendhighmoney, sendstarttime, sendendtime, usetype, outimetype, sendtimeinday, fixedstarttime, fixedendtime, lecompanyid, platformtype, createtime,creater,status) 
-          VALUES (#{id}, #{name}, #{sendservicetype},#{sendruletype},#{sendcount}, #{sendruletarget}, #{sendruleidref}, #{activystate}, #{sendmoneytype}, #{sendfixedmoney}, #{sendlowmoney}, #{sendhighmoney}, #{sendstarttime}, #{sendendtime}, #{usetype}, #{outimetype}, #{sendtimeinday}, #{fixedstarttime}, #{fixedendtime}, #{lecompanyid}, 1, now(),#{creater},'1');
+          INSERT INTO pub_coupon_activity (id, name, sendservicetype,sendruletype,sendcount, sendruletarget, sendruleidref, activystate, sendmoneytype, sendfixedmoney, sendlowmoney, sendhighmoney, sendstarttime, sendendtime, usetype, outimetype, sendtimeinday, fixedstarttime, fixedendtime, lecompanyid, platformtype, createtime,creater,status,couponrule) 
+          VALUES (#{id}, #{name}, #{sendservicetype},#{sendruletype},#{sendcount}, #{sendruletarget}, #{sendruleidref}, #{activystate}, #{sendmoneytype}, #{sendfixedmoney}, #{sendlowmoney}, #{sendhighmoney}, #{sendstarttime}, #{sendendtime}, #{usetype}, #{outimetype}, #{sendtimeinday}, #{fixedstarttime}, #{fixedendtime}, #{lecompanyid}, 1, now(),#{creater},'1',#{couponrule});
       </insert>
       
       <select id="getCouponActivityByQuery" parameterType="pubcouponactivityqueryparam" resultType="pubcouponactivitydto">
@@ -274,7 +274,9 @@
           inner join org_organ org on pc.userid=org.id
           where pc.couponactivyidref=#{id}
             and pc.status='1'
-            and org.status='1') t1, (select @rownum := 0) r )t
+            and org.status='1'
+            order by pc.createtime desc
+            ) t1, (select @rownum := 0) r )t
                 <![CDATA[
 	            where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
 	            ]]>
@@ -289,7 +291,7 @@
             and org.status='1'
       </select>
       
-       <select id="GetOrganUserReceivedCouponList" parameterType="pubreceivedcouponqueryparam" resultType="Integer">
+       <select id="GetOrganUserReceivedCouponList" parameterType="pubreceivedcouponqueryparam" resultType="pubcouponreceivedto">
           select t.* from
            (select (@rownum := @rownum + 1) as rownum,t1.* from
            (select nickname as account,org.shortname as belongorgan,pc.money,pc.couponstatus,
@@ -298,13 +300,14 @@
             date_format(pc.createtime,'%Y-%m-%d %H:%i') as createtime from pub_coupon pc
           inner join org_user orguser on pc.userid=orguser.id
           left join org_organ org on org.id=orguser.organid
-            where pc.couponactivyidref='1'
+            where pc.couponactivyidref=#{id}
               and pc.platformtype=1
               and pc.status='1'
               and orguser.status='1'
 	           <if test="couponstatus != null and couponstatus != ''">
 	            and pc.couponstatus=#{couponstatus}
 	          </if>
+	          order by pc.createtime desc
 	          ) t1, (select @rownum := 0) r )t
                 <![CDATA[
 	            where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})

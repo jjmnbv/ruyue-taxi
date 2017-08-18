@@ -59,37 +59,35 @@
 		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 出租车订单</div>
 		<div class="content">
 			<ul class="tabmenu" style="padding-top: 10px;">
-				<li class="on">未接订单</li>
-				<c:if test="${taxiSendruleCount > 0}">
-					<li><a href="TaxiOrderManage/LabourOrderIndex" style="text-decoration: none;">待人工派单</a></li>
-				</c:if>
+				<li class="on">待接订单</li>
 				<li><a href="TaxiOrderManage/CurrentOrderIndex" style="text-decoration: none;">当前订单</a></li>
 				<li><a href="TaxiOrderManage/AbnormalOrderIndex" style="text-decoration: none;">异常订单</a></li>
 				<li><a href="TaxiOrderManage/WaitgatheringOrderIndex" style="text-decoration: none;">待收款订单</a></li>
 				<li><a href="TaxiOrderManage/HistoryOrderIndex" style="text-decoration: none;">已完成订单</a></li>
+                <li><a href="TaxiOrderManage/CancelOrderIndex" style="text-decoration: none;">已取消订单</a></li>
 			</ul>
 		
 			<div class="row form">
-				<div class="col-3">
-					<label>订单号</label><input id="orderno" type="text" style="width: 69%" placeholder="订单号">
-				</div>
-				<div class="col-3">
-					<label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
-				</div>
-				<div class="col-3 ordermanage_css_col_1" style="width: 31%">
-					<label>用车时间</label>
-					<input style="width:33%;" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始日期" value="" class="searchDate">
-					至
-            		<input style="width:33%;" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">
-				</div>
-				<div class="col-3">
-					<label>订单来源</label>
-					<select id="ordersource">
-						<option value="">全部</option>
-						<option value="CG">乘客端 | 个人</option>
-						<option value="CY">运管端</option>
-					</select>
-				</div>
+                <div class="col-3">
+                    <label>订单来源</label>
+                    <select id="ordersource">
+                        <option value="">全部</option>
+                        <option value="CG">乘客端 | 个人</option>
+                        <option value="CY">运管端</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <label>订单号</label><input id="orderno" type="text" style="width: 69%" placeholder="订单号">
+                </div>
+                <div class="col-3">
+                    <label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
+                </div>
+                <div class="col-3 ordermanage_css_col_1" style="width: 31%">
+                    <label>下单时间</label>
+                    <input style="width:33%;" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始日期" value="" class="searchDate">
+                    至
+                    <input style="width:33%;" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">
+                </div>
 				<div class="col-12" style="text-align: right;">
 					<button class="Mbtn green_a" onclick="search();">查询</button>
 					<button class="Mbtn grey_b" onclick="initSearch();">清空</button>
@@ -97,7 +95,7 @@
 			</div>
 			<div class="row" style="position:relative;">
 				<div class="col-6">
-					<h4 style="position:relative;top:20px;">未接订单信息</h4>
+					<h4 style="position:relative;top:20px;">待接订单信息</h4>
 				</div>
 			</div>
 			<table id="manualOrderdataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>

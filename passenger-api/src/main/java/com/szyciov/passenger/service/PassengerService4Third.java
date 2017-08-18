@@ -15,6 +15,7 @@ import com.szyciov.entity.PubMostaddress;
 import com.szyciov.entity.PubMostcontact;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.UserType;
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.PlatformTypeByDb;
 import com.szyciov.enums.RedisKeyEnum;
@@ -228,6 +229,15 @@ public class PassengerService4Third {
                     if(!isreal){
                         //未实名
                         res.put("info","-1");
+                    }else{
+                    	//未注册，检测是否已经被邀请
+                    	userdao.updateExpireInviteInfos();
+        				Map<String,Object> invitinfo = userdao.getInviteInfoByInvitee(phone);
+        				if(invitinfo!=null){
+        					res.put("isinvitee",true);
+        				}else{
+        					res.put("isinvitee",false);
+        				}
                     }
                 }
             }catch(Exception e){
@@ -661,6 +671,47 @@ public class PassengerService4Third {
                     if(StringUtils.isNotBlank(imgpath)){
                         res.put("imgpath",SystemConfig.getSystemProperty("fileserver")+File.separator+imgpath);
                     }
+                    //触发登录优惠券发放
+    				try{
+    					//机构端一定有个人用户，所以先给运管登录触发然后在触发机构租赁公司的活动
+    					String city = (String) loginparam.get("city");
+    					String citycode = dicdao.getCityNo(city);
+    					//触发优惠券
+    					//1）运管端登录触发优惠券发放活动
+    					Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+    					String companyid = (String) opinfo.get("id");
+    					PeUser user = userdao.getUser4Op(orguser.getAccount());
+    					if(user!=null){
+    						Map<String,Object> couponparams = new HashMap<String,Object>();
+    						couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+    						couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+    						couponparams.put("companyId", companyid);
+    						couponparams.put("cityCode", citycode);
+    						couponparams.put("userId", user.getId());
+    						couponparams.put("userPhone", user.getAccount());
+    						couponparams.put("version", "v3.0.1");
+    						Const.grenerateCoupon(templateHelper, couponparams);
+    					}
+    					//2）租赁优惠券发放活动
+    					Map<String,Object> pp2 = new HashMap<String,Object>();
+    	    			pp2.put("organid", orguser.getOrganId());
+    	    			List<String> tempcompanyids = userdao.getValiableCompanys(pp2);
+    					if(tempcompanyids!=null){
+    						for(int i=0;i<tempcompanyids.size();i++){
+    							String lecompanyid = tempcompanyids.get(i);
+    							Map<String,Object> couponparams = new HashMap<String,Object>();
+    							couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+    							couponparams.put("userType", CouponRuleTypeEnum.ORGAN_USER.value);
+    							couponparams.put("companyId", lecompanyid);
+    							couponparams.put("cityCode", citycode);
+    							couponparams.put("userId", orguser.getId());
+    							couponparams.put("version", "v3.0.1");
+    							Const.grenerateCoupon(templateHelper, couponparams);
+    						}
+    					}
+    				}catch(Exception e){
+    					logger.error("触发优惠券出错",e);
+    				}
                 }else{
                     PeUser peuser = userdao.getUser4Op(useraccount);
                     //个人用户身份
@@ -714,6 +765,23 @@ public class PassengerService4Third {
                     if(StringUtils.isNotBlank(imgpath)){
                         res.put("imgpath",SystemConfig.getSystemProperty("fileserver")+File.separator+imgpath);
                     }
+                    try{
+    					Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+    					String companyid = (String) opinfo.get("id");
+    					String city = (String) loginparam.get("city");
+    					String citycode = dicdao.getCityNo(city);
+    					//触发优惠券
+    					Map<String,Object> couponparams = new HashMap<String,Object>();
+    					couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+    					couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+    					couponparams.put("companyId", companyid);
+    					couponparams.put("cityCode", citycode);
+    					couponparams.put("userId", peuser.getId());
+    					couponparams.put("version", "v3.0.1");
+    					Const.grenerateCoupon(templateHelper, couponparams);
+    				}catch(Exception e){
+    					logger.error("触发优惠券出错",e);
+    				}
                 }
             }else{
                 //失效了
@@ -3755,7 +3823,7 @@ public class PassengerService4Third {
 						//取消成功
 						if(jsonres.has("cancelnature")&&jsonres.has("cancelcost")){
 							int cancelnature = jsonres.getInt("cancelnature");
-							res.put("paystate", cancelnature==1?"1":"0");
+							res.put("paystate", "0");
 							res.put("cancelcost", jsonres.get("cancelcost"));
 						}
 					}
@@ -3865,7 +3933,9 @@ public class PassengerService4Third {
             res = carserviceapi.dealRequestWithToken("/OrderApi/CreateOrgOrder", HttpMethod.POST, null, order, Map.class);
         } else { //个人订单
             order.setBelongleasecompany(order.getCompanyid());
-            order.setCompanyid(null);
+            Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+			String companyid = (String) opinfo.get("id");
+            order.setCompanyid(companyid);
             String account = Const.getUserInfo(usertoken).get("account");
             PeUser user = userdao.getUser4Op(account);
             if("1".equalsIgnoreCase(user.getDisablestate())){
@@ -3920,7 +3990,9 @@ public class PassengerService4Third {
         Map<String,Object> res = new HashMap<String,Object>();
         addPubInfos(res);
         taxiorder.setBelongleasecompany(taxiorder.getCompanyid());
-        taxiorder.setCompanyid(null);
+        Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+		String companyid = (String) opinfo.get("id");
+        taxiorder.setCompanyid(companyid);
         res.put("status",Retcode.OK.code);
         res.put("message",Retcode.OK.msg);
         if(StringUtils.isNotBlank(taxiorder.getOrdersource())){

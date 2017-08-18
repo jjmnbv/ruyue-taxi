@@ -15,7 +15,7 @@ $(function () {
 	manualOrderdataGrid();
 	initForm();
     initselect();
-    initBelongLeasecompany();
+    // initBelongLeasecompany();
 });
 
 function initForm() {
@@ -262,8 +262,8 @@ function manualOrderdataGrid() {
             } },
             {mDataProp: "vehiclemodelName", sTitle: "服务车型", sClass: "center", sortable: true },
             {mDataProp: "vehclineName", sTitle: "品牌车系", sClass: "center", sortable: true },
-            {mDataProp: "platenoStr", sTitle: "车牌号", sClass: "center", sortable: true },
-            {mDataProp: "belongLeasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true }
+            {mDataProp: "platenoStr", sTitle: "车牌号", sClass: "center", sortable: true }
+            // {mDataProp: "belongLeasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true }
         ]
     };
     

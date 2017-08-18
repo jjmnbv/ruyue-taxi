@@ -573,7 +573,6 @@ public class OrderService extends BaseService{
 		if(oid.getOrderprop() == 0){
 			OrgOrder order = dao.getOrgOrder(oid.getOrderno());
 			order.setFactmodel(pd.getOrgcartypeid());  //更新实际车型
-			order.setCompanyid(pd.getLeasescompanyid());
 			order.setOrdertime(new Date());
 			order.setDriverid(pd.getId());
 			order.setOrderstatus(OrderState.WAITSTART.state);
@@ -581,12 +580,11 @@ public class OrderService extends BaseService{
 			order.setPlateno(pd.getPlateno());
 			order.setVehcbrandname(pd.getVehcbrandname());
 			order.setVehclinename(pd.getVehclinename());
-			order.setBelongleasecompany(pd.getBelongleasecompany());
+			order.setBelongleasecompany(pd.getLeasescompanyid());
 			dao.updateOrgOrder(order);
 		}else{
 			OpOrder order = dao.getOpOrder(oid.getOrderno());
 			order.setFactmodel(pd.getOpcartypeid());  //更新实际车型
-			order.setCompanyid(pd.getLeasescompanyid());
 			order.setOrdertime(new Date());
 			order.setDriverid(pd.getId());
 			order.setOrderstatus(OrderState.WAITSTART.state);
@@ -594,7 +592,7 @@ public class OrderService extends BaseService{
 			order.setPlateno(pd.getPlateno());
 			order.setVehcbrandname(pd.getVehcbrandname());
 			order.setVehclinename(pd.getVehclinename());
-			order.setBelongleasecompany(pd.getBelongleasecompany());
+			order.setBelongleasecompany(pd.getLeasescompanyid());
 			dao.updateOpOrder(order);
 		}
 		oid.setDriverid(pd.getId());  //设置司机ID,表示该订单抢单成功
@@ -953,7 +951,7 @@ public class OrderService extends BaseService{
 	 * @return
 	 */
 	private boolean removeOrderMessage(OrderApiParam param){
-		String key = "DRIVER_TRAVEL_REMINDER_" + param.getOrderno() + "*";
+		String key = "DRIVER_TRAVEL_REMINDER_" + param.getOrderno() + "_" + param.getUsetype();
 		JedisUtil.delKey(key);
 		return true;
 	}
@@ -1028,6 +1026,7 @@ public class OrderService extends BaseService{
 	 * @param sow
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private boolean checkDriverState(PubDriver driver){
 		String workstatus = driver.getWorkstatus();
 		 //司机状态不是空闲

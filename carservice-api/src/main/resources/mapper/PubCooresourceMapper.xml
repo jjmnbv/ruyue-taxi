@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.PubCooresourceMapper">
+    <update id="updatePubCooresourceStatus" parameterType="java.util.Map">
+            update pub_cooresource set enabled=#{enabled}
+            where
+              vehicleid=#{vehicleid}
+              and (
+              (leasecompanyid=#{leasecompanyid})
+                or
+                (companyid=#{leasecompanyid})
+                )
+    </update>
+    <select id="queryTaxiEnableDriver" resultType="java.lang.Integer" parameterType="java.util.Map">
+        select count(1) c from (
+         select distinct driverid
+            from pub_driver_vehicle_ref vreft
+            inner join pub_driver dt on dt.id=vreft.driverid and vreft.status=1
+            AND ( (dt.vehicletype = '1' AND dt.passworkstatus IN( '0' ,'1' ,'3') ) OR (dt.vehicletype = '0') )
+            and vehicleid=#{vehicleid}
+            ) t
+    </select>
+</mapper>

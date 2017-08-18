@@ -228,12 +228,17 @@ String page_Title_value = SystemConfig.getSystemProperty("page_Title_value");
 			</div>
 			<!--结束-->
 			<div class="block">
-				<div class="">
-					<span class="yugu">预估费用</span>
-					<span class="price">￥0.00</span>
-					<span class="price_info">预估里程0公里,预估时长0分钟</span>
-				</div>
-				<div class=""><span style="color:red;">(*预约用车会增加附加费用30元，本公司保留最终解释权)</span></div>
+                    <div class="">
+                        <span class="yugu">预估费用</span>
+                        <span class="price">￥0.0</span>
+                        <span class="price_info">预估里程0公里,预估时长0分钟</span>
+						<span id="couponpriceSpan" style="display:none;">券已抵扣<span id="couponprice">0元</span>
+                    </div>
+                    <div class="">
+                    	<span style="color:red;" id="reversefeeSpan">(*预约用车会增加附加费用
+                    		<span style="color:red;" id="reversefee">30元</span>
+                    	，本公司保留最终解释权)</span>
+                   	</div>
 <!-- 				<div class="mar m" style="display:none;"  id= "payable"> -->
 <!-- 					企业账户已超出限额;建议使用个人垫付,否则无法叫车 -->
 <!-- 				</div> -->

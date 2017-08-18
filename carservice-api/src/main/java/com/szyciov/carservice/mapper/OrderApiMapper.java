@@ -1,5 +1,8 @@
 package com.szyciov.carservice.mapper;
 
+import java.util.List;
+import java.util.Map;
+
 import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.entity.PubDriverNews;
 import com.szyciov.driver.param.OrderCostParam;
@@ -33,9 +36,6 @@ import com.szyciov.org.param.OrgUserParam;
 import com.szyciov.param.OrderApiParam;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
-import java.util.Map;
-
 public interface OrderApiMapper {
 	LeLeasescompany getCompanyById(@Param("companyid") String companyid);
 	
@@ -50,6 +50,8 @@ public interface OrderApiMapper {
 	List<OrderInfoDetail> getOrderInfoList(OrderListParam param);
 
 	List<OrderInfoDetail> listTaxiOrderInfo(OrderListParam param);
+	
+	List<OrderInfoDetail> getLastOrders(String userphone);
 
 	OrderInfoDetail getOrgOrderInfoById(OrderApiParam param);
 	
@@ -181,5 +183,7 @@ public interface OrderApiMapper {
     
     public PubOrderCancel getOrderCancelInfo(@Param("orderno")String orderno,@Param("ordertype") int ordertype);
     
-    public void saveOrUpdateOrderCancelInfo(PubOrderCancel cancelInfo,@Param("ordertype") int ordertype);
+    public void saveOrUpdateOrderCancelInfo(PubOrderCancel cancelInfo);
+    
+    public void updatePeUserCity(PeUser user);
 }

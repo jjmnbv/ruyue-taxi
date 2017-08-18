@@ -74,7 +74,7 @@
 		<input id="aaid" name="aaid" value="${aaid}"type="hidden"/>
 		<div class="row">
 				<div class="col-4" style="margin-top: 15px;">
-					<h4>历史记录规则</h4>
+					<h4>历史规则记录<span id="">【${rulename.rulename}】</span></h4>
 				</div>
 			</div>
 			<table id="dataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpPlatformStagnationMapper">
+	
+	<!-- 服务机构 -->
+	<resultMap type="com.szyciov.op.entity.OpPlatformStagnation" id="OpPlatformStagnation">
+		<id property="id" column="id"></id>
+	</resultMap>
+
+
+	<!-- 分页查询服务机构列表-->
+	<select id="getListByQuery" parameterType="QueryParam" resultMap="OpPlatformStagnation">
+		SELECT * FROM op_platform_stagnation
+		WHERE status = 1
+		<if test="city!=null and city!=''">
+			AND city=#{city}
+		</if>
+
+		<if test="responsible!=null and responsible!=''">
+			AND responsible LIKE "%"#{responsible}"%"
+		</if>
+
+		<if test="responsibleway!=null and responsibleway!=''">
+			AND responsibleway LIKE "%"#{responsibleway}"%"
+		</if>
+		ORDER BY updatetime DESC
+		limit #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<!--查询机构信息 BY 机构ID-->
+	<select id="getById" resultMap="OpPlatformStagnation" parameterType="string">
+		SELECT *  FROM op_platform_stagnation
+		WHERE status = 1 AND id=#{id}
+	</select>
+
+	<!--导出数据-->
+	<select id="exportExcel"  resultMap="OpPlatformStagnation" parameterType="QueryParam">
+		SELECT * FROM op_platform_stagnation
+		WHERE status = 1
+
+		<if test="city!=null and city!=''">
+			AND city=#{city}
+		</if>
+
+		<if test="responsible!=null and responsible!=''">
+			AND responsible LIKE "%"#{responsible}"%"
+		</if>
+
+		<if test="responsibleway!=null and responsibleway!=''">
+			AND responsibleway LIKE "%"#{responsibleway}"%"
+		</if>
+		ORDER BY updatetime DESC
+	  	 limit 0,5000
+	</select>
+
+
+	<!--查询数量,用于分页-->
+	<select id="getListCountByQuery" parameterType="QueryParam" resultType="int">
+		SELECT count(*) FROM op_platform_stagnation
+		WHERE status = 1
+		<if test="city!=null and city!=''">
+			AND city=#{city}
+		</if>
+
+		<if test="responsible!=null and responsible!=''">
+			AND responsible LIKE "%"#{responsible}"%"
+		</if>
+
+		<if test="responsibleway!=null and responsibleway!=''">
+			AND responsibleway LIKE "%"#{responsibleway}"%"
+		</if>
+	</select>
+
+
+	<!--删除-->
+	<update id = "delete" parameterType="string"  >
+	  	UPDATE op_platform_stagnation SET status=2,updatetime=now(),updater=#{updater}  WHERE id = #{id}
+	</update>
+
+
+
+	<!--增加-->
+
+
+	<insert id="create" parameterType="OpPlatformStagnation">
+		INSERT INTO op_platform_stagnation(id,platformid,city,responsible,responsibleway,postcode,contactaddresscity,contactaddress,parentcompany,parentadcity,parentad,createtime,updatetime,creater,updater,status)
+		VALUES (#{id},#{platformid},#{city},#{responsible},#{responsibleway},#{postcode},#{contactaddresscity},#{contactaddress},#{parentcompany},#{parentadcity},#{parentad},now(),now(),#{creater},#{updater},1)
+	</insert>
+
+	<!--更新-->
+	<update id = "update" parameterType="OpPlatformStagnation">
+		UPDATE op_platform_stagnation
+		SET
+		platformid=#{platformid},city=#{city},responsible=#{responsible},responsibleway=#{responsibleway},postcode=#{postcode},contactaddresscity=#{contactaddresscity},contactaddress=#{contactaddress},parentcompany=#{parentcompany},parentadcity=#{parentadcity},parentad=#{parentad},updatetime=now(),updater=#{updater}
+		WHERE id = #{id}
+	</update>
+
+</mapper>

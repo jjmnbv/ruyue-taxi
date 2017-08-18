@@ -163,7 +163,7 @@
 					</div>
 				</div>
 				<div class="row">
-					<div class="col-3"><label>归属车企</label>
+					<div class="col-3" style="display: none;"><label>归属车企</label>
 						<select id="belongleasecompanyQuery" name="belongleasecompanyQuery">
 							<option value="" selected="selected">全部</option>
 							<c:forEach var="belongleasecompany" items="${belongleasecompany}">
@@ -172,7 +172,7 @@
 						</select>
 						<input id="belongleasecompanyQuerys" name="belongleasecompanyQuerys" type="hidden" value="">	
 					</div>
-					<div class="col-9" style="text-align: right;">
+					<div class="col-9" style="text-align: right;float: right;">
 						<button class="Mbtn red_q" onclick="search();">查询</button>
 						<button class="Mbtn grey_w" onclick="emptys();">清空</button>
 					</div>
@@ -258,7 +258,7 @@
 									<option value="1">出租车</option>
 								</select>	
 	            			</div>
-	            			<div class="col-7">
+	            			<div class="col-7" style="display: none;">
 								<label>归属车企<em class="asterisk"></em></label> 
 								<select id="belongleasecompany" name="belongleasecompany" style="width:62%;">
 									<option value="">请选择</option>	

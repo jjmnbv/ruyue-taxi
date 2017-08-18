@@ -68,15 +68,26 @@
 		}
 	</style>
 	<body>
-		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="PubPremiumRule/Index">溢价规则 </a>>历史记录
+		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="PubPremiumRule/Index">溢价规则 </a>>溢价详情
 		</div>
 		<div class="content">
 		<input id="aaid" name="aaid" value="${aaid}"type="hidden"/>
 		<div class="row">
+		    <div class="col-4">
+		        <label>日期</label>
+           		<input style="width:31.5%;" id="startdt1" name="startdt1" type="text" placeholder="开始日期" value="" class="searchDate" readonly="readonly">
+				至
+           		<input style="width:31.5%;" id="enddt1" name="enddt1" type="text" placeholder="结束日期" value="" class="searchDate" readonly="readonly">
+           		</div>
+			    <div class="col-8" style="text-align:right">
+				   <button class="Mbtn red_q" onclick="search();">查询</button>
+			    </div>
+		</div>
+		<div class="row">
 				<div  style="margin-top: 15px;">
-					<h4>详情界面</h4>
+					<h4>溢价规则信息<span id="">【${rulename.rulename}】</span></h4>
 				</div>
-			</div>
+		</div>
 			<table id="dataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 		</div>
 		<script type="text/javascript" src="js/pubPremiumRule/detailDate.js"></script>

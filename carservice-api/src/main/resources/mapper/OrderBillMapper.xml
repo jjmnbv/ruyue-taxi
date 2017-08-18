@@ -12,12 +12,12 @@
 	
 	<select id="getOrderAmountByQuery" resultType="decimal" parameterType="OrgOrganBill">
 	    select IFNULL(SUM(case org_order.orderstatus when '7' then org_order.orderamount when '8' then IFNULL(org_ordercancel.cancelamount,0) end),0) as orderAmount
-	    from org_order left join org_ordercancel on (org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1)
+	    from org_order left join org_ordercancel on (org_ordercancel.orderno = org_order.orderno and org_ordercancel.status = 1 and org_order.expensetype = 2)
 	    where org_order.companyid = #{leasesCompanyId}
 	      and org_order.usetype = 0
 	      and org_order.paymethod = 2
 	      and org_order.status = 1
-	      and (org_order.orderstatus = 7 or org_order.orderstatus = 8)
+	      and (org_order.orderstatus = 7 or (org_order.orderstatus = 8 and org_ordercancel.cancelnature = 1))
 	      and org_order.paymentstatus = 4
 	    <if test="organId != null and organId != ''">
 	        and org_order.organid IN (
@@ -73,12 +73,12 @@
 	
 	<select id="getOrderListByQuery" resultType="String" parameterType="OrgOrganBill">	    
 	    select org_order.orderno as orderNo
-	    from org_order
+	    from org_order left join org_ordercancel on (org_ordercancel.orderno = org_order.orderno and org_ordercancel.status = 1 and org_order.expensetype = 2)
 	    where org_order.companyid = #{leasesCompanyId}
 	      and org_order.usetype = 0
 	      and org_order.paymethod = 2
 	      and org_order.status = 1
-	      and (org_order.orderstatus = 7 or org_order.orderstatus = 8)
+	      and (org_order.orderstatus = 7 or (org_order.orderstatus = 8 and org_ordercancel.cancelnature = 1))
 	      and org_order.paymentstatus = 4
 	    <if test="organId != null and organId != ''">
 	        and org_order.organid IN (

@@ -102,4 +102,8 @@ public class DictionaryService {
 		}
 		return ret;
 	}
+	
+	public Dictionary getDictionaryText(Map<String, String> map){
+		return dao.getDictionaryText(map);
+	};
 }

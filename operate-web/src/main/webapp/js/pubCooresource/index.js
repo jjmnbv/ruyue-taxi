@@ -7,19 +7,25 @@ $(document).ready(function () {
 
 
 function initLeasecompany() {
-    $.ajax({
-        type: 'GET',
-        url: "PubCooresource/queryHavingCooLeasecompany",
-        dataType: "json",
-        success: function (result) {
-            $.each(result, function (i, data) {
-                $("#leasecompany").append('<option value="' + data.id + '">' + data.text + '</option>')
-            });
-        },
-        contentType: "application/json"
+    $("#leasecompany").select2({
+        placeholder: "",
+        minimumInputLength: 0,
+        multiple : false, //控制是否多选
+        allowClear : true,
+        ajax: {
+            url: "PubCooresource/queryHavingCooLeasecompany",
+            dataType: 'json',
+            data: function (term, page) {
+                var param = {
+                    keyword: term
+                }
+                return param;
+            },
+            results: function (data, page) {
+                return { results: data };
+            }
+        }
     });
-
-
 }
 
 function initGrid() {
@@ -29,22 +35,26 @@ function initGrid() {
         userQueryParam: [
             // {name: "ordertype", value: $("#ordertype").val()}
         ],
-        iLeftColumn: 3,
+        language: {
+            sEmptyTable: "没有查询到相关信息"
+        },
+        iLeftColumn: 0,
         scrollX: true,
         bAutoWidth: false,
         columns: [
             {
                 mDataProp: "id",
-                sClass: "left",
+                sClass: "center",
                 sTitle: "操作",
                 sortable: false,
                 "mRender": function (data, type, full) {
                     var html = "";
-
-                    html += '<button type="button" class="SSbtn green" onclick="manage(\'' + data + '\')"><i class="fa fa-paste"></i>资源管理</button>';
-                    html += '&nbsp;';
-                    html += '<button type="button" class="SSbtn red" onclick="info(\'' + data + '\')"><i class="fa fa-paste"></i>资源信息</button>';
-
+                    if(full.servicetype==0){
+                        html += '<button type="button" class="SSbtn green" onclick="manage(\'' + data + '\')"><i class="fa fa-paste"></i>资源管理</button>';
+                        html += '&nbsp;';
+                    } else if(full.servicetype==1){
+                        html += '<button type="button" class="SSbtn red" onclick="info(\'' + data + '\')"><i class="fa fa-paste"></i>资源信息</button>';
+                    }
                     return html;
                 }
             },
@@ -88,7 +98,7 @@ function initGrid() {
 
     $("#clearSearchBox").on("click", function(){
         $("#coono").val("");
-        $("#leasecompany").val("");
+        $("#leasecompany").select2("val", "");
         $("#servicetype").val("");
         search(table);
     });

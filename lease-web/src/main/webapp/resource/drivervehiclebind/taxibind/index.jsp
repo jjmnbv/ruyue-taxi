@@ -143,13 +143,13 @@
 							</div>
 						</div>
 						<div class="row form">
-							<div class="col-4">
-								<label>归属车企</label>
-								<select id="belongLeasecompany">
-									<option value="">全部</option>
-								</select>
-							</div>
-							<div class="col-8" style="text-align: right;">
+							<%--<div class="col-4">--%>
+								<%--<label>归属车企</label>--%>
+								<%--<select id="belongLeasecompany">--%>
+									<%--<option value="">全部</option>--%>
+								<%--</select>--%>
+							<%--</div>--%>
+							<div class="col-12" style="text-align: right;">
 								<button class="Mbtn green_a" onclick="search();">查询</button>
 								<button class="Mbtn gray_a" onclick="clearOptions();">清空</button>
 							</div>

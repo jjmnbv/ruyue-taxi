@@ -484,4 +484,8 @@ public class UserDao {
 	public void useCoupon(Map<String, Object> useinfo) {
 		mapper.useCoupon(useinfo);
 	}
+
+	public void deleteUseCouponOrder(Map<String, Object> usecouponp) {
+		mapper.deleteUseCouponOrder(usecouponp);
+	}
 }

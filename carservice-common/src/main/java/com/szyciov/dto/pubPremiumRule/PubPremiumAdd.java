@@ -15,6 +15,8 @@ public class PubPremiumAdd {
 	private String creater;
 	private String updater;
 	private String isoperated;
+	private String leasescompanyid;
+	private String rulestatus;
 	public String getRuletype() {
 		return ruletype;
 	}
@@ -87,6 +89,19 @@ public class PubPremiumAdd {
 	public void setIsoperated(String isoperated) {
 		this.isoperated = isoperated;
 	}
+	public String getLeasescompanyid() {
+		return leasescompanyid;
+	}
+	public void setLeasescompanyid(String leasescompanyid) {
+		this.leasescompanyid = leasescompanyid;
+	}
+	public String getRulestatus() {
+		return rulestatus;
+	}
+	public void setRulestatus(String rulestatus) {
+		this.rulestatus = rulestatus;
+	}
+	
 	
 	
 }

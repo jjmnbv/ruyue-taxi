@@ -232,6 +232,9 @@ function manualOrderdataGrid() {
                     if(full.cancelnature == 2) {
                         return "/";
                     }
+                    if(null == full.cancelamount) {
+                        return "0";
+                    }
                     return full.cancelamount;
                 }
             },
@@ -283,7 +286,7 @@ function manualOrderdataGrid() {
                 "sTitle": "处理原因",
                 "mRender": function (data, type, full) {
                     if(full.cancelnature == 1 && full.paymentstatus == "9") {
-                        return full.exemption;
+                        return showToolTips(full.exemption, 15);
                     }
                     return "/";
                 }
@@ -339,10 +342,7 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "支付方式",
                 "mRender": function (data, type, full) {
-                    if(full.paymentstatus != "1") {
-                        return "/";
-                    }
-                    if(full.paytype == "0") {
+                    if(full.paymethod == "0") {
                         return "个人支付";
                     } else {
                         return "/";
@@ -427,8 +427,8 @@ function manualOrderdataGrid() {
                 "sClass": "left",
                 "sTitle": "上下车地址",
                 "mRender": function (data, type, full) {
-                    var onaddress = "(" + full.oncity + ")" + full.onaddress;
-                    var offaddress = "(" + full.offcity + ")" + full.offaddress;
+                    var onaddress = "(" + full.oncityname + ")" + full.onaddress;
+                    var offaddress = "(" + full.offcityname + ")" + full.offaddress;
                     return showToolTips(onaddress, 12, undefined, offaddress);
                 }
             },
@@ -503,6 +503,9 @@ function search() {
 function exemption(orderno) {
 	$("#exemptionFormDiv").show();
 	showObjectOnForm("exemptionForm", null);
+    var editForm = $("#exemptionForm").validate();
+    editForm.resetForm();
+    editForm.reset();
     $("#ordernoHide").val(orderno);
 }
 
@@ -528,11 +531,11 @@ function save() {
 		success: function (result) {
 			var message = result.message == null ? result : result.message;
 			if (result.status == "success") {
-				$("#exemptionFormDiv").hide();
             	toastr.success(message, "提示");
 			} else {
             	toastr.error(message, "提示");
 			}
+            $("#exemptionFormDiv").hide();
 			dataGrid._fnReDraw();
 		}
 	});

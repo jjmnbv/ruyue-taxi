@@ -131,4 +131,22 @@ public class PubCoooperateController extends BaseController {
     public Map<String,String> updatePubVehicleModelsRef(@RequestBody PubVehicleModelsRef p){
         return service.updatePubVehicleModelsRef(p);
     };
+    /**
+     * <p></p>
+     * @return 
+     */
+    @RequestMapping(value = "api/PubCoooperate/Select2QueryJobnum", method = RequestMethod.POST)
+    @ResponseBody
+    public List<Map<String, Object>> select2QueryJobnum(@RequestBody PubCoooperateQueryParam queryParam){
+    	return service.select2QueryJobnum(queryParam);
+    };
+    /**
+     * <p></p>
+     * @return 
+     */
+    @RequestMapping(value = "api/PubCoooperate/Select2QueryDriverInformation", method = RequestMethod.POST)
+    @ResponseBody
+    public List<Map<String, Object>> select2QueryDriverInformation(@RequestBody PubCoooperateQueryParam queryParam){
+    	return service.select2QueryDriverInformation(queryParam);
+    };
 }

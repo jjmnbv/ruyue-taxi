@@ -23,18 +23,15 @@
 <link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/dataTables.bootstrap.css"/>
 <link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/fixedColumns.bootstrap.css"/>
 <link rel="stylesheet" type="text/css" href="content/plugins/cityselect1/cityselect1.css">
-
 <script type="text/javascript" src="content/js/jquery.js"></script>
 <script type="text/javascript" src="content/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
 <script type="text/javascript" src="content/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="content/js/common.js"></script>
-
 <script type="text/javascript" src="content/plugins/data-tables/js/jquery.dataTables.js"></script>
 <script type="text/javascript" src="content/plugins/data-tables/js/dataTables.bootstrap.js"></script>
 <script type="text/javascript" src="content/plugins/data-tables/js/dataTables.fnSearch.js"></script>
 <script type="text/javascript" src="content/plugins/data-tables/js/dataTables.fixedColumns.js"></script>
 <script type="text/javascript" src="content/plugins/jquery-validate/js/jquery.validate.js"></script>
-
 <script type="text/javascript" src="content/plugins/toastr/toastr.min.js"></script>
 <script type="text/javascript" src="js/basecommon.js"></script>
 <script type="text/javascript"  src="content/plugins/cityselect1/cityselect1.js"></script>
@@ -191,7 +188,7 @@
 						</c:forEach>
 					</select> --%>
 				</div>
-				<div class="col-4">
+				<div class="col-4" style="display: none;">
 					<label>归属车企<em class="asterisk"></em></label> <select id="belongleasecompany" name="belongleasecompany">
 						<option value="0">请选择</option>	
 						<c:forEach var="belongleasecompany" items="${belongleasecompany}">

@@ -11,7 +11,7 @@ import com.szyciov.annotation.SzycValid;
  */
 public class SendSMSParam extends BaseParam {
 	/**
-	 * 0-登录;1-修改密码
+	 * 0-登录;1-修改密码;2-忘记密码
 	 */
 	@SzycValid(rules={"checkNull","checkSMSType"})
 	private String type;
@@ -49,18 +49,17 @@ public class SendSMSParam extends BaseParam {
 		this.usertype = usertype;
 	}
 	
-
 	/**  
-	 * 获取0-登录;1-修改密码  
-	 * @return type 0-登录;1-修改密码  
+	 * 获取0-登录;1-修改密码;2-忘记密码  
+	 * @return type 0-登录;1-修改密码;2-忘记密码  
 	 */
 	public String getType() {
 		return type;
 	}
-	
+
 	/**  
-	 * 设置0-登录;1-修改密码  
-	 * @param type 0-登录;1-修改密码  
+	 * 设置0-登录;1-修改密码;2-忘记密码  
+	 * @param type 0-登录;1-修改密码;2-忘记密码  
 	 */
 	public void setType(String type) {
 		this.type = type;

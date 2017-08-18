@@ -10,7 +10,7 @@ public class GenerateCouponParam {
 
     /**
      * 优惠券类型
-     * 1-注册，2充值，3消费，4活动
+     * 1-注册，2充值，3消费，4活动，5邀请，6人工
      */
     private Integer type;
 
@@ -40,6 +40,11 @@ public class GenerateCouponParam {
      * 个人用户/机构用户/机构客户ID
      */
     private String userId;
+
+    /**
+     * 用户手机
+     */
+    private String userPhone;
 
     /**
      * 充值金额
@@ -113,6 +118,14 @@ public class GenerateCouponParam {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getUserPhone() {
+        return userPhone;
+    }
+
+    public void setUserPhone(String userPhone) {
+        this.userPhone = userPhone;
     }
 }
  

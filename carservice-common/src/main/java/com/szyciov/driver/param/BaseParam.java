@@ -63,6 +63,11 @@ public class BaseParam {
 	 */
 	private String sSearch;
 	
+	/**
+	 * 1-运管网约车单 2-机构网约车单 3-运管出租车单
+	 */
+	private int orderprop;
+	
 	/**  
 	 * 获取操作次数  
 	 * @return sEcho 操作次数  
@@ -285,4 +290,21 @@ public class BaseParam {
 	public void setOrdertype(String ordertype) {
 		this.ordertype = ordertype;
 	}
+
+	/**  
+	 * 获取1-运管网约车单2-机构网约车单3-运管出租车单  
+	 * @return orderprop 1-运管网约车单2-机构网约车单3-运管出租车单  
+	 */
+	public int getOrderprop() {
+		return orderprop;
+	}
+	
+	/**  
+	 * 设置1-运管网约车单2-机构网约车单3-运管出租车单  
+	 * @param orderprop 1-运管网约车单2-机构网约车单3-运管出租车单  
+	 */
+	public void setOrderprop(int orderprop) {
+		this.orderprop = orderprop;
+	}
+	
 }

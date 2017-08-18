@@ -73,7 +73,11 @@
         <div class="row">
             <div class="col-3">
                 <label>车牌号</label>
-                <input id="fullplateno" type="text" placeholder="车牌号">
+                <input id="fullplateno" type="text" placeholder="车牌号" maxlength="7">
+            </div>
+            <div class="col-3">
+                <label>资格证号</label>
+                <input id="jobnum" type="text" placeholder="司机资格证号">
             </div>
             <div class="col-3">
                 <label>司机</label>
@@ -85,7 +89,9 @@
                     <option value="">全部</option>
                 </select>
             </div>
-            <div class="col-3" style="text-align: right;">
+        </div>
+        <div class="row">
+            <div class="col-12" style="text-align: right;">
                 <button id="search" class="Mbtn green_a">查询</button>
                 <button class="Mbtn grey_w" onclick="clearSearchBox();">清空</button>
             </div>
@@ -107,8 +113,8 @@
             <form method="get" class="form-horizontal  m-t" id="frmmodal">
                 <div class="row">
                     <div class="col-12" style="text-align:left;margin-top: 15px;">
-                        <div class="col-3" id="vehicleModelOrg" style="color: #999;"></div>
-                        <div class="col-9"></div>
+                        <div class="col-3"></div>
+                        <div class="col-9" id="vehicleModelOrg"  style="color: #999;"></div>
                     </div>
                     <div class="col-12" style="text-align:left;">
                         <div class="col-3" style="line-height: 30px;">分配车型</div>

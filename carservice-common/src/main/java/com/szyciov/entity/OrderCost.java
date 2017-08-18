@@ -107,15 +107,25 @@ public class OrderCost{
 	/**
 	 * 预约附加费
 	 */
-	private double reversefee;
+	private int reversefee;
 	/**
 	 * 订单折扣
 	 */
-	private double discount;
+	private double discount = 1.0D;
 	/**
 	 * 溢价倍率
 	 */
 	private double premiumrate = 1.0D;
+	
+	/**
+	 * 优惠券金额
+	 */
+	private int couponprice;
+	
+	/**
+	 * 优惠券ID
+	 */
+	private String couponid;
 	
 	/**  
 	 * 获取低速用时限定时速  
@@ -467,15 +477,15 @@ public class OrderCost{
 	 * 获取预约附加费  
 	 * @return reversefee 预约附加费  
 	 */
-	public double getReversefee() {
+	public int getReversefee() {
 		return reversefee;
 	}
-	
+
 	/**  
 	 * 设置预约附加费  
 	 * @param reversefee 预约附加费  
 	 */
-	public void setReversefee(double reversefee) {
+	public void setReversefee(int reversefee) {
 		this.reversefee = reversefee;
 	}
 
@@ -509,6 +519,38 @@ public class OrderCost{
 	 */
 	public void setPremiumrate(double premiumrate) {
 		this.premiumrate = premiumrate;
+	}
+
+	/**  
+	 * 获取优惠券金额  
+	 * @return couponprice 优惠券金额  
+	 */
+	public int getCouponprice() {
+		return couponprice;
+	}
+
+	/**  
+	 * 设置优惠券金额  
+	 * @param couponprice 优惠券金额  
+	 */
+	public void setCouponprice(int couponprice) {
+		this.couponprice = couponprice;
+	}
+
+	/**  
+	 * 获取优惠券ID  
+	 * @return couponid 优惠券ID  
+	 */
+	public String getCouponid() {
+		return couponid;
+	}
+	
+	/**  
+	 * 设置优惠券ID  
+	 * @param couponid 优惠券ID  
+	 */
+	public void setCouponid(String couponid) {
+		this.couponid = couponid;
 	}
 	
 }

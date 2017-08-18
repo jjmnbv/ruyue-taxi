@@ -11,7 +11,7 @@ function initGrid() {
 		id: "dataGrid",
 		iLeftColumn: 1,
 		scrollX: true,
-        sAjaxSource: "PubPremiumRule/GetHistorydetail?aaid="+$("#aaid").val()+"&aaruletype="+$("#aaruletype").val(),
+        sAjaxSource: "PubPremiumRule/GetHistorydetail?aaid="+$("#aaid").val()+"&aaruletype="+$("#aaruletype").val()+"&aaoperationtype="+$("#aaoperationtype").val(),
         columns: [
 	        {mDataProp: "id", sTitle: "Id", sClass: "center", visible: false},
 	        //自定义操作列

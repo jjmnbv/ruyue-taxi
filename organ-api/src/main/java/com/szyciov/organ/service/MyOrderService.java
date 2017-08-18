@@ -138,37 +138,128 @@ public class MyOrderService {
 			}
 			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 				if (o.getOrderstatus().equals(OrderState.SERVICEDONE.state)) {
-					if(o.getPaymentstatus().equals("0")){
-						o.setOrderStatusShow("未支付");
-					}else if(o.getPaymentstatus().equals("1")){
-						o.setOrderStatusShow("已支付");
-					}else if(o.getPaymentstatus().equals("2")){
-						o.setOrderStatusShow("结算中");
-					}else if(o.getPaymentstatus().equals("3")){
-						o.setOrderStatusShow("已结算");
-					}else if(o.getPaymentstatus().equals("4")){
-						o.setOrderStatusShow("未结算");
+//					if(o.getPaymentstatus().equals("0")){
+//						o.setOrderStatusShow("未支付");
+//					}else if(o.getPaymentstatus().equals("1")){
+//						o.setOrderStatusShow("已支付");
+//					}else if(o.getPaymentstatus().equals("2")){
+//						o.setOrderStatusShow("结算中");
+//					}else if(o.getPaymentstatus().equals("3")){
+//						o.setOrderStatusShow("已结算");
+//					}else if(o.getPaymentstatus().equals("4")){
+//						o.setOrderStatusShow("未结算");
+//					}
+					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+						o.setOrderStatusShow(PayState.STATEMENTING.msg);
+					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+						o.setOrderStatusShow(PayState.STATEMENTED.msg);
+					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+						o.setOrderStatusShow(PayState.MENTED.msg);
 					}
 				}
 			}
 			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					o.setOrderStatusShow("已取消");
+					if(o.getCancelnature()==null){
+						o.setOrderStatusShow(OrderState.CANCEL.msg);
+					}else{
+						if(o.getCancelnature() == 1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								o.setOrderStatusShow(PayState.STATEMENTING.msg);
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								o.setOrderStatusShow(PayState.STATEMENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								o.setOrderStatusShow(PayState.MENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setOrderStatusShow(PayState.CLOSE.msg);
+							}
+						}else{
+							o.setOrderStatusShow(OrderState.CANCEL.msg);
+						}
+					}
 				}
 			}
+//			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//				if (o.getPaymethod().equals("0")) {
+//					o.setPayTypeShow("个人支付");
+//				}
+//			}
+//			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//				if (o.getPaymethod().equals("1")) {
+//					o.setPayTypeShow("个人垫付");
+//				}
+//			}
+//			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//				if (o.getPaymethod().equals("2")) {
+//					o.setPayTypeShow("机构支付");
+//				}
+//			}
 			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-				if (o.getPaymethod().equals("0")) {
-					o.setPayTypeShow("个人支付");
+				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+					if(o.getCancelnature()==null){
+						o.setPayTypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setPayTypeShow("/");
+							}
+						}else{
+							o.setPayTypeShow("/");
+						}
+					}
+				}else{
+//					if (o.getPaymethod().equals("0")) {
+//						o.setPayTypeShow("个人支付");
+//					}else if (o.getPaymethod().equals("1")) {
+//						o.setPayTypeShow("个人垫付");
+//					}else 
+					if (o.getPaymethod().equals("2")) {
+						o.setPayTypeShow("机构支付");
+					}
 				}
 			}
-			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-				if (o.getPaymethod().equals("1")) {
-					o.setPayTypeShow("个人垫付");
-				}
-			}
-			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-				if (o.getPaymethod().equals("2")) {
-					o.setPayTypeShow("机构支付");
+			if(o.getExpensetype() != null && o.getExpensetype() != 0 && !o.getExpensetype().toString().equals("")){
+				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+					if(o.getCancelnature()==null){
+						o.setExpensetypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setExpensetypeShow("/");
+							}
+						}else{
+							o.setExpensetypeShow("/");
+						}
+					}
+				}else{
+					if(o.getExpensetype() == 1){
+						o.setExpensetypeShow("行程服务");
+						o.setCancelamount(0);
+					}
 				}
 			}
 		}
@@ -244,39 +335,115 @@ public class MyOrderService {
 		}
 		if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 			if (o.getOrderstatus().equals(OrderState.SERVICEDONE.state)) {
-				if(o.getPaymentstatus().equals("0")){
-					o.setOrderStatusShow("未支付");
-				}else if(o.getPaymentstatus().equals("1")){
-					o.setOrderStatusShow("已支付");
-				}else if(o.getPaymentstatus().equals("2")){
-					o.setOrderStatusShow("结算中");
-				}else if(o.getPaymentstatus().equals("3")){
-					o.setOrderStatusShow("已结算");
-				}else if(o.getPaymentstatus().equals("4")){
-					o.setOrderStatusShow("未结算");
+//				if(o.getPaymentstatus().equals("0")){
+//					o.setOrderStatusShow("未支付");
+//				}else if(o.getPaymentstatus().equals("1")){
+//					o.setOrderStatusShow("已支付");
+//				}else 
+				if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+					o.setOrderStatusShow(PayState.STATEMENTING.msg);
+				}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+					o.setOrderStatusShow(PayState.STATEMENTED.msg);
+				}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+					o.setOrderStatusShow(PayState.MENTED.msg);
 				}
+//				else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+//					o.setOrderStatusShow(PayState.CLOSE.msg);
+//				}
 			}
 		}
 		if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 			if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-				o.setOrderStatusShow("已取消");
+				if(o.getCancelnature()==null){
+					o.setOrderStatusShow(OrderState.CANCEL.msg);
+				}else{
+					if(o.getCancelnature() == 1){
+						if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+							o.setOrderStatusShow(PayState.STATEMENTING.msg);
+						}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+							o.setOrderStatusShow(PayState.STATEMENTED.msg);
+						}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+							o.setOrderStatusShow(PayState.MENTED.msg);
+						}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+							o.setOrderStatusShow(PayState.CLOSE.msg);
+						}
+					}else{
+						o.setOrderStatusShow(OrderState.CANCEL.msg);
+					}
+				}
 			}
 		}
 		if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-			if (o.getPaymethod().equals("0")) {
-				o.setPaymethod("个人支付");
+			if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+				if(o.getCancelnature()==null){
+					o.setPaymethod("/");
+				}else{
+					if(o.getCancelnature()==1){
+						if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+							if (o.getPaymethod().equals("2")) {
+								o.setPaymethod("机构支付");
+							}
+						}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+							if (o.getPaymethod().equals("2")) {
+								o.setPaymethod("机构支付");
+							}
+						}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+							if (o.getPaymethod().equals("2")) {
+								o.setPaymethod("机构支付");
+							}
+						}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+							o.setPaymethod("/");
+						}
+					}else{
+						o.setPaymethod("/");
+					}
+				}
+			}else{
+//				if (o.getPaymethod().equals("0")) {
+//					o.setPayTypeShow("个人支付");
+//				}else if (o.getPaymethod().equals("1")) {
+//					o.setPayTypeShow("个人垫付");
+//				}else 
+				if (o.getPaymethod().equals("2")) {
+					o.setPaymethod("机构支付");
+				}
 			}
 		}
-		if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-			if (o.getPaymethod().equals("1")) {
-				o.setPaymethod("个人垫付");
-			}
-		}
-		if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-			if (o.getPaymethod().equals("2")) {
-				o.setPaymethod("机构支付");
-			}
-		}
+//		if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+//			if (o.getOrderstatus().equals(OrderState.SERVICEDONE.state)) {
+//				if(o.getPaymentstatus().equals("0")){
+//					o.setOrderStatusShow("未支付");
+//				}else if(o.getPaymentstatus().equals("1")){
+//					o.setOrderStatusShow("已支付");
+//				}else if(o.getPaymentstatus().equals("2")){
+//					o.setOrderStatusShow("结算中");
+//				}else if(o.getPaymentstatus().equals("3")){
+//					o.setOrderStatusShow("已结算");
+//				}else if(o.getPaymentstatus().equals("4")){
+//					o.setOrderStatusShow("未结算");
+//				}
+//			}
+//		}
+//		if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+//			if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+//				o.setOrderStatusShow("已取消");
+//			}
+//		}
+//		if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//			if (o.getPaymethod().equals("0")) {
+//				o.setPaymethod("个人支付");
+//			}
+//		}
+//		if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//			if (o.getPaymethod().equals("1")) {
+//				o.setPaymethod("个人垫付");
+//			}
+//		}
+//		if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//			if (o.getPaymethod().equals("2")) {
+//				o.setPaymethod("机构支付");
+//			}
+//		}
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 	    String dateString = formatter.format(o.getUsetime());
@@ -366,45 +533,153 @@ public class MyOrderService {
 					}
 				}
 			}
-			if(o.getPaymentstatus()!= null && !o.getPaymentstatus().equals("")){
-				if(o.getOrderstatus().equals(OrderState.CANCEL.state)){
-					o.setPaymentstatus("");
-				}else{
-					if(o.getPaymentstatus().equals("0")){
-						o.setPaymentstatus("未支付");
-					}else if(o.getPaymentstatus().equals("1")){
-						o.setPaymentstatus("已支付");
-					}else if(o.getPaymentstatus().equals("2")){
-						o.setPaymentstatus("结算中");
-					}else if(o.getPaymentstatus().equals("3")){
-						o.setPaymentstatus("已结算");
-					}else if(o.getPaymentstatus().equals("4")){
-						o.setPaymentstatus("未结算");
+//			if(o.getPaymentstatus()!= null && !o.getPaymentstatus().equals("")){
+//				if(o.getOrderstatus().equals(OrderState.CANCEL.state)){
+//					o.setPaymentstatus("");
+//				}else{
+//					if(o.getPaymentstatus().equals("0")){
+//						o.setPaymentstatus("未支付");
+//					}else if(o.getPaymentstatus().equals("1")){
+//						o.setPaymentstatus("已支付");
+//					}else if(o.getPaymentstatus().equals("2")){
+//						o.setPaymentstatus("结算中");
+//					}else if(o.getPaymentstatus().equals("3")){
+//						o.setPaymentstatus("已结算");
+//					}else if(o.getPaymentstatus().equals("4")){
+//						o.setPaymentstatus("未结算");
+//					}
+//				}
+//			}
+//			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+//				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+//					o.setOrderStatusShow("已取消");
+//				}
+//			}
+//			//<!-- 支付方式  	paymethod--><!-- 订单结算方式 包括：0-个人支付，1-个人垫付，2-机构支付 -->
+//			if(o.getOrderstatus().equals(OrderState.CANCEL.state)){
+//				o.setPaymethod("");
+//			}else{
+//				if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//					if (o.getPaymethod().equals("0")) {
+//						o.setPaymethod("个人支付");
+//					}
+//				}
+//				if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//					if (o.getPaymethod().equals("1")) {
+//						o.setPaymethod("个人垫付");
+//					}
+//				}
+//				if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+//					if (o.getPaymethod().equals("2")) {
+//						o.setPaymethod("机构支付");
+//					}
+//				}
+//			}
+			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.SERVICEDONE.state)) {
+//					if(o.getPaymentstatus().equals("0")){
+//						o.setOrderStatusShow("未支付");
+//					}else if(o.getPaymentstatus().equals("1")){
+//						o.setOrderStatusShow("已支付");
+//					}else 
+					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+						o.setOrderStatusShow(PayState.STATEMENTING.msg);
+					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+						o.setOrderStatusShow(PayState.STATEMENTED.msg);
+					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+						o.setOrderStatusShow(PayState.MENTED.msg);
 					}
+//					else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+//						o.setOrderStatusShow(PayState.CLOSE.msg);
+//					}
 				}
 			}
 			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					o.setOrderStatusShow("已取消");
+					if(o.getCancelnature()==null){
+						o.setOrderStatusShow(OrderState.CANCEL.msg);
+					}else{
+						if(o.getCancelnature() == 1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								o.setOrderStatusShow(PayState.STATEMENTING.msg);
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								o.setOrderStatusShow(PayState.STATEMENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								o.setOrderStatusShow(PayState.MENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setOrderStatusShow(PayState.CLOSE.msg);
+							}
+						}else{
+							o.setOrderStatusShow(OrderState.CANCEL.msg);
+						}
+					}
 				}
 			}
-			//<!-- 支付方式  	paymethod--><!-- 订单结算方式 包括：0-个人支付，1-个人垫付，2-机构支付 -->
-			if(o.getOrderstatus().equals(OrderState.CANCEL.state)){
-				o.setPaymethod("");
-			}else{
-				if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-					if (o.getPaymethod().equals("0")) {
-						o.setPaymethod("个人支付");
+			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+					if(o.getCancelnature()==null){
+						o.setPayTypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setPayTypeShow("/");
+							}
+						}else{
+							o.setPayTypeShow("/");
+						}
 					}
-				}
-				if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
-					if (o.getPaymethod().equals("1")) {
-						o.setPaymethod("个人垫付");
-					}
-				}
-				if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
+				}else{
+//					if (o.getPaymethod().equals("0")) {
+//						o.setPayTypeShow("个人支付");
+//					}else if (o.getPaymethod().equals("1")) {
+//						o.setPayTypeShow("个人垫付");
+//					}else 
 					if (o.getPaymethod().equals("2")) {
-						o.setPaymethod("机构支付");
+						o.setPayTypeShow("机构支付");
+					}
+				}
+			}
+			if(o.getExpensetype() != null && o.getExpensetype() != 0 && !o.getExpensetype().toString().equals("")){
+				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
+					if(o.getCancelnature()==null){
+						o.setExpensetypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setExpensetypeShow("/");
+							}
+						}else{
+							o.setExpensetypeShow("/");
+						}
+					}
+				}else{
+					if(o.getExpensetype() == 1){
+						o.setExpensetypeShow("行程服务");
+						o.setCancelamount(0);
 					}
 				}
 			}

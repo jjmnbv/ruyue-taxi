@@ -9,7 +9,8 @@
 	    select t.* from
 	    (select (@rownum := @rownum + 1) as rownum,t1.* from
 	    (select org_organ.shortname as shortName,org_organ.city as city,org_organ_company_ref.actualbalance as actualBalance,org_organ_company_ref.balance as balance,org_organ_company_ref.lineofcredit as lineOfCredit,org_organ.fullname as fullName,org_organ_company_ref.id as id,org_organ.id as organId,
-	            pub_cityaddr.city as cityName,(org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit - org_organ_company_ref.balance) as unbalance
+	            pub_cityaddr.city as cityName,(org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit + IFNULL(org_organ_company_ref.couponamount,0) - org_organ_company_ref.balance) as unbalance,
+	            IFNULL(org_organ_company_ref.couponamount,0) as couponamount
 	    from org_organ_company_ref inner join org_organ on (org_organ_company_ref.organid = org_organ.id)
 	                               left join pub_cityaddr on (pub_cityaddr.id = org_organ.city and pub_cityaddr.status = 1)
 	    where org_organ.status = 1
@@ -48,7 +49,7 @@
             </choose>
 	    </if>
 	    <if test="unbalance != null and unbalance != ''">
-	        and (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit - org_organ_company_ref.balance) > #{unbalance}
+	        and (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit + IFNULL(org_organ_company_ref.couponamount,0) - org_organ_company_ref.balance) > #{unbalance}
 	    </if>
 	    order by pub_cityaddr.cityInitials,org_organ_company_ref.actualbalance) t1, (select @rownum := 0) r ) t
 	    <![CDATA[
@@ -58,9 +59,8 @@
 	
 	<select id="getOrganAccountInfoListCountByQuery" resultType="int" parameterType="OrganAccountQueryParam">
 	    select count(*)
-	    from org_organ_company_ref,org_organ
-	    where org_organ_company_ref.organid = org_organ.id
-	      and org_organ.status = 1
+	    from org_organ_company_ref inner join org_organ on (org_organ_company_ref.organid = org_organ.id)
+	    where org_organ.status = 1
 	      and org_organ_company_ref.companyid = #{leasesCompanyId}
 	      and org_organ_company_ref.status = 1
 	    <if test="city != null and city != ''">
@@ -96,7 +96,7 @@
             </choose>
 	    </if>
 	    <if test="unbalance != null and unbalance != ''">
-	        and (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit - org_organ_company_ref.balance) > #{unbalance}
+	        and (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit + IFNULL(org_organ_company_ref.couponamount,0) - org_organ_company_ref.balance) > #{unbalance}
 	    </if>
 	</select>
 	
@@ -274,6 +274,130 @@
 	                group by org_organ.id
               </otherwise>
         </choose>
+	</select>
+	
+	<!-- 抵用券明细 -->
+	<select id="getPubCouponDetailListByQuery" resultType="PubCouponDetail" parameterType="OrganAccountQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pub_coupon_detail.createtime,pub_coupon_detail.usetype,pub_coupon_detail.amount,pub_coupon_detail.balance,pub_coupon_detail.remark
+	    from pub_coupon_detail
+	    where pub_coupon_detail.userid = #{organId}
+	      and pub_coupon_detail.lecompanyid = #{leasesCompanyId}
+	      and pub_coupon_detail.status = 1
+	    <if test="type != null and type != ''">
+	        and pub_coupon_detail.usetype = #{type}
+	    </if>  
+	    <if test="type == null or type == ''">
+	        and pub_coupon_detail.usetype in (1,2,3,4,5)
+	    </if>
+	    <if test="startTime != null and startTime != ''">
+	        and pub_coupon_detail.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_coupon_detail.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pub_coupon_detail.createtime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	
+	<select id="getPubCouponDetailListCountByQuery" resultType="int" parameterType="OrganAccountQueryParam">
+	    select count(*)
+	    from pub_coupon_detail
+	    where pub_coupon_detail.userid = #{organId}
+	      and pub_coupon_detail.lecompanyid = #{leasesCompanyId}
+	      and pub_coupon_detail.status = 1
+	    <if test="type != null and type != ''">
+	        and pub_coupon_detail.usetype = #{type}
+	    </if>  
+	    <if test="type == null or type == ''">
+	        and pub_coupon_detail.usetype in (1,2,3,4,5)
+	    </if>
+	    <if test="startTime != null and startTime != ''">
+	        and pub_coupon_detail.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_coupon_detail.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	</select>
+	
+	<!-- 抵用券明细导出 -->
+	<select id="getPubCouponDetailExport" resultType="PubCouponDetail" parameterType="OrganAccountQueryParam">
+	    select pub_coupon_detail.createtime,pub_coupon_detail.usetype,pub_coupon_detail.amount,pub_coupon_detail.balance,pub_coupon_detail.remark
+	    from pub_coupon_detail
+	    where pub_coupon_detail.userid = #{organId}
+	      and pub_coupon_detail.lecompanyid = #{leasesCompanyId}
+	      and pub_coupon_detail.status = 1
+	    <if test="type != null and type != ''">
+	        and pub_coupon_detail.usetype = #{type}
+	    </if>  
+	    <if test="type == null or type == ''">
+	        and pub_coupon_detail.usetype in (1,2,3,4,5)
+	    </if>
+	    <if test="startTime != null and startTime != ''">
+	        and pub_coupon_detail.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_coupon_detail.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pub_coupon_detail.createtime desc
+	</select>
+	
+	<!-- 机构返券时机构可用余额加上相应的额度 -->
+	<update id="addOrganCouponValue" parameterType="hashmap">
+		update org_organ_company_ref
+		set balance=IFNULL(balance,0) + #{money},couponamount=IFNULL(couponamount,0) + #{money},updatetime=now()
+		where organid = #{organid}
+		  and companyid = #{companyid}
+		  and status = 1
+	</update>
+	
+	<!-- 机构返券时插入抵用券明细 -->
+	<insert id="addCouponDetail" parameterType="hashmap">
+	    insert into pub_coupon_detail(id,userid,couponidref,usetype,amount,balance,remark,platformtype,lecompanyid,updatetime,createtime,status)
+	    select #{id},#{organid},#{couponidref},#{usetype},#{money},couponamount,#{remark},1,#{companyid},now(),now(),1
+	    from org_organ_company_ref 
+        where organid = #{organid} 
+          and companyid = #{companyid} 
+          and status = 1
+	</insert>
+	
+	<!-- 机构提现时清空抵用券 -->
+	<update id="clearOrganCouponValue" parameterType="hashmap">
+		update org_organ_company_ref
+		set balance=IFNULL(balance,0) - IFNULL(couponamount,0),couponamount=0,updatetime=now()
+		where organid = #{organid}
+		  and companyid = #{companyid}
+		  and status = 1
+	</update>
+	
+	<!-- 机构提现时查找抵用券余额 -->
+	<select id="getOrganCouponValue" parameterType="hashmap" resultType="double">
+		select IFNULL(couponamount,0) 
+		from org_organ_company_ref 
+		where organid = #{organid}
+		  and companyid = #{companyid}
+		  and status = 1
+	</select>
+	
+	<!-- 机构提现时插入抵用券明细 -->
+	<insert id="clearCouponDetail" parameterType="hashmap">
+	    insert into pub_coupon_detail(id,userid,couponidref,usetype,amount,balance,remark,platformtype,lecompanyid,updatetime,createtime,status)
+	    select #{id},#{organid},#{couponidref},#{usetype},couponamount,0,#{remark},1,#{companyid},now(),now(),1
+	    from org_organ_company_ref 
+        where organid = #{organid} 
+          and companyid = #{companyid} 
+          and status = 1
+	</insert>
+	
+	<!-- 获取机构信息 -->
+	<select id="getCityByOrganid" parameterType="String" resultType="String">
+		select city
+		from org_organ
+		where id = #{id}
+		  and status = 1
 	</select>
 
 </mapper>

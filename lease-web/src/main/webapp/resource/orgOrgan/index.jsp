@@ -75,7 +75,7 @@
 						<input id="queryCity" name="queryCity" value="" placeholder="全部"/>
 						<input id="queryCitys" name="queryCitys" value="" type="hidden"/>
 					</div>
-					<div class="col-3">
+					<!-- <div class="col-3">
 						<label>客户类型</label>
 						<select id="queryCustomertype" name="queryCustomertype">
 							<option value="">全部</option>
@@ -83,7 +83,7 @@
 							<option value="0">非渠道客户</option>
 						</select>
 						<input id="queryCustomertypes" name="queryCustomertypes" value="" type="hidden"/>
-					</div>
+					</div> -->
 					<div class="col-3">
 						<label>合作状态</label>
 						<select id="cooperationStatus" name="cooperationStatus">
@@ -93,6 +93,16 @@
 						</select>
 						<input id="cooperationStatuss" name="cooperationStatuss" value="" type="hidden"/>
 					</div>
+					<div class="col-3">
+						<label>供车主体</label>
+						<select id="queryCustomertype" name="queryCustomertype">
+							<option value="">全部</option>
+							<c:forEach var="list" items="${list}">
+								<option value="${list.organid}">${list.shortName}</option>
+							</c:forEach>
+						</select>
+						<input id="queryCustomertypes" name="queryCustomertypes" value="" type="hidden"/>
+					</div> 
 				</div>
 				<div class="row">
 					<div class="col-12" style="text-align: right;">

@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -42,7 +43,7 @@ public class PubPremiumRuleController {
 	}
 	@RequestMapping(value = "api/PubPremiumRule/ruleConflict", method = RequestMethod.POST)
 	@ResponseBody
-	public int ruleConflict(@RequestBody PubPremiumParam pubPremiumParam)  {
+	public Map<String,Object> ruleConflict(@RequestBody PubPremiumParam pubPremiumParam)  {
 		return pubPremiumRuleService.ruleConflict(pubPremiumParam);
 	}
 	@RequestMapping(value = "api/PubPremiumRule/ruleConflictOk", method = RequestMethod.POST)
@@ -83,5 +84,15 @@ public class PubPremiumRuleController {
 		@ResponseBody
 	public PageBean getHistorydetail(@RequestBody PubPremiumHistory pubPremiumHistory){
 			return pubPremiumRuleService.getHistorydetail(pubPremiumHistory);
+		}
+		@RequestMapping(value = "api/PubPremiumRule/getWeeks/{id}", method = RequestMethod.GET)
+		@ResponseBody
+	public List<PubDictionary> getWeeks(@PathVariable String id)  {
+			return pubPremiumRuleService.getWeeks(id);
+		}
+		@RequestMapping(value = "api/PubPremiumRule/getRulename/{id}", method = RequestMethod.GET)
+		@ResponseBody
+	public PubPremiumParam getRulename(@PathVariable String id)  {
+			return pubPremiumRuleService.getRulename(id);
 		}
 }

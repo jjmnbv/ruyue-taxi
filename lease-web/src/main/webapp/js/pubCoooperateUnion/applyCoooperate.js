@@ -33,7 +33,7 @@ function initStep1() {
         }
     })
 
-    $("#leaseCompanyName").on("keyup", function(){
+    $("#leaseCompanyName").on("change", function(){
         $("#leaseCompanyNameError").addClass("hidden");
         if ($("#leaseCompanyName").val() == "") {
             $("#leaseCompanyNameError2").removeClass("hidden");
@@ -81,7 +81,7 @@ function validateLeaseCompanyName(){
                result = false;
            }else if(res == "3"){
                $("#leaseCompanyNameError").addClass("hidden");
-               Zalert("提示", "当前与" + $("#leaseCompanyName").val() + "存在" + $("#cootype").find("option:selected").text() + "合作，请终止或到期后再申请合作");
+               Zalert("提示", "当前与" + $("#leaseCompanyName").val() + "存在" + $("#cootype").find("option:selected").text() + $("#servicetype").find("option:selected").text() + "合作，请终止或到期后再申请合作");
                result = false;
            }
         },
@@ -151,10 +151,14 @@ function goStep2() {
 
     if(dataGrid2 && $("#servicetype").val() == "1") {
         dataGrid2.fnSetColumnVis(3 , false);
+    }else{
+        dataGrid2.fnSetColumnVis(3 , true);
     }
 
     if(dataGridLocal && $("#servicetype").val() == "1") {
         dataGridLocal.fnSetColumnVis(2 , false);
+    }else{
+        dataGridLocal.fnSetColumnVis(2 , true);
     }
 
     $("#vehclineid").select2({
@@ -236,7 +240,6 @@ function searchGridResource() {
         {"name": "vehicletype", "value": $("#servicetype").val()}
     ];
     dataGrid2.fnSearch(conditionArr);
-    $("#selectVeCount").text(0);
 }
 
 /**

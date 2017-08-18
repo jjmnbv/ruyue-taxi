@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 
 import com.szyciov.entity.Retcode;
+import com.szyciov.util.GsonUtil;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
 import com.szyciov.util.UserTokenManager;
@@ -147,7 +148,8 @@ public class Const {
 	    res.put("status", Retcode.OK.code);
 	    res.put("message",Retcode.OK.msg);
 		try{
-			templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/grenerate", HttpMethod.POST, null, params, JSONObject.class);
+			String paramstr = GsonUtil.toJson(params);
+			templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/generate", HttpMethod.POST, null, paramstr, String.class);
 		}catch(Exception e){
 			logger.error("优惠券触发出错",e);
 		}

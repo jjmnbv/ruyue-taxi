@@ -480,6 +480,11 @@ public abstract class AbstractOrder{
      * 优惠券id
      */
     private String couponid;
+    
+    /**
+     * 优惠券金额
+     */
+    private Integer couponprice;
 
     public String getUsetype() {
 		return usetype;
@@ -1528,4 +1533,21 @@ public abstract class AbstractOrder{
 	public void setCouponid(String couponid) {
 		this.couponid = couponid;
 	}
+
+	/**  
+	 * 获取优惠券金额  
+	 * @return couponprice 优惠券金额  
+	 */
+	public Integer getCouponprice() {
+		return couponprice;
+	}
+
+	/**  
+	 * 设置优惠券金额  
+	 * @param couponprice 优惠券金额  
+	 */
+	public void setCouponprice(Integer couponprice) {
+		this.couponprice = couponprice;
+	}
+	
 }

@@ -61,8 +61,8 @@
 			(select org_organ.shortname from org_organ where org_organ.id = org_order.organid) organname,
 			org_user.id, org_user.nickname, org_user.account, org_order.passengers, org_order.passengerphone,
             org_order.usetime, org_order.undertime, org_order.pushnumber, org_order.orderstatus, org_user.status userstatus,
-            getCityStr(org_order.oncity) oncity, org_order.oncity, org_order.onaddress,
-            getCityStr(org_order.offcity) offcity, org_order.offcity, org_order.offaddress
+            getCityStr(org_order.oncity) oncityname, org_order.oncity, org_order.onaddress,
+            getCityStr(org_order.offcity) offcityname, org_order.offcity, org_order.offaddress
 		from
 			org_order left join org_user on org_order.userid = org_user.id
 		where
@@ -147,9 +147,9 @@
 			(select org_organ.shortname from org_organ where org_organ.id = org_order.organid) organname,
 			org_user.id, org_user.nickname, org_user.account, org_order.passengers, org_order.passengerphone, org_order.driverid,
 			(select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid) drivername,
-            getCityStr(org_order.oncity) oncity, org_order.oncity, org_order.onaddress,
-            getCityStr(org_order.offcity) offcity, org_order.offcity, org_order.offaddress,
-            org_order.usetime, org_order.updatetime, org_order.belongleasecompany, org_user.status userstatus,
+            getCityStr(org_order.oncity) oncityname, org_order.oncity, org_order.onaddress,
+            getCityStr(org_order.offcity) offcityname, org_order.offcity, org_order.offaddress,
+            org_order.usetime, org_order.updatetime, org_order.belongleasecompany, org_user.status userstatus, org_order.companyid,
             (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_order.belongleasecompany) belongcompanyname
 		from
 			org_order left join org_user on org_order.userid = org_user.id
@@ -273,17 +273,17 @@
 		select
 			org_order.orderno, org_order.ordertype, org_order.paymentstatus, org_order.orderstatus, org_order.paytype,
             org_order.reviewperson, org_order.organid, org_order.actualpayamount, org_order.paymethod, org_order.orderamount,
-            org_order.mileage, org_order.pricecopy, org_order.starttime, org_order.endtime, org_order.usetime,
+            org_order.mileage, org_order.pricecopy, org_order.starttime, org_order.endtime, org_order.usetime, org_order.companyid,
 			org_user.id, org_user.nickname, org_user.account, org_order.passengers, org_order.passengerphone, org_order.driverid,
-            getCityStr(org_order.oncity) oncity, org_order.oncity, org_order.onaddress,
-            getCityStr(org_order.offcity) offcity, org_order.offcity, org_order.offaddress,
+            getCityStr(org_order.oncity) oncityname, org_order.oncity, org_order.onaddress,
+            getCityStr(org_order.offcity) offcityname, org_order.offcity, org_order.offaddress,
             org_order.plateno, org_order.shouldpayamount, ifnull(tmp.mileage, org_order.mileage) reviewmileage, tmp.times reviewtimes,
             tmp.counttimes reviewcounttimes, tmp.id reviewid, org_order.belongleasecompany, org_user.status userstatus,
             (select org_organ.shortname from org_organ where org_organ.id = org_order.organid) organname,
             (select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid) drivername,
             (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_order.belongleasecompany) belongcompanyname,
             (select pub_coupon_use.actualamount from pub_coupon_use where pub_coupon_use.status = 1
-                and pub_coupon_use.usetype = 2 and pub_coupon_use.billingorderid = org_order.orderno) actualamount
+                and pub_coupon_use.usetype = 2 and pub_coupon_use.usestate = 1 and pub_coupon_use.billingorderid = org_order.orderno) actualamount
 		from
 			org_order left join org_user on org_order.userid = org_user.id
 			left join (select * from (select * from org_orderreview order by createtime desc) review group by orderno) tmp on org_order.orderno = tmp.orderno
@@ -420,7 +420,7 @@
             tmp.times reviewtimes, tmp.id reviewid, tmp.rawpricecopy, tmp.reviewtype, org_user.status userstatus, org_order.pricecopy,
             (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_order.belongleasecompany) belongcompanyname,
             (select pub_coupon_use.actualamount from pub_coupon_use where pub_coupon_use.status = 1
-                and pub_coupon_use.usetype = 2 and pub_coupon_use.billingorderid = org_order.orderno) actualamount
+                and pub_coupon_use.usetype = 2 and pub_coupon_use.usestate = 1 and pub_coupon_use.billingorderid = org_order.orderno) actualamount
 		from
 			org_order left join (select * from (select * from org_orderreview order by createtime desc) review group by orderno) tmp on org_order.orderno = tmp.orderno
             left join org_user on org_order.userid = org_user.id
@@ -507,9 +507,9 @@
             org_user.id, org_user.nickname, org_user.account, org_order.passengers, org_order.passengerphone, org_order.driverid,
             (select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = org_order.driverid) drivername,
             org_order.usetime, org_order.reviewstatus, org_order.paymethod, org_order.plateno, org_order.shouldpayamount,
-            org_order.companyid, org_order.belongleasecompany, org_order.status userstatus,
-            getCityStr(org_order.oncity) oncity, org_order.oncity, org_order.onaddress,
-            getCityStr(org_order.offcity) offcity, org_order.offcity, org_order.offaddress,
+            org_order.companyid, org_order.belongleasecompany, org_order.status userstatus, org_ordercancel.cancelamount,
+            getCityStr(org_order.oncity) oncityname, org_order.oncity, org_order.onaddress,
+            getCityStr(org_order.offcity) offcityname, org_order.offcity, org_order.offaddress,
             ifnull(tmp.mileage, org_order.mileage) reviewmileage, tmp.counttimes reviewcounttimes, tmp.times reviewtimes, tmp.id reviewid,
             (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_order.belongleasecompany) belongcompanyname
         from
@@ -660,15 +660,15 @@
             org_order.starttime, org_order.endtime, org_order.usetime, org_order.undertime, org_order.ordertime,
 			org_user.id, org_user.nickname, org_user.account, org_order.passengers, org_order.passengerphone, org_order.driverid,
 			concat(pub_driver.name, " ", pub_driver.phone) drivername,
-            getCityStr(org_order.oncity) oncity, org_order.oncity, org_order.onaddress,
-            getCityStr(org_order.offcity) offcity, org_order.offcity, org_order.offaddress,
+            getCityStr(org_order.oncity) oncityname, org_order.oncity, org_order.onaddress,
+            getCityStr(org_order.offcity) offcityname, org_order.offcity, org_order.offaddress,
 			org_order.cancelparty, org_order.reviewstatus, org_order.paymethod, org_order.expensetype, org_orderpaymentrecord.tradeno,
 			org_order.factmodelname, org_order.shouldpayamount, org_order.actualpayamount, org_ordercancel.cancelamount, org_order.companyid,
             pub_driver.jobnum, org_order.plateno, org_order.estimatedtime, org_order.estimatedmileage, org_order.belongleasecompany,
 			ifnull(tmp.mileage, org_order.mileage) reviewmileage, tmp.counttimes reviewcounttimes, tmp.times reviewtimes, tmp.id reviewid,
             (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_order.belongleasecompany) belongcompanyname,
             (select pub_coupon_use.actualamount from pub_coupon_use where pub_coupon_use.status = 1
-                and pub_coupon_use.usetype = 2 and pub_coupon_use.billingorderid = org_order.orderno) actualamount
+                and pub_coupon_use.usetype = 2 and pub_coupon_use.usestate = 1 and pub_coupon_use.billingorderid = org_order.orderno) actualamount
 		from
 			org_order left join org_user on org_order.userid = org_user.id
 			left join (select * from (select * from org_orderreview order by createtime desc) review group by orderno) tmp on org_order.orderno = tmp.orderno
@@ -849,8 +849,8 @@
           (select le_user.nickname from le_user where le_user.id = org_ordercancel.exemptionoperator) exemptionname,
           concat(pub_driver.name, " ", pub_driver.phone) drivername,
           (select org_organ.shortname from org_organ where org_organ.id = org_order.organid) organname,
-          getCityStr(org_order.oncity) oncity, org_order.oncity, org_order.onaddress,
-          getCityStr(org_order.offcity) offcity, org_order.offcity, org_order.offaddress,
+          getCityStr(org_order.oncity) oncityname, org_order.oncity, org_order.onaddress,
+          getCityStr(org_order.offcity) offcityname, org_order.offcity, org_order.offaddress,
           (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_order.belongleasecompany) belongcompanyname
         from
           org_order left join org_user on org_order.userid = org_user.id
@@ -891,7 +891,7 @@
                 and org_ordercancel.cancelnature = 2
             </if>
             <if test='null != paymentstatus and "" != paymentstatus and "10" != paymentstatus'>
-                and org_order.paymentstatus = #{paymentstatus}
+                and org_order.paymentstatus = #{paymentstatus} and org_ordercancel.cancelnature = 1
             </if>
 
             <if test='null != orderNo and "" != orderNo'>
@@ -899,7 +899,7 @@
             </if>
 
             <if test='null != paymethod and "" != paymethod'>
-                and org_order.paymentstatus = "1" and org_order.paymethod = #{paymethod}
+                and org_order.paymethod = #{paymethod}
             </if>
 
             <if test='null != tradeno and "" != tradeno'>
@@ -940,6 +940,7 @@
         from
             org_order left join org_user on org_order.userid = org_user.id
             left join org_orderpaymentrecord on org_order.orderno = org_orderpaymentrecord.orderno and not isnull(org_orderpaymentrecord.tradeno)
+            left join pub_driver on org_order.driverid = pub_driver.id
             left join org_ordercancel on org_order.orderno = org_ordercancel.orderno
         where
             org_order.status = 1 and org_order.companyid = #{leasescompanyid} and org_order.usetype = #{usetype} and org_order.orderstatus = "8"
@@ -975,7 +976,7 @@
                 and org_ordercancel.cancelnature = 2
             </if>
             <if test='null != paymentstatus and "" != paymentstatus and "10" != paymentstatus'>
-                and org_order.paymentstatus = #{paymentstatus}
+                and org_order.paymentstatus = #{paymentstatus} and org_ordercancel.cancelnature = 1
             </if>
 
             <if test='null != orderNo and "" != orderNo'>
@@ -983,7 +984,7 @@
             </if>
 
             <if test='null != paymethod and "" != paymethod'>
-                and org_order.paymentstatus = "1" and org_order.paymethod = #{paymethod}
+                and org_order.paymethod = #{paymethod}
             </if>
 
             <if test='null != tradeno and "" != tradeno'>
@@ -1021,8 +1022,7 @@
 			pub_dictionary.value vehiclessubjectvalue, getCityStr(org_order.oncity) oncityName, getCityStr(org_order.offcity) offcityName,
 			ifnull(tmp.price, 0) price, tmp.starttime reviewstarttime, tmp.endtime reviewendtime, tmp.times reviewtimes,
 			tmp.counttimes reviewcounttimes, tmp.mileage reviewmileage, tmp.timesubsidies reviewtimesubsidies, tmp.mileageprices reviewmileageprices,
-			tmp.reviewtype, org_ordercancel.cancelnature, org_ordercancel.cancelamount, tmp.pricecopy reviewpricecopy, tmp.reviewtype,
-            pub_coupon_use.actualamount,
+			tmp.reviewtype, org_ordercancel.cancelnature, org_ordercancel.cancelamount, tmp.pricecopy reviewpricecopy, pub_coupon_use.actualamount,
 			(select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = org_order.belongleasecompany) belongleasecompanytext
 		from
 			org_order left join org_user on org_order.userid = org_user.id
@@ -1128,17 +1128,16 @@
         from
             pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
             left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+            left join pub_vehicle_models_ref on pub_vehicle.id = pub_vehicle_models_ref.vehicleid
             left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
             left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.Id
-            left join le_vehcline_models_ref on pub_vehcline.Id = le_vehcline_models_ref.vehclineid
-            left join le_vehiclemodels on le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+            left join le_vehiclemodels on pub_vehicle_models_ref.vehiclemodelsid = le_vehiclemodels.Id
             left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-            left join pub_cooresource on pub_vehicle.id = pub_cooresource.vehicleid
         where
             pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1
-            and pub_vehcline.status = 1 and le_vehcline_models_ref.status = 1 and le_vehiclemodels.status = 1
+            and pub_vehcline.status = 1 and le_vehiclemodels.status = 1
             and pub_vehicle_scope.status = 1 and pub_driver.workstatus in ("0", "1", "2")
-            and ((pub_cooresource.status = 1 and pub_cooresource.enabled = 0) or pub_vehicle.leasescompanyid = #{leasescompanyid})
+            and pub_vehicle_models_ref.companyid = #{leasescompanyid}
             and pub_driver.phone not in (select org_user.account from org_user where org_user.id = #{userId} and org_user.status = 1)
             and pub_driver.vehicletype = "0" and pub_driver.platformtype = "1"
             and pub_driver.phone not in (select account from org_user where org_user.id = #{userId} and org_user.status = 1)
@@ -1201,9 +1200,6 @@
                 </if>
                 )
             </if>
-            <if test="leasescompanyid != null and leasescompanyid != ''">
-                and (pub_driver.leasescompanyid = #{leasescompanyid} or pub_cooresource.leasecompanyid = #{leasescompanyid})
-            </if>
             <if test="driverState != null and driverState != ''">
                 and pub_driver.workstatus = #{driverState}
             </if>
@@ -1246,17 +1242,16 @@
             from
                 pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
                 left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+                left join pub_vehicle_models_ref on pub_vehicle.id = pub_vehicle_models_ref.vehicleid
                 left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
                 left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.Id
-                left join le_vehcline_models_ref on pub_vehcline.Id = le_vehcline_models_ref.vehclineid
-                left join le_vehiclemodels on le_vehcline_models_ref.vehiclemodelsid = le_vehiclemodels.Id
+                left join le_vehiclemodels on pub_vehicle_models_ref.vehiclemodelsid = le_vehiclemodels.Id
                 left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-                left join pub_cooresource on pub_vehicle.id = pub_cooresource.vehicleid
             where
                 pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1
-                and pub_vehcline.status = 1 and le_vehcline_models_ref.status = 1 and le_vehiclemodels.status = 1
+                and pub_vehcline.status = 1 and le_vehiclemodels.status = 1
                 and pub_vehicle_scope.status = 1 and pub_driver.workstatus in ("0", "1", "2")
-                and ((pub_cooresource.status = 1 and pub_cooresource.enabled = 0) or pub_vehicle.leasescompanyid = #{leasescompanyid})
+                and pub_vehicle_models_ref.companyid = #{leasescompanyid}
                 and pub_driver.phone not in (select org_user.account from org_user where org_user.id = #{userId} and org_user.status = 1)
                 and pub_driver.vehicletype = "0" and pub_driver.platformtype = "1"
                 and pub_driver.phone not in (select account from org_user where org_user.id = #{userId} and org_user.status = 1)
@@ -1318,9 +1313,6 @@
                         or pub_vehicle_scope.cityid = #{offcity}
                     </if>
                     )
-                </if>
-                <if test="leasescompanyid != null and leasescompanyid != ''">
-                    and (pub_driver.leasescompanyid = #{leasescompanyid} or pub_cooresource.leasecompanyid = #{leasescompanyid})
                 </if>
                 <if test="driverState != null and driverState != ''">
                     and pub_driver.workstatus = #{driverState}

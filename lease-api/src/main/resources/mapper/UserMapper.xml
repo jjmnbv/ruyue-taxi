@@ -20,6 +20,7 @@
 			disablehis,
 			createtime,
 			updatetime,
+			expirestime,
 			status
 		)
 		VALUES
@@ -37,6 +38,7 @@
 			'0',
 			now(),
 			now(),
+			date_add(now(),interval 1 MONTH),
 			1
 		)
 	</insert>
@@ -46,6 +48,7 @@
 		SET 
 			<if test=" userpassword !=null and userpassword != '' ">
 				le_user.userpassword = #{userpassword},
+				le_user.expirestime = date_add(now(),interval 1 MONTH),
 			</if>
 			<if test=" nickname !=null and nickname != '' ">
 				le_user.nickname = #{nickname},

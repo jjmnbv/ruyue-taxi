@@ -19,8 +19,8 @@
 		name=#{name},
 		phone=#{phone},
 		sex=#{sex},driverstype=#{driversType},
-		city=#{city},jobstatus=#{jobStatus},identitytype=#{idEntityType},driversnum=#{driversNum},driverphoto=#{driverPhoto},idcardnum=#{idCardNum},idcardfront=#{idCardFront},idcardback=#{idCardBack},UpdateTime=now(),Updater=#{updater},headportraitmin=#{headPortraitMax},headportraitmax=#{headPortraitMax},driveryears=#{driverYears},
-		belongleasecompany=#{belongleasecompany}
+		city=#{city},jobstatus=#{jobStatus},identitytype=#{idEntityType},driversnum=#{driversNum},driverphoto=#{driverPhoto},idcardnum=#{idCardNum},idcardfront=#{idCardFront},idcardback=#{idCardBack},UpdateTime=now(),Updater=#{updater},headportraitmin=#{headPortraitMax},headportraitmax=#{headPortraitMax},driveryears=#{driverYears}
+		<!-- belongleasecompany=#{belongleasecompany} -->
 		WHERE
 		id = #{id}
 	</update>
@@ -91,7 +91,7 @@
 		SELECT
 		*,
 		(SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_driver.city)  AS cityName,
-		(
+		<!-- (
 				SELECT
 					pub_dictionary.text
 				FROM
@@ -99,7 +99,7 @@
 				WHERE
 					pub_dictionary.type = '租赁公司'
 				AND pub_dictionary.`value` = pub_driver.belongleasecompany
-			) AS belongleasecompanyName,
+			) AS belongleasecompanyName, -->
 		(SELECT text FROM pub_dictionary where pub_dictionary.Type='服务状态' and
 		pub_dictionary.`Value`=pub_driver.workstatus and pub_dictionary.status=1)as workStatusName,
 		(CASE workstatus WHEN  2 THEN 1 WHEN  0 THEN 2 WHEN  1 THEN 3 ELSE 0 END)		
@@ -152,9 +152,9 @@
 		<if test="queryJobNum != null and queryJobNum !='' ">
 			AND pub_driver.id=#{queryJobNum}
 		</if>
-		<if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
+		<!-- <if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
 			AND pub_driver.belongleasecompany=#{belongleasecompanyQuery}
-		</if>
+		</if> -->
 		ORDER BY
 		jobstatus,
 		CONVERT ((SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_driver.city) USING gbk) COLLATE gbk_chinese_ci,
@@ -227,9 +227,9 @@
 		<if test="queryJobNum != null and queryJobNum !='' ">
 			AND pub_driver.id=#{queryJobNum}
 		</if>
-		<if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
+		<!-- <if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
 			AND pub_driver.belongleasecompany=#{belongleasecompanyQuery}
-		</if>
+		</if> -->
 		) m
 		) t
 	</select>
@@ -645,9 +645,9 @@
 		<if test="queryJobNum != null and queryJobNum !='' ">
 			AND pub_driver.id=#{queryJobNum}
 		</if>
-		<if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
+		<!-- <if test="belongleasecompanyQuery != null and belongleasecompanyQuery !='' ">
 			AND pub_driver.belongleasecompany=#{belongleasecompanyQuery}
-		</if>
+		</if> -->
 		ORDER BY
 		CONVERT ((SELECT pub_cityaddr.city FROM pub_cityaddr WHERE pub_cityaddr.`status`=1 AND pub_cityaddr.id = pub_driver.city) USING gbk) COLLATE gbk_chinese_ci,
 		pub_driver.vehicletype DESC,

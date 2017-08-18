@@ -55,8 +55,6 @@
 			tbody tr td:first-child{
 				text-align:left;
 			}
-			.col-3{width: 22%;}
-
 		</style>
 	</head>
 	<body>

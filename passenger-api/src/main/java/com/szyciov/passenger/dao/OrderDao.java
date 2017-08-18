@@ -234,4 +234,16 @@ public class OrderDao {
 		mapper.updateCancelReson4OpNetCar(pp);
 	}
 
+	public Map<String, Object> getUnpayOrder4OrgNetCar_cancel(Map<String, Object> params) {
+		return mapper.getUnpayOrder4OrgNetCar_cancel(params);
+	}
+
+	public Map<String, Object> getUnpayOrder4OpNetCar_cancel(Map<String, Object> params) {
+		return mapper.getUnpayOrder4OpNetCar_cancel(params);
+	}
+
+	public Map<String, Object> getUnpayOrder4OpTaxi_cancel(Map<String, Object> params) {
+		return mapper.getUnpayOrder4OpTaxi_cancel(params);
+	}
+
 }

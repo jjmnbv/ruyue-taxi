@@ -8,6 +8,7 @@ import com.szyciov.entity.PubAdImage;
 import com.szyciov.entity.PubAirPortAddr;
 import com.szyciov.entity.PubSysVersion;
 import com.szyciov.lease.entity.PubCityAddr;
+import org.springframework.web.bind.annotation.RequestBody;
 
 public interface PubInfoMapper {
 	
@@ -26,7 +27,13 @@ public interface PubInfoMapper {
 	public boolean checkTokenValid(Map<String, Object> param);
 	
 	public List<Map<String, String>> getCitySelect1();
-	
+
+	public List<PubCityAddr> getCitySelect2();
+
 	public PubCityAddr getCityById(String id);
+
+	public List<Map<String, String>> getCityIdByName(String name);
+
+	public List<Map<String,String>> getSearchCitySelect(PubCityAddr pubCityAddr);
 	
 }

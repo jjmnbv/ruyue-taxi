@@ -25,22 +25,22 @@ public class PubOrderCancel extends BaseParam{
 	/**
 	  *责任方(1-乘客,2-司机,3-客服,4-平台)
 	  */
-	private int dutyparty;
+	private Integer dutyparty;
 
 	/**
 	  *取消费用
 	  */
-	private int cancelamount;
+	private Integer cancelamount;
 
 	/**
 	  *取消性质(1-有责,2-免责)
 	  */
-	private int cancelnature;
+	private Integer cancelnature;
 
 	/**
 	  *取消原因(1-不再需要用车,2-乘客迟到违约,3-司机迟到违约,4-司机不愿接乘客,5-业务操作错误,6-暂停供车服务,7-系统派单失败)
 	  */
-	private int cancelreason;
+	private Integer cancelreason;
 
 	/**
 	  *取消操作人
@@ -107,56 +107,56 @@ public class PubOrderCancel extends BaseParam{
 	/**
 	  *设置责任方(1-乘客,2-司机,3-客服,4-平台)
 	  */
-	public void setDutyparty(int dutyparty){
+	public void setDutyparty(Integer dutyparty){
 		this.dutyparty=dutyparty;
 	}
 
 	/**
 	  *获取责任方(1-乘客,2-司机,3-客服,4-平台)
 	  */
-	public int getDutyparty(){
+	public Integer getDutyparty(){
 		return dutyparty;
 	}
 
 	/**
 	  *设置取消费用
 	  */
-	public void setCancelamount(int cancelamount){
+	public void setCancelamount(Integer cancelamount){
 		this.cancelamount=cancelamount;
 	}
 
 	/**
 	  *获取取消费用
 	  */
-	public int getCancelamount(){
+	public Integer getCancelamount(){
 		return cancelamount;
 	}
 
 	/**
 	  *设置取消性质(1-有责,2-免责)
 	  */
-	public void setCancelnature(int cancelnature){
+	public void setCancelnature(Integer cancelnature){
 		this.cancelnature=cancelnature;
 	}
 
 	/**
 	  *获取取消性质(1-有责,2-免责)
 	  */
-	public int getCancelnature(){
+	public Integer getCancelnature(){
 		return cancelnature;
 	}
 
 	/**
 	  *设置取消原因(1-不再需要用车,2-乘客迟到违约,3-司机迟到违约,4-司机不愿接乘客,5-业务操作错误,6-暂停供车服务,7-系统派单失败)
 	  */
-	public void setCancelreason(int cancelreason){
+	public void setCancelreason(Integer cancelreason){
 		this.cancelreason=cancelreason;
 	}
 
 	/**
 	  *获取取消原因(1-不再需要用车,2-乘客迟到违约,3-司机迟到违约,4-司机不愿接乘客,5-业务操作错误,6-暂停供车服务,7-系统派单失败)
 	  */
-	public int getCancelreason(){
+	public Integer getCancelreason(){
 		return cancelreason;
 	}
 

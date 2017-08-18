@@ -46,7 +46,17 @@ public class OrganUserAccountInfo {
 	 * 余额明细数
 	 */
 	public int balanceCount;
-
+	
+	/**
+	 * 抵用券明细数
+	 */
+    public int couponCount; 
+    
+    /**
+     * 可用的抵用券张数
+     */
+	public int validCoupon;
+    
 	public String getNickName() {
 		return nickName;
 	}
@@ -109,5 +119,25 @@ public class OrganUserAccountInfo {
 
 	public void setBalanceCount(int balanceCount) {
 		this.balanceCount = balanceCount;
+	}
+
+	public int getCouponCount() {
+		return couponCount;
+	}
+
+	public void setCouponCount(int couponCount) {
+		this.couponCount = couponCount;
+	}
+
+	public int getValidCoupon() {
+		return validCoupon;
+	}
+
+	public void setValidCoupon(int validCoupon) {
+		this.validCoupon = validCoupon;
+	}
+
+	public OrganUserAccountInfo() {
+		super();
 	}
 }

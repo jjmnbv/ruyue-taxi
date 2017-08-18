@@ -231,13 +231,39 @@
 				)
 			)
 			+
-			(select count(*) from op_taxiorder where op_taxiorder.status = 1 and op_taxiorder.userid = pu.id and op_taxiorder.orderstatus = "7" and (op_taxiorder.paymentstatus in ("0", "5", "6") or isnull(op_taxiorder.paymentstatus)))
-			) > 0 
-			THEN CONCAT(pu.account,' ',IFNULL(pu.nickname,''),'(未支付)')
-			WHEN pu.disablestate = 1
-			THEN CONCAT(pu.account,' ',IFNULL(pu.nickname,''),'(已禁用)')
-			ELSE CONCAT(pu.account,' ',IFNULL(pu.nickname,''))
-			END text
+			(
+				SELECT
+					count(*)
+				FROM
+					op_taxiorder
+				WHERE
+					op_taxiorder. STATUS = 1
+				AND op_taxiorder.userid = pu.id
+				AND op_taxiorder.orderstatus = "7"
+				AND (
+					op_taxiorder.paymentstatus IN ("0", "5", "6")
+					OR isnull(op_taxiorder.paymentstatus)
+				)
+			)
+			+
+			(
+				SELECT COUNT(oo2.orderno)
+				FROM
+					op_order oo2,
+					op_ordercancel ooc
+				WHERE oo2.`status` = '1'
+				AND oo2.orderno = ooc.orderno
+ 				AND oo2.userid = pu.id
+				AND oo2.orderstatus = '8'
+				AND oo2.paymentstatus = '0'
+				AND ooc.cancelnature = '1'
+			)
+		) > 0 
+		THEN CONCAT(pu.account,' ',IFNULL(pu.nickname,''),'(未支付)')
+		WHEN pu.disablestate = 1
+		THEN CONCAT(pu.account,' ',IFNULL(pu.nickname,''),'(已禁用)')
+		ELSE CONCAT(pu.account,' ',IFNULL(pu.nickname,''))
+		END text
 		FROM
 			pe_user pu
 		WHERE 1=1
@@ -248,7 +274,7 @@
 			OR pu.nickname LIKE '%${sSearch}%'
 		)
 		</if>
-		limit 0,10
+		LIMIT 0,10
 	</select>
 	
 	<select id="getPeUserById" parameterType="String" resultType="PeUser">

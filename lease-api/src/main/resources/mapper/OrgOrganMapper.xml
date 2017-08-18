@@ -175,7 +175,7 @@
 							and org_organ.cooperationstatus = #{cooperationStatus}
 						</if>
 						<if test="queryCustomertype != null and queryCustomertype != ''">
-							and org_organ.customertype = #{queryCustomertype}
+							and org_organ.id = #{queryCustomertype}
 						</if>
 						ORDER BY
 						CONVERT(citycaption USING gbk ) COLLATE gbk_chinese_ci ,
@@ -479,6 +479,9 @@
 						<if test="cooperationStatus != null and cooperationStatus != ''">
 							and org_organ.cooperationstatus = #{cooperationStatus}
 						</if>
+						<if test="queryCustomertype != null and queryCustomertype != ''">
+							and org_organ.id = #{queryCustomertype}
+						</if>
 						ORDER BY
 						CONVERT(citycaption USING gbk ) COLLATE gbk_chinese_ci ,
 						org_organ.CreateTime
@@ -584,4 +587,96 @@
 	<update id="DeleteChInfo" parameterType="string">
 		update ch_info set ch_info.status = 2 where organid = #{id}
 	</update>
+	<!-- 供车主体，未添加 且 合作中的网约车战略伙伴 -->
+	<select id="getPubCoooperateList" resultType="PubCoooperate" parameterType="QueryParam">
+		SELECT
+			t.*,t2.shortname as companyName
+		FROM
+			pub_coooperate t
+		LEFT JOIN pub_lease_organ_relation t1 ON (t1.`status` = 1 AND t1.companyid = t.companyid AND t1.leasecompanyid = t.leasecompanyid AND t1.organid = #{key})
+		LEFT JOIN le_leasescompany t2 ON (t.leasecompanyid = t2.id AND t2.`Status` = 1)
+		WHERE 1 = 1
+		AND t.servicetype = 0
+		AND t.platformtype = 1
+		AND t.`status` = 1
+		AND t.companyid = #{leasescompanyid}
+		<if test="queryForTheCarBody != null and queryForTheCarBody != ''">
+			and t.id = #{queryForTheCarBody} 
+		</if>
+		AND t1.Id IS NULL
+		LIMIT #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<select id="getPubCoooperateListCount"  resultType="int" parameterType="QueryParam">
+		SELECT
+			count(*)
+		FROM
+			pub_coooperate t
+		LEFT JOIN pub_lease_organ_relation t1 ON (t1.`status` = 1 AND t1.companyid = t.companyid AND t1.leasecompanyid = t.leasecompanyid AND t1.organid = #{key})
+		LEFT JOIN le_leasescompany t2 ON (t.leasecompanyid = t2.id AND t2.`Status` = 1)
+		WHERE 1 = 1
+		AND t.servicetype = 0
+		AND t.platformtype = 1
+		AND t.`status` = 1
+		AND t.companyid = #{leasescompanyid}
+		<if test="queryForTheCarBody != null and queryForTheCarBody != ''">
+			and t.id = #{queryForTheCarBody} 
+		</if>
+		AND t1.Id IS NULL
+	</select>
+	<insert id="insertPubLeaseOrganRelation" parameterType="PubLeaseOrganRelation" >
+	    insert into pub_lease_organ_relation (Id, companyid, leasecompanyid, 
+	      organid, createtime, updatetime, 
+	      creater, updater, status
+	      )
+	    values (#{id}, #{companyid}, #{leasecompanyid}, 
+	      #{organid}, now(), now(), 
+	      #{creater}, #{updater}, 1
+	      )
+  	</insert>
+  	<delete id="deletePubLeaseOrganRelation" parameterType="string" >
+    delete from pub_lease_organ_relation
+    where organid = #{id}
+  </delete>
+  <select id="getPubLeaseOrganRelationById" resultType="PubLeaseOrganRelation" parameterType="string">
+  		SELECT
+			t.*,t1.shortname AS shortName
+		FROM
+			pub_lease_organ_relation t
+		LEFT JOIN le_leasescompany t1 ON (t.leasecompanyid = t1.id AND t1.`Status`= 1)
+		WHERE
+			1 = 1
+		AND t.organid = #{id}
+		AND t.`status` = 1
+  </select>
+  <select id="getIndexList" parameterType="string" resultType="PubLeaseOrganRelation">
+  	SELECT
+		t.*,t1.shortname AS shortName
+	FROM
+		pub_lease_organ_relation t
+	LEFT JOIN le_leasescompany t1 ON (t.leasecompanyid = t1.id AND t1.`Status` = 1)
+	WHERE 1 =1 
+	AND t.`status` = 1
+	AND t.companyid = #{id}
+  </select>
+  <select id="getPubCoooperateSelect" resultType="map" parameterType="QueryParam">
+  	SELECT
+		t.id as id,t2.shortname as text
+	FROM
+		pub_coooperate t
+	LEFT JOIN pub_lease_organ_relation t1 ON (t1.`status` = 1 AND t1.companyid = t.companyid AND t1.leasecompanyid = t.leasecompanyid AND t1.organid = #{key})
+	LEFT JOIN le_leasescompany t2 ON (t.leasecompanyid = t2.id AND t2.`Status` = 1)
+	WHERE 1 = 1
+	AND t.servicetype = 0
+	AND t.platformtype = 1
+	AND t.`status` = 1
+	AND t.companyid = #{leasescompanyid}
+	<if test="queryForTheCarBody != null and queryForTheCarBody != ''">
+		and t2.shortname like "%"#{queryForTheCarBody}"%"
+	</if>
+	AND t1.Id IS NULL
+  </select>
+	<select id="queryOrgUserByOrganid" resultType="map" parameterType="string">
+	    select id as userId,account as userPhone from org_user
+	    where usertype='0' and organid=#{id} and status='1'
+	</select>
 </mapper>

@@ -62,6 +62,14 @@ response.setDateHeader ("Expires", 0);
     .form_yueche .col-4-label{
         width: 14.5% !important;
     }
+    #cancelDetail table{
+        width: 100%;
+    }
+    #cancelDetail td{
+        padding-right: 18px;
+        padding-bottom: 5px;
+        color:#9e9e9e;
+    }
 
     @media screen and (max-width: 1240px) {
         .form_yueche .col-4-label {

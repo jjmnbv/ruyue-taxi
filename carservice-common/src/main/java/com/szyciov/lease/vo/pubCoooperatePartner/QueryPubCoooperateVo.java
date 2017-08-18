@@ -15,6 +15,15 @@ public class QueryPubCoooperateVo {
     private String applicationtime; // 申请时间
     private String reviewtime; // 审核时间
     private String reviewtext; // 审核意见
+    private String leasecompanyshorttext; // 战略伙伴(简写)
+
+    public String getLeasecompanyshorttext() {
+        return leasecompanyshorttext;
+    }
+
+    public void setLeasecompanyshorttext(String leasecompanyshorttext) {
+        this.leasecompanyshorttext = leasecompanyshorttext;
+    }
 
     public String getId() {
         return id;

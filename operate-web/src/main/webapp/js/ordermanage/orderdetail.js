@@ -20,6 +20,19 @@ $(document).ready(function() {
         	commentDataGrid.fnSearch({});
         }
     });
+
+    /**
+     * 计费规则点击收缩
+     */
+    $(".e_margin .fr").click(function() {
+        if($(".e_box").css("display")=="none"){
+            $(this).css("background-image","url(img/orgordermanage/btn_up.png)");
+            $(".e_box").show();
+        }else {
+            $(this).css("background-image","url(img/orgordermanage/btn_down.png)");
+            $(".e_box").hide();
+        }
+    });
 	
     initOrder();
     rangeNameInit();
@@ -123,18 +136,18 @@ function renderPageByOrder(order) {
 		case "6": orderstatus = "服务中"; break;
 		case "7": orderstatus = "行程结束"; break;
 		case "8": orderstatus = "已取消"; break;
-		default: orderstatus = ""; break; 
+		default: orderstatus = "/"; break;
 	}
-	
-	var paymentstatus = order.paymentstatus;
-	switch(paymentstatus) {
-		case "0": paymentstatus = "未支付"; break;
-		case "1": paymentstatus = "已支付"; break;
-		case "2": paymentstatus = "结算中"; break;
-		case "3": paymentstatus = "已结算"; break;
-		default: paymentstatus = ""; break; 
-	}
-	
+
+    if(order.orderstatus == "7" || (order.orderstatus == "8" && order.cancelnature == 1)) {
+        var paymentstatus = order.paymentstatus;
+        switch(paymentstatus) {
+            case "0": orderstatus = "未支付"; break;
+            case "1": orderstatus = "已支付"; break;
+            default: orderstatus = "/"; break;
+        }
+    }
+
 	$("#ddxx").text(ordertype + "订单基本信息，订单号：" + order.orderno);
 	
 	//下单人信息
@@ -180,8 +193,7 @@ function renderPageByOrder(order) {
 		$("#hbhtd").remove();
 		$("#hbhtitle").remove();
 		$("#jlsjtitle").remove();
-        // $("#gxsjtd").attr("colspan", 5);
-        $("#fwcqtd").attr("colspan", 5);
+        $("#gxsjtd").attr("colspan", 5);
 	} else {
 		//航班号
 		$("#hbh").text(order.fltno);
@@ -192,12 +204,11 @@ function renderPageByOrder(order) {
             $("#qfsj").text(order.falltime);
         }
 	}
+	$("#xcbz").text(limitLength(order.tripremark));
 	//计费车型
 	$("#jfcx").text(order.pricemodelname);
 	//更新时间
-    // $("#gxsj").text(timeStamp2String(order.updatetime));
-    // 服务车企
-    $("#fwcqtd").text(order.belongleasecompanytext);
+    $("#gxsj").text(dateFtt(order.updatetime, "yyyy-MM-dd hh:mm"));
 	//订单状态
 	$("#ddzt").text(orderstatus);
 	//司机信息
@@ -214,8 +225,6 @@ function renderPageByOrder(order) {
 	}
 	//实际车型
 	$("#sjcx").text(order.factmodelname);
-	//支付状态
-	$("#zfzt").text(paymentstatus);
 	//取消订单隐藏相应单元格
 	if(order.orderstatus == "8") {
 		$("#cxtr").hide();
@@ -263,38 +272,84 @@ function renderPageByOrder(order) {
 	var rangecost = (mileage * rangeprice).toFixed(1);
 	var timecost = (showtime * timeprice).toFixed(1);
 	//服务开始后的状态才需要显示实际金额、实际里程费、实时时间补贴
-	if(order.orderstatus < 6 || order.orderstatus == 8) {
-		$(".sjtitle").remove();
-		$("#zfzttd").attr("colspan", 3);
-	} else {
-		if(order.orderstatus == 7) {
-			$("#ssjetd").text("订单金额");
-			$("#sslcftd").text("里程费");
-			$("#sssjbttd").text("时长费");
-		} else {
-			$("#ssjetd").text("实时金额");
-			$("#sslcftd").text("实时里程费");
-			$("#sssjbttd").text("实时时长费");
-		}
+    if(order.orderstatus == 6) {
+        $("#ssjetd").text("实时费用");
+    } else if(order.orderstatus == 7) {
+        $("#ssjetd").text("订单金额");
+    } else if(order.orderstatus == 8) {
+        var cancelamount = order.cancelamount;
+        if(null == cancelamount) {
+            cancelamount = 0;
+        }
+        $("#cffy").text(cancelamount);
+    }
+    var pricecopy = JSON.parse(order.pricecopy);
+    var reviewtype = 1;
+    if(null != order.reviewpricecopy) {
+        pricecopy = JSON.parse(order.reviewpricecopy);
+        reviewtype = order.reviewtype;
+    }
+    if(order.orderstatus != 8) {
+        $("#cffytd").text("");
+        if(order.paymentstatus == "0") {
+            $("#sfjeDetailTitle").text("应付金额");
+        }
 
-        // 起步价
-        $("#qbj").text(order.startprice == 0 ? "￥0.0" : "￥" + order.startprice);
-        // 空驶费
-        $("#ksf").text(order.deadheadcost == 0 ? "￥0.0" : "￥" + order.deadheadcost);
-        // 夜间费
-        $("#yjf").text(order.nightcost == 0 ? "￥0.0" : "￥" + order.nightcost);
-		//实时里程费
-		$("#sslcf").text("￥" + rangecost + "(" + mileage + "公里*" + rangeprice + "元/公里)");
-		//实时时间补贴
-		$("#sssjbt").text("￥" + timecost + "(" + showtime + "分钟*" + timeprice + "元/分钟)");
-		//实时金额
-		var cost = order.cost;
-		if(order.orderstatus == 7) {
-			$("#ssje").text("￥" + order.shouldpayamount);
-		} else {
-			$("#ssje").text("￥" + cost);
-		}
-	}
+        var actualamount = order.actualamount;
+        if(null == order.actualamount || order.actualamount == 0) {
+            actualamount = 0;
+        }
+        $("#sfjeDetail").text((parseInt(pricecopy.cost) - parseInt(actualamount)) + "元");
+        if(pricecopy.premiumrate > 1) {
+            $("#xcfyDetailTitle").text("行程费用(溢价" + pricecopy.premiumrate + "倍)");
+        }
+        $("#xcfyDetail").text(pricecopy.cost + "元");
+        if(reviewtype == 1) {
+            $("#qbjDetail").text(pricecopy.startprice + "元");
+            $("#scDetail").text(convertMinute(showtime));
+            $("#scfDetail").text(timecost + "元");
+            $("#lcDetail").text(mileage + "公里");
+            $("#lcfDetail").text(rangecost + "元");
+        } else {
+            $("#qbjDetail").text("/元");
+            $("#scDetail").text("/分钟");
+            $("#scfDetail").text("/元");
+            $("#lcDetail").text("/公里");
+            $("#lcfDetail").text("/元");
+        }
+        if(null == order.actualamount || order.actualamount == 0) {
+            $("#qydkDetail").text("0元");
+        } else {
+            $("#qydkDetail").text("-" + order.actualamount + "元");
+        }
+        $("#qbjRule").text(pricecopy.startprice + "元");
+        $("#lcfRule").text(pricecopy.rangeprice + "元/公里");
+        $("#sjbtRule").text(pricecopy.timeprice + "元/分钟");
+        $("#yjsdRule").text(pricecopy.nightstarttime + "-" + pricecopy.nightendtime);
+        $("#yjfRule").text(pricecopy.nighteprice + "元/公里");
+        if(order.isusenow == 0) {
+            var reversefee = 0;
+            if(null != pricecopy.reversefee && "" != pricecopy.reversefee) {
+                reversefee = pricecopy.reversefee;
+            }
+            $("#yrfRule").text(reversefee + "元");
+            $("#yrfRuleDiv").show();
+        } else {
+            $("#yrfRuleDiv").hide();
+        }
+    }
+    //实时金额
+    var cost = order.cost;
+    if(order.orderstatus == 7) {
+        cost = order.shouldpayamount;
+    }
+    if(order.orderstatus == 6 || order.orderstatus == 7) {
+        var html = "￥" + cost;
+        html += "<button type='button' class='SSbtn red' style='float: right;' onclick='costDetail()'><i class='fa fa-paste'></i>费用明细</button>";
+        $("#ssje").html(html);
+    } else {
+        $("#ssje").text("/");
+    }
 	
 	//下单时间
 	var xdsjHtmlArr = [];
@@ -374,91 +429,108 @@ function renderPageByOrder(order) {
 	if(null != order.reivewstarttime) {
 		starttime = order.reivewstarttime;
 	}
-	if(order.orderstatus > 5 && order.orderstatus < 8 && starttime) {
-		$("#kssjIcon").removeClass("quan ing");
-		$("#kssjIcon").addClass("quan");
-		
-		var kssjHtmlArr = [];
-		kssjHtmlArr.push("开始时间：");
-		kssjHtmlArr.push(formatTimeForDetail(starttime));
-		kssjHtmlArr.push("</br>");
-		if(order.orderstatus == "6") {
-			kssjHtmlArr.push("实时金额：");
-		} else {
-			kssjHtmlArr.push("订单金额：");
-		}
-		kssjHtmlArr.push($("#ssje").text());
-		kssjHtmlArr.push("</br>");
-		kssjHtmlArr.push("里程：");
-		kssjHtmlArr.push(mileage + "公里");
-		kssjHtmlArr.push("</br>");
-		kssjHtmlArr.push("时长：");
-		kssjHtmlArr.push(convertMinute(times));
-		kssjHtmlArr.push("</br>");
-		kssjHtmlArr.push("上车地址：");
-		kssjHtmlArr.push(order.startaddress);
-		kssjHtmlArr.push("</br>");
-		$("#kssjDiv").html(kssjHtmlArr.join(""));
-	} else {
-		$("#kssjDiv").remove();
-	}
+    if(order.orderstatus > 5 && order.orderstatus < 8 && starttime) {
+        $("#kssjIcon").removeClass("quan ing");
+        $("#kssjIcon").addClass("quan");
+
+        var kssjHtmlArr = [];
+        kssjHtmlArr.push("开始时间：");
+        kssjHtmlArr.push(formatTimeForDetail(starttime));
+        kssjHtmlArr.push("</br>");
+        if(order.orderstatus == "6") {
+            kssjHtmlArr.push("实时金额：");
+        } else {
+            kssjHtmlArr.push("订单金额：");
+        }
+        kssjHtmlArr.push("￥" + cost + "元");
+        kssjHtmlArr.push("</br>");
+        if(reviewtype == 1) {
+            kssjHtmlArr.push("里程：");
+            kssjHtmlArr.push(mileage + "公里");
+            kssjHtmlArr.push("</br>");
+            kssjHtmlArr.push("时长：");
+            kssjHtmlArr.push(convertMinute(times));
+        } else {
+            kssjHtmlArr.push("里程：/公里");
+            kssjHtmlArr.push("</br>");
+            kssjHtmlArr.push("时长：/分钟");
+        }
+        kssjHtmlArr.push("</br>");
+        kssjHtmlArr.push("上车地址：");
+        kssjHtmlArr.push(order.startaddress);
+        kssjHtmlArr.push("</br>");
+        $("#kssjDiv").html(kssjHtmlArr.join(""));
+    } else {
+        $("#kssjDiv").remove();
+    }
 	
 	//结束时间
-	var endtime = order.endtime;
-	if(null != order.reviewendtime) {
-		endtime = order.reviewendtime;
-	}
-	if(order.orderstatus == 7 && endtime) {
-		$("#jssjIcon").removeClass("quan ing");
-		$("#jssjIcon").addClass("quan");
-		
-		var jssjHtmlArr = [];
-		jssjHtmlArr.push("结束时间：");
-		jssjHtmlArr.push(formatTimeForDetail(endtime));
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("订单金额：");
-		jssjHtmlArr.push($("#ssje").text());
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("里程费：");
-		jssjHtmlArr.push($("#sslcf").text());
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("时间补贴：");
-		jssjHtmlArr.push($("#sssjbt").text());
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("下车地址：");
-		jssjHtmlArr.push(order.endaddress);
-		jssjHtmlArr.push("</br>");
-		$("#jssjDiv").html(jssjHtmlArr.join(""));
-	} else {
-		$("#jssjDiv").remove();
-	}
+    var endtime = order.endtime;
+    if(null != order.reviewendtime) {
+        endtime = order.reviewendtime;
+    }
+    if(order.orderstatus == 7 && endtime) {
+        $("#jssjIcon").removeClass("quan ing");
+        $("#jssjIcon").addClass("quan");
+
+        var jssjHtmlArr = [];
+        jssjHtmlArr.push("结束时间：");
+        jssjHtmlArr.push(formatTimeForDetail(endtime));
+        jssjHtmlArr.push("</br>");
+        jssjHtmlArr.push("订单金额：");
+        jssjHtmlArr.push("￥" + cost + "元");
+        jssjHtmlArr.push("</br>");
+        if(reviewtype == 1) {
+            jssjHtmlArr.push("里程费：");
+            jssjHtmlArr.push(rangecost + "(" + mileage + "公里*" + pricecopy.rangeprice + "元)");
+            jssjHtmlArr.push("</br>");
+            jssjHtmlArr.push("时间补贴：");
+            jssjHtmlArr.push(timecost + "(" + convertMinute(showtime) + "*" + pricecopy.timeprice + "元)");
+        } else {
+            jssjHtmlArr.push("里程费：/元");
+            jssjHtmlArr.push("</br>");
+            jssjHtmlArr.push("时间补贴：/元");
+        }
+        jssjHtmlArr.push("</br>");
+        jssjHtmlArr.push("下车地址：");
+        jssjHtmlArr.push(order.endaddress);
+        jssjHtmlArr.push("</br>");
+        $("#jssjDiv").html(jssjHtmlArr.join(""));
+    } else {
+        $("#jssjDiv").remove();
+    }
 	
 	//完成时间
-	if(order.orderstatus == 7 && order.completetime) {
-		$("#wcsjIcon").removeClass("quan ing");
-		$("#wcsjIcon").addClass("quan");
-		
-		var jssjHtmlArr = [];
-		jssjHtmlArr.push("完成时间：");
-		jssjHtmlArr.push(formatTimeForDetail(order.completetime));
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("订单金额：");
-		jssjHtmlArr.push($("#ssje").text());
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("里程费：");
-		jssjHtmlArr.push($("#sslcf").text());
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("时间补贴：");
-		jssjHtmlArr.push($("#sssjbt").text());
-		jssjHtmlArr.push("</br>");
-		jssjHtmlArr.push("下车地址：");
-		jssjHtmlArr.push(order.endaddress);
-		jssjHtmlArr.push("</br>");
-		$("#wcsjDiv").html(jssjHtmlArr.join(""));
-	} else {
-		$("#wcsjDiv").remove();
-	}
-		
+    if(order.orderstatus == 7 && order.completetime) {
+        $("#wcsjIcon").removeClass("quan ing");
+        $("#wcsjIcon").addClass("quan");
+
+        var jssjHtmlArr = [];
+        jssjHtmlArr.push("完成时间：");
+        jssjHtmlArr.push(formatTimeForDetail(order.completetime));
+        jssjHtmlArr.push("</br>");
+        jssjHtmlArr.push("订单金额：");
+        jssjHtmlArr.push("￥" + cost + "元");
+        jssjHtmlArr.push("</br>");
+        if(reviewtype == 1) {
+            jssjHtmlArr.push("里程费：");
+            jssjHtmlArr.push(rangecost + "(" + mileage + "公里*" + pricecopy.rangeprice + "元)");
+            jssjHtmlArr.push("</br>");
+            jssjHtmlArr.push("时间补贴：");
+            jssjHtmlArr.push(timecost + "(" + convertMinute(showtime) + "*" + pricecopy.timeprice + "元)");
+        } else {
+            jssjHtmlArr.push("里程费：/元");
+            jssjHtmlArr.push("</br>");
+            jssjHtmlArr.push("时间补贴：/元");
+        }
+        jssjHtmlArr.push("</br>");
+        jssjHtmlArr.push("下车地址：");
+        jssjHtmlArr.push(order.endaddress);
+        jssjHtmlArr.push("</br>");
+        $("#wcsjDiv").html(jssjHtmlArr.join(""));
+    } else {
+        $("#wcsjDiv").remove();
+    }
 }
 
 /**
@@ -565,6 +637,14 @@ function initFirstOrder(order) {
 		}
 	});
 }
+
+/**
+ * 显示费用明细
+ */
+function costDetail() {
+    $("#costDetailDiv").show();
+}
+
 /**
  * 人工派单记录
  */
@@ -789,32 +869,69 @@ function reviewRecordDataGridInit() {
         },
         columns: [
             {mDataProp: "rownum", sTitle: "序号", sClass: "center", sortable: true },
-	        {mDataProp: "reviewedprice", sTitle: "订单金额(元)", sClass: "center", sortable: true },
-	        {mDataProp: "price", sTitle: "差异金额(元)", sClass: "center", sortable: true },
-	        {mDataProp: "mileage", sTitle: "服务里程(公里)", sClass: "center", sortable: true,
-	        	"mRender": function(data, type, full) {
-	        		var mileage = (full.mileage/1000).toFixed(1);
-	        		if(full.mileage != full.rawmileage) {
-	        			return "<span class='font_red'>" + mileage + "</span>";
-	        		} else {
-	        			return mileage;
-	        		}
-	        	}
-	        },
-	        {mDataProp: "times", sTitle: "服务时长(分钟)", sClass: "center", sortable: true,
-	        	"mRender": function(data, type, full) {
-	        		return Math.ceil(full.times/60);
-		        }
-	        },
-	        {
+            {mDataProp: "raworderamount", sTitle: "复核前订单金额(元)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    return full.raworderamount.toFixed(1);
+                }
+            },
+            {mDataProp: "reviewtype", sTitle: "复核类型", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 1) {
+                        return "按里程时长";
+                    } else if(full.reviewtype == 2) {
+                        return "按固定金额";
+                    } else {
+                        return "/";
+                    }
+                }
+            },
+            {mDataProp: "price", sTitle: "差异金额(元)", sClass: "center", sortable: true },
+            {mDataProp: "reviewedprice", sTitle: "复核后订单金额(元)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    return full.reviewedprice.toFixed(1);
+                }
+            },
+            {mDataProp: "mileage", sTitle: "服务里程(公里)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    var mileage = (full.mileage/1000).toFixed(1);
+                    if(full.mileage != full.rawmileage) {
+                        return "<span class='font_red'>" + mileage + "</span>";
+                    } else {
+                        return mileage;
+                    }
+                }
+            },
+            {mDataProp: "times", sTitle: "服务时长(分钟)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    var starttime = new Date();
+                    if(null != full.starttime && "" != full.starttime) {
+                        starttime = new Date(full.starttime);
+                    }
+                    var endtime = new Date();
+                    if(null != full.endtime && "" != full.endtime) {
+                        endtime = new Date(full.endtime);
+                    }
+                    return Math.ceil((endtime - starttime)/1000/60);
+                }
+            },
+            {
                 "mDataProp": "STARTTIME",
                 "sClass": "center",
                 "sTitle": "服务开始时间",
                 "mRender": function (data, type, full) {
-                	if(full.starttime != full.rawstarttime) {
-                		return "<span class='font_red'>" + timeStamp2String(full.starttime) + "</span>";
-                	}
-                	return timeStamp2String(full.starttime);
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    if(full.starttime != full.rawstarttime) {
+                        return "<span class='font_red'>" + timeStamp2String(full.starttime) + "</span>";
+                    }
+                    return timeStamp2String(full.starttime);
                 }
             },
             {
@@ -822,72 +939,118 @@ function reviewRecordDataGridInit() {
                 "sClass": "center",
                 "sTitle": "服务结束时间",
                 "mRender": function (data, type, full) {
-                	if(full.endtime != full.rawendtime) {
-                		return "<span class='font_red'>" + timeStamp2String(full.endtime) + "</span>";
-                	}
-                	return timeStamp2String(full.endtime);
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    if(full.endtime != full.rawendtime) {
+                        return "<span class='font_red'>" + timeStamp2String(full.endtime) + "</span>";
+                    }
+                    return timeStamp2String(full.endtime);
                 }
             },
             {mDataProp: "counttimes", sTitle: "计费时长(分钟)", sClass: "center", sortable: true,
-            	"mRender": function(data, type, full) {
-            		if(null != full.pricecopy) {
-            			var pricecopy = JSON.parse(full.pricecopy);
-            			var timetype = pricecopy.timetype;
-            			if(timetype == 0) { //总用时
-            				var times = Math.ceil(full.times/60); //复核后服务时长
-            				var rawstarttime = new Date(rawstarttime);
-            				var rawendtime = new Date(rawendtime);
-            				var rawtimes = Math.ceil((rawendtime - rawstarttime)/1000/60); //复核前服务时长
-            				if(times != rawtimes) {
-            					return "<span class='font_red'>" + times + "</span>";
-            				} else {
-            					return times;
-            				}
-            			} else if(timetype == 1) { //低速用时
-            				if(full.counttimes != full.rawtimes) {
-                    			return "<span class='font_red'>" + full.counttimes + "</span>";
-                    		} else {
-                    			return full.counttimes;
-                    		}
-            			}
-            		}
-            	}
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    if(null != full.pricecopy) {
+                        var pricecopy = JSON.parse(full.pricecopy);
+                        var timetype = pricecopy.timetype;
+                        if(timetype == 0) { //总用时
+                            var times = Math.ceil(full.times/60); //复核后服务时长
+                            var rawstarttime = new Date(full.rawstarttime);
+                            var rawendtime = new Date(full.rawendtime);
+                            var rawtimes = Math.ceil((rawendtime - rawstarttime)/1000/60); //复核前服务时长
+                            if(times != rawtimes) {
+                                return "<span class='font_red'>" + times + "</span>";
+                            } else {
+                                return times;
+                            }
+                        } else if(timetype == 1) { //低速用时
+                            if(full.counttimes != full.rawtimes) {
+                                return "<span class='font_red'>" + full.counttimes + "</span>";
+                            } else {
+                                return full.counttimes;
+                            }
+                        }
+                    }
+                }
             },
-	        {mDataProp: "timesubsidies", sTitle: "时间补贴(元)", sClass: "center", sortable: true },
-	        {mDataProp: "mileageprices", sTitle: "里程费(元)", sClass: "center", sortable: true },
-	        {
-                "mDataProp": "REVIEWPERSON",
-                "sClass": "center",
-                "sTitle": "提出复核方",
-                "mRender": function (data, type, full) {
-					if(full.reviewperson == "1") {
-						return "司机";
-					} else if(full.reviewperson == "2") {
-						return "下单人";
-					} else {
-						return "/";
-					}
-            	}
+            {mDataProp: "timesubsidies", sTitle: "时间补贴(元)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    if(null != full.pricecopy) {
+                        var pricecopy = JSON.parse(full.pricecopy);
+                        var timetype = pricecopy.timetype;
+                        var timeprice = pricecopy.timeprice;
+                        if(timetype == 0) {
+                            var starttime = new Date();
+                            if(null != full.starttime && "" != full.starttime) {
+                                starttime = new Date(full.starttime);
+                            }
+                            var endtime = new Date();
+                            if(null != full.endtime && "" != full.endtime) {
+                                endtime = new Date(full.endtime);
+                            }
+                            var times = Math.ceil((endtime - starttime)/1000/60);
+                            return (timeprice * times).toFixed(1);
+                        } else if(timetype == 1) {
+                            var slowtimes = full.counttimes;
+                            return (timeprice * slowtimes).toFixed(1);
+                        } else {
+                            return "0";
+                        }
+                    } else {
+                        return "0";
+                    }
+                }
+            },
+            {mDataProp: "mileageprices", sTitle: "里程费(元)", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewtype == 2) {
+                        return "/";
+                    }
+                    if(null != full.pricecopy) {
+                        var pricecopy = JSON.parse(full.pricecopy);
+                        var mileage = (full.mileage/1000).toFixed(1);
+                        return (pricecopy.rangeprice * mileage).toFixed(1);
+                    } else {
+                        return "0";
+                    }
+                }
+            },
+            {mDataProp: "reviewperson", sTitle: "提出复核方", sClass: "center", sortable: true,
+                "mRender": function(data, type, full) {
+                    if(full.reviewperson == "1") {
+                        return "司机";
+                    } else if(full.reviewperson == "2") {
+                        return "乘客";
+                    } else {
+                        return "/";
+                    }
+                }
             },
             {mDataProp: "reason", sTitle: "申请原因", sClass: "center", sortable: true,
-            	"mRender":function(data, type, full) {
-                	return showToolTips(full.reason, 7);
-            	}
+                "mRender": function(data, type, full) {
+                    return showToolTips(full.reason, 15);
+                }
             },
             {mDataProp: "opinion", sTitle: "处理意见", sClass: "center", sortable: true,
-            	"mRender":function(data, type, full) {
-                	return showToolTips(full.opinion, 8);
-            	}
+                "mRender": function(data, type, full) {
+                    return showToolTips(full.opinion, 15);
+                }
             },
-	        {
+            {
                 "mDataProp": "REVIEWTIME",
                 "sClass": "center",
                 "sTitle": "复核时间",
                 "mRender": function (data, type, full) {
-                	return timeStamp2String(full.reviewtime);
+                    return dateFtt(full.reviewtime, "yyyy/MM/dd hh:mm");
                 }
             },
-	        {mDataProp: "operatorname", sTitle: "复核人", sClass: "center", sortable: true }
+            {mDataProp: "operatorname", sTitle: "复核人", sClass: "center", sortable: true }
         ]
     };
     

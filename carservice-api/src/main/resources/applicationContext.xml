@@ -197,8 +197,8 @@
 	<bean id="couponActivityStatusJonTrigger" class="com.szyciov.carservice.util.scheduler.CronTriggerBean">
         <property name="jobClass" value="com.szyciov.carservice.util.scheduler.job.CouponActivityStatusJob"/>
         <!-- <property name="cronExpression" value="1 0 0 * * ?"/> -->
-        <!-- 为便于测试，调度时间改为每隔半个小时执行，测试完成后，改回每天0点执行 -->
-        <property name="cronExpression" value="0 0/30 * * * ?"/>
+        <!-- 为便于测试，调度时间改为每隔5分钟执行，测试完成后，改回每天0点执行 -->
+        <property name="cronExpression" value="1 0 0 * * ?"/>
     </bean>
     
     <!-- 强派订单行程提醒监控 -->
@@ -221,6 +221,7 @@
                 <entry key="mileageApiService" value-ref="MileageApiService"/>
                 <entry key="giveIntegrationService" value-ref="giveIntegrationService"/>
                 <entry key="CouponActivityStatusService" value-ref="couponActivityStatusService"/>
+				<entry key="rabbitService" value-ref="RabbitService"/>
 			</map>
 		</property>
 	</bean>

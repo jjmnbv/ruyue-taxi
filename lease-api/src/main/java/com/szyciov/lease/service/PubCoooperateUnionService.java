@@ -3,20 +3,20 @@ package com.szyciov.lease.service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.szyciov.dto.PagingResponse;
-import com.szyciov.entity.PubCooagreement;
-import com.szyciov.entity.PubCoooperate;
-import com.szyciov.entity.PubCooresource;
-import com.szyciov.entity.Select2Entity;
+import com.szyciov.entity.*;
+import com.szyciov.lease.dao.PubCoooperatePartnerDao;
 import com.szyciov.lease.dao.PubCoooperateUnionDao;
 import com.szyciov.lease.entity.LeLeasescompany;
+import com.szyciov.lease.entity.LeUserNews;
 import com.szyciov.lease.param.pubCoooperateUnion.*;
 import com.szyciov.lease.utils.CoooperateNumUtils;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryApplyResourceVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryCooagreementViewVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryPubCoooperateVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryResourceVo;
+import com.szyciov.lease.vo.pubCoooperateUnion.*;
+import com.szyciov.message.UserMessage;
 import com.szyciov.op.entity.OpPlatformInfo;
+import com.szyciov.param.Select2Param;
+import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.SMSTempPropertyConfigurer;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +32,8 @@ import java.util.*;
 public class PubCoooperateUnionService {
     @Autowired
     private PubCoooperateUnionDao pubCoooperateUnionDao;
+    @Autowired
+    private PubCoooperatePartnerDao pubCoooperatePartnerDao;
 
 
     /**
@@ -79,13 +81,24 @@ public class PubCoooperateUnionService {
     }
 
     /**
+     * 查询合作运营合作编号下拉
+     *
+     * @param param
+     * @return
+     */
+    public List<Select2Entity> queryCoonoSelect2(Select2Param param) {
+        List list = this.pubCoooperateUnionDao.queryCoonoSelect2(param);
+        return list;
+    }
+
+    /**
      * 查询合作运营合作方下拉
      *
-     * @param companyid 租赁ID
+     * @param param 租赁ID
      * @return 合作方下拉集合
      */
-    public List<Select2Entity> queryLeasecompany(String companyid) {
-        List list = this.pubCoooperateUnionDao.queryLeasecompany(companyid);
+    public List<Select2Entity> queryLeasecompany(Select2Param param) {
+        List list = this.pubCoooperateUnionDao.queryLeasecompany(param);
         return list;
     }
 
@@ -106,8 +119,11 @@ public class PubCoooperateUnionService {
      *
      * @param param 参数
      */
+    @Transactional(rollbackFor = Exception.class)
     public void disableCoooperate(DisableCoooperateParam param) {
         this.pubCoooperateUnionDao.disableCoooperate(param);
+        this.pubCoooperatePartnerDao.deleteLeaseOrganRef(param.getId());
+        this.pubCoooperatePartnerDao.deleteVehicleModelRef(param.getId());
     }
 
     /**
@@ -284,7 +300,8 @@ public class PubCoooperateUnionService {
                 return res;
             }
 
-            if(le.getId().equals(param.getCompanyid())){
+            /** 与产品确认后，服务车企自己是可以与自己进行合作的。 **/
+            if (le.getId().equals(param.getCompanyid())) {
                 res.put("result", "1");
                 return res;
             }
@@ -461,4 +478,92 @@ public class PubCoooperateUnionService {
     }
 
 
+    public void sendMsg(String companyId, int cootype, int vehicletype) {
+        // 获取超级管理员信息
+        List<QueryApplayCooCompanyAdminVo> list = this.pubCoooperateUnionDao.queryApplayCooCompanyAdmin(companyId);
+
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        String vehicletypeText;
+        if (vehicletype == 0) { // 0-网约车
+            vehicletypeText = "网约车";
+        } else { // 1-出租车
+            vehicletypeText = "出租车";
+        }
+
+        String content;
+        String title;
+
+        if (cootype == 1) { // 1-B2C联营
+            title = "加盟B2C联盟申请";
+            // 【申请加盟服务车企全称】申请加盟【业务类型】B2B联盟合作，请尽快审批。
+            content = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.lease.service.PubCoooperateUnionService.notice", list.get(0).getLeaseCompany(), vehicletypeText, "B2C联盟");
+        } else if (cootype == 0) { // 0-B2B联盟
+            title = "加盟B2B联盟申请";
+            // 【申请加盟服务车企全称】申请加盟【业务类型】B2B联盟合作，请尽快审批。
+            content = SMSTempPropertyConfigurer.getSMSTemplate("com.szyciov.lease.service.PubCoooperateUnionService.notice", list.get(0).getLeaseCompany(), vehicletypeText, "B2B联盟");
+        } else {
+            return;
+        }
+
+        List<String> phones = new ArrayList<>();
+
+        for (QueryApplayCooCompanyAdminVo vo : list) {
+            if (null != vo.getPhone() && !"".equals(vo.getPhone())) {
+                phones.add(vo.getPhone());
+            }
+        }
+
+        UserMessage usermessage = new UserMessage(phones, content, UserMessage.GETSMSCODE);
+        MessageUtil.sendMessage(usermessage);
+
+        if (cootype == 1) { // 1-B2C联营
+            OpUsernews news;
+            JSONObject obj;
+
+            for (QueryApplayCooCompanyAdminVo vo : list) {
+                obj = new JSONObject();
+                news = new OpUsernews();
+
+                obj.put("content", content);
+                obj.put("title", title);
+                obj.put("type", title);
+                news.setContent(obj.toString());
+                news.setType("1");
+                news.setNewsstate("0");
+                news.setUserid(vo.getAdminId());
+                news.setStatus(1);
+                news.setCreatetime(new Date());
+                news.setUpdatetime(new Date());
+                news.setId(GUIDGenerator.newGUID());
+
+                this.pubCoooperateUnionDao.insertOpUserNews(news);
+            }
+        } else if (cootype == 0) { // 0-B2B联盟
+            LeUserNews news;
+            JSONObject obj;
+
+            for (QueryApplayCooCompanyAdminVo vo : list) {
+                obj = new JSONObject();
+                news = new LeUserNews();
+
+                obj.put("content", content);
+                obj.put("title", title);
+                obj.put("type", title);
+                news.setContent(obj.toString());
+                news.setType("1");
+                news.setNewsState("0");
+                news.setUserId(vo.getAdminId());
+                news.setStatus(1);
+                news.setCreateTime(new Date());
+                news.setTitle(title);
+                news.setUpdateTime(new Date());
+                news.setId(GUIDGenerator.newGUID());
+
+                this.pubCoooperatePartnerDao.insertLeUserNews(news);
+            }
+        }
+    }
 }

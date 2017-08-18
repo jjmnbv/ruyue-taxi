@@ -10,12 +10,16 @@ import lombok.Data;
  */
 public class GenerateCouponDTO {
 
-
+    //抵用券ID
     private String id;
-
+    //抵用券金额
     private Double money;
-
+    //用户ID
+    private String userId;
+    //活动名称
     private String name;
+    //租赁公司Id
+    private String companyid;
 
     public String getId() {
         return id;
@@ -39,6 +43,22 @@ public class GenerateCouponDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getCompanyid() {
+        return companyid;
+    }
+
+    public void setCompanyid(String companyid) {
+        this.companyid = companyid;
     }
 }
  

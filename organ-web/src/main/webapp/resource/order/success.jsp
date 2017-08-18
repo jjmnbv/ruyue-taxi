@@ -64,11 +64,11 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
    </div>
    <div class="popup" id="cancel" style="display:none;">
 		<div class="popup_title">
-			<span>温馨提示</span>
+			<span>努力派单中</span>
 			<i class="close"></i>
 		</div>
 		<div class="popup_content">
-			您确定要取消吗?
+			正在努力通知司机接单，再等等吧！
 		</div>
 		<div class="popup_footer">
 			<span class="cancel">不取消</span>

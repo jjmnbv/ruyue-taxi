@@ -100,10 +100,6 @@ public class TaxiOrderManageService {
 		List<Map<String, Object>> list = null;
 		int iTotalRecords = 0;
 		switch (Integer.valueOf(queryParam.getType()).intValue()) {
-			case 0:
-				list = dao.getOpMissTaxiOrderListByQuery(queryParam);
-				iTotalRecords = dao.getOpMissTaxiOrderCountByQuery(queryParam);
-				break;
 			case 1:
 				list = dao.getOpLabourTaxiOrderListByQuery(queryParam);
 				iTotalRecords = dao.getOpLabourTaxiOrderCountByQuery(queryParam);
@@ -121,12 +117,16 @@ public class TaxiOrderManageService {
 				iTotalRecords = dao.getOpWasabnormalTaxiOrderCountByQuery(queryParam);
 				break;
 			case 5:
+				list = dao.getOpWaitgatheringTaxiOrderListByQuery(queryParam);
+				iTotalRecords = dao.getOpWaitgatheringTaxiOrderCountByQuery(queryParam);
+				break;
+			case 6:
 				list = dao.getOpCompleteTaxiOrderListByQuery(queryParam);
 				iTotalRecords = dao.getOpCompleteTaxiOrderCountByQuery(queryParam);
 				break;
-			case 6:
-				list = dao.getOpWaitgatheringTaxiOrderListByQuery(queryParam);
-				iTotalRecords = dao.getOpWaitgatheringTaxiOrderCountByQuery(queryParam);
+			case 7:
+				list = dao.getOpCancelTaxiOrderListByQuery(queryParam);
+				iTotalRecords = dao.getOpCancelTaxiOrderCountByQuery(queryParam);
 				break;
 		}
 		int iTotalDisplayRecords = iTotalRecords;
@@ -792,5 +792,14 @@ public class TaxiOrderManageService {
 			return 0;
 		}
 	}
+
+    /**
+     * 获取订单列表中的服务车企(select2)
+     * @param queryParam
+     * @return
+     */
+	public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam queryParam) {
+        return dao.getBelongCompanySelect(queryParam);
+    }
 	
 }

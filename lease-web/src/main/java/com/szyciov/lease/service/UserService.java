@@ -4,6 +4,7 @@ import com.szyciov.lease.entity.RoleManagement;
 import com.szyciov.lease.entity.User;
 import com.szyciov.lease.param.UserQueryParam;
 import com.szyciov.message.redis.RedisMessage;
+import com.szyciov.op.entity.OpUser;
 import com.szyciov.util.*;
 import com.szyciov.util.message.RedisListMessage;
 import org.apache.commons.lang.StringUtils;
@@ -210,7 +211,16 @@ public class UserService {
 				// 获取user信息加入session
 				User user = getByName(userName, usertoken);
 				request.getSession().setAttribute("user", user);
-
+				try{
+					Date expirestime = user.getExpirestime();
+					Date now = new Date();
+					if(now.after(expirestime)){
+						//需要强制更新密码
+						model.put("needchangepwd", "1");
+					}
+				}catch(Exception e){
+					logger.error("查看用户密码是否过期出错");
+				}
 				
 				//增加租赁端超管登陆后 修改le_user的firsttime
 				String id = user.getId();

@@ -85,7 +85,8 @@ function initGrid() {
 	        		return html;
 	        	}
 	        },
-	        {mDataProp: "billDateShow", sTitle: "账单生成日", sClass: "center", sortable: true }
+	        {mDataProp: "billDateShow", sTitle: "账单生成日", sClass: "center", sortable: true },
+	        {mDataProp: "forTheCarBodyId", sTitle: "供车主体", sClass: "center", sortable: true }
         ]
     };
     

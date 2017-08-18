@@ -19,6 +19,7 @@
                  pca.sendhighmoney,
                  pca.sendcount,
                  pca.lecompanyid,
+                 pca.platformtype,
                  pca.usetype,
                  pca.outimetype,
                  pca.sendtimeinday,
@@ -28,13 +29,16 @@
               date_format(pca.sendendtime,'%Y-%m-%d') as sendendtime,
               date_format(pca.fixedstarttime,'%Y-%m-%d') as fixedstarttime,
               date_format(pca.fixedendtime,'%Y-%m-%d') as fixedendtime, 
-              GROUP_CONCAT(pc.city SEPARATOR ',') citys,
-              GROUP_CONCAT(pcs.phone SEPARATOR ',') users 
+              GROUP_CONCAT(pc.id SEPARATOR ',') citys,
+              GROUP_CONCAT(pcs.userid SEPARATOR ',') users 
               From pub_coupon_activity pca 
         inner join pub_coupon_activity_use_city pcauc on pcauc.couponactivityidref=pca.id
         inner join pub_cityaddr pc on pc.id=pcauc.city 
         left join pub_coupon_senduser pcs on pcs.couponactivityidref=pca.id
-        where pca.activystate=1 and date_format(pca.sendstarttime,'%Y-%m-%d')<![CDATA[   <=  ]]>#{sendstarttime} and pca.status='1'
+        where pca.activystate=1 
+          and date_format(pca.sendstarttime,'%Y-%m-%d')<![CDATA[   <=  ]]>#{sendstarttime} 
+          and date_format(pca.sendendtime,'%Y-%m-%d')<![CDATA[   >=  ]]>#{sendstarttime} 
+          and pca.status='1'
         group by pca.id;
     </select>
 
@@ -53,6 +57,7 @@
                  pca.sendhighmoney,
                  pca.sendcount,
                  pca.lecompanyid,
+                 pca.platformtype,
                  pca.usetype,
                  pca.outimetype,
                  pca.sendtimeinday,
@@ -61,7 +66,7 @@
               date_format(pca.sendendtime,'%Y-%m-%d') as sendendtime,
               date_format(pca.fixedstarttime,'%Y-%m-%d') as fixedstarttime,
               date_format(pca.fixedendtime,'%Y-%m-%d') as fixedendtime, 
-              GROUP_CONCAT(pc.city SEPARATOR ',') citys,
+              GROUP_CONCAT(pc.id SEPARATOR ',') citys,
               GROUP_CONCAT(pcs.phone SEPARATOR ',') users 
               From pub_coupon_activity pca 
         inner join pub_coupon_activity_use_city pcauc on pcauc.couponactivityidref=pca.id

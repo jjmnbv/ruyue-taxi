@@ -12,7 +12,9 @@
         from ${tbName} t
         where
         t.endtime BETWEEN #{startDt} AND #{endDt}
-        and t.companyid = #{companyid}
+        <if test="tbName=='org_order'">
+            and t.companyid = #{companyid}
+        </if>
         and t.oncity = #{cityCode}
         and t.orderstatus = '7'
         and t.userid = #{userId} and t.`status` = '1'
@@ -26,7 +28,9 @@
         t.completetime BETWEEN #{startDt} AND #{endDt}
         and t.orderstatus = '7'
         and t.oncity = #{cityCode}
-        and t.companyid = #{companyid}
+        <if test="tbName=='org_order'">
+            and t.companyid = #{companyid}
+        </if>
         and t.userid = #{userId} and t.`status` = '1'
     </select>
 
@@ -39,7 +43,9 @@
           t.endtime BETWEEN #{startDt} AND #{endDt}
           and t.orderstatus = '7'
           and t.oncity = #{cityCode}
-          and t.companyid = #{companyid}
+            <if test="tbName=='org_order'">
+                and t.companyid = #{companyid}
+            </if>
           and t.`status` = '1'
         group by companyid,userid
     </select>
@@ -52,7 +58,9 @@
           t.completetime BETWEEN #{startDt} AND #{endDt}
           and t.`status` = '1'
           and t.oncity = #{cityCode}
-          and t.companyid = #{companyid}
+          <if test="tbName=='org_order'">
+            and t.companyid = #{companyid}
+          </if>
           and t.orderstatus = '7'
         group by companyid,userid
     </select>
@@ -60,7 +68,7 @@
 
     <select id="listOrderByConsume" resultType="OrderInfoDTO" parameterType="OrderQueryParam">
         select
-        companyid,userid,oncity
+        userid,oncity
         from ${tbName} t
         where
         (t.completetime BETWEEN #{startDt} AND #{endDt}
@@ -68,6 +76,9 @@
         )
         and t.`status` = '1'
         and t.orderstatus = '7'
-        group by companyid,userid,oncity
+        <if test="tbName=='org_order'">
+            and t.companyid = #{companyid}
+        </if>
+        group by userid,oncity
     </select>
 </mapper>

@@ -35,14 +35,18 @@ public interface TaxiOrderManageMapper {
 	List<Map<String, Object>> getOpWasabnormalTaxiOrderListByQuery(OrderManageQueryParam queryParam);
 	
 	int getOpWasabnormalTaxiOrderCountByQuery(OrderManageQueryParam queryParam);
+
+	List<Map<String, Object>> getOpWaitgatheringTaxiOrderListByQuery(OrderManageQueryParam queryParam);
+
+	int getOpWaitgatheringTaxiOrderCountByQuery(OrderManageQueryParam queryParam);
 	
 	List<Map<String, Object>> getOpCompleteTaxiOrderListByQuery(OrderManageQueryParam queryParam);
 	
 	int getOpCompleteTaxiOrderCountByQuery(OrderManageQueryParam queryParam);
-	
-	List<Map<String, Object>> getOpWaitgatheringTaxiOrderListByQuery(OrderManageQueryParam queryParam);
-	
-	int getOpWaitgatheringTaxiOrderCountByQuery(OrderManageQueryParam queryParam);
+
+	List<Map<String, Object>> getOpCancelTaxiOrderListByQuery(OrderManageQueryParam queryParam);
+
+	int getOpCancelTaxiOrderCountByQuery(OrderManageQueryParam queryParam);
 	
 	Map<String, Object> getOpTaxiOrderByOrderno(String orderno);
 	
@@ -93,5 +97,7 @@ public interface TaxiOrderManageMapper {
 	void orderReject(OpTaxiOrder object);
 
     PubDriver getPubDriverById(String driverid);
+
+	List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam queryParam);
 	
 }

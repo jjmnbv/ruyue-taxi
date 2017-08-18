@@ -1,38 +1,26 @@
 package com.szyciov.coupon.service.generate.expense;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
 import com.szyciov.coupon.dao.OrderDao;
 import com.szyciov.coupon.dao.PubCouponActivityDao;
-import com.szyciov.coupon.dao.PubCouponActivityUseCityDao;
 import com.szyciov.coupon.dto.CouponActivityDTO;
-import com.szyciov.coupon.dto.CouponOrderCacheDTO;
 import com.szyciov.coupon.dto.OrderInfoDTO;
-import com.szyciov.coupon.factory.generate.GenerateCouponFactory;
 import com.szyciov.coupon.param.CouponActivityQueryParam;
 import com.szyciov.coupon.param.OrderQueryParam;
-import com.szyciov.coupon.service.RedisService;
-import com.szyciov.coupon.service.generate.AbstractGenerateCoupon;
-import com.szyciov.dto.coupon.PubCouponActivityDto;
-import com.szyciov.entity.coupon.PubCoupon;
-import com.szyciov.entity.coupon.PubCouponRule;
-import com.szyciov.enums.CouponRuleTypeEnum;
-import com.szyciov.enums.RedisKeyEnum;
+import com.szyciov.coupon.rabbitMq.coupon.SenderCouponQueue;
 import com.szyciov.enums.coupon.CouponActivityEnum;
 import com.szyciov.param.coupon.GenerateCouponParam;
 import com.szyciov.util.GsonUtil;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  * 每日自动生成消费类型抵用券
@@ -49,10 +37,13 @@ public class AutoExpenseGenerateCoupon {
     private PubCouponActivityDao activityDao;
 
     @Resource
-    private PubCouponActivityUseCityDao useCityDao;
+    private SenderCouponQueue senderCouponQueue;
 
+    private Logger logger = LoggerFactory.getLogger(AutoExpenseGenerateCoupon.class);
 
-
+    /**
+     * 自动生成消费抵用券
+     */
     public void autoGenerateCoupon(){
         System.out.println("----------------");
         LocalDate nowDt = LocalDate.now().minusDays(1);
@@ -60,24 +51,27 @@ public class AutoExpenseGenerateCoupon {
         queryParam.setNowDt(nowDt);
         //类型为消费类型
         queryParam.setRuleType(CouponActivityEnum.SEND_RULE_CONSUME.code);
-
+        logger.info("---------------------------获取订单参数：{}", GsonUtil.toJson(queryParam));
         //获取发放时间在当前范围之内的派发活动
         List<CouponActivityDTO> activityList = activityDao.listValidActivity(queryParam);
-
-        Set<String> tables = new HashSet<>();
+        logger.info("---------------------------获取当前有效活动个数【{}】",activityList.size());
+        HashMap<String,String> tables = new HashMap<>();
         if(activityList!=null && activityList.size()>0){
             for(CouponActivityDTO dto:activityList){
                 String tbName = this.getOrderTbName(dto.getSendservicetype(), dto.getSendruletarget());
-                tables.add(tbName);
+                if(StringUtils.isNotEmpty(tbName)) {
+                    tables.put(dto.getLecompanyid(),tbName);
+                }
             }
         }
-
-        for(String tbName:tables) {
+        logger.info("---------------------------获取需要查询的订单表【{}】",GsonUtil.toJson(tables));
+        for(Map.Entry<String,String> entrySet : tables.entrySet()) {
             //获取表名称
             OrderQueryParam orderParam = new OrderQueryParam();
             orderParam.setStartDt(nowDt.atStartOfDay());
             orderParam.setEndDt(nowDt.atTime(23, 59, 59));
-            orderParam.setTbName(tbName);
+            orderParam.setTbName(entrySet.getValue());
+            orderParam.setCompanyid(entrySet.getKey());
             //生成抵用券
             this.generateCoupon(orderParam);
         }
@@ -108,10 +102,11 @@ public class AutoExpenseGenerateCoupon {
                 GenerateCouponParam param = new GenerateCouponParam();
                 param.setType(CouponActivityEnum.SEND_RULE_CONSUME.code);
                 param.setUserType(this.getRuleTargetByTbName(orderParam.getTbName()));
-                param.setCompanyId(dto.getCompanyid());
+                param.setCompanyId(orderParam.getCompanyid());
                 param.setUserId(dto.getUserid());
                 param.setCityCode(dto.getOncity());
-                GenerateCouponFactory.expenseGenerateCoupon().generate(param);
+                //放入队列执行生成抵用券
+                senderCouponQueue.pushGenerateMsg(GsonUtil.toJson(param));
             }
         }
     }
@@ -146,9 +141,10 @@ public class AutoExpenseGenerateCoupon {
 
         //获取出租车订单表
         if(CouponActivityEnum.SERVICE_TYPE_TAXI.code.equals(serviceType)) {
-            if(CouponActivityEnum.TARGET_ORGAN_USER.code.equals(ruletarget)){
-                return "org_taxiorder";
-            }
+            /**暂时租赁端没有出租车订单表 2017.08.15**/
+            //if(CouponActivityEnum.TARGET_ORGAN_USER.code.equals(ruletarget)){
+            //    return "org_taxiorder";
+            //}
             if(CouponActivityEnum.TARGET_USER.code.equals(ruletarget)){
                 return "op_taxiorder";
             }

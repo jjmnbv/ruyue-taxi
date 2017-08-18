@@ -66,6 +66,11 @@ public class OrganAccountInfo {
 	 * 未结算金额
 	 */
 	public BigDecimal unbalance;
+	
+	/**
+	 * 抵用券余额
+	 */
+	public Double couponamount;
 
 	public String getShortName() {
 		return shortName;
@@ -162,4 +167,13 @@ public class OrganAccountInfo {
 	public void setUnbalance(BigDecimal unbalance) {
 		this.unbalance = unbalance;
 	}
+
+	public Double getCouponamount() {
+		return couponamount;
+	}
+
+	public void setCouponamount(Double couponamount) {
+		this.couponamount = couponamount;
+	}
+
 }

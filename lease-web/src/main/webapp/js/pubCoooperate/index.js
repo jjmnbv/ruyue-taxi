@@ -31,14 +31,17 @@ function initGrid() {
                 "sortable": false,
                 "mRender": function (data, type, full) {
                     var html = "";
-                    html += '&nbsp; <button type="button" class="SSbtn grey_q"  onclick="resourceInformation(' +"'"+ full.id + "','"+full.companyid+"','"+full.leasecompanyid+"','"+full.servicetype+"'"+')"><i class="fa fa-times"></i> 资源信息</button>';
-                    html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="see(' +"'"+ full.leasecompanyid +"','"+full.servicetype+"'"+ ')"><i class="fa fa-times"></i> 加盟资源</button>';
+                    if(full.servicetype == 0){
+                    	html += '&nbsp; <button type="button" class="SSbtn grey_q"  onclick="see(' +"'"+ full.id +"','"+full.servicetype+"'"+ ')"><i class="fa fa-times"></i> 资源管理</button>';
+					}else{
+						html += '&nbsp; <button type="button" class="SSbtn grey_q"  onclick="resourceInformation(' +"'"+ full.id + "','"+full.companyid+"','"+full.leasecompanyid+"','"+full.servicetype+"'"+')"><i class="fa fa-times"></i> 资源信息</button>';
+					}
                     return html;																			
                 }
             },
 	        {mDataProp: "coono", sTitle: "合作编号", sClass: "center", sortable: true },
 	        {mDataProp: "companyName", sTitle: "战略伙伴", sClass: "center", sortable: true },
-	        {mDataProp: "servicetype", sTitle: "业务类型", sClass: "center", sortable: true,
+	        {mDataProp: "servicetype", sTitle: "加盟业务", sClass: "center", sortable: true,
 				mRender: function(data, type, full) {
 					var html = '';
 					if(full.servicetype == 0){
@@ -50,7 +53,17 @@ function initGrid() {
 				}
 			},
 	        {mDataProp: "allCount", sTitle: "开放资源数(个)", sClass: "center", sortable: true },
-	        {mDataProp: "availableCount", sTitle: "投运资源数(个)", sClass: "center", sortable: true }
+	        {mDataProp: "availableCount", sTitle: "投运资源数(个)", sClass: "center", sortable: true,
+	        	mRender: function(data, type, full) {
+					var html = '';
+					if(full.allCount > full.availableCount){
+						html += '<font color="red">'+full.availableCount+'</font>';
+					}else{
+						html += '<font>'+full.availableCount+'</font>';
+					}
+					return html;
+				}	
+	        }
         ]
     };
     
@@ -82,5 +95,5 @@ function resourceInformation(id,companyid,leasecompanyid,servicetype){
 }
 //查看
 function see(id,servicetype){
-	window.location.href=base+"PubCoooperate/DriverInformation?leasescompanyid="+id+"&servicetype="+servicetype;
+	window.location.href=base+"PubCoooperate/DriverInformation?id="+id;
 }

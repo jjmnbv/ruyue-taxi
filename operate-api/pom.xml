@@ -391,7 +391,12 @@
             <artifactId>pagehelper</artifactId>
             <version>5.0.1</version>
         </dependency>
-        <!-- 分页 end-->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>RELEASE</version>
+		</dependency>
+		<!-- 分页 end-->
 	</dependencies>
 	
 	<build>

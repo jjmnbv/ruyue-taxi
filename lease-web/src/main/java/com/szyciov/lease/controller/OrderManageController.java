@@ -805,9 +805,9 @@ public class OrderManageController extends BaseController{
     /**
      * 获取服务车企
      * @param shortname 车企名字
-     * @param request r
-     * @param response r
-     * @return r
+     * @param request
+     * @param response
+     * @return
      */
     @RequestMapping(value = "OrderManage/GetBelongCompanySelect")
     @ResponseBody

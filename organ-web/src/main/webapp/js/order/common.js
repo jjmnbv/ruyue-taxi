@@ -1088,6 +1088,7 @@ function getCost() {
 		rulestype : '1',
 		onAddress : $("#onAddress").val(),
 		offAddress : $("#offAddress").val(),
+		paymethod : $("#paymethod").val(),
 		onaddrlng : params.onLng,
 		onaddrlat : params.onLat,
 		offaddrlng : params.offLng,
@@ -1116,8 +1117,20 @@ function getCost() {
 		dataType : "json",
 		success : function(data) {
 			if (data.status == 0) {
-				$(".price").text("￥" + data.cost);
-				$(".price_info").text("预估里程" + data.mileage + ",预估时长" + data.times);
+				if(data.reversefee != "0元"){
+					$("#reversefee").text(data.reversefee);
+					$("#reversefeeSpan").show();
+				}else{
+					$("#reversefeeSpan").hide();
+				}
+//				if(data.couponprice != "0元"){
+//					$("#couponpriceSpan").show();
+//					$("#couponprice").text(data.couponprice);
+//					//优惠券金额需要页面单独计算
+//					data.cost = data.cost.replace("元","") - data.couponprice.replace("元","") + "元";
+//				}else{
+//					$("#couponpriceSpan").hide();
+//				}
 				if (!data.payable) {
 					var content = "机构账户余额不足,不可继续下单。";
 					var sureStr = "我知道了";
@@ -1128,6 +1141,8 @@ function getCost() {
 				}else{  //如果余额足够,则还原提示按钮
 					$('.popup_hint .popup_footer .sure').html("确定");
 				}
+				$(".price_info").text("预估里程" + data.mileage + ",预估时长" + data.times);
+				$(".price").text("￥" + data.cost);
 			} else {
 				// alert(data.message);
 			}

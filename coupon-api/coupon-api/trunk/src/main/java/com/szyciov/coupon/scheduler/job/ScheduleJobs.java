@@ -23,12 +23,15 @@ public class ScheduleJobs {
 
     public void initSchedules(){
         this.addCouponJob();
+        this.addCouponTimeOutJob();
     }
 
-
+    /**
+     * 新增抵用券自动生成调度
+     */
     private void addCouponJob(){
         ScheduleParamDTO dto = new ScheduleParamDTO();
-        dto.setCronSchedule("0 0 * * *  ?");
+        dto.setCronSchedule("0/20 * * * *  ?");
         dto.setJobClass(CouponSendJob.class);
         dto.setJobName("couponSendJob");
         dto.setJobGroup("group1");
@@ -40,6 +43,26 @@ public class ScheduleJobs {
             logger.info("-------添加消费类型优惠券派发调度结束-------");
         } catch (SchedulerException e) {
             logger.error("-------添加消费类型优惠券派发调度失败-------",e);
+        }
+    }
+
+    /**
+     * 抵用券超时调度
+     */
+    private void addCouponTimeOutJob(){
+        ScheduleParamDTO dto = new ScheduleParamDTO();
+        dto.setCronSchedule("0/20 * * * *  ?");
+        dto.setJobClass(CouponTimOutJob.class);
+        dto.setJobName("CouponTimOutJob");
+        dto.setJobGroup("group1");
+        dto.setTriggerName("couponOutTimeTrigger");
+        dto.setTriggerGroup("group1");
+
+        try {
+            scheduleTask.addCroTrigger(dto);
+            logger.info("-------添加抵用券超时调度结束-------");
+        } catch (SchedulerException e) {
+            logger.error("-------添加抵用券超时调度失败-------",e);
         }
     }
 }

@@ -315,14 +315,14 @@
 	       (case org_order.ordertype when '0' then '即时用车' when '1' then '约车' when '2' then '接机' when '3' then '送机' end) as ordertype,
 	       (select CONCAT(org_user.nickname,' ',org_user.account) from org_user where org_user.id = org_order.userid) as userid,
 	       CONCAT(org_order.passengers,' ',org_order.passengerphone) as passengers,
-	       (select org_ordercancel.cancelamount from org_ordercancel where org_ordercancel.orderno = org_order.orderno and org_order.orderstatus = 8 and org_order.expensetype = 2 and org_ordercancel.cancelnature = 1 and org_ordercancel.status = 1) as cancelamount,
+	       org_ordercancel.cancelamount,
 	       (case org_order.orderstatus when 7 then org_order.endtime when 8 then org_order.canceltime end) as endtime
-	    from org_order
+	    from org_order left join org_ordercancel on (org_ordercancel.orderno = org_order.orderno and org_ordercancel.status = 1 and org_order.expensetype = 2)
 	    where org_order.companyid = #{leasesCompanyId}
 	      and org_order.usetype = 0
 	      and org_order.paymethod = 2
 	      and org_order.status = 1
-	      and (org_order.orderstatus = 7 or org_order.orderstatus = 8)
+	      and (org_order.orderstatus = 7 or (org_order.orderstatus = 8 and org_ordercancel.cancelnature = 1))
 	      and org_order.paymentstatus = 4
 	    <if test="organId != null and organId != ''">
 	        and org_order.organid IN (
@@ -385,12 +385,12 @@
 	
 	<select id="getManualOrgOrderListCountByQuery" resultType="int" parameterType="OrganBillQueryParam">	    
         select count(*)
-	    from org_order
+	    from org_order left join org_ordercancel on (org_ordercancel.orderno = org_order.orderno and org_ordercancel.status = 1 and org_order.expensetype = 2)
 	    where org_order.companyid = #{leasesCompanyId}
 	      and org_order.usetype = 0
 	      and org_order.paymethod = 2
 	      and org_order.status = 1
-	      and (org_order.orderstatus = 7 or org_order.orderstatus = 8)
+	      and (org_order.orderstatus = 7 or (org_order.orderstatus = 8 and org_ordercancel.cancelnature = 1))
 	      and org_order.paymentstatus = 4
 	    <if test="organId != null and organId != ''">
 	        and org_order.organid IN (

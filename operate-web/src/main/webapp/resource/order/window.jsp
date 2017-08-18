@@ -171,5 +171,38 @@ String ak = SystemConfig.getSystemProperty("yingyan_ak");
         </div>
     </div>
 </div>
-
-
+<!-- 取消责任方弹窗 start -->
+<div class="pop_box" id="cancelpartyFormDiv" style="display: none;">
+	<div class="tip_box_b" style="width: 600px;">
+		<h3>取消订单</h3>
+		<img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+		<div style="width: 540px">
+			<input type="hidden" id="identifyingHide">
+            <input type="hidden" id="orderstatusHide">
+			<form id="cancelpartyForm" method="get" class="form">
+				<div class="row" style="padding-bottom: 18px">
+					<label style="float: left;">责任方<em class="asterisk"></em></label> 
+					<select id="dutyparty" name="dutyparty" style="width: 60%" onchange="showCancelreason();">
+						<option value="">请选择</option>
+						<option value="1">乘客</option>
+						<option value="3">客服</option>
+						<option value="4">平台</option>
+					</select>
+				</div>
+				<div class="row" style="padding-bottom: 18px">
+					<label style="float: left;">取消原因<em class="asterisk"></em></label>
+					<select id="cancelreason" name="cancelreason" style="width: 60%" onchange="showDutyparty();">
+						<option value="">请选择</option>
+						<option value="1">不再需要用车</option>
+						<option value="5">业务操作错误</option>
+						<option value="6">暂停供车服务</option>
+					</select>
+				</div>
+				<div id="cancelDetail" style="margin-left: 40px;"></div>
+			</form>
+			<button class="Lbtn red">提交</button>
+			<button class="Lbtn grey" style="margin-left: 10%;">取消</button>
+		</div>
+	</div>
+</div>
+<!-- 取消责任方弹窗 end -->

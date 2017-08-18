@@ -1,10 +1,22 @@
 package com.szyciov.operate.service;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.szyciov.entity.Excel;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.entity.Retcode;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpAccountrules;
 import com.szyciov.op.entity.OpOrder;
+import com.szyciov.op.entity.OpOrderReview;
 import com.szyciov.op.entity.OpOrdercomment;
 import com.szyciov.param.OrderApiParam;
 import com.szyciov.param.OrdercommentQueryParam;
@@ -17,15 +29,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service("OrderManageService")
 public class OrderManageService {
@@ -76,7 +79,7 @@ public class OrderManageService {
 	
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> manualSendOrder(OpOrder object, String userToken) {
-		return templateHelper.dealRequestWithTokenCarserviceApiUrl("/OrderManage/ManualSendOpOrder", HttpMethod.POST, userToken, object, Map.class);
+		return templateHelper.dealRequestWithToken("/OrderManage/ManualSendOrder", HttpMethod.POST, userToken, object, Map.class);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -120,8 +123,8 @@ public class OrderManageService {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> opOrderReview(Map<String, Object> params, String userToken) {
-		return templateHelper.dealRequestWithToken("/OrderManage/OpOrderReview", HttpMethod.POST, userToken, params, Map.class);
+	public Map<String, Object> opOrderReview(OpOrderReview review, String userToken) {
+		return templateHelper.dealRequestWithToken("/OrderManage/OpOrderReview", HttpMethod.POST, userToken, review, Map.class);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -148,6 +151,26 @@ public class OrderManageService {
 	public List<Map<String, Object>> getToCCompanySelect(Map<String, Object> params, String userToken) {
 		return templateHelper.dealRequestWithToken("/OrderManage/GetToCCompanySelect", HttpMethod.POST, userToken, params, List.class);
 	}
+
+	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam params, String userToken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/GetBelongCompanySelect", HttpMethod.POST, userToken, params, List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getCancelPriceDetail(Map<String, String> param, String userToken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/GetCancelPriceDetail", HttpMethod.POST, userToken, param, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> endOrder(String orderno, String usertoken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/EndOrder/{orderno}", HttpMethod.GET, usertoken, null, Map.class, orderno);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> exemptionOrder(PubOrderCancel object, String userToken) {
+        return templateHelper.dealRequestWithToken("/OrderManage/ExemptionOrder", HttpMethod.POST, userToken, object, Map.class);
+    }
 	
 	/**
 	 * 订单导出

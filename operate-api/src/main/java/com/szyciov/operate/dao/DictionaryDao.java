@@ -59,4 +59,8 @@ public class DictionaryDao {
 	public void updateDictionary(Dictionary dictionary) {
 		mapper.updateDictionary(dictionary);
 	}
+	
+	public Dictionary getDictionaryText(Map<String, String> map){
+		return mapper.getDictionaryText(map);
+	};
 }

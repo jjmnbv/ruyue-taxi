@@ -1,5 +1,15 @@
 package com.szyciov.operate.service;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.szyciov.entity.Excel;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
@@ -15,15 +25,6 @@ import com.szyciov.util.TemplateHelper;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service("TaxiOrderManageService")
 public class TaxiOrderManageService {
@@ -129,6 +130,11 @@ public class TaxiOrderManageService {
 				SystemConfig.getSystemProperty("carserviceApiUrl")
 						+ "/BaiduApi/GetTraceData/?orderno={orderno}&ordertype={ordertype}&usetype={usetype}",
 				HttpMethod.GET, userToken, null, Map.class, orderno, ordertype, usetype);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam queryParam, String userToken) {
+		return templateHelper.dealRequestWithToken("/TaxiOrderManage/GetBelongCompanySelect", HttpMethod.POST, userToken, queryParam, List.class);
 	}
 	
 	/**
@@ -617,5 +623,5 @@ public class TaxiOrderManageService {
 		}
 		return sb.toString();
 	}
-	
+
 }

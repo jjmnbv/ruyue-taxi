@@ -59,19 +59,29 @@
 //				html += '<li data-value="7-0">未支付</li>';
 //				html += '<li data-value="7-1">已支付</li>';
 				html += '<li data-value="8">已取消</li>';
+				html += '<li data-value="7-9">已关闭</li>'
 			}else{
 				html += '<li data-value="">全部订单状态</li>';
 				html += '<li data-value="0,1">等待接单</li>';
 				html += '<li data-value="2,3,4">等待服务</li>';
 				html += '<li data-value="5,6">服务中</li>';
-				html += '<li data-value="7-0">未支付</li>';
-				html += '<li data-value="7-1">已支付</li>';
+//				html += '<li data-value="7-0">未支付</li>';
+//				html += '<li data-value="7-1">已支付</li>';
 				html += '<li data-value="7-4">未结算</li>';
 				html += '<li data-value="7-2">结算中</li>';
 				html += '<li data-value="7-3">已结算</li>';
 				html += '<li data-value="8">已取消</li>';
+				html += '<li data-value="7-9">已关闭</li>'
 			}
 			$(".queryOrder .select_content").html(html);
+			search();
+		});
+		$(".queryExpensetype li").live("click", function(){ 
+			/* var queryVehicleMode = $("#queryVehicleMode").attr("data-value");
+			var conditionArr = [
+				{ "name": "queryVehicleMode", "value": queryVehicleMode }
+			];
+			dataGrid.fnSearch(conditionArr); */
 			search();
 		});
 	});
@@ -144,9 +154,19 @@
 				sTitle : "支付方式",
 				sClass : "center",
 				sortable : true
-			} , {
+			},{
+				mDataProp : "expensetypeShow",
+				sTitle : "费用类型",
+				sClass : "center",
+				sortable : true
+			}, {
 				mDataProp : "orderamount",
-				sTitle : "金额（元）",
+				sTitle : "支付金额（元）",
+				sClass : "center",
+				sortable : true
+			}  ,{
+				mDataProp : "cancelamount",
+				sTitle : "取消费用（元）",
 				sClass : "center",
 				sortable : true
 			}  ]
@@ -173,7 +193,8 @@
 				{ "name": "queryUserMessage", "value": $("#queryUserMessage").val() },
 				{ "name": "queryOrderTemp", "value": $("#queryOrder").attr("data-value") },
 				{ "name": "queryVehicleMode", "value": $("#queryVehicleMode").attr("data-value") },
-				{ "name": "queryPaymentMethod", "value": $("#queryPaymentMethod").attr("data-value") }
+				{ "name": "queryPaymentMethod", "value": $("#queryPaymentMethod").attr("data-value")},
+				{ "name": "queryExpensetype", "value": $("#queryExpensetype").attr("data-value")}			
 			];
 			dataGrid.fnSearch(conditionArr,"没有查询到相关用车信息");
 			$("#startTimes").val($("#startTime").val());
@@ -182,6 +203,7 @@
 			$("#queryOrders").val($("#queryOrder").attr("data-value"));
 			$("#queryVehicleModes").val($("#queryVehicleMode").attr("data-value"));
 			$("#queryPaymentMethods").val($("#queryPaymentMethod").attr("data-value"));
+			$("#queryExpensetypes").val($("#queryExpensetype").attr("data-value"));
 		}
 	}
 	
@@ -253,18 +275,21 @@
 		$("#queryVehicleMode").attr("data-value","");
 		$("#queryPaymentMethod").val("");
 		$("#queryPaymentMethod").attr("data-value","");
+		$("#queryExpensetype").val("");
+		$("#queryExpensetype").attr("data-value","");
 		
 		var html = "";
 		html += '<li data-value="">全部订单</li>';
 		html += '<li data-value="0,1">等待接单</li>';
 		html += '<li data-value="2,3,4">等待服务</li>';
 		html += '<li data-value="5,6">服务中</li>';
-		html += '<li data-value="7-0">未支付</li>';
-		html += '<li data-value="7-1">已支付</li>';
+//		html += '<li data-value="7-0">未支付</li>';
+//		html += '<li data-value="7-1">已支付</li>';
 		html += '<li data-value="7-4">未结算</li>';
 		html += '<li data-value="7-2">结算中</li>';
 		html += '<li data-value="7-3">已结算</li>';
 		html += '<li data-value="8">已取消</li>';
+		html += '<li data-value="7-9">已关闭</li>'
 		$(".queryOrder .select_content").html(html);
 		emptySearch();
 		dataGrid.fnSearch("","您还没有用车记录");
@@ -276,18 +301,21 @@
 		$("#queryVehicleMode").attr("data-value","");
 		$("#queryPaymentMethod").val("");
 		$("#queryPaymentMethod").attr("data-value","");
+		$("#queryExpensetype").val("");
+		$("#queryExpensetype").attr("data-value","");
 		
 		var html = "";
 		html += '<li data-value="">全部订单</li>';
 		html += '<li data-value="0,1">等待接单</li>';
 		html += '<li data-value="2,3,4">等待服务</li>';
 		html += '<li data-value="5,6">服务中</li>';
-		html += '<li data-value="7-0">未支付</li>';
-		html += '<li data-value="7-1">已支付</li>';
+//		html += '<li data-value="7-0">未支付</li>';
+//		html += '<li data-value="7-1">已支付</li>';
 		html += '<li data-value="7-4">未结算</li>';
 		html += '<li data-value="7-2">结算中</li>';
 		html += '<li data-value="7-3">已结算</li>';
 		html += '<li data-value="8">已取消</li>';
+		html += '<li data-value="7-9">已关闭</li>'
 		$(".queryOrder .select_content").html(html);
 		emptySearch();
 		dataGrid.fnSearch("","您还没有用车记录");
@@ -299,6 +327,7 @@
 		$("#queryOrders").val("");
 		$("#queryVehicleModes").val("");
 		$("#queryPaymentMethods").val("");
+		$("#queryExpensetypes").val("");
 	}
 	function exportExcel(){
 		var startTime=$("#startTimes").val();
@@ -307,8 +336,9 @@
 		var queryOrderTemp=$("#queryOrders").val();
 		var queryVehicleMode=$("#queryVehicleModes").val();
 		var queryPaymentMethod=$("#queryPaymentMethods").val();
+		var queryExpensetype=$("#queryExpensetypes").val();
 		window.location.href = base+'MyOrder/ExportExcel?startTime='+startTime+"&endTime="+endTime
-		+"&queryUserMessage="+queryUserMessage+"&queryOrderTemp="+queryOrderTemp+"&queryVehicleMode="+queryVehicleMode+"&queryPaymentMethod="+queryPaymentMethod;
+		+"&queryUserMessage="+queryUserMessage+"&queryOrderTemp="+queryOrderTemp+"&queryVehicleMode="+queryVehicleMode+"&queryPaymentMethod="+queryPaymentMethod+"&queryExpensetype="+queryExpensetype;
 		
 		$("#startTime").blur();
 		$("#endTime").blur();
@@ -316,4 +346,5 @@
 		$("#queryOrder").blur();
 		$("#queryVehicleMode").blur();
 		$("#queryPaymentMethod").blur();
+		$("#queryExpensetype").blur();
 	};

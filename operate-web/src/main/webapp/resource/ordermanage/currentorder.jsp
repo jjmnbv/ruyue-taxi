@@ -53,8 +53,16 @@
 			tbody tr td:first-child{
 				text-align:left;
 			}
-			.w400 label.error{padding-left:15px!important;}
-			.col-3{width: 23%;}
+			.form label.error{padding-left:17px!important;}
+            .col-3{width: 23%;}
+            #cancelDetail table{
+                width: 100%;
+            }
+            #cancelDetail td{
+                padding-right: 18px;
+                padding-bottom: 5px;
+                color:#9e9e9e;
+            }
 		</style>
 	</head>
 	<body class="ordermanage_css_body">
@@ -62,59 +70,60 @@
 		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > 网约车订单</div>
 		<div class="content">
 			<ul class="tabmenu" style="padding-top: 10px;">
-				<li><a href="OrderManage/OrderIndex" style="text-decoration: none;">待人工派单</a></li>
+				<li><a href="OrderManage/OrderIndex" style="text-decoration: none;">待接订单</a></li>
 				<li class="on">当前订单</li>
 				<li><a href="OrderManage/AbnormalOrderIndex" style="text-decoration: none;">异常订单</a></li>
 				<li><a href="OrderManage/WaitgatheringOrderIndex" style="text-decoration: none;">待收款订单</a></li>
 				<li><a href="OrderManage/HistoryOrderIndex" style="text-decoration: none;">已完成订单</a></li>
+                <li><a href="OrderManage/CancelOrderIndex" style="text-decoration: none;">已取消订单</a></li>
 			</ul>
 		
 			<div class="row form" style="margin-bottom: 20px;">
-				<div class="col-3">
-					<label>订单号</label><input id="orderno" type="text" style="width: 68%" placeholder="订单号">
-				</div>
-				<div class="col-3">
-					<label>订单类型</label>
-					<select id="ordertype">
-						<option value="">全部</option>
-						<option value="1">约车</option>
-						<option value="2">接机</option>
-						<option value="3">送机</option>
-					</select>
-				</div>
-				<div class="col-3">
-					<label>订单状态</label>
-					<select id="orderstatus">
-						<option value="">全部</option>
-						<option value="2">待出发</option>
-						<option value="3">已出发</option>
-						<option value="4">已抵达</option>
-						<option value="6">服务中</option>
-					</select>
-				</div>
-				<div class="col-3" style="width: 31%">
-					<label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
-				</div>
-				<div class="col-3">
-					<label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
-				</div>
-				<div class="col-3">
-					<label>订单来源</label>
-					<select id="ordersource">
-						<option value="">全部</option>
-						<option value="CG">乘客端 | 个人</option>
-						<option value="CY">运管端</option>
-					</select>
-				</div>
-				<div class="col-3">
-					<label class="ordermanage_css_label_1">服务车企</label><input id="leasescompanyid" type="hidden" placeholder="全部">
-				</div>
-				<div class="col-3 ordermanage_css_col_1" style="width: 31%">
-					<label>用车日期</label>
-					<input style="width:33%;" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始日期" value="" class="searchDate">
-					至
-            		<input style="width:33%;" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">
-				</div>
+                <div class="col-3">
+                    <label>订单来源</label>
+                    <select id="ordersource">
+                        <option value="">全部</option>
+                        <option value="CG">乘客端 | 个人</option>
+                        <option value="CY">运管端</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <label>订单类型</label>
+                    <select id="ordertype">
+                        <option value="">全部</option>
+                        <option value="1">约车</option>
+                        <option value="2">接机</option>
+                        <option value="3">送机</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <label>服务车企</label><input id="belongleasecompany" type="hidden" placeholder="服务车企">
+                </div>
+                <div class="col-3">
+                    <label>订单状态</label>
+                    <select id="orderstatus">
+                        <option value="">全部</option>
+                        <option value="2">待出发</option>
+                        <option value="3">已出发</option>
+                        <option value="4">已抵达</option>
+                        <option value="6">服务中</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <label>订单号</label><input id="orderno" type="text" style="width: 68%" placeholder="订单号">
+                </div>
+                <div class="col-3">
+                    <label>司机</label><input id="drivername" type="hidden" placeholder="请选择司机">
+                </div>
+                <div class="col-3">
+                    <label class="ordermanage_css_label_1">下单人</label><input id="orderperson" type="hidden" placeholder="请选择下单人">
+                </div>
+                <div class="col-3 ordermanage_css_col_1">
+                    <label>用车日期</label>
+                    <input style="width:45%;" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始日期" value="" class="searchDate">
+                    至
+                    <input style="width:45%;" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">
+                </div>
 				<div class="col-12" style="text-align: right;">
 					<button class="Mbtn green_a" onclick="search();">查询</button>
 					<button class="Mbtn grey_b" onclick="initSearch();">清空</button>
@@ -127,6 +136,49 @@
 			</div>
 			<table id="manualOrderdataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 		</div>
+
+        <div class="pop_box" id="cancelpartyFormDiv" style="display: none;">
+            <div class="tip_box_b" style="width: 600px;">
+                <h3>取消订单</h3>
+                <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+                <div style="width: 540px">
+                    <input type="hidden" id="ordernoHide">
+                    <input type="hidden" id="ordertypeHide">
+                    <input type="hidden" id="usetypeHide">
+                    <input type="hidden" id="identifyingHide">
+                    <input type="hidden" id="orderstatusHide">
+                    <form id="cancelpartyForm" method="get" class="form">
+                        <div class="row" style="padding-bottom: 18px">
+                            <label style="float: left;">责任方<em class="asterisk"></em></label>
+                            <select id="dutyparty" name="dutyparty" style="width: 60%" onchange="showCancelreason();">
+                                <option value="">请选择</option>
+                                <option value="1">乘客</option>
+                                <option value="2">司机</option>
+                                <option value="3">客服</option>
+                                <option value="4">平台</option>
+                            </select>
+                        </div>
+                        <div class="row" style="padding-bottom: 18px">
+                            <label style="float: left;">取消原因<em class="asterisk"></em></label>
+                            <select id="cancelreason" name="cancelreason" style="width: 60%" onchange="showDutyparty();">
+                                <option value="">请选择</option>
+                                <option value="1">不再需要用车</option>
+                                <option value="2">乘客迟到违约</option>
+                                <option value="3">司机迟到违约</option>
+                                <option value="4">司机不愿接乘客</option>
+                                <option value="5">业务操作错误</option>
+                                <option value="6">暂停供车服务</option>
+                            </select>
+                        </div>
+                        <div id="cancelDetail" style="margin-left: 40px;">
+
+                        </div>
+                    </form>
+                    <button class="Lbtn red" onclick="save()">提交</button>
+                    <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
+                </div>
+            </div>
+        </div>
 		
 		<script type="text/javascript" src="js/ordermanage/currentorder.js"></script>
 	</body>

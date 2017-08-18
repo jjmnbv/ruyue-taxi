@@ -1,6 +1,13 @@
 package com.szyciov.operate.dao;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import com.szyciov.driver.entity.OrderInfoDetail;
 import com.szyciov.driver.entity.PubDriverNews;
+import com.szyciov.lease.entity.PubCityAddr;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpAccountrules;
 import com.szyciov.op.entity.OpDriverchanges;
@@ -14,10 +21,6 @@ import com.szyciov.op.entity.PubSendRules;
 import com.szyciov.operate.mapper.OrderManageMapper;
 import com.szyciov.param.OrdercommentQueryParam;
 import org.springframework.stereotype.Repository;
-
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
 
 @Repository("OrderManageDao")
 public class OrderManageDao {
@@ -63,6 +66,14 @@ public class OrderManageDao {
 	public int getOpWasabnormalOrderCountByQuery(OrderManageQueryParam queryParam) {
 		return mapper.getOpWasabnormalOrderCountByQuery(queryParam);
 	}
+
+    public List<Map<String, Object>> getOpWaitgatheringOrderListByQuery(OrderManageQueryParam queryParam) {
+        return mapper.getOpWaitgatheringOrderListByQuery(queryParam);
+    }
+
+    public int getOpWaitgatheringOrderCountByQuery(OrderManageQueryParam queryParam) {
+        return mapper.getOpWaitgatheringOrderCountByQuery(queryParam);
+    }
 	
 	public List<Map<String, Object>> getOpCompleteOrderListByQuery(OrderManageQueryParam queryParam) {
 		return mapper.getOpCompleteOrderListByQuery(queryParam);
@@ -72,13 +83,13 @@ public class OrderManageDao {
 		return mapper.getOpCompleteOrderCountByQuery(queryParam);
 	}
 	
-	public List<Map<String, Object>> getOpWaitgatheringOrderListByQuery(OrderManageQueryParam queryParam) {
-		return mapper.getOpWaitgatheringOrderListByQuery(queryParam);
-	}
-	
-	public int getOpWaitgatheringOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return mapper.getOpWaitgatheringOrderCountByQuery(queryParam);
-	}
+    public List<Map<String, Object>> getOpCancelOrderListByQuery(OrderManageQueryParam queryParam) {
+        return mapper.getOpCancelOrderListByQuery(queryParam);
+    }
+
+    public int getOpCancelOrderCountByQuery(OrderManageQueryParam queryParam) {
+        return mapper.getOpCancelOrderCountByQuery(queryParam);
+    }
 	
 	public List<Map<String, Object>> getPeUser(String userName) {
 		return mapper.getPeUser(userName);
@@ -222,5 +233,25 @@ public class OrderManageDao {
 
 	public void updatePubDriverLeisure(String driverid) {
         mapper.updatePubDriverLeisure(driverid);
+    }
+
+    public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam queryParam) {
+        return mapper.getBelongCompanySelect(queryParam);
+    }
+
+    public OrderInfoDetail getOpOrderInfoByOrderno(String orderno) {
+        return mapper.getOpOrderInfoByOrderno(orderno);
+    }
+
+    public void updateOpOrderInfo(OrderInfoDetail infoDetail) {
+        mapper.updateOpOrderInfo(infoDetail);
+    }
+
+    public PubCityAddr getPubCityByName(String cityname) {
+        return mapper.getPubCityByName(cityname);
+    }
+
+    public void updatePubDriver(PubDriver pubDriver) {
+        mapper.updatePubDriver(pubDriver);
     }
 }

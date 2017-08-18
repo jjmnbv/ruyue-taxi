@@ -472,8 +472,7 @@ public class LeCarForceSendMethodImp implements SendMethodHelper {
 		orderinfo.setPlateno(driverInfo.getPlateno());
 		orderinfo.setOrderstatus(OrderState.WAITSTART.state);
 		orderinfo.setPaymentstatus(PayState.MENTED.state);
-		orderinfo.setCompanyid(driver.getLeasescompanyid());
-		orderinfo.setBelongleasecompany(driver.getBelongleasecompany());
+		orderinfo.setBelongleasecompany(driver.getLeasescompanyid());
 		//更新订单
 		sendInfoService.forceOrder4Driver(orderinfo);
 		//发送消息到对应司机和乘客

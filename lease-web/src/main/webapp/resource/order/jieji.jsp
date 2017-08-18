@@ -32,7 +32,6 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 			<li><a href="Order/songji">送机</a></li>
 		</ul>
         <form id="form" class="form form-jieji"  method="post">
-	        <input type="hidden" name="ordertype" id="ordertype" value="2"/>
         	<div class="row">
         		<div class="col-3 col-3-usetype" id="usetype"><label class="genre label-late">用车类型<em class="asterisk"></em></label>
             		<input type="radio" name="usetype" value="0" style="margin-left:0px;" checked/>因公用车
@@ -230,7 +229,11 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 	        	<div class="col-1" style="margin-right:2%;width:auto;"><h2>预估费用</h2></div>
 	        	<div class="col-3"><h2>¥<span id="estimatedcost">0.0元</span></h2></div>
 	        	<div class="col-4" style="width:auto;">
-	        		<h2>预估里程<span id="estimatedmileage">0公里</span>,预估时长<span id="estimatedtime">0分钟</span></h2>
+	        		<h2>
+	        		预估里程<span id="estimatedmileage">0公里</span>,预估时长<span id="estimatedtime">0分钟</span> 
+	        		<span id="premiumrateSpan" style="display:none;">溢价<span id="premiumrate">1.0倍</span></span> 
+	        		<span id="couponpriceSpan" style="display:none;">券已抵扣<span id="couponprice">0元</span>
+	        		</h2>
 	        	</div>
 	        </div>
 <!-- 	        <div class="row" style="display:none;"  id= "payable"><font style="color:red;">机构账户已超出限额；建议使用个人垫付，否则无法叫车</font></div> -->
@@ -241,7 +244,8 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
         </form>
 </div>
 <%@include file="window.jsp"%>
-<input type="hidden" value="0" id="orderno"/>
+<input type="hidden" id="orderno" value="0"/>
+<input type="hidden" id="ordertype" value="2"/>
 <script src="js/order/index.js"></script>
 <script src="js/order/common.js"></script>
 <script src="js/order/baidu.js" type="text/javascript"></script>

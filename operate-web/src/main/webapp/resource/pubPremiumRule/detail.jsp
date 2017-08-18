@@ -68,15 +68,30 @@
 		}
 	</style>
 	<body>
-		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="PubPremiumRule/Index">溢价规则 </a>>历史记录
+		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="PubPremiumRule/Index">溢价规则 </a>>溢价详情
 		</div>
 		<div class="content">
 		<input id="aaid" name="aaid" value="${aaid}"type="hidden"/>
-		<div class="row">
-				<div  style="margin-top: 15px;">
-					<h4>详情界面</h4>
-				</div>
+	<div class="form" style="padding-top: 30px;">
+		   <div class="row">
+				<div class="col-4"><label>星期</label>
+					<select id="weeks">
+						<option value="">全部</option>
+						<c:forEach items="${list}" var="list">
+							<option value="${list.id}">${list.text}</option>
+						</c:forEach>
+					</select>
+			    </div>
+			    <div class="col-8" style="text-align:right">
+				   <button class="Mbtn red_q" onclick="search();">查询</button>
+			    </div>
 			</div>
+			<div class="row">
+					<div  style="margin-top: 15px;">
+						<h4>溢价规则信息<span id="sysversionPageTitle">【${rulename.rulename}】</span></h4>
+					</div>
+			</div>
+		</div>
 			<table id="dataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 		</div>
 		<script type="text/javascript" src="js/pubPremiumRule/detail.js"></script>

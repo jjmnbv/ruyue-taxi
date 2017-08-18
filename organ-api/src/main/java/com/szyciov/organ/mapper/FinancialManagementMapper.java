@@ -44,6 +44,8 @@ public interface FinancialManagementMapper {
 	
 	BigDecimal getActualBalanceById(Map<String, String> map);
 	
+	Map<String, Object> getActualBalanceAndCouponamountById(Map<String, Object> map);
+	
 	void reduceOrganAccount(Map<String, Object> map);
 	
 	void createOrganExpenses(OrgOrganExpenses orgOrganExpenses);
@@ -89,4 +91,10 @@ public interface FinancialManagementMapper {
 	List<PubCouponDetail> getPubCouponDetailList(OrganAccountQueryParam organAccountQueryParam);
 	
 	int getPubCouponDetailListCount(OrganAccountQueryParam organAccountQueryParam);
+	
+	void addCouponDetail(Map<String, Object> map);
+	
+	void addOrganCouponValue(Map<String, Object> map);
+	
+	String getCityByOrganid(String id);
 }

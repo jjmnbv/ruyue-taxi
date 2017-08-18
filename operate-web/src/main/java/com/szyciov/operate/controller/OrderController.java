@@ -8,8 +8,6 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import com.szyciov.operate.vo.request.GetManualSelectDriverRequest;
-import com.szyciov.operate.vo.request.GetTaxiManualSelectDriverRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -385,6 +383,8 @@ public class OrderController extends WebExceptionHandle {
 	@RequestMapping(value = "/Order/CreateOpOrder")
 	public JSONObject createOpOrder(@RequestBody OpOrder orderInfo,HttpServletRequest request) {
 		starttime.set(System.currentTimeMillis());
+		OpUser user = getLoginOpUser(request);
+		orderInfo.setCompanyid(user.getOperateid());
 		JSONObject result =  os.createOpOrder(orderInfo);
 		releaseResource(os);
 		return checkResult(result);
@@ -400,8 +400,10 @@ public class OrderController extends WebExceptionHandle {
 	@RequestMapping(value = "/Order/GetOpOrderCost")
 	public JSONObject getOpOrderCost(@RequestBody OrderCostParam param,HttpServletRequest request) {
 		starttime.set(System.currentTimeMillis());
+		OpUser user = getLoginOpUser(request);
 		param.setToken(getUserToken(request));
 		param.setOrderprop(OrderVarietyEnum.OPERATING_NET.icode);
+		param.setCompanyid(user.getOperateid());
 		JSONObject result =  os.getOpOrderCost(param);
 		releaseResource(os);
 		return checkResult(result);

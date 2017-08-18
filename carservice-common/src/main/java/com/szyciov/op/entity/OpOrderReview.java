@@ -1,6 +1,10 @@
 package com.szyciov.op.entity;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import org.apache.commons.lang.StringUtils;
 
 public class OpOrderReview {
 	
@@ -131,6 +135,11 @@ public class OpOrderReview {
      */
     private String rawpricecopy;
 
+    /**
+     * 复核类型(1-按里程时长,2-按固定金额)
+     */
+    private Integer reviewtype;
+
 	public String getId() {
 		return id;
 	}
@@ -191,16 +200,42 @@ public class OpOrderReview {
 		return starttime;
 	}
 
-	public void setStarttime(Date starttime) {
-		this.starttime = starttime;
+	public void setStarttime(Object starttime) {
+        if(starttime instanceof Date){
+            this.starttime = (Date) starttime;
+        }else if(starttime instanceof String){
+            try {
+                if(StringUtils.isNotBlank((String) starttime)){
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                    this.starttime = format.parse((String)starttime);
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }else if(starttime instanceof Long){
+            this.starttime = new Date((long)starttime);
+        }
 	}
 
 	public Date getEndtime() {
 		return endtime;
 	}
 
-	public void setEndtime(Date endtime) {
-		this.endtime = endtime;
+	public void setEndtime(Object endtime) {
+        if(endtime instanceof Date){
+            this.endtime = (Date) endtime;
+        }else if(endtime instanceof String){
+            try {
+                if(StringUtils.isNotBlank((String) endtime)){
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                    this.endtime = format.parse((String)endtime);
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }else if(endtime instanceof Long){
+            this.endtime = new Date((long)endtime);
+        }
 	}
 
 	public Double getTimes() {
@@ -337,5 +372,13 @@ public class OpOrderReview {
 
     public void setRawpricecopy(String rawpricecopy) {
         this.rawpricecopy = rawpricecopy;
+    }
+
+    public Integer getReviewtype() {
+        return reviewtype;
+    }
+
+    public void setReviewtype(Integer reviewtype) {
+        this.reviewtype = reviewtype;
     }
 }

@@ -3,7 +3,6 @@ package com.szyciov.operate.service;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +23,10 @@ import com.szyciov.entity.PubPremiumRuleWeekdetail;
 import com.szyciov.lease.entity.PubDictionary;
 import com.szyciov.operate.dao.PubPremiumRuleDao;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PageBean;
+
+import net.sf.json.JSONObject;
 
 @Service("pubPremiumRuleService")
 public class PubPremiumRuleService {
@@ -53,12 +55,20 @@ public class PubPremiumRuleService {
 	public List<PubDictionary> getCity(){
 		return dao.getCity();
 	}
-	public int ruleConflict(PubPremiumParam pubPremiumParam)  {
+	public List<PubDictionary> getWeeks(String id){
+		return dao.getWeeks(id);
+	}
+	public PubPremiumParam getRulename(String id)  {
+		return dao.getRulename(id);
+	}
+	public Map<String,Object> ruleConflict(PubPremiumParam pubPremiumParam)  {
 		//通过id查询出这条规则,返回 0表示可以 启用规则，返回1表示不能启用规则
 		PubPremiumParam pubPremiumParamId = dao.getById(pubPremiumParam);
-		if(pubPremiumParamId.getRuletype() != null){
+		Map<String, Object> ret = new HashMap<String, Object>();
 			if(pubPremiumParamId.getRuletype().equals("0")){
 				dao.updateStatus(pubPremiumParam);
+				//存入缓存
+				insetRedis(pubPremiumParamId,0);
 				//存入历史记录
 				   PubPremiumHistory pubPremiumHistory = new PubPremiumHistory();
 				   pubPremiumHistory.setId(GUIDGenerator.newGUID());
@@ -68,11 +78,13 @@ public class PubPremiumRuleService {
 				   pubPremiumHistory.setCreater(pubPremiumParam.getCreater());
 				   pubPremiumHistory.setUpdater(pubPremiumParam.getCreater());
 				   dao.insertIntoHistory(pubPremiumHistory);
-				   return 0;
+				   return ret;
 			}else{
-				int theResult  = dao.ruleConflict(pubPremiumParamId);
-				if(theResult == 0){
+				List<PubPremiumParam> theResult  = dao.ruleConflict(pubPremiumParamId);
+				if(theResult == null || theResult.size() == 0){
 					dao.updateStatus(pubPremiumParam);
+					//存入缓存
+					insetRedis(pubPremiumParamId,0);
 					//存入历史记录
 					   PubPremiumHistory pubPremiumHistory = new PubPremiumHistory();
 					   pubPremiumHistory.setId(GUIDGenerator.newGUID());
@@ -82,16 +94,19 @@ public class PubPremiumRuleService {
 					   pubPremiumHistory.setCreater(pubPremiumParam.getCreater());
 					   pubPremiumHistory.setUpdater(pubPremiumParam.getCreater());
 					   dao.insertIntoHistory(pubPremiumHistory);
-					   return 0;
+					   return ret;
+				}else{
+					ret.put("rulename", theResult);
+					   return ret;
 				}
 			}
-	  }
-		return 1;
 	}
 	public void ruleConflictOk(PubPremiumParam pubPremiumParam)  {
 		 PubPremiumParam returnResult = dao.getById(pubPremiumParam);
 		// 修改状态
 		   dao.ruleConflictOk(pubPremiumParam);
+		 //存入缓存
+			insetRedis(returnResult,1);
 		   PubPremiumHistory pubPremiumHistory = new PubPremiumHistory();
 		   pubPremiumHistory.setId(GUIDGenerator.newGUID());
 		   pubPremiumHistory.setPremiumruleid(returnResult.getId());
@@ -113,6 +128,9 @@ public class PubPremiumRuleService {
 		ret.put("ifHavePremiumRule", "ok");
 		ret.put("ifHaveOverlying", "ok");
 		ret.put("ifDateOk", "ok");
+		ret.put("ifHaveOverlyingWeek", "ok");
+		//开始时间大于结束时间
+		ret.put("ifTimeOk", "ok");
 		//获取传过来的值
 		String tableInfo = pubPremiumAdd.getTableInfo();
 		String checkVal = pubPremiumAdd.getCheckVal();
@@ -134,7 +152,10 @@ public class PubPremiumRuleService {
 		String [] datess  = dates.split(",");
 		String [] checkVals = repeatArray(checkVal.split(","));
 		//转换为集合
-		List<String> checkValslist= Arrays.asList(checkVals);
+				List<String> checkValslist= new ArrayList<String>();
+				for(int i=0;i<checkVals.length;i++){
+					checkValslist.add(checkVals[i]);
+				}
 		Map<String,String> weekData = new HashMap<String,String>(); 
 		//循环获取table里面的值
 		//判断为什么保存 星期，或者日期
@@ -148,11 +169,11 @@ public class PubPremiumRuleService {
 				return ret;
 			};
 		}
-			//判断星期
-			if(checkValslist.contains("undefinded")){
-				ret.put("weekIsNull", "请勾选星期选项");
-				return ret;
-			}else{
+		for(int i=0;i<checkValslist.size();i++){
+			if(checkValslist.get(i).equals("undefined")){
+				checkValslist.remove(i);
+			}
+		}
 				//判断是否所选项都有值
 				int count = 0;
 				if(checkValslist.contains("one")){
@@ -193,21 +214,77 @@ public class PubPremiumRuleService {
 				//里面的值都不为空,判断时间有没有重叠
 				if(checkValslist.size() == count){
 					// 返回true是存在叠加的情况
-					boolean a = timeOverlying(weekOnes,checkValslist,"one"); 
-					boolean b = timeOverlying(weekTows,checkValslist,"tow"); 
-					boolean c = timeOverlying(weekThrees,checkValslist,"three");
-					boolean d = timeOverlying(weekFours,checkValslist,"four");
-					boolean e = timeOverlying(weekFives,checkValslist,"five");
-					boolean f = timeOverlying(weekSixss,checkValslist,"six");
-					boolean g = timeOverlying(weekSevens,checkValslist,"seven");
-					if(a||b||c||d||e||f||g){
-						ret.put("ifHaveOverlying", "noOk");
-						return ret;
+					//开始时间比结束时间大返回0有重叠时间返回1，没有返回2，没有被勾选返回3
+					int a = timeOverlying(weekOnes,checkValslist,"one"); 
+					int b = timeOverlying(weekTows,checkValslist,"tow"); 
+					int c = timeOverlying(weekThrees,checkValslist,"three");
+					int d = timeOverlying(weekFours,checkValslist,"four");
+					int e = timeOverlying(weekFives,checkValslist,"five");
+					int f = timeOverlying(weekSixss,checkValslist,"six");
+					int g = timeOverlying(weekSevens,checkValslist,"seven");
+					if((a==0 || a==1) || (b==0 || b==1) || (c==0 || c==1) || (d==0 || d==1)||(e==0 || e==1)||(f==0 || f==1)||(g==0 || g==1)){
+						if(a == 0){
+							ret.put("ifTimeOk", "noOk");
+							return ret;
+						}
+						if(b == 0){
+							ret.put("ifTimeOk", "noOk");
+							return ret;
+						}
+						if(c == 0){
+							ret.put("ifTimeOk", "noOk");
+							return ret;
+						}
+						if(d == 0){
+							ret.put("ifTimeOk", "noOk");
+							return ret;
+						}
+						if(e == 0){
+							ret.put("ifTimeOk", "noOk");
+							return ret;
+						}
+						if(f == 0){
+							ret.put("ifTimeOk", "noOk");
+							return ret;
+						}
+						if(g == 0){
+							ret.put("ifTimeOk", "noOk");
+							return ret;
+						}
+						if(a == 1){
+							ret.put("ifHaveOverlyingWeek", "noOk1");
+							return ret;
+						}
+						if(b == 1){
+							ret.put("ifHaveOverlyingWeek", "noOk2");
+							return ret;
+						}
+						if(c == 1){
+							ret.put("ifHaveOverlyingWeek", "noOk3");
+							return ret;
+						}
+						if(d == 1){
+							ret.put("ifHaveOverlyingWeek", "noOk4");
+							return ret;
+						}
+						if(e == 1){
+							ret.put("ifHaveOverlyingWeek", "noOk5");
+							return ret;
+						}
+						if(f == 1){
+							ret.put("ifHaveOverlyingWeek", "noOk6");
+							return ret;
+						}
+						if(g == 1){
+							ret.put("ifHaveOverlyingWeek", "noOk7");
+							return ret;
+						}
 					}else{
 						//插入数据
 						if(pubPremiumAdd.getId() == null || pubPremiumAdd.getId() == ""){
 							pubPremiumAdd.setId(id);
 							pubPremiumAdd.setIsoperated("0");
+							pubPremiumAdd.setRulestatus("0");
 							dao.insertPubPremiumRule(insertPubPremiumRule(pubPremiumAdd));
 							insertAllWeek(checkValslist,weekOnes,weekTows,weekThrees,weekFours,weekFives,weekSixss,weekSevens,id);
 					  }else{
@@ -222,16 +299,21 @@ public class PubPremiumRuleService {
 							dao.deleteWeek(pubPremiumAdd.getId());
 							dao.deletWeekDetail(pubPremiumAdd.getId());
 							pubPremiumAdd.setIsoperated("1");
+							if(pubPremiumAdd.getRulestatus().equals("启用")){
+								pubPremiumAdd.setRulestatus("1");
+							}else{
+								pubPremiumAdd.setRulestatus("0");
+							}
 							dao.insertPubPremiumRule(insertPubPremiumRule(pubPremiumAdd));
 							insertAllWeek(checkValslist,weekOnes,weekTows,weekThrees,weekFours,weekFives,weekSixss,weekSevens,pubPremiumAdd.getId());
-						  
+							PubPremiumParam pubPremiumParamId = dao.getById(pubPremiumParam);
+							insetRedis(pubPremiumParamId,2);
 					  }
 					}
 				}else{
 					ret.put("ifHaveNull", "noOk");
 					return ret;
 				}
-			}
 		}else{
 			//插入日期
 			//获取日期开始结束时间
@@ -250,7 +332,7 @@ public class PubPremiumRuleService {
 			String newDates = dates.substring(dates.indexOf(",",dates.indexOf(",")+1 )+1,dates.length());
 			//转换为数组
 			String[] arr = newDates.split(",");
-			//判断是否为修改
+			//判断是否为修改,如果为新增
 			if(pubPremiumAdd.getId() == null || pubPremiumAdd.getId() == ""){
 				//空值判断
 				if(!isTheNUll(newDates,arr)){
@@ -264,24 +346,41 @@ public class PubPremiumRuleService {
 					ret.put("ifDateOk", "noOk");
 					return ret;
 				}
+				//开始时间结束时间判断
+				if(theTimeIsOk(arr) == 0){
+					ret.put("ifTimeOk", "noOk");
+					return ret;
+				};
 				//时间重叠判断
-				if(theTimeIsOk(arr)){
+				if(theTimeIsOk(arr) == 1){
 					ret.put("ifHaveOverlying", "noOk");
 					return ret;
 				};
 				pubPremiumAdd.setId(id);
 				pubPremiumAdd.setIsoperated("0");
+				pubPremiumAdd.setRulestatus("0");
 				dao.insertPubPremiumRule(insertPubPremiumRule(pubPremiumAdd));
 				insertDate(datess,id);
 			}else{
 				//为修改
 				//空值判断
+				//通过城市名称获取城市id
 				if(!isTheNUll(newDates,arr)){
 					ret.put("ifHaveNull", "noOk");
 					return ret;
 				};
+				/*//是否存在选城市、所选业务类型、所填日期范围完全相同
+				int abc = dao.getDateSame(pubPremiumAdd);
+				if(abc != 0){
+					ret.put("ifDateOk", "noOk");
+					return ret;
+				}*/
+				if(theTimeIsOk(arr) == 0){
+					ret.put("ifTimeOk", "noOk");
+					return ret;
+				};
 				//时间重叠判断
-				if(theTimeIsOk(arr)){
+				if(theTimeIsOk(arr) == 1){
 					ret.put("ifHaveOverlying", "noOk");
 					return ret;
 				};
@@ -297,8 +396,15 @@ public class PubPremiumRuleService {
 				dao.deletDateDetail(pubPremiumAdd.getId());
 				//插入原有id的数据
 				pubPremiumAdd.setIsoperated("1");
+				if(pubPremiumAdd.getRulestatus().equals("启用")){
+					pubPremiumAdd.setRulestatus("1");
+				}else{
+					pubPremiumAdd.setRulestatus("0");
+				}
 				dao.insertPubPremiumRule(insertPubPremiumRule(pubPremiumAdd));
 				insertDate(datess,pubPremiumAdd.getId());
+				PubPremiumParam pubPremiumParamId = dao.getById(pubPremiumParam);
+				insetRedis(pubPremiumParamId,2);
 		  }
 		}
 		//判断是什么保存
@@ -364,7 +470,8 @@ public class PubPremiumRuleService {
 				pubPremiumRule.setPlatformtype(0);
 				pubPremiumRule.setLeasescompanyid("");
 				pubPremiumRule.setStatus(1);
-				pubPremiumRule.setRulestatus(0);
+				pubPremiumRule.setRulestatus(Integer.parseInt(pubPremiumAdd.getRulestatus()));
+				pubPremiumRule.setRulestatus(Integer.parseInt(pubPremiumAdd.getRulestatus()));
 				pubPremiumRule.setStartdt(pubPremiumAdd.getStartdate());
 				pubPremiumRule.setEnddt(pubPremiumAdd.getEnddate());
 				pubPremiumRule.setCreater(pubPremiumAdd.getCreater());
@@ -438,8 +545,8 @@ public class PubPremiumRuleService {
 		}
 		return false;
 	}
-	//对时间进行判断有没有叠加的情况
-	public boolean theTimeIsOk(String [] week){
+	//判断开始时间比结束时间大返回0
+	public int theTimeIsOk(String [] week){
 		List<Integer> weekList = new ArrayList<Integer>();
 		for(int i=0;i<week.length;i=i+3){
 			String startdt = week[i].replaceAll(":","");
@@ -447,12 +554,13 @@ public class PubPremiumRuleService {
 			int start = Integer.parseInt(startdt);
 			int end = Integer.parseInt(enddt);
 			if(start>end){
-				return true;
+				return 0;
 			}else{
 				weekList.add(start);
 				weekList.add(end);
 			}
 		}
+		//对时间进行判断有没有叠加的情况
 		//循环比较list里面的数据小的比大的大或者大的比小的小
 		for(int m = 0;m<weekList.size();m = m+2){
 			for(int n = 0;n<weekList.size()-3-m;n=n+2){
@@ -461,18 +569,18 @@ public class PubPremiumRuleService {
 				int nextSmall = weekList.get(n+2+m);
 				int nextBig = weekList.get(n+3+m);
 				if(!(small>nextBig || big<nextSmall)){
-					return true;
+					return 1;
 				}
 			}
 		}
-		return false;
+		return 2;
 	}
-	public boolean timeOverlying(String [] week,List<String> checkValslist,String number){
+	public int timeOverlying(String [] week,List<String> checkValslist,String number){
 		/*List<Integer> weekListSmall = new ArrayList<Integer>();
 		List<Integer> weekIntListBig = new ArrayList<Integer>();*/
-		//首先判断此星期有没有被勾选
+		//首先判断此星期有没有被勾选 没有被勾选返回 3
 		if(!ifHaveTheWeek(checkValslist,number)){;
-		   return false;
+		   return 3;
 		}
 		return theTimeIsOk(week);
 	}
@@ -576,7 +684,10 @@ public class PubPremiumRuleService {
 	public PageBean getHistorydetail(PubPremiumHistory pubPremiumHistory){
 		PageBean pageBean = new PageBean();
 		List<PubPremiumHistory> list;
+		List<PubPremiumDetail> list2;
 		int iTotalRecords;
+		//判断是不是修改
+	 if(pubPremiumHistory.getOperationtype().equals("修改")){
 		//判断是按星期还是按日期
 		if(pubPremiumHistory.getRuletype().equals("按星期")){
 		  list = getHistorydetailList(pubPremiumHistory);
@@ -585,12 +696,28 @@ public class PubPremiumRuleService {
 		  list = getHistorydetailDateList(pubPremiumHistory);
 		  iTotalRecords = getHistorydetaiDatelCount(pubPremiumHistory);
 		}
-		pageBean.setsEcho(pubPremiumHistory.getsEcho());
-		int iTotalDisplayRecords = iTotalRecords;
-		pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
-		pageBean.setiTotalRecords(iTotalRecords);
-		pageBean.setAaData(list);
-		return pageBean;
+		 pageBean.setsEcho(pubPremiumHistory.getsEcho());
+			int iTotalDisplayRecords = iTotalRecords;
+			pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
+			pageBean.setiTotalRecords(iTotalRecords);
+			pageBean.setAaData(list);
+			return pageBean;
+	 }else{
+		 if(pubPremiumHistory.getRuletype().equals("按星期")){
+			 list2 = getdetailList(pubPremiumHistory);
+			 iTotalRecords = getdetailCount(pubPremiumHistory); 
+		 }else{
+			 list2 = getdetailDateList(pubPremiumHistory);
+			 iTotalRecords = getdetaiDatelCount(pubPremiumHistory);
+		 }
+		 pageBean.setsEcho(pubPremiumHistory.getsEcho());
+			int iTotalDisplayRecords = iTotalRecords;
+			pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
+			pageBean.setiTotalRecords(iTotalRecords);
+			pageBean.setAaData(list2);
+			return pageBean;
+	 }
+	
 	}
 	public List<PubPremiumHistory> getHistorydetailList(PubPremiumHistory pubPremiumHistory){
 		return dao.getHistorydetailList(pubPremiumHistory);
@@ -603,6 +730,18 @@ public class PubPremiumRuleService {
 	}
 	public int getHistorydetaiDatelCount(PubPremiumHistory pubPremiumHistory){
 		return dao.getHistorydetaiDatelCount(pubPremiumHistory);
+	}
+	public List<PubPremiumDetail> getdetailList(PubPremiumHistory pubPremiumHistory){
+		return dao.getdetailList(pubPremiumHistory);
+	}
+	public int getdetailCount(PubPremiumHistory pubPremiumHistory){
+		return dao.getdetailCount(pubPremiumHistory);
+	}
+	public List<PubPremiumDetail> getdetailDateList(PubPremiumHistory pubPremiumHistory){
+		return dao.getdetailDateList(pubPremiumHistory);
+	}
+	public int getdetaiDatelCount(PubPremiumHistory pubPremiumHistory){
+		return dao.getdetaiDatelCount(pubPremiumHistory);
 	}
 	//修改
 	public PubPremiumModify modify(PubPremiumParam pubPremiumParam)  {
@@ -652,4 +791,39 @@ public class PubPremiumRuleService {
 				   }
 		   }
 	}
+	//对修改，禁用，启用存入redis
+		public void insetRedis(PubPremiumParam pubPremiumParam,int operationtype){
+			//拼接key
+					String theKey ="PREMIUMRULE"+"_"+pubPremiumParam.getCitycode()+"_"+pubPremiumParam.getCartype()+"_"+pubPremiumParam.getPlatformtype()+"_"+pubPremiumParam.getId();
+			if(operationtype == 1){
+				JedisUtil.delKey(theKey);
+			}else if(operationtype ==0){
+				//获取规则信息
+				PubPremiumRule pubPremiumRule= dao.getRule(pubPremiumParam.getId());
+				List<PubPremiumRuleWeekdetail> weekList = dao.getWeekRule(pubPremiumParam.getId());
+				List<PubPremiumRuleDatedetail> dateList = dao.getDateRule(pubPremiumParam.getId());
+				/*pubPremiumRule.setWeekdetails(weekList);
+				pubPremiumRule.setDatedetails(dateList);*/
+				//拼接value
+//				JSONObject jsonRule = JSONObject.fromObject(pubPremiumRule);
+				JSONObject jsonRule = new JSONObject();
+				jsonRule.put("premiumrule", pubPremiumRule);
+				jsonRule.put("weekdetails", weekList);
+				jsonRule.put("datedetails", dateList);
+				JedisUtil.setString(theKey,jsonRule.toString());
+			}else{
+				JedisUtil.delKey(theKey);
+				//获取规则信息
+				PubPremiumRule pubPremiumRule= dao.getRule(pubPremiumParam.getId());
+				List<PubPremiumRuleWeekdetail> weekList = dao.getWeekRule(pubPremiumParam.getId());
+				List<PubPremiumRuleDatedetail> dateList = dao.getDateRule(pubPremiumParam.getId());
+				/*pubPremiumRule.setWeekdetails(weekList);
+				pubPremiumRule.setDatedetails(dateList);*/
+				JSONObject jsonRule = new JSONObject();
+				jsonRule.put("premiumrule", pubPremiumRule);
+				jsonRule.put("weekdetails", weekList);
+				jsonRule.put("datedetails", dateList);
+				JedisUtil.setString(theKey,jsonRule.toString());
+			}
+		}
 }

@@ -9,10 +9,10 @@ import javax.annotation.Resource;
 
 import com.szyciov.coupon.dao.OrderDao;
 import com.szyciov.coupon.dto.CouponOrderCacheDTO;
+import com.szyciov.coupon.dto.GenerateCouponDTO;
 import com.szyciov.coupon.param.OrderQueryParam;
 import com.szyciov.coupon.service.RedisService;
 import com.szyciov.coupon.service.generate.AbstractGenerateCoupon;
-import com.szyciov.coupon.util.GenerateLogUtil;
 import com.szyciov.dto.coupon.PubCouponActivityDto;
 import com.szyciov.entity.coupon.PubCoupon;
 import com.szyciov.entity.coupon.PubCouponRule;
@@ -65,18 +65,24 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
         param1.setTbName(tbName);
         param1.setCompanyid(activity.getLecompanyid());
         param1.setCityCode(param.getCityCode());
+        param1.setUserPhone(param.getUserPhone());
 
         //如果规则为按频次统计
         if(rule.getConsumetype().equals(CouponRuleTypeEnum.FRENQUENCY.value)){
             return this.validOrderCount(rule,param1,activity);
         }
 
-        //如果规则为按频次统计
+        //如果规则为按金额统计
         if(rule.getConsumetype().equals(CouponRuleTypeEnum.MONETARY.value)){
             return this.validOrderMoney(rule,param1,activity);
         }
 
 
+        return false;
+    }
+
+    @Override
+    protected boolean afterGenerated(GenerateCouponDTO dto) {
         return false;
     }
 
@@ -87,7 +93,7 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
      * @param activity
      * @return
      */
-    private boolean validOrderCount(PubCouponRule rule,
+    private synchronized boolean validOrderCount(PubCouponRule rule,
                                     OrderQueryParam param1,
                                     PubCouponActivityDto activity){
 
@@ -136,13 +142,13 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
         }else
         //如果是满于低于
         if(rule.getConsumefrequencytype().equals(CouponRuleTypeEnum.FULL_LOW.value)){
-            if(count >= rule.getConsumelowtimes() && count <= rule.getConsumehightimes()){
+            if(count >= rule.getConsumelowtimes() && count < rule.getConsumehightimes()){
                 isValid= true;
             }
         }else
         //如果是满于低于
         if(rule.getConsumefrequencytype().equals(CouponRuleTypeEnum.LOW.value)){
-            if(count<= rule.getConsumehightimes()){
+            if(count< rule.getConsumehightimes()){
                 isValid= true;
             }
         }
@@ -235,7 +241,7 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
      * @param activity
      * @return
      */
-    private boolean validOrderMoneySum(PubCouponRule rule,
+    private synchronized boolean validOrderMoneySum(PubCouponRule rule,
                                     OrderQueryParam param1,
                                     PubCouponActivityDto activity){
 
@@ -288,13 +294,13 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
         }else
         //如果是满于低于
         if(rule.getConsumemoneycycletype().equals(CouponRuleTypeEnum.FULL_LOW.value)){
-            if(moneySum >= rule.getConsumemoneycyclelow() && moneySum<= rule.getConsumemoneycyclefull()){
+            if(moneySum >= rule.getConsumemoneycyclelow() && moneySum< rule.getConsumemoneycyclefull()){
                 isValid= true;
             }
         }else
         //如果是满于低于
         if(rule.getConsumemoneycycletype().equals(CouponRuleTypeEnum.LOW.value)){
-            if(moneySum<= rule.getConsumemoneycyclefull()){
+            if(moneySum< rule.getConsumemoneycyclefull()){
                 isValid= true;
             }
         }
@@ -327,15 +333,17 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
                                        PubCouponActivityDto activity){
 
 
-
+        boolean isSaved = false;
         //从数据库获取订单次数
         List<Double> moneyList = orderDao.listOrderMoney(param1);
-
-        for (Double money : moneyList) {
-
-            if(validOrderMoney(rule,money)){
-
-                this.saveMoneyCoupon(activity,param1.getUserId());
+        if(moneyList!=null && moneyList.size()>0){
+            for (Double money : moneyList) {
+                if(money!=null) {
+                    if (validOrderMoney(rule, money)&&!isSaved) {
+                        isSaved = true;
+                        this.saveMoneyCoupon(activity, param1.getUserId(),param1.getUserPhone());
+                    }
+                }
             }
         }
     }
@@ -361,11 +369,13 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
      * @param userId
      */
     private void saveMoneyCoupon(PubCouponActivityDto activity,
-                                 String userId){
+                                 String userId,String phone){
 
         PubCoupon coupon = this.savePubCoupon(activity,userId);
         this.savePubCouponActivityUseCity(activity.getCitys(),coupon.getId());
         this.saveHaved(activity.getId(),userId,activity.getSendendtime());
+        GenerateCouponDTO dto = this.createDto(coupon);
+        super.phshMessage(dto,phone,userId);
     }
 
 
@@ -384,9 +394,10 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
 
         //获取出租车订单表
         if(CouponActivityEnum.SERVICE_TYPE_TAXI.code.equals(serviceType)) {
-            if(CouponActivityEnum.TARGET_ORGAN_USER.code.equals(ruletarget)){
-                return "org_taxiorder";
-            }
+            /**暂时租赁端没有出租车订单表 2017.08.15**/
+            //if(CouponActivityEnum.TARGET_ORGAN_USER.code.equals(ruletarget)){
+            //    return "org_taxiorder";
+            //}
             if(CouponActivityEnum.TARGET_USER.code.equals(ruletarget)){
                 return "op_taxiorder";
             }

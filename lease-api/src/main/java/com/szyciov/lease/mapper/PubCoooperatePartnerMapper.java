@@ -5,11 +5,11 @@ import com.szyciov.entity.Select2Entity;
 import com.szyciov.lease.entity.LeUserNews;
 import com.szyciov.lease.param.pubCoooperatePartner.DisableCoooperateParam;
 import com.szyciov.lease.param.pubCoooperatePartner.QueryPubCoooperateParam;
+import com.szyciov.lease.param.pubCoooperatePartner.QueryPubCoooperatePartnerLeaseCompanyParam;
 import com.szyciov.lease.param.pubCoooperatePartner.ReviewLeasecompanyParam;
 import com.szyciov.lease.vo.pubCoooperatePartner.QueryCooagreementViewVo;
-import com.szyciov.lease.vo.pubCoooperatePartner.QueryPubCoooperateVo;
-import com.szyciov.lease.param.pubCoooperatePartner.QueryPubCoooperatePartnerLeaseCompanyParam;
 import com.szyciov.lease.vo.pubCoooperatePartner.QueryLeaseCompanyAdminVo;
+import com.szyciov.lease.vo.pubCoooperatePartner.QueryPubCoooperateVo;
 
 import java.util.List;
 
@@ -32,4 +32,8 @@ public interface PubCoooperatePartnerMapper {
     List<QueryLeaseCompanyAdminVo> queryLeaseCompanyAdminByCoooId(String coooid);
 
     int insertLeUserNews(LeUserNews news);
+
+    int deleteLeaseOrganRef(String coooId);
+
+    int deleteVehicleModelRef(String coooId);
 }

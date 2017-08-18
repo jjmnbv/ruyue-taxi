@@ -68,20 +68,28 @@ public class TaxiOrderManageDao {
 		return mapper.getOpWasabnormalTaxiOrderCountByQuery(queryParam);
 	}
 	
-	public List<Map<String, Object>> getOpCompleteTaxiOrderListByQuery(OrderManageQueryParam queryParam) {
-		return mapper.getOpCompleteTaxiOrderListByQuery(queryParam);
-	}
-	
-	public int getOpCompleteTaxiOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return mapper.getOpCompleteTaxiOrderCountByQuery(queryParam);
-	}
-	
 	public List<Map<String, Object>> getOpWaitgatheringTaxiOrderListByQuery(OrderManageQueryParam queryParam) {
 		return mapper.getOpWaitgatheringTaxiOrderListByQuery(queryParam);
 	}
 	
 	public int getOpWaitgatheringTaxiOrderCountByQuery(OrderManageQueryParam queryParam) {
 		return mapper.getOpWaitgatheringTaxiOrderCountByQuery(queryParam);
+	}
+
+	public List<Map<String, Object>> getOpCompleteTaxiOrderListByQuery(OrderManageQueryParam queryParam) {
+		return mapper.getOpCompleteTaxiOrderListByQuery(queryParam);
+	}
+
+	public int getOpCompleteTaxiOrderCountByQuery(OrderManageQueryParam queryParam) {
+		return mapper.getOpCompleteTaxiOrderCountByQuery(queryParam);
+	}
+
+	public List<Map<String, Object>> getOpCancelTaxiOrderListByQuery(OrderManageQueryParam queryParam) {
+		return mapper.getOpCancelTaxiOrderListByQuery(queryParam);
+	}
+
+	public int getOpCancelTaxiOrderCountByQuery(OrderManageQueryParam queryParam) {
+		return mapper.getOpCancelTaxiOrderCountByQuery(queryParam);
 	}
 	
 	public Map<String, Object> getOpTaxiOrderByOrderno(String orderno) {
@@ -183,5 +191,9 @@ public class TaxiOrderManageDao {
     public PubDriver getPubDriverById(String driverid) {
         return mapper.getPubDriverById(driverid);
     }
+
+    public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam queryParam) {
+		return mapper.getBelongCompanySelect(queryParam);
+	}
 	
 }

@@ -60,7 +60,19 @@ public class LeLeasescompanyController extends BaseController {
 	public LeLeasescompany getLeLeasescompany(@PathVariable String id) {
 		return leLeasescompanyService.getLeLeasescompany(id);
 	}
-	
+	/**
+	 * <p>
+	 * 
+	 * </p>
+	 *
+	 * @param 
+	 * @return
+	 */
+	@RequestMapping(value = "api/LeLeasescompany/GetLeLeasescompanyById/{id}", method = RequestMethod.GET)
+	@ResponseBody
+	public LeLeasescompany getLeLeasescompanyById(@PathVariable String id) {
+		return leLeasescompanyService.getLeLeasescompanyById(id);
+	}
 	/**
 	 * <p>
 	 * 

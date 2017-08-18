@@ -19,7 +19,7 @@
 		<link rel="stylesheet" type="text/css" href="content/css/laterchange.css" />
 		<link rel="stylesheet" type="text/css" href="content/plugins/toastr/toastr.css" />
 		<link rel="stylesheet" type="text/css" href="content/plugins/cityselect1/cityselect1.css">
-		<link rel="stylesheet" type="text/css" href="css/opAccountRules/ztimepicker1.css">
+		<link rel="stylesheet" type="text/css" href="css/pubPremiumRule/ztimepicker1.css">
 		<link rel="stylesheet" type="text/css" href="content/plugins/bootstrap-datepicker/bootstrap-datetimepicker.css"/>
 		
 		<script type="text/javascript" src="content/js/jquery.js"></script>
@@ -57,14 +57,15 @@
 		#nightstarttime2 label.error {margin-left: 5%!important;}
 		.ztimepicker{position: relative;width: 150px;}
     </style>
-<body>
+<body style="overflow-x:hidden;overflow-y:hidden">
 	<div class="crumbs">
 		<a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > <a class="breadcrumb" href="PubPremiumRule/Index">溢价规则</a> > <span id="sysversionPageTitle">${addOrModify}</span>
 		<button class="SSbtn red_q back" onclick="callBack()">返回</button>
 	</div>
 	<div class="content" style="padding-top:30px;">
 	<input id="aaid" name="aaid" value="${pubPremiumParam.id}"type="hidden"/>
-	<input id="aaruletype" name="aaid" value="${pubPremiumParam.ruletype}"type="hidden"/>
+	<input id="aaruletype" name="aaruletype" value="${pubPremiumParam.ruletype}"type="hidden"/>
+	<input id="aarulestatus" name="aarulestatus" value="${pubPremiumParam.rulestatus}"type="hidden"/>
 		  <form id="editPubPremiumRuleForm" class="form-account" method="post">
 			<div class="row form" style="padding-top: 30px;">
 			<div class="col-6">
@@ -228,7 +229,7 @@
 						</div>
 						<div class="col-5" id="nightstarttime2">
 							<div class="ztimepicker">
-								<input type="text" readonly value="${opAccountrules.nightendtime}" class="ztimepicker_input" name="nightendtime" id="fourtimeE"placeholder="请选择时间"/>
+								<input type="text" readonly value="" class="ztimepicker_input" name="nightendtime" id="fourtimeE"placeholder="请选择时间"/>
 								<div class="ztimebox">
 									<div class="ztimebox_s">
 										<ul class="zhour">
@@ -248,7 +249,7 @@
             <td>  <div class="row">
                         <div class="col-5" id="nightstarttime1">
 		                    <div class="ztimepicker" >
-								<input type="text" readonly value="${opAccountrules.nightstarttime}" class="ztimepicker_input" name="nightstarttime" id="fivetimeS"placeholder="请选择时间"/>
+								<input type="text" readonly value="" class="ztimepicker_input" name="nightstarttime" id="fivetimeS"placeholder="请选择时间"/>
 								<div class="ztimebox">
 									<div class="ztimebox_s">
 										<ul class="zhour">
@@ -264,7 +265,7 @@
 						</div>
 						<div class="col-5" id="nightstarttime2">
 							<div class="ztimepicker">
-								<input type="text" readonly value="${opAccountrules.nightendtime}" class="ztimepicker_input" name="nightendtime" id="fivetimeE"placeholder="请选择时间"/>
+								<input type="text" readonly value="" class="ztimepicker_input" name="nightendtime" id="fivetimeE"placeholder="请选择时间"/>
 								<div class="ztimebox">
 									<div class="ztimebox_s">
 										<ul class="zhour">
@@ -284,7 +285,7 @@
             <td>  <div class="row">
                         <div class="col-5" id="nightstarttime1">
 		                    <div class="ztimepicker" >
-								<input type="text" readonly value="${opAccountrules.nightstarttime}" class="ztimepicker_input" name="nightstarttime" id="sixtimeS"placeholder="请选择时间"/>
+								<input type="text" readonly value="" class="ztimepicker_input" name="nightstarttime" id="sixtimeS"placeholder="请选择时间"/>
 								<div class="ztimebox">
 									<div class="ztimebox_s">
 										<ul class="zhour">
@@ -300,7 +301,7 @@
 						</div>
 						<div class="col-5" id="nightstarttime2">
 							<div class="ztimepicker">
-								<input type="text" readonly value="${opAccountrules.nightendtime}" class="ztimepicker_input" name="nightendtime" id="sixtimeE"placeholder="请选择时间"/>
+								<input type="text" readonly value="" class="ztimepicker_input" name="nightendtime" id="sixtimeE"placeholder="请选择时间"/>
 								<div class="ztimebox">
 									<div class="ztimebox_s">
 										<ul class="zhour">
@@ -349,7 +350,7 @@
 						</div>
 					</div>
             </td>
-            <td><input id="sevenOk"style="text-align: center;"type="text" placeholder="溢价倍率"/></td>
+            <td><input id="sevenOk"style="text-align: center;"type="text" placeholder="溢价倍率" maxlength = "3" onBlur="overFormat(this)" onkeypress="pageOnlyNumber(event)" onkeyup="clearNoNum2(this)"/></td>
             <td>&nbsp&nbsp<a id="addSeven" href="javascript:void(0)"onclick="addSeven(this)"><font color="#8CEA00">新增</font></a>
             <a style="display:none"id="deleteSeven" href="javascript:void(0)"onclick="deleteSeven(this)"><font color="red">删除</font></a></td></tr>
             <tr style="display:none">
@@ -424,7 +425,7 @@
 		  </div>
 	</div>
 	<script type="text/javascript" src="js/pubPremiumRule/add.js"></script>
-	<script type="text/javascript" src="js/opAccountRules/ztimepicker1.js"></script>
+	<script type="text/javascript" src="js/pubPremiumRule/ztimepicker1.js"></script>
 	<script type="text/javascript">
 		var base = document.getElementsByTagName("base")[0].getAttribute("href");
 	</script>

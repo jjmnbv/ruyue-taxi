@@ -106,20 +106,20 @@ function initForm() {
         }
     });
     
-    $.ajax({
-        type: "POST",
-        dataType: "json",
-        url: $("#baseUrl").val() + "driverVehicleBind/getBelongLeasecompany",
-        data: "{}",
-        contentType: "application/json; charset=utf-8",
-        async: false,
-        success: function (result) {
-            var message = result.message == null ? result : result.message;
-            if (result.status == "0") {
-                loadLeasecompany(result.data);
-            }
-        }
-    });
+    // $.ajax({
+    //     type: "POST",
+    //     dataType: "json",
+    //     url: $("#baseUrl").val() + "driverVehicleBind/getBelongLeasecompany",
+    //     data: "{}",
+    //     contentType: "application/json; charset=utf-8",
+    //     async: false,
+    //     success: function (result) {
+    //         var message = result.message == null ? result : result.message;
+    //         if (result.status == "0") {
+    //             loadLeasecompany(result.data);
+    //         }
+    //     }
+    // });
 
 
     $('.searchDate').datetimepicker({
@@ -206,7 +206,7 @@ function manualOrderdataGrid() {
             {mDataProp: "vehclineName", sTitle: "品牌车系", sClass: "center", sortable: true },
             {mDataProp: "color", sTitle: "颜色", sClass: "center", sortable: true },
             {mDataProp: "cityStr", sTitle: "登记城市", sClass: "center", sortable: true },
-            {mDataProp: "belongLeasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true },
+            // {mDataProp: "belongLeasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true },
             {mDataProp: "boundstate", sTitle: "绑定状态", sClass: "center", sortable: true },
             {mDataProp: "vehiclestatus", sTitle: "营运状态", sClass: "center", sortable: true},
             {mDataProp: "driverid", sTitle: "排班状态", sClass: "center", sortable: true ,

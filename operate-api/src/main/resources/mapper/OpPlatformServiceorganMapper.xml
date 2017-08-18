@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpPlatformServiceorganMapper">
+	
+	<!-- 服务机构 -->
+	<resultMap type="com.szyciov.op.entity.OpPlatformServiceorgan" id="OpPlatformServiceorgan">
+		<id property="id" column="id"></id>
+	</resultMap>
+
+
+	<!-- 分页查询服务机构列表-->
+	<select id="getListByQuery" parameterType="QueryParam" resultMap="OpPlatformServiceorgan">
+		SELECT * FROM op_platform_serviceorgan
+		WHERE status = 1
+
+		<if test="address != null and address!=''">
+			AND address=#{address}
+		</if>
+
+		<if test="servicename!=null and servicename!=''">
+			AND servicename LIKE "%"#{servicename}"%"
+		</if>
+
+		<if test="responsiblename!=null and responsiblename!=''">
+			AND responsiblename LIKE "%"#{responsiblename}"%"
+		</if>
+
+		<if test="responsiblephone!=null and responsiblephone!=''">
+			AND responsiblephone LIKE "%"#{responsiblephone}"%"
+		</if>
+
+		ORDER BY op_platform_serviceorgan.updatetime DESC
+		limit #{iDisplayStart},#{iDisplayLength}
+	</select>
+	<!--查询机构信息 BY 机构ID-->
+	<select id="getById" resultType="com.szyciov.op.vo.OpPlatformServiceorganVo" parameterType="string">
+		SELECT op_platform_serviceorgan.*,(SELECT city FROM pub_cityaddr WHERE id=op_platform_serviceorgan.address) addressName FROM op_platform_serviceorgan
+		WHERE op_platform_serviceorgan.status = 1 AND id=#{id}
+	</select>
+
+	<select id="exportExcel" resultType="com.szyciov.op.vo.OpPlatformServiceorganVo" parameterType="QueryParam">
+		SELECT op_platform_serviceorgan.*,(select city FROM pub_cityaddr where id=op_platform_serviceorgan.address) addressName FROM op_platform_serviceorgan
+		WHERE op_platform_serviceorgan.status = 1
+
+		<if test="address!=null and address!=''">
+			AND address=#{address}
+		</if>
+
+		<if test="servicename!=null and servicename!=''">
+			AND servicename LIKE "%"#{servicename}"%"
+		</if>
+
+		<if test="responsiblename!=null and responsiblename!=''">
+			AND responsiblename LIKE "%"#{responsiblename}"%"
+		</if>
+
+		<if test="responsiblephone!=null and responsiblephone!=''">
+			AND responsiblephone LIKE "%"#{responsiblephone}"%"
+		</if>
+		ORDER BY op_platform_serviceorgan.updatetime DESC
+	  	 limit 0,5000
+	</select>
+
+
+	<!--查询服务机构数量-->
+	<select id="getListCountByQuery" parameterType="QueryParam" resultType="int">
+		SELECT count(*) FROM op_platform_serviceorgan
+		WHERE status = 1
+
+		<if test="address!=null and address!=''">
+			AND address=#{address}
+		</if>
+
+		<if test="servicename!=null and servicename!=''">
+			AND servicename LIKE "%"#{servicename}"%"
+		</if>
+
+		<if test="responsiblename!=null and responsiblename!=''">
+			AND responsiblename LIKE "%"#{responsiblename}"%"
+		</if>
+
+		<if test="responsiblephone!=null and responsiblephone!=''">
+			AND responsiblephone LIKE "%"#{responsiblephone}"%"
+		</if>
+	</select>
+
+
+	<!--删除服务机构-->
+	<update id = "delete" parameterType="string"  >
+	  	UPDATE op_platform_serviceorgan SET op_platform_serviceorgan.status=2,updatetime=now(),updater=#{updater}  WHERE id = #{id}
+	</update>
+
+
+	<!--增加服务机构-->
+	<insert id="create" parameterType="OpPlatformServiceorgan">
+		INSERT INTO op_platform_serviceorgan(id,platformid,servicename,serviceno,responsiblename,responsiblephone,
+		managername,managerphone,contactphone,createdate,address,detailaddresscity,detailaddress,mailaddresscity,mailaddress,createtime,updatetime,creater,updater,status)
+		VALUES (#{id},#{platformid},#{servicename},#{serviceno},#{responsiblename},#{responsiblephone},#{managername},#{managerphone},#{contactphone},#{createdate},#{address},#{detailaddresscity},#{detailaddress},#{mailaddresscity},#{mailaddress},now(),now(),#{creater},#{updater},1)
+	</insert>
+
+	<!--更新服务机构-->
+	<update id = "update" parameterType="OpPlatformServiceorgan">
+		UPDATE op_platform_serviceorgan
+		SET platformid=#{platformid},servicename=#{servicename},serviceno=#{serviceno},
+		responsiblename=#{responsiblename},responsiblephone=#{responsiblephone},
+		managername=#{managername},managerphone=#{managerphone},contactphone=#{contactphone},
+		createdate=#{createdate},detailaddresscity=#{detailaddresscity},address=#{address},detailaddress=#{detailaddress},mailaddresscity=#{mailaddresscity},
+		mailaddress=#{mailaddress},updatetime=now(),updater=#{updater}
+		WHERE op_platform_serviceorgan.id = #{id}
+	</update>
+
+</mapper>

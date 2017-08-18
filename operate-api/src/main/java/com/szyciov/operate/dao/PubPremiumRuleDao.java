@@ -35,7 +35,13 @@ public class PubPremiumRuleDao {
 	     public List<PubDictionary> getCity(){
 	    	 return mapper.getCity();
 	     }
-	     public int ruleConflict(PubPremiumParam pubPremiumParam){
+	     public List<PubDictionary> getWeeks(String id){
+		 		return mapper.getWeeks(id);
+		 	}
+	     public PubPremiumParam getRulename(String id)  {
+	 		return mapper.getRulename(id);
+	 	}
+	     public List<PubPremiumParam> ruleConflict(PubPremiumParam pubPremiumParam){
 	    	 return mapper.ruleConflict(pubPremiumParam);
 	     }
 	     public PubPremiumParam getById(PubPremiumParam pubPremiumParam){
@@ -124,5 +130,26 @@ public class PubPremiumRuleDao {
 		}
 		public void deletWeekDetail(String id){
 			mapper.deletWeekDetail(id);
+		}
+		public PubPremiumRule getRule(String id){
+			return mapper.getRule(id);
+		}
+		public List<PubPremiumRuleWeekdetail> getWeekRule(String id){
+			return mapper.getWeekRule(id);
+		}
+		public List<PubPremiumRuleDatedetail> getDateRule(String id){
+			return mapper.getDateRule(id);
+		}
+		public List<PubPremiumDetail> getdetailList(PubPremiumHistory pubPremiumHistory){
+			return mapper.getdetailList(pubPremiumHistory);
+		}
+		public int getdetailCount(PubPremiumHistory pubPremiumHistory){
+			return mapper.getdetailCount(pubPremiumHistory);
+		}
+		public List<PubPremiumDetail> getdetailDateList(PubPremiumHistory pubPremiumHistory){
+			return mapper.getdetailDateList(pubPremiumHistory);
+		}
+		public int getdetaiDatelCount(PubPremiumHistory pubPremiumHistory){
+			return mapper.getdetaiDatelCount(pubPremiumHistory);
 		}
 }

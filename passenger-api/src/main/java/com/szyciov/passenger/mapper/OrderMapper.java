@@ -115,4 +115,10 @@ public interface OrderMapper {
 
 	void updateCancelReson4OpNetCar(Map<String, Object> pp);
 
+	Map<String, Object> getUnpayOrder4OrgNetCar_cancel(Map<String, Object> params);
+
+	Map<String, Object> getUnpayOrder4OpNetCar_cancel(Map<String, Object> params);
+
+	Map<String, Object> getUnpayOrder4OpTaxi_cancel(Map<String, Object> params);
+
 }

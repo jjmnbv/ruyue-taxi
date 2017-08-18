@@ -54,7 +54,6 @@
 			tbody tr td:first-child{
 				text-align:left;
 			}
-			.col-3{width: 22%;}
 		</style>
 	</head>
 	<body  class="ordermanage_css_body">
@@ -177,7 +176,7 @@
 		            		<select id="reviewpersonAgain" name="reviewpersonAgain" style="width: 60%">
 		            			<option value="">选择复核方</option>
 		            			<option value="1">司机</option>
-		            			<option value="2">下单人</option>
+		            			<option value="2">乘客</option>
 		            		</select>
 		            	</div>
 		            	<div class="row">

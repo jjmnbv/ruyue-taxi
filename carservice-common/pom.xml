@@ -367,7 +367,7 @@
 		  <artifactId>alipay_jar</artifactId>
 		  <version>1.0</version>
 		</dependency>
-		
+
 		<!-- ******************start unit test****************** -->
 		<dependency>
 			<groupId>junit</groupId>

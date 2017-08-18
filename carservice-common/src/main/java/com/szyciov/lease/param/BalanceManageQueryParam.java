@@ -21,7 +21,7 @@ public class BalanceManageQueryParam extends QueryParam {
 	/**
 	 * 车牌号
 	 */
-	public String plateno;
+	public String fullplateno;
 	
 	/**
 	 * 资格证号
@@ -74,12 +74,12 @@ public class BalanceManageQueryParam extends QueryParam {
 		this.orderno = orderno;
 	}
 
-	public String getPlateno() {
-		return plateno;
+	public String getFullplateno() {
+		return fullplateno;
 	}
 
-	public void setPlateno(String plateno) {
-		this.plateno = plateno;
+	public void setFullplateno(String fullplateno) {
+		this.fullplateno = fullplateno;
 	}
 
 	public String getJobnum() {

@@ -42,7 +42,7 @@
     <form id="searchForm">
     <label>时间</label>
     <div class="datebox" style="width: 20%;">
-        <input type="text" id="startTime" name="startTime" placeholder="" class="date" readonly="readonly"><input type="text" id="endTime" name="endTime" placeholder="" class="date" style="padding-left: 10px;" readonly="readonly">
+        <input type="text" id="startTime" name="startTime" placeholder="开始时间" class="date" readonly="readonly"><input type="text" id="endTime" name="endTime" placeholder="结束时间" class="date" style="padding-left: 10px;" readonly="readonly">
     </div>
    	<label>类型</label>
 	<div class="select_box" style="height: 40px;line-height: 38px;width: 20%;;margin-left: -4px;">

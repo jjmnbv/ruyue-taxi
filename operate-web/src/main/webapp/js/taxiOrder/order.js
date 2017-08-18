@@ -553,6 +553,7 @@ function getCost() {
 	params.onLat = mapParam.onaddrlat;
 	params.offLng = mapParam.offaddrlng;
 	params.offLat = mapParam.offaddrlat;
+	var paymethod = $("#paymethod").find("input[type='radio']:checked").val();
 	
 	if (params.onLng == 0 || params.onLat == 0 || params.offLng == 0
 			|| params.offLat == 0 || $("#onAddress").val() == ""
@@ -561,6 +562,8 @@ function getCost() {
 	}
 	var data = {
 		city : $("#onCity").val(),
+		usetype : 2,
+		paymethod : paymethod,
 		schedulefee : $("#schedulefee").val(),
 		meterrange : $("#meterrange").val(),
 		onaddrlng:params.onLng,
@@ -577,6 +580,20 @@ function getCost() {
         success : function(result) {
         	var status = result.status;
         	if(status == 0) {
+	    		if(result.taxiOrderCost.premiumrate > 1){    //是否是溢价时段
+	    			$("#premiumrateSpan").show();
+	    			$("#premiumrate").text(result.taxiOrderCost.premiumrate);
+	    		}else{
+	    			$("#premiumrateSpan").hide();
+	    		}
+	    		if(result.taxiOrderCost.couponprice > 0){    //是否有可用优惠券
+	    			$("#couponpriceSpan").show();
+	    			$("#couponprice").text(result.taxiOrderCost.couponprice)  + "元";
+	    			//优惠券金额需要页面单独计算
+	    			result.taxiOrderCost.cost = (result.taxiOrderCost.cost - result.taxiOrderCost.couponprice) + "元";
+	    		}else{
+	    			$("#couponpriceSpan").hide();
+	    		}
         		$("#estimateCostDiv").show();
         		$("#estimatedcost").text(result.taxiOrderCost.cost + "元");
         	} else {

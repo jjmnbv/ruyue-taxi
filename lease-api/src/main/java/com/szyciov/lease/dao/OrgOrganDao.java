@@ -8,12 +8,15 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Repository;
 
+import com.szyciov.entity.PubCoooperate;
 import com.szyciov.lease.entity.OrgOrgan;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
 import com.szyciov.lease.entity.OrgOrganCreditRecord;
 import com.szyciov.lease.entity.PubCityAddr;
+import com.szyciov.lease.entity.PubLeaseOrganRelation;
 import com.szyciov.lease.mapper.OrgOrganMapper;
 import com.szyciov.lease.param.OrgOrganQueryParam;
+import com.szyciov.op.param.PubCoooperateQueryParam;
 import com.szyciov.org.entity.OrgUser;
 
 @Repository("OrgOrganDao")
@@ -122,5 +125,36 @@ public class OrgOrganDao {
 	
 	public void DeleteChInfo(String id){
 		mapper.DeleteChInfo(id);
+	}
+
+	public List<Map<String, Object>> queryOrgUserByOrganid(String id) {
+		return mapper.queryOrgUserByOrganid(id);
 	};
+	public List<PubCoooperate> getPubCoooperateList(PubCoooperateQueryParam queryParam){
+        return mapper.getPubCoooperateList(queryParam);
+    };
+
+    public int getPubCoooperateListCount(PubCoooperateQueryParam queryParam){
+        return mapper.getPubCoooperateListCount(queryParam);
+    };
+    
+    public void insertPubLeaseOrganRelation(PubLeaseOrganRelation po){
+    	mapper.insertPubLeaseOrganRelation(po);
+    };
+    
+    public void deletePubLeaseOrganRelation(String id){
+    	mapper.deletePubLeaseOrganRelation(id);
+    };
+    
+    public List<PubLeaseOrganRelation> getPubLeaseOrganRelationById(String id){
+    	return mapper.getPubLeaseOrganRelationById(id);
+    };
+    
+    public List<PubLeaseOrganRelation> getIndexList(String id){
+    	return mapper.getIndexList(id);
+    };
+    
+    public List<Map<String, Object>> getPubCoooperateSelect(PubCoooperateQueryParam queryParam){
+    	return mapper.getPubCoooperateSelect(queryParam);
+    };
 }

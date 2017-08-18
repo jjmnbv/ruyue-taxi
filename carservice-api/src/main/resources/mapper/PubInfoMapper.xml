@@ -122,10 +122,30 @@
 		order by
 			pub_provinceaddr.sortno desc, pub_provinceaddr.cityinitials, pub_cityaddr.sortno desc, pub_cityaddr.cityinitials
 	</select>
+
+
+
+	<select id="getCitySelect2" resultType="PubCityAddr">
+		select * from pub_cityaddr where status = 1
+		ORDER BY convert(pub_cityaddr.city using gbk) ASC
+	</select>
 	
 	<!-- 根据ID获取城市 -->
 	<select id="getCityById" parameterType="string" resultType="PubCityAddr">
 		select * from pub_cityaddr where id = #{id} and status = 1
+	</select>
+	<!--获取城市id-->
+	<select id="getCityIdByName" parameterType="string" resultType="map" >
+		select id from pub_cityaddr where status = 1 AND city=#{name}
+	</select>
+
+	<!---->
+	<select id="getSearchCitySelect" parameterType="PubCityAddr" resultType="map" >
+		select id,city as text from pub_cityaddr where status = 1
+		<if test='null != city and "" != city'>
+			and pub_cityaddr.city like concat("%", #{city}, "%")
+		</if>
+		limit 0,12
 	</select>
 	
 </mapper>

@@ -13,6 +13,7 @@ import javax.annotation.Resource;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.szyciov.dto.coupon.PubCouponActivityDto;
@@ -52,6 +53,7 @@ public class CouponDistritubeService {
 	}
 
 	// 新增抵扣券活动
+	@Transactional(rollbackFor=Exception.class)
 	public Map<String, Object> addCouponActivity(PubCouponActivityDto activityDto) {
 		Map<String, Object> result = new HashMap<>();
 
@@ -109,7 +111,7 @@ public class CouponDistritubeService {
 		// 人工发券 插入优惠卷
 		if (activityDto.getSendruletype() != null && activityDto.getSendruletype().equals(6)
 				&& activityDto.getUsers() != null) {
-			String[] users = activityDto.getUsers().split(",");
+			String[] users = activityDto.getUsers().split(";");
 			List<PubCouponSendUser> userList = null;
 			PubCouponSendUser user = null;
 			if (users != null && users.length > 0) {
@@ -117,7 +119,10 @@ public class CouponDistritubeService {
 				for (String u : users) {
 					user = new PubCouponSendUser();
 					user.setId(GUIDGenerator.newGUID());
-					user.setPhone(u);
+					user.setUserid(u.split(",")[0]);
+					user.setPhone(u.split(",")[1]);
+					user.setPlatformtype(0);
+					user.setLecompanyid(activityDto.getLecompanyid());
 					user.setCouponactivityidref(id);
 					userList.add(user);
 				}

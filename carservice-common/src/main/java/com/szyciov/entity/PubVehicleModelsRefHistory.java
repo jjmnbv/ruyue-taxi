@@ -4,54 +4,66 @@ import java.util.Date;
 
 public class PubVehicleModelsRefHistory {
     /**
-    主键
+     * 主键
      */
     private String id;
 
     /**
-    所属租赁,数据归属
+     * 所属租赁,数据归属
      */
     private String companyid;
 
     /**
-    租赁公司
+     * 租赁公司
      */
     private String leasecompanyid;
 
     /**
-    车辆id
+     * 车辆id
      */
     private String vehicleid;
 
     /**
-    车型id
+     * 车型id
      */
     private String vehiclemodelsid;
 
     /**
-    创建时间
+     * 创建时间
      */
     private Date createtime;
 
     /**
-    更新时间
+     * 更新时间
      */
     private Date updatetime;
 
     /**
-    创建人
+     * 创建人
      */
     private String creater;
 
     /**
-    更新人
+     * 更新人
      */
     private String updater;
 
     /**
-    数据状态
+     * 数据状态
      */
     private Integer status;
+    /**
+     * 0-加盟资源关联，1-自有资源关联，默认为0
+     */
+    private int associationtype;
+
+    public int getAssociationtype() {
+        return associationtype;
+    }
+
+    public void setAssociationtype(int associationtype) {
+        this.associationtype = associationtype;
+    }
 
     /**
      * get 主键
@@ -61,7 +73,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 主键
      */
     public void setId(String id) {
@@ -76,7 +87,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 所属租赁,数据归属
      */
     public void setCompanyid(String companyid) {
@@ -91,7 +101,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 租赁公司
      */
     public void setLeasecompanyid(String leasecompanyid) {
@@ -106,7 +115,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 车辆id
      */
     public void setVehicleid(String vehicleid) {
@@ -121,7 +129,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 车型id
      */
     public void setVehiclemodelsid(String vehiclemodelsid) {
@@ -136,7 +143,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 创建时间
      */
     public void setCreatetime(Date createtime) {
@@ -151,7 +157,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 更新时间
      */
     public void setUpdatetime(Date updatetime) {
@@ -166,7 +171,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 创建人
      */
     public void setCreater(String creater) {
@@ -181,7 +185,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 更新人
      */
     public void setUpdater(String updater) {
@@ -196,7 +199,6 @@ public class PubVehicleModelsRefHistory {
     }
 
     /**
-     *
      * set 数据状态
      */
     public void setStatus(Integer status) {

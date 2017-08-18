@@ -36,33 +36,41 @@
 		</if>
 	</sql>
 	
-	<!-- 待人工派单 -->
+	<!-- 待接订单 -->
 	<select id="getOpLabourOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
 		select
-			op_order.orderno, op_order.ordertype, op_order.userid, pe_user.nickname, pe_user.account, op_order.passengers, op_order.passengerphone,
-			date_format(op_order.undertime, '%Y/%m/%d %H:%i') undertime,
-			date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,
-			op_order.pushnumber, op_order.orderstatus,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.oncity) oncity,
-			op_order.oncity, op_order.onaddress,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.offcity) offcity,
-			op_order.offcity, op_order.offaddress
+			op_order.orderno, op_order.ordertype, op_order.userid, pe_user.nickname, pe_user.account,
+            op_order.passengers, op_order.passengerphone, op_order.undertime, op_order.usetime,
+			op_order.pushnumber, op_order.orderstatus, op_order.usetype,
+            getCityStr(op_order.oncity) oncityname, op_order.oncity, op_order.onaddress,
+            getCityStr(op_order.offcity) offcityname, op_order.offcity, op_order.offaddress
 		from
 			op_order left join pe_user on op_order.userid = pe_user.id
 		where
 			op_order.status = 1 and op_order.orderstatus in ("0", "1")
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.undertime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.undertime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
 			<include refid="getOrderCitySQL"></include>
 		order by
 			op_order.createtime asc
@@ -74,76 +82,81 @@
 		from
 			op_order
 		where
-			op_order.status = 1 and op_order.orderstatus in ("0", "1")
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-			<include refid="getOrderCitySQL"></include>
+            op_order.status = 1 and op_order.orderstatus in ("0", "1")
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.undertime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.undertime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+            <include refid="getOrderCitySQL"></include>
 	</select>
 	
 	<!-- 当前订单 -->
 	<select id="getOpCurrentOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
 		select
-			op_order.orderno, op_order.ordertype, op_order.orderstatus, op_order.userid, pe_user.nickname, pe_user.account,
-			op_order.passengers, op_order.passengerphone, op_order.driverid,
+			op_order.orderno, op_order.ordertype, op_order.orderstatus, op_order.userid, pe_user.nickname, pe_user.account, op_order.usetype,
+			op_order.passengers, op_order.passengerphone, op_order.driverid, op_order.usetime, op_order.belongleasecompany, op_order.companyid,
 			(select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = op_order.driverid) drivername,
-			date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,
-            <!-- le_leasescompany.shortname,-->
-            ifnull(pub_dictionary.text, '运管平台') shortname
+            getCityStr(op_order.oncity) oncityname, op_order.oncity, op_order.onaddress,
+            getCityStr(op_order.offcity) offcityname, op_order.offcity, op_order.offaddress,
+            (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_order.belongleasecompany) belongcompanyname
 		from
 			op_order left join pe_user on op_order.userid = pe_user.id
-			left join le_leasescompany on op_order.companyid = le_leasescompany.id
-            left join pub_dictionary on pub_dictionary.id = op_order.belongleasecompany
 		where
 			op_order.status = 1 and op_order.orderstatus in ('2', '3', '4', '5', '6')
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != orderstatus and "" != orderstatus'>
-				and op_order.orderstatus = #{orderstatus}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != driverid and "" != driverid'>
-				and op_order.driverid = #{driverid}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
-            <if test='null != belongleasecompany and "" != belongleasecompany'>
-                <if test='"运管平台" == belongleasecompany'>
-                    and ifnull(op_order.belongleasecompany, '') = ''
-                </if>
-                <if test='"运管平台" != belongleasecompany'>
-                    and op_order.belongleasecompany = #{belongleasecompany}
-                </if>
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
             </if>
-			<if test='null != minUseTime and "" != minUseTime'>
-				<![CDATA[
-					and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
-			<if test='null != maxUseTime and "" != maxUseTime'>
-				<![CDATA[
-					and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+
+            <if test='null != orderstatus and "" != orderstatus'>
+                and op_order.orderstatus = #{orderstatus}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
 			<include refid="getOrderCitySQL"></include>
 		order by
 			op_order.orderstatus asc,
@@ -157,116 +170,103 @@
 		from
 			op_order
 		where
-			op_order.status = 1 and op_order.orderstatus in ('2', '3', '4', '5', '6')
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != orderstatus and "" != orderstatus'>
-				and op_order.orderstatus = #{orderstatus}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != driverid and "" != driverid'>
-				and op_order.driverid = #{driverid}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
+            op_order.status = 1 and op_order.orderstatus in ('2', '3', '4', '5', '6')
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
             </if>
-            <if test='"运管平台" != belongleasecompany'>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
                 and op_order.belongleasecompany = #{belongleasecompany}
             </if>
-        </if>
-			<if test='null != minUseTime and "" != minUseTime'>
-				<![CDATA[
-					and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
-			<if test='null != maxUseTime and "" != maxUseTime'>
-				<![CDATA[
-					and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
-			<include refid="getOrderCitySQL"></include>
+
+            <if test='null != orderstatus and "" != orderstatus'>
+                and op_order.orderstatus = #{orderstatus}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+            <include refid="getOrderCitySQL"></include>
 	</select>
 
 	<!-- 待复核订单 -->
 	<select id="getOpAbnormalOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
 		select
 			op_order.orderno, op_order.ordertype, op_order.paymentstatus, op_order.orderstatus, op_order.reviewperson,
-			op_order.orderamount, op_order.mileage, op_order.pricecopy,
-			date_format(op_order.starttime, '%Y/%m/%d %H:%i:%s') starttime,
-			date_format(op_order.endtime, '%Y/%m/%d %H:%i:%s') endtime,
+			op_order.orderamount, op_order.mileage, op_order.pricecopy, op_order.starttime, op_order.endtime, op_order.usetime,
 			op_order.userid, pe_user.nickname, pe_user.account, op_order.passengers, op_order.passengerphone, op_order.driverid,
 			(select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = op_order.driverid) drivername,
-			date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.oncity) oncity,
-			op_order.oncity, op_order.onaddress,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.offcity) offcity,
-			op_order.offcity, op_order.offaddress,
-            <!-- le_leasescompany.shortname, -->
-            ifnull(pub_dictionary.text, '运管平台') shortname,
-            op_order.shouldpayamount,
-			ifnull(tmp.mileage, op_order.mileage) reviewmileage, tmp.times reviewtimes, tmp.counttimes reviewcounttimes, tmp.id reviewid
+            getCityStr(op_order.oncity) oncityname, op_order.oncity, op_order.onaddress,
+            getCityStr(op_order.offcity) offcityname, op_order.offcity, op_order.offaddress,
+            (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_order.belongleasecompany) belongcompanyname,
+            op_order.shouldpayamount, op_order.belongleasecompany, op_order.companyid,
+			ifnull(tmp.mileage, op_order.mileage) reviewmileage, tmp.times reviewtimes, tmp.counttimes reviewcounttimes, tmp.id reviewid,
+            (select pub_coupon_use.actualamount from pub_coupon_use where pub_coupon_use.status = 1
+                and pub_coupon_use.usetype = 2 and pub_coupon_use.usestate = 1 and pub_coupon_use.billingorderid = op_order.orderno) actualamount
 		from
 			op_order left join pe_user on op_order.userid = pe_user.id
-			left join le_leasescompany on op_order.companyid = le_leasescompany.id
 			left join (select * from (select * from op_orderreview order by createtime desc) review group by orderno) tmp on op_order.orderno = tmp.orderno
-            left join pub_dictionary on pub_dictionary.id = op_order.belongleasecompany
 		where
 			op_order.status = 1 and op_order.reviewstatus = "1"
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != paymentstatus and "" != paymentstatus'>
-				and op_order.paymentstatus = #{paymentstatus}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != driverid and "" != driverid'>
-				and op_order.driverid = #{driverid}
-			</if>
-			<if test='null != reviewperson and "" != reviewperson'>
-				and op_order.reviewperson = #{reviewperson}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
             </if>
-            <if test='"运管平台" != belongleasecompany'>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
                 and op_order.belongleasecompany = #{belongleasecompany}
             </if>
-        </if>
-			<if test='null != minUseTime and "" != minUseTime'>
-				<![CDATA[
-					and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
-			<if test='null != maxUseTime and "" != maxUseTime'>
-				<![CDATA[
-					and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
+
+            <if test='null != reviewperson and "" != reviewperson'>
+                and op_order.reviewperson = #{reviewperson}
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != paymentstatus and "" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
 			<include refid="getOrderLeaseSQL"></include>
 		order by
 			op_order.updatetime asc
@@ -278,97 +278,84 @@
 		from
 			op_order
 		where
-			op_order.status = 1 and op_order.reviewstatus = "1"
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != paymentstatus and "" != paymentstatus'>
-				and op_order.paymentstatus = #{paymentstatus}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != driverid and "" != driverid'>
-				and op_order.driverid = #{driverid}
-			</if>
-			<if test='null != reviewperson and "" != reviewperson'>
-				and op_order.reviewperson = #{reviewperson}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
+            op_order.status = 1 and op_order.reviewstatus = "1"
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
             </if>
-            <if test='"运管平台" != belongleasecompany'>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
                 and op_order.belongleasecompany = #{belongleasecompany}
             </if>
-        </if>
-			<if test='null != minUseTime and "" != minUseTime'>
-				<![CDATA[
-					and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
-			<if test='null != maxUseTime and "" != maxUseTime'>
-				<![CDATA[
-					and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i')
-				]]>
-			</if>
-			<include refid="getOrderLeaseSQL"></include>
+
+            <if test='null != reviewperson and "" != reviewperson'>
+                and op_order.reviewperson = #{reviewperson}
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != paymentstatus and "" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+            <include refid="getOrderLeaseSQL"></include>
 	</select>
 	
 	<!-- 已复核订单 -->
 	<select id="getOpWasabnormalOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
 		select
-			op_order.orderno, op_order.ordertype, op_order.paymentstatus, op_order.orderstatus, op_order.reviewperson, op_order.orderamount, op_order.mileage,
-        case when rawtmp.pricecopy is null or rawtmp.pricecopy = '' then op_order.pricecopy else rawtmp.pricecopy end pricecopy,
-			date_format(op_order.starttime, '%Y/%m/%d %H:%i:%s') starttime,
-			date_format(op_order.endtime, '%Y/%m/%d %H:%i:%s') endtime,
-			<!-- le_leasescompany.shortname,-->
-            ifnull(pub_dictionary.text, '运管平台') shortname,
-            op_order.originalorderamount, op_order.shouldpayamount, op_order.actualpayamount,
+			op_order.orderno, op_order.ordertype, op_order.paymentstatus, op_order.orderstatus, op_order.reviewperson,
+            op_order.orderamount, op_order.mileage, op_order.pricecopy, op_order.starttime, op_order.endtime,
+            op_order.originalorderamount, op_order.shouldpayamount, op_order.actualpayamount, tmp.reviewtype,
 			tmp.reviewedprice reviewedprice, tmp.mileage reviewmileage, tmp.counttimes reviewcounttimes, tmp.times reviewtimes,
-			rawtmp.rawtimes, rawtmp.rawstarttime, rawtmp.rawendtime, rawtmp.rawmileage, tmp.id reviewid, tmp.rawpricecopy
+			tmp.id reviewid, tmp.rawpricecopy, op_order.companyid,
+            (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_order.belongleasecompany) belongcompanyname,
+            (select pub_coupon_use.actualamount from pub_coupon_use where pub_coupon_use.status = 1
+                and pub_coupon_use.usetype = 2 and pub_coupon_use.usestate = 1 and pub_coupon_use.billingorderid = op_order.orderno) actualamount
 		from
 			op_order left join (select * from (select * from op_orderreview order by createtime desc) review group by orderno) tmp on op_order.orderno = tmp.orderno
-			left join (select * from (select * from op_orderreview order by createtime asc) review group by orderno) rawtmp on op_order.orderno = rawtmp.orderno
-			left join le_leasescompany on op_order.companyid = le_leasescompany.id
-            left join pub_dictionary on pub_dictionary.id = op_order.belongleasecompany
 		where
-			op_order.status = 1 and op_order.reviewstatus = "2" and op_order.paymentstatus in ("0", "1")
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != paymentstatus and "" != paymentstatus'>
-				and op_order.paymentstatus = #{paymentstatus}
-			</if>
-			<if test='null != reviewperson and "" != reviewperson'>
-				and op_order.reviewperson = #{reviewperson}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
+			op_order.status = 1 and op_order.reviewstatus = "2"
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
             </if>
-            <if test='"运管平台" != belongleasecompany'>
-                and op_order.belongleasecompany = #{belongleasecompany}
+
+            <if test='null != reviewperson and "" != reviewperson'>
+                and op_order.reviewperson = #{reviewperson}
             </if>
-        </if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != paymentstatus and "" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
 			<include refid="getOrderLeaseSQL"></include>
 		order by
 			op_order.updatetime desc
@@ -380,119 +367,208 @@
 		from
 			op_order
 		where
-			op_order.status = 1 and op_order.reviewstatus = "2" and op_order.paymentstatus in ("0", "1")
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='null != paymentstatus and "" != paymentstatus'>
-				and op_order.paymentstatus = #{paymentstatus}
-			</if>
-			<if test='null != reviewperson and "" != reviewperson'>
-				and op_order.reviewperson = #{reviewperson}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
+            op_order.status = 1 and op_order.reviewstatus = "2"
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
             </if>
-            <if test='"运管平台" != belongleasecompany'>
+
+            <if test='null != reviewperson and "" != reviewperson'>
+                and op_order.reviewperson = #{reviewperson}
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != paymentstatus and "" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+            <include refid="getOrderLeaseSQL"></include>
+	</select>
+
+    <!-- 待收款订单 -->
+    <select id="getOpWaitgatheringOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
+        select
+            op_order.orderno, op_order.ordertype, op_order.paymentstatus, op_order.orderstatus, op_order.orderamount, op_order.mileage,
+            op_order.pricecopy, op_order.reviewstatus, op_order.starttime, op_order.endtime, op_order.usetime, op_order.shouldpayamount,
+            op_order.userid, pe_user.nickname, pe_user.account, op_order.passengers, op_order.passengerphone, op_order.driverid,
+            (select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = op_order.driverid) drivername,
+            getCityStr(op_order.oncity) oncityname, op_order.oncity, op_order.onaddress,
+            getCityStr(op_order.offcity) offcityname, op_order.offcity, op_order.offaddress,
+            op_order.expensetype, op_ordercancel.cancelamount, op_order.companyid,
+            ifnull(tmp.mileage, op_order.mileage) reviewmileage, tmp.counttimes reviewcounttimes, tmp.times reviewtimes, tmp.id reviewid,
+            (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_order.belongleasecompany) belongcompanyname
+        from
+            op_order left join pe_user on op_order.userid = pe_user.id
+            left join (select * from (select * from op_orderreview order by createtime desc) review group by orderno) tmp on op_order.orderno = tmp.orderno
+            left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
+        where
+            op_order.status = 1 and (op_order.orderstatus = "7" or (op_order.orderstatus = "8" and op_ordercancel.cancelnature = 1))
+            and op_order.paymentstatus = "0"
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
                 and op_order.belongleasecompany = #{belongleasecompany}
             </if>
-        </if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
-			<include refid="getOrderLeaseSQL"></include>
-	</select>
-	
-	<!-- 已完成订单 -->
+
+            <if test='null != expensetype and "" != expensetype'>
+                and op_order.expensetype = #{expensetype}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+            <include refid="getOrderLeaseSQL"></include>
+        order by
+          op_order.usetime desc
+        limit #{iDisplayStart}, #{iDisplayLength}
+    </select>
+    <select id="getOpWaitgatheringOrderCountByQuery" resultType="int" parameterType="OrderManageQueryParam">
+        select
+          count(*)
+        from
+            op_order left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
+        where
+            op_order.status = 1 and (op_order.orderstatus = "7" or (op_order.orderstatus = "8" and op_ordercancel.cancelnature = 1))
+            and op_order.paymentstatus = "0"
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+
+            <if test='null != expensetype and "" != expensetype'>
+                and op_order.expensetype = #{expensetype}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+            <include refid="getOrderLeaseSQL"></include>
+    </select>
+
+    <!-- 已完成订单 -->
 	<select id="getOpCompleteOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
 		select
 			op_order.orderno, op_order.ordertype, op_order.orderstatus, op_order.paymentstatus, op_order.paytype,
-			op_order.orderamount, op_order.mileage, op_order.pricecopy, op_order.factmodelname,
-			date_format(op_order.starttime, '%Y/%m/%d %H:%i:%s') starttime,
-			date_format(op_order.endtime, '%Y/%m/%d %H:%i:%s') endtime,
+			op_order.orderamount, op_order.mileage, op_order.pricecopy, op_order.factmodelname, op_order.starttime,
+            op_order.endtime, op_order.usetime, op_order.undertime, op_order.ordertime, op_order.expensetype,
 			op_order.userid, pe_user.nickname, pe_user.account, op_order.passengers, op_order.passengerphone, op_order.driverid,
-			concat(pub_driver.name, " ", pub_driver.phone) drivername,
-			date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.oncity) oncity,
-			op_order.oncity, op_order.onaddress,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.offcity) offcity,
-			op_order.offcity, op_order.offaddress, op_order.cancelparty, op_order.reviewstatus, op_orderpaymentrecord.tradeno,
-            <!-- le_leasescompany.shortname, -->
-            case when op_order.driverid='' or op_order.driverid is null then '/'
-            else ifnull(pub_dictionary.text, '运管平台')
-            end shortname,
-			op_order.factmodelname, op_order.shouldpayamount, pub_driver.jobnum, op_order.plateno, op_order.estimatedtime, op_order.estimatedmileage,
-			date_format(op_order.undertime, '%Y-%m-%d %H:%i') undertime,
-			date_format(op_order.ordertime, '%Y-%m-%d %H:%i') ordertime,
-			op_order.factmodelname, ifnull(tmp.mileage, op_order.mileage) reviewmileage, tmp.counttimes reviewcounttimes, tmp.times reviewtimes, tmp.id reviewid
+			concat(pub_driver.name, " ", pub_driver.phone) drivername, op_order.companyid, op_order.actualpayamount,
+            getCityStr(op_order.oncity) oncityname, op_order.oncity, op_order.onaddress,
+            getCityStr(op_order.offcity) offcityname, op_order.offcity, op_order.offaddress,
+			op_order.cancelparty, op_order.reviewstatus, op_orderpaymentrecord.tradeno, op_ordercancel.cancelamount, op_order.factmodelname,
+            op_order.shouldpayamount, pub_driver.jobnum, op_order.plateno, op_order.estimatedtime, op_order.estimatedmileage, op_order.factmodelname,
+            ifnull(tmp.mileage, op_order.mileage) reviewmileage, tmp.counttimes reviewcounttimes, tmp.times reviewtimes, tmp.id reviewid,
+            (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_order.belongleasecompany) belongcompanyname,
+            (select pub_coupon_use.actualamount from pub_coupon_use where pub_coupon_use.status = 1
+                and pub_coupon_use.usetype = 2 and pub_coupon_use.usestate = 1 and pub_coupon_use.billingorderid = op_order.orderno) actualamount
 		from
 			op_order left join pe_user on op_order.userid = pe_user.id
 			left join (select * from (select * from op_orderreview order by createtime desc) review group by orderno) tmp on op_order.orderno = tmp.orderno
 			left join op_orderpaymentrecord on op_order.orderno = op_orderpaymentrecord.orderno and not isnull(op_orderpaymentrecord.tradeno)
-			left join le_leasescompany on op_order.companyid = le_leasescompany.id
 			left join pub_driver on op_order.driverid = pub_driver.id
-            left join pub_dictionary on pub_dictionary.id = op_order.belongleasecompany
+            left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
 		where
-			op_order.status = 1 and ((((op_order.orderstatus = "7" and op_order.paymentstatus = "1")
-			or (op_order.orderstatus = '8' and not isnull(op_order.companyid) and op_order.companyid != ""))
-			<include refid="getOrderLeaseSQL"></include>)
-			or (op_order.orderstatus = '8' and (isnull(op_order.companyid) or op_order.companyid = "")
-			<include refid="getOrderCitySQL"></include>))
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='orderstatus == "8"'>
-				and op_order.orderstatus = '8'
-			</if>
-			<if test='null != orderstatus and "" != orderstatus and orderstatus != "8"'>
-				and op_order.paymentstatus = #{orderstatus}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != driverid and "" != driverid'>
-				and op_order.driverid = #{driverid}
-			</if>
-			<if test='null != cancelparty and "" != cancelparty'>
-				and op_order.cancelparty = #{cancelparty}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
-			<if test='null != tradeno and "" != tradeno'>
-				 and op_orderpaymentrecord.tradeno like concat('%', #{tradeno} , '%')
-			</if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
+			op_order.status = 1 and (op_order.orderstatus = "7" or (op_order.orderstatus = "8" and op_ordercancel.cancelnature = 1))
+            and op_order.paymentstatus in ("1", "9")
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
             </if>
-            <if test='"运管平台" != belongleasecompany'>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
                 and op_order.belongleasecompany = #{belongleasecompany}
             </if>
-        </if>
-			<if test='null != minUseTime and "" != minUseTime'>
-				<![CDATA[
-					and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i:%s')
-				]]>
-			</if>
-			<if test='null != maxUseTime and "" != maxUseTime'>
-				<![CDATA[
-					and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i:%s')
-				]]>
-			</if>
+
+            <if test='null != paytype and "" != paytype'>
+                and op_order.paytype = #{paytype}
+            </if>
+
+            <if test='null != paymentstatus and "" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus}
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != expensetype and "" != expensetype'>
+                and op_order.expensetype = #{expensetype}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != tradeno and "" != tradeno'>
+                and op_orderpaymentrecord.tradeno like concat('%', #{tradeno} , '%')
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+            <include refid="getOrderLeaseSQL"></include>
 		order by
 			op_order.usetime desc
 		limit #{iDisplayStart}, #{iDisplayLength}
@@ -502,174 +578,202 @@
 			count(*)
 		from
 			op_order left join op_orderpaymentrecord on op_order.orderno = op_orderpaymentrecord.orderno and not isnull(op_orderpaymentrecord.tradeno)
-		where
-			op_order.status = 1 and ((((op_order.orderstatus = "7" and op_order.paymentstatus = "1")
-			or (op_order.orderstatus = '8' and not isnull(op_order.companyid) and op_order.companyid != ""))
-			<include refid="getOrderLeaseSQL"></include>)
-			or (op_order.orderstatus = '8' and (isnull(op_order.companyid) or op_order.companyid = "")
-			<include refid="getOrderCitySQL"></include>))
-			<if test='null != orderNo and "" != orderNo'>
-				and op_order.orderno like concat('%', #{orderNo}, '%')
-			</if>
-			<if test='null != orderType and "" != orderType'>
-				and op_order.ordertype = #{orderType}
-			</if>
-			<if test='orderstatus == "8"'>
-				and op_order.orderstatus = '8'
-			</if>
-			<if test='null != orderstatus and "" != orderstatus and orderstatus != "8"'>
-				and op_order.paymentstatus = #{orderstatus}
-			</if>
-			<if test='null != userId and "" != userId'>
-				and op_order.userid = #{userId}
-			</if>
-			<if test='null != driverid and "" != driverid'>
-				and op_order.driverid = #{driverid}
-			</if>
-			<if test='null != cancelparty and "" != cancelparty'>
-				and op_order.cancelparty = #{cancelparty}
-			</if>
-			<if test='null != ordersource and "" != ordersource'>
-				and op_order.orderno like concat(#{ordersource}, '%')
-			</if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
-            </if>
-            <if test='"运管平台" != belongleasecompany'>
-                and op_order.belongleasecompany = #{belongleasecompany}
-            </if>
-        </if>
-			<if test='null != leasescompanyid and "" != leasescompanyid'>
-				and op_order.companyid = #{leasescompanyid}
-			</if>
-			<if test='null != tradeno and "" != tradeno'>
-				 and op_orderpaymentrecord.tradeno like concat('%', #{tradeno} , '%')
-			</if>
-			<if test='null != minUseTime and "" != minUseTime'>
-				<![CDATA[
-					and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i:%s')
-				]]>
-			</if>
-			<if test='null != maxUseTime and "" != maxUseTime'>
-				<![CDATA[
-					and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i:%s')
-				]]>
-			</if>
-	</select>
-	
-	<!-- 待收款订单 -->
-	<select id="getOpWaitgatheringOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
-		select
-			op_order.orderno, op_order.ordertype, op_order.paymentstatus, op_order.orderstatus, op_order.orderamount, op_order.mileage, op_order.pricecopy, op_order.reviewstatus,
-			date_format(op_order.starttime, '%Y/%m/%d %H:%i:%s') starttime,
-			date_format(op_order.endtime, '%Y/%m/%d %H:%i:%s') endtime,
-			op_order.userid, pe_user.nickname, pe_user.account, op_order.passengers, op_order.passengerphone, op_order.driverid,
-			(select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = op_order.driverid) drivername,
-			date_format(op_order.usetime, '%Y/%m/%d %H:%i') usetime,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.oncity) oncity,
-			op_order.oncity, op_order.onaddress,
-			(select pub_cityaddr.city from pub_cityaddr where pub_cityaddr.id = op_order.offcity) offcity,
-			op_order.offcity, op_order.offaddress,
-            <!--      le_leasescompany.shortname,-->
-            ifnull(pub_dictionary.text, '运管平台') shortname,
-            op_order.shouldpayamount,
-                ifnull(tmp.mileage, op_order.mileage) reviewmileage, tmp.counttimes reviewcounttimes, tmp.times reviewtimes, tmp.id reviewid
-            from
-                op_order left join pe_user on op_order.userid = pe_user.id
-                left join (select * from (select * from op_orderreview order by createtime desc) review group by orderno) tmp on op_order.orderno = tmp.orderno
-                left join le_leasescompany on op_order.companyid = le_leasescompany.id
-                left join pub_dictionary on pub_dictionary.id = op_order.belongleasecompany
-            where
-                op_order.status = 1 and op_order.orderstatus = "7" and op_order.paymentstatus = "0"
-                <if test='null != orderNo and "" != orderNo'>
-                    and op_order.orderno like concat('%', #{orderNo}, '%')
-                </if>
-                <if test='null != orderType and "" != orderType'>
-                    and op_order.ordertype = #{orderType}
-                </if>
-                <if test='null != userId and "" != userId'>
-                    and op_order.userid = #{userId}
-                </if>
-                <if test='null != driverid and "" != driverid'>
-                    and op_order.driverid = #{driverid}
-                </if>
-                <if test='null != ordersource and "" != ordersource'>
-                    and op_order.orderno like concat(#{ordersource}, '%')
-                </if>
-                <if test='null != leasescompanyid and "" != leasescompanyid'>
-                    and op_order.companyid = #{leasescompanyid}
-                </if>
-        <if test='null != belongleasecompany and "" != belongleasecompany'>
-            <if test='"运管平台" == belongleasecompany'>
-                and ifnull(op_order.belongleasecompany, '') = ''
-            </if>
-            <if test='"运管平台" != belongleasecompany'>
-                and op_order.belongleasecompany = #{belongleasecompany}
-            </if>
-        </if>
-                <if test='null != minUseTime and "" != minUseTime'>
-                    <![CDATA[
-                        and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i')
-                    ]]>
-                </if>
-                <if test='null != maxUseTime and "" != maxUseTime'>
-                    <![CDATA[
-                        and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i')
-                    ]]>
-                </if>
-                <include refid="getOrderLeaseSQL"></include>
-            order by
-                op_order.usetime desc
-            limit #{iDisplayStart}, #{iDisplayLength}
-        </select>
-        <select id="getOpWaitgatheringOrderCountByQuery" resultType="int" parameterType="OrderManageQueryParam">
-            select
-                count(*)
-            from
-                op_order
-            where
-                op_order.status = 1 and op_order.orderstatus = "7" and op_order.paymentstatus = "0"
-                <if test='null != orderNo and "" != orderNo'>
-                    and op_order.orderno like concat('%', #{orderNo}, '%')
-                </if>
-                <if test='null != orderType and "" != orderType'>
-                    and op_order.ordertype = #{orderType}
-                </if>
-                <if test='null != userId and "" != userId'>
-                    and op_order.userid = #{userId}
-                </if>
-                <if test='null != driverid and "" != driverid'>
-                    and op_order.driverid = #{driverid}
-                </if>
-                <if test='null != ordersource and "" != ordersource'>
-                    and op_order.orderno like concat(#{ordersource}, '%')
-                </if>
-                <if test='null != leasescompanyid and "" != leasescompanyid'>
-                    and op_order.companyid = #{leasescompanyid}
-                </if>
-            <if test='null != belongleasecompany and "" != belongleasecompany'>
-                <if test='"运管平台" == belongleasecompany'>
-                    and ifnull(op_order.belongleasecompany, '') = ''
-                </if>
-                <if test='"运管平台" != belongleasecompany'>
-                    and op_order.belongleasecompany = #{belongleasecompany}
-                </if>
-            </if>
-                <if test='null != minUseTime and "" != minUseTime'>
-                    <![CDATA[
-                        and op_order.usetime >= date_format(#{minUseTime}, '%Y-%m-%d %H:%i')
-                    ]]>
-                </if>
-                <if test='null != maxUseTime and "" != maxUseTime'>
-                    <![CDATA[
-                        and op_order.usetime <= date_format(#{maxUseTime}, '%Y-%m-%d %H:%i')
-                    ]]>
-                </if>
-                <include refid="getOrderLeaseSQL"></include>
-        </select>
+            left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
+        where
+            op_order.status = 1 and (op_order.orderstatus = "7" or (op_order.orderstatus = "8" and op_ordercancel.cancelnature = 1))
+            and op_order.paymentstatus in ("1", "9")
 
-        <!-- 查询派单规则中所有城市 -->
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+
+            <if test='null != paytype and "" != paytype'>
+                and op_order.paytype = #{paytype}
+            </if>
+
+            <if test='null != paymentstatus and "" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus}
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != expensetype and "" != expensetype'>
+                and op_order.expensetype = #{expensetype}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != tradeno and "" != tradeno'>
+                and op_orderpaymentrecord.tradeno like concat('%', #{tradeno} , '%')
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+            <include refid="getOrderLeaseSQL"></include>
+	</select>
+
+    <!-- 已取消订单列表查询 -->
+    <select id="getOpCancelOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
+        select
+            op_order.orderno, op_order.paymentstatus, op_order.ordertype, op_order.cancelparty, op_order.canceltime,
+            op_order.paytype, op_order.userid, pe_user.nickname, pe_user.account,op_order.passengers,
+            op_order.passengerphone, op_order.driverid, op_order.companyid, op_order.belongleasecompany,
+            op_ordercancel.cancelnature, op_ordercancel.dutyparty, op_ordercancel.cancelamount, op_ordercancel.cancelreason,
+            op_ordercancel.exemption, op_orderpaymentrecord.tradeno, pe_user.status userstatus, op_order.usetime,
+            (select op_user.nickname from op_user where op_user.id = op_ordercancel.canceloperator) cancelname,
+            (select op_user.nickname from op_user where op_user.id = op_ordercancel.exemptionoperator) exemptionname,
+            concat(pub_driver.name, " ", pub_driver.phone) drivername,
+            getCityStr(op_order.oncity) oncityname, op_order.oncity, op_order.onaddress,
+            getCityStr(op_order.offcity) offcityname, op_order.offcity, op_order.offaddress,
+            (select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_order.belongleasecompany) belongcompanyname
+        from
+            op_order left join pe_user on op_order.userid = pe_user.id
+            left join op_orderpaymentrecord on op_order.orderno = op_orderpaymentrecord.orderno and not isnull(op_orderpaymentrecord.tradeno)
+            left join pub_driver on op_order.driverid = pub_driver.id
+            left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
+        where
+            op_order.status = 1 and op_order.orderstatus = "8"
+            and ((not isnull(op_order.companyid) and op_order.companyid != "" <include refid="getOrderLeaseSQL"></include>)
+            or ((isnull(op_order.companyid) or op_order.companyid = "") <include refid="getOrderCitySQL"></include>))
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+
+            <if test='null != paymentstatus and "10" == paymentstatus'>
+                and op_ordercancel.cancelnature = 2
+            </if>
+            <if test='null != paymentstatus and "" != paymentstatus and "10" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus} and op_ordercancel.cancelnature = 1
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != cancelparty and "" != cancelparty'>
+                and op_order.cancelparty = #{cancelparty}
+            </if>
+
+            <if test='null != cancelnature'>
+                and op_ordercancel.cancelnature = #{cancelnature}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != tradeno and "" != tradeno'>
+                and op_orderpaymentrecord.tradeno like concat('%', #{tradeno} , '%')
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+        order by
+          op_order.usetime desc
+        limit #{iDisplayStart}, #{iDisplayLength}
+    </select>
+    <select id="getOpCancelOrderCountByQuery" resultType="int" parameterType="OrderManageQueryParam">
+        select
+            count(*)
+        from
+            op_order left join pe_user on op_order.userid = pe_user.id
+            left join op_orderpaymentrecord on op_order.orderno = op_orderpaymentrecord.orderno and not isnull(op_orderpaymentrecord.tradeno)
+            left join pub_driver on op_order.driverid = pub_driver.id
+            left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
+        where
+            op_order.status = 1 and op_order.orderstatus = "8"
+            and ((not isnull(op_order.companyid) and op_order.companyid != "" <include refid="getOrderLeaseSQL"></include>)
+            or ((isnull(op_order.companyid) or op_order.companyid = "") <include refid="getOrderCitySQL"></include>))
+
+            <if test='null != ordersource and "" != ordersource'>
+                and op_order.orderno like concat(#{ordersource}, '%')
+            </if>
+
+            <if test='null != orderType and "" != orderType'>
+                and op_order.ordertype = #{orderType}
+            </if>
+
+            <if test='null != belongleasecompany and "" != belongleasecompany'>
+                and op_order.belongleasecompany = #{belongleasecompany}
+            </if>
+
+            <if test='null != paymentstatus and "10" == paymentstatus'>
+                and op_ordercancel.cancelnature = 2
+            </if>
+            <if test='null != paymentstatus and "" != paymentstatus and "10" != paymentstatus'>
+                and op_order.paymentstatus = #{paymentstatus} and op_ordercancel.cancelnature = 1
+            </if>
+
+            <if test='null != driverid and "" != driverid'>
+                and op_order.driverid = #{driverid}
+            </if>
+
+            <if test='null != userId and "" != userId'>
+                and op_order.userid = #{userId}
+            </if>
+
+            <if test='null != cancelparty and "" != cancelparty'>
+                and op_order.cancelparty = #{cancelparty}
+            </if>
+
+            <if test='null != cancelnature'>
+                and op_ordercancel.cancelnature = #{cancelnature}
+            </if>
+
+            <if test='null != orderNo and "" != orderNo'>
+                and op_order.orderno like concat('%', #{orderNo}, '%')
+            </if>
+
+            <if test='null != tradeno and "" != tradeno'>
+                and op_orderpaymentrecord.tradeno like concat('%', #{tradeno} , '%')
+            </if>
+
+            <if test='null != minUseTime and "" != minUseTime'>
+                and op_order.usetime &gt;= date_format(#{minUseTime}, '%Y-%m-%d %T')
+            </if>
+            <if test='null != maxUseTime and "" != maxUseTime'>
+                and op_order.usetime &lt;= date_format(#{maxUseTime}, '%Y-%m-%d %T')
+            </if>
+    </select>
+	
+    <!-- 查询派单规则中所有城市 -->
 	<select id="getSendRulesByName" parameterType="string" resultType="map">
 		select
             pub_sendrules.city id, pub_cityaddr.city text
@@ -699,18 +803,19 @@
 	<!-- 查询订单详情 -->
 	<select id="getOpOrderByOrderno" resultType="map" parameterType="string">
 		select 
-			a.*, b.nickname, b.account, d.name drivername, d.phone driverphone,
-			(select city from pub_cityaddr where pub_cityaddr.id = a.oncity) oncityName, 
-			(select city from pub_cityaddr where pub_cityaddr.id = a.offcity) offcityName,
-			ifnull(tmp.price, 0) price, tmp.starttime reviewstarttime, tmp.endtime reviewendtime, tmp.times reviewtimes, tmp.counttimes reviewcounttimes,
-			tmp.mileage reviewmileage, tmp.timesubsidies reviewtimesubsidies, tmp.mileageprices reviewmileageprices,
-			case when a.driverid is null or a.driverid = '' then '/' else ifnull(pub_dictionary.text, '运管平台') end belongleasecompanytext
-		from op_order a left join pe_user b on a.userid = b.id
+			op_order.*, pe_user.nickname, pe_user.account, pub_driver.name drivername, pub_driver.phone driverphone,
+			getCityStr(op_order.oncity) oncityName, getCityStr(op_order.offcity) offcityName,
+			ifnull(tmp.price, 0) price, tmp.starttime reviewstarttime, tmp.endtime reviewendtime, tmp.times reviewtimes,
+			tmp.counttimes reviewcounttimes, tmp.mileage reviewmileage, tmp.timesubsidies reviewtimesubsidies, tmp.mileageprices reviewmileageprices,
+			tmp.reviewtype, op_ordercancel.cancelnature, op_ordercancel.cancelamount, tmp.pricecopy reviewpricecopy, pub_coupon_use.actualamount,
+			(select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_order.belongleasecompany) belongleasecompanytext
+		from op_order left join pe_user on op_order.userid = pe_user.id
 			left join (select * from (select * from op_orderreview order by createtime desc) review group by orderno) tmp
-				on a.orderno = tmp.orderno
-			left join pub_driver d on a.driverid = d.id
-			left join pub_dictionary on pub_dictionary.id = a.belongleasecompany
-		where a.status = 1 and a.orderno = #{orderno} limit 1
+				on op_order.orderno = tmp.orderno
+			left join pub_driver on op_order.driverid = pub_driver.id
+			left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
+			left join pub_coupon_use on op_order.orderno = pub_coupon_use.billingorderid and pub_coupon_use.usestate = 1 and pub_coupon_use.usetype = 2
+		where op_order.status = 1 and op_order.orderno = #{orderno} limit 1
 	</select>
 	
 	<!-- 取消订单 -->
@@ -747,155 +852,223 @@
             and usetype = #{useType}
         </if>
 	</select>
-	
-	<!-- 分页查询司机信息 -->
-	<sql id="getDriverSQL">
-		<if test="driverid != null and driverid != ''">
-			and pub_driver.id != #{driverid}
-		</if>
-		<if test="oncity != null and oncity != ''">
-			and (pub_vehicle_scope.cityid = #{oncity}
-			<if test="offcity != null and offcity != ''">
-				or pub_vehicle_scope.cityid = #{offcity}
-			</if>
-			)
-		</if> 
-		<if test="driverState != null and driverState != ''">
-			and pub_driver.workstatus = #{driverState}
-		</if>
-		<if test="selectedmodel != null and selectedmodel != ''">
-			and op_vehiclemodels.id = #{selectedmodel}
-		</if>
-		<if test="minLat != null and minLat != '' and maxLat != null and maxLat != ''">
-		<![CDATA[
-			and pub_driver.lat >= ${minLat} and pub_driver.lat <= ${maxLat}
-		]]>
-		</if>
-		<if test="minLon != null and minLon != '' and maxLon != null and maxLon != ''">
-		<![CDATA[
-			and pub_driver.lng >= ${minLon} and pub_driver.lng <= ${maxLon}
-		]]>
-		</if>
-		<if test="driverName != null and driverName != ''">
-			and pub_driver.name like "%"#{driverName}"%"
-		</if>
-		<if test="models == 1">
-			and op_vehiclemodels.level >= (select level from op_vehiclemodels where id = #{orderSelectedmodel})
-		</if>
-		<if test="models == 0">
-			and op_vehiclemodels.id = #{orderSelectedmodel}
-		</if>
-        <if test='null != queryTmpBelongleasecompany and "" != queryTmpBelongleasecompany'>
-            and pub_driver.belongleasecompany = #{queryTmpBelongleasecompany}
-        </if>
-		and pub_driver.lng &gt; 0 and pub_driver.lat &gt; 0
-		and pub_driver.vehicletype = "0"
-		and op_vehiclemodels.id in (
-			select
-				op_vehiclemodels.id
-			from
-				op_accountrules left join op_vehiclemodels on op_accountrules.vehiclemodelsid = op_vehiclemodels.id,
-				(select oncity, ordertype from op_order where orderno = #{orderNo}) temp
-			where
-				op_accountrules.rulesstate = "0" and op_accountrules.status = 1
-				and op_vehiclemodels.modelstatus = "0" and op_vehiclemodels.status = 1
-				and op_accountrules.city = temp.oncity and op_accountrules.rulestype = temp.ordertype
-		)
-		and pub_driver.phone not in (select account from pe_user where pe_user.id = #{userId} and pe_user.status = 1)
-		group by pub_driver.id
-	</sql>
+
+    <!-- 分页查询司机 -->
 	<select id="getDriverListByQuery" parameterType="OrderManageQueryParam" resultType="map">
-		select
-			*
-		from
-			(select
-				pub_driver.id driverid, pub_driver.name drivername, pub_driver.workstatus, pub_driver.lat, pub_driver.lng,
-				pub_driver.phone, pub_driver.headportraitmin, pub_driver.headportraitmax, op_vehiclemodels.id modelsid,
-				op_vehiclemodels.name modelname, pub_driver.leasescompanyid, pub_vehicle.id vehicleid,
-				concat(pub_vehcbrand.name, " ", pub_vehcline.name) brandname,
-				concat(
-					(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenoprovince = pub_dictionary.value and pub_dictionary.type = "车牌省"),
-					(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenocity = pub_dictionary.value and pub_dictionary.type = "车牌市"),
-					pub_vehicle.plateno
-				) plateno
-			from
-				pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
-				left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
-				left join op_vehiclemodels_vehicle_ref on pub_vehicle.id = op_vehiclemodels_vehicle_ref.vehicleid
-				left join op_vehiclemodels on op_vehiclemodels_vehicle_ref.vehiclemodelsid = op_vehiclemodels.id
-				left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-				left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
-				left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.id
-			where
-				pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1 and op_vehiclemodels_vehicle_ref.status = 1
-				and op_vehiclemodels.status = 1 and pub_vehicle_scope.status = 1 and pub_vehcline.status = 1 and pub_vehcbrand.status = 1
-				and pub_driver.workstatus in ("0", "2") and pub_driver.platformtype = "1"
-				<include refid="getDriverSQL"></include>
-			
-			union
-			
-			select
-				pub_driver.id driverid, pub_driver.name drivername, pub_driver.workstatus, pub_driver.lat, pub_driver.lng,
-				pub_driver.phone, pub_driver.headportraitmin, pub_driver.headportraitmax, op_vehiclemodels.id modelsid,
-				op_vehiclemodels.name modelname, pub_driver.leasescompanyid, pub_vehicle.id vehicleid,
-				concat(pub_vehcbrand.name, " ", pub_vehcline.name) brandname,
-				concat(
-					(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenoprovince = pub_dictionary.value and pub_dictionary.type = "车牌省"),
-					(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenocity = pub_dictionary.value and pub_dictionary.type = "车牌市"),
-					pub_vehicle.plateno
-				) plateno
-			from
-				pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
-				left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
-				left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
-				left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.id
-				left join op_vehcline_models_ref on pub_vehcline.id = op_vehcline_models_ref.vehclineid
-				left join op_vehiclemodels on op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.id
-				left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-			where
-				pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1 and pub_vehcbrand.status = 1
-				and op_vehcline_models_ref.status = 1 and op_vehiclemodels.status = 1 and pub_vehicle_scope.status = 1
-				and pub_driver.workstatus in ("0", "2") and pub_driver.platformtype = "0"
-				<include refid="getDriverSQL"></include>) driverTmp
-			limit #{iDisplayStart}, #{iDisplayLength}
+        select
+            pub_driver.id driverid, pub_driver.name drivername, pub_driver.workstatus, pub_driver.lat, pub_driver.lng,
+            pub_driver.phone, pub_driver.headportraitmin, pub_driver.headportraitmax, op_vehiclemodels.id modelsid,
+            op_vehiclemodels.name modelname, pub_driver.leasescompanyid, pub_vehicle.id vehicleid,
+            concat(pub_vehcbrand.name, " ", pub_vehcline.name) brandname, pub_vehicle.fullplateno plateno
+        from
+            pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
+            left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+            left join pub_vehicle_models_ref on pub_vehicle.id = pub_vehicle_models_ref.vehicleid
+            left join op_vehiclemodels on pub_vehicle_models_ref.vehiclemodelsid = op_vehiclemodels.id
+            left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
+            left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
+            left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.id
+        where
+            pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1 and pub_vehicle_models_ref.status = 1
+            and op_vehiclemodels.status = 1 and pub_vehicle_scope.status = 1 and pub_vehcline.status = 1 and pub_vehcbrand.status = 1
+            and pub_driver.workstatus in ("0", "1", "2") and pub_vehicle_models_ref.companyid = #{leasescompanyid}
+
+            <if test='null != isusenow and isusenow == 1'>
+                and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 1 and org_order.orderstatus in ('2', '3', '4', '6'))
+                and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 0 and org_order.orderstatus in ('2', '3', '4', '6')
+                <![CDATA[
+                    and org_order.usetime <= date_format(#{estimatedEndtime}, '%Y-%m-%d %T')
+                ]]>)
+
+                and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 1 and op_order.orderstatus in ('2', '3', '4', '6'))
+                and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 0 and op_order.orderstatus in ('2', '3', '4', '6')
+                <![CDATA[
+                    and op_order.usetime <= date_format(#{estimatedEndtime}, '%Y-%m-%d %T')
+                ]]>)
+            </if>
+            <if test='null != isusenow and isusenow == 0'>
+                and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 1 and org_order.orderstatus in ('2', '3', '4', '6')
+                <![CDATA[
+                    and date_add(org_order.usetime, interval (1) hour) <= #{usetime}
+                ]]>)
+                and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 0 and org_order.orderstatus in ('2', '3', '4', '6')
+                <![CDATA[
+                    and date_format(org_order.usetime, '%Y-%m-%d') = date_format(#{usetime}, '%Y-%m-%d')
+                ]]>)
+
+                and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 1 and op_order.orderstatus in ('2', '3', '4', '6')
+                <![CDATA[
+                    and date_add(op_order.usetime, interval (1) hour) <= #{usetime}
+                ]]>)
+                and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 0 and op_order.orderstatus in ('2', '3', '4', '6')
+                <![CDATA[
+                    and date_format(op_order.usetime, '%Y-%m-%d') = date_format(#{usetime}, '%Y-%m-%d')
+                ]]>)
+            </if>
+
+            <if test="driverid != null and driverid != ''">
+                and pub_driver.id != #{driverid}
+            </if>
+            <if test="selectdriverid != null and selectdriverid != ''">
+                and pub_driver.id = #{selectdriverid}
+            </if>
+            <if test="oncity != null and oncity != ''">
+                and (pub_vehicle_scope.cityid = #{oncity}
+                <if test="offcity != null and offcity != ''">
+                    or pub_vehicle_scope.cityid = #{offcity}
+                </if>
+                )
+            </if>
+            <if test="driverState != null and driverState != ''">
+                and pub_driver.workstatus = #{driverState}
+            </if>
+            <if test="selectedmodel != null and selectedmodel != ''">
+                and op_vehiclemodels.id = #{selectedmodel}
+            </if>
+            <if test="minLat != null and minLat != '' and maxLat != null and maxLat != ''">
+                <![CDATA[
+                    and pub_driver.lat >= ${minLat} and pub_driver.lat <= ${maxLat}
+                ]]>
+            </if>
+            <if test="minLon != null and minLon != '' and maxLon != null and maxLon != ''">
+                <![CDATA[
+                    and pub_driver.lng >= ${minLon} and pub_driver.lng <= ${maxLon}
+                ]]>
+            </if>
+            <if test="driverName != null and driverName != ''">
+                and pub_driver.name like "%"#{driverName}"%"
+            </if>
+            <if test="models == 1">
+                and op_vehiclemodels.level >= (select level from op_vehiclemodels where id = #{orderSelectedmodel})
+            </if>
+            <if test="models == 0">
+                and op_vehiclemodels.id = #{orderSelectedmodel}
+            </if>
+            <if test='null != queryTmpBelongleasecompany and "" != queryTmpBelongleasecompany'>
+                and pub_driver.belongleasecompany = #{queryTmpBelongleasecompany}
+            </if>
+            and pub_driver.lng &gt; 0 and pub_driver.lat &gt; 0
+            and pub_driver.vehicletype = "0"
+            and op_vehiclemodels.id in (
+                select
+                  op_vehiclemodels.id
+                from
+                    op_accountrules left join op_vehiclemodels on op_accountrules.vehiclemodelsid = op_vehiclemodels.id
+                where
+                    op_accountrules.rulesstate = "0" and op_accountrules.status = 1
+                    and op_vehiclemodels.modelstatus = "0" and op_vehiclemodels.status = 1
+                    and op_accountrules.city = #{oncity} and op_accountrules.rulestype = #{orderType}
+            )
+            and pub_driver.phone not in (select account from pe_user where pe_user.id = #{userId} and pe_user.status = 1)
+        group by pub_driver.id
+        limit #{iDisplayStart}, #{iDisplayLength}
 	</select>
 	<select id="getDriverCountByQuery" parameterType="OrderManageQueryParam" resultType="int">
-		select
-			count(*)
-		from
-			(select
-				pub_driver.id
-			from
-				pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
-				left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
-				left join op_vehiclemodels_vehicle_ref on pub_vehicle.id = op_vehiclemodels_vehicle_ref.vehicleid
-				left join op_vehiclemodels on op_vehiclemodels_vehicle_ref.vehiclemodelsid = op_vehiclemodels.id
-				left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-				left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
-				left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.id
-			where
-				pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1 and op_vehiclemodels_vehicle_ref.status = 1
-				and op_vehiclemodels.status = 1 and pub_vehicle_scope.status = 1 and pub_vehcline.status = 1 and pub_vehcbrand.status = 1
-				and pub_driver.workstatus in ("0", "2") and pub_driver.platformtype = "1"
-				<include refid="getDriverSQL"></include>
-			
-			union
-			
-			select
-				pub_driver.id
-			from
-				pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
-				left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
-				left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
-				left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.id
-				left join op_vehcline_models_ref on pub_vehcline.id = op_vehcline_models_ref.vehclineid
-				left join op_vehiclemodels on op_vehcline_models_ref.vehiclemodelsid = op_vehiclemodels.id
-				left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-			where
-				pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1 and pub_vehcbrand.status = 1
-				and op_vehcline_models_ref.status = 1 and op_vehiclemodels.status = 1 and pub_vehicle_scope.status = 1
-				and pub_driver.workstatus in ("0", "2") and pub_driver.platformtype = "0"
-				<include refid="getDriverSQL"></include>) driverTmp
+        select count(*) from (
+            select
+              pub_driver.id
+            from
+                pub_driver left join pub_driver_vehicle_ref on pub_driver.id = pub_driver_vehicle_ref.driverid
+                left join pub_vehicle on pub_driver_vehicle_ref.vehicleid = pub_vehicle.id
+                left join pub_vehicle_models_ref on pub_vehicle.id = pub_vehicle_models_ref.vehicleid
+                left join op_vehiclemodels on pub_vehicle_models_ref.vehiclemodelsid = op_vehiclemodels.id
+                left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
+                left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id
+                left join pub_vehcbrand on pub_vehcline.vehcBrandID = pub_vehcbrand.id
+            where
+                pub_driver.status = 1 and pub_driver_vehicle_ref.status = 1 and pub_vehicle.status = 1 and pub_vehicle_models_ref.status = 1
+                and op_vehiclemodels.status = 1 and pub_vehicle_scope.status = 1 and pub_vehcline.status = 1 and pub_vehcbrand.status = 1
+                and pub_driver.workstatus in ("0", "1", "2") and pub_vehicle_models_ref.companyid = #{leasescompanyid}
+
+                <if test='null != isusenow and isusenow == 1'>
+                    and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 1 and org_order.orderstatus in ('2', '3', '4', '6'))
+                    and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 0 and org_order.orderstatus in ('2', '3', '4', '6')
+                    <![CDATA[
+                        and org_order.usetime <= date_format(#{estimatedEndtime}, '%Y-%m-%d %T')
+                    ]]>)
+
+                    and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 1 and op_order.orderstatus in ('2', '3', '4', '6'))
+                    and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 0 and op_order.orderstatus in ('2', '3', '4', '6')
+                    <![CDATA[
+                        and op_order.usetime <= date_format(#{estimatedEndtime}, '%Y-%m-%d %T')
+                    ]]>)
+                </if>
+                <if test='null != isusenow and isusenow == 0'>
+                    and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 1 and org_order.orderstatus in ('2', '3', '4', '6')
+                    <![CDATA[
+                        and date_add(org_order.usetime, interval (1) hour) <= #{usetime}
+                    ]]>)
+                    and pub_driver.id not in (select pub_driver.id from org_order left join pub_driver on org_order.driverid = pub_driver.id where org_order.isusenow = 0 and org_order.orderstatus in ('2', '3', '4', '6')
+                    <![CDATA[
+                        and date_format(org_order.usetime, '%Y-%m-%d') = date_format(#{usetime}, '%Y-%m-%d')
+                    ]]>)
+
+                    and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 1 and op_order.orderstatus in ('2', '3', '4', '6')
+                    <![CDATA[
+                        and date_add(op_order.usetime, interval (1) hour) <= #{usetime}
+                    ]]>)
+                    and pub_driver.id not in (select pub_driver.id from op_order left join pub_driver on op_order.driverid = pub_driver.id where op_order.isusenow = 0 and op_order.orderstatus in ('2', '3', '4', '6')
+                    <![CDATA[
+                        and date_format(op_order.usetime, '%Y-%m-%d') = date_format(#{usetime}, '%Y-%m-%d')
+                    ]]>)
+                </if>
+
+                <if test="driverid != null and driverid != ''">
+                    and pub_driver.id != #{driverid}
+                </if>
+                <if test="selectdriverid != null and selectdriverid != ''">
+                    and pub_driver.id = #{selectdriverid}
+                </if>
+                <if test="oncity != null and oncity != ''">
+                    and (pub_vehicle_scope.cityid = #{oncity}
+                    <if test="offcity != null and offcity != ''">
+                        or pub_vehicle_scope.cityid = #{offcity}
+                    </if>
+                    )
+                </if>
+                <if test="driverState != null and driverState != ''">
+                    and pub_driver.workstatus = #{driverState}
+                </if>
+                <if test="selectedmodel != null and selectedmodel != ''">
+                    and op_vehiclemodels.id = #{selectedmodel}
+                </if>
+                <if test="minLat != null and minLat != '' and maxLat != null and maxLat != ''">
+                    <![CDATA[
+                        and pub_driver.lat >= ${minLat} and pub_driver.lat <= ${maxLat}
+                    ]]>
+                </if>
+                <if test="minLon != null and minLon != '' and maxLon != null and maxLon != ''">
+                    <![CDATA[
+                        and pub_driver.lng >= ${minLon} and pub_driver.lng <= ${maxLon}
+                    ]]>
+                </if>
+                <if test="driverName != null and driverName != ''">
+                    and pub_driver.name like "%"#{driverName}"%"
+                </if>
+                <if test="models == 1">
+                    and op_vehiclemodels.level >= (select level from op_vehiclemodels where id = #{orderSelectedmodel})
+                </if>
+                <if test="models == 0">
+                    and op_vehiclemodels.id = #{orderSelectedmodel}
+                </if>
+                <if test='null != queryTmpBelongleasecompany and "" != queryTmpBelongleasecompany'>
+                    and pub_driver.belongleasecompany = #{queryTmpBelongleasecompany}
+                </if>
+                and pub_driver.lng &gt; 0 and pub_driver.lat &gt; 0
+                and pub_driver.vehicletype = "0"
+                and op_vehiclemodels.id in (
+                    select
+                      op_vehiclemodels.id
+                    from
+                      op_accountrules left join op_vehiclemodels on op_accountrules.vehiclemodelsid = op_vehiclemodels.id
+                    where
+                        op_accountrules.rulesstate = "0" and op_accountrules.status = 1
+                        and op_vehiclemodels.modelstatus = "0" and op_vehiclemodels.status = 1
+                        and op_accountrules.city = #{oncity} and op_accountrules.rulestype = #{orderType}
+                )
+                and pub_driver.phone not in (select account from pe_user where pe_user.id = #{userId} and pe_user.status = 1)
+                group by pub_driver.id
+        ) tmp
 	</select>
 	
 	<!-- 根据车型查询计费规则 -->
@@ -911,7 +1084,7 @@
 	<!-- 人工派单修改订单数据 -->
 	<update id="manualSendOrder" parameterType="OpOrder">
 		update op_order set driverid=#{driverid}, companyid = #{companyid}, orderstatus='2', pricemodel = #{pricemodel}, factmodel = #{factmodel},
-		pricecopy = #{pricecopy}, vehicleid = #{vehicleid}, updatetime = now(), ordertime = now(), isusenow = #{isusenow}
+		pricecopy = #{pricecopy}, vehicleid = #{vehicleid}, updatetime = now(), ordertime = now()
 		where orderno=#{orderno}
 	</update>
 	
@@ -924,8 +1097,7 @@
 	<!-- 更换司机修改订单数据 -->
 	<update id="changeOpDriver" parameterType="map">
 		update op_order set updatetime=#{updatetime}, companyid = #{companyid}, driverid = #{newdriverid}, pricemodel = #{pricemodel},
-		factmodel = #{factmodel}, pricecopy = #{pricecopy}, vehicleid = #{vehicleid}, updatetime = now(), orderstatus = "2", ordertime = now(),
-		isusenow = #{isusenow}
+		factmodel = #{factmodel}, pricecopy = #{pricecopy}, vehicleid = #{vehicleid}, updatetime = now(), orderstatus = "2", ordertime = now()
 		where orderno=#{orderno}
 	</update>
 	
@@ -965,10 +1137,14 @@
 	
 	<!-- 查询订单的复核记录 -->
 	<select id="getOpOrderReviewListByQuery" resultType="map" parameterType="OrderManageQueryParam">
-		select (@rownum := @rownum + 1) rownum, t.*, (select t1.nickname from op_user t1 where t1.id = t.operator) operatorname,
-		(select pricecopy from op_order where orderno = #{orderNo}) pricecopy
-		from op_orderreview t, (select @rownum :=0) b where orderno = #{orderNo} and status = 1
-		order by reviewtime desc
+		select
+            (@rownum := @rownum + 1) rownum,
+            op_orderreview.*,
+            (select op_user.nickname from op_user where op_user.id = op_orderreview.operator) operatorname
+		from
+		    op_orderreview, (select @rownum :=0) b
+		where op_orderreview.orderno = #{orderNo} and op_orderreview.status = 1
+		order by op_orderreview.reviewtime desc
 	</select>
 	<select id="getOpOrderReviewCountByQuery" resultType="int" parameterType="OrderManageQueryParam">
 		select count(*) from op_orderreview where orderno = #{orderNo} and status = 1
@@ -1014,6 +1190,9 @@
 		<if test="actualpayamount != null">
 			, actualpayamount = #{actualpayamount}
 		</if>
+        <if test="belongleasecompany != null">
+            , belongleasecompany = #{belongleasecompany}
+        </if>
 		where orderno=#{orderno}
 	</update>
 	
@@ -1022,11 +1201,11 @@
 		insert into op_orderreview
 		(id, orderno, price, mileage, times, starttime, endtime, counttimes, timesubsidies, mileageprices, reviewperson,
 		reason, reviewtime, operator, createtime, updatetime, status, rawstarttime, rawendtime, rawtimes, rawmileage, reviewedprice,
-		opinion, raworderamount, pricecopy, rawpricecopy)
+		opinion, raworderamount, pricecopy, rawpricecopy, reviewtype)
 		values
-		(#{id}, #{orderno}, #{price}, #{mileage}, #{times}, #{starttime}, #{endtime}, #{counttimes}, #{timesubsidies}, 
-		#{mileageprices}, #{reviewperson}, #{reason}, now(), #{operator}, now(), now(), '1', #{rawstarttime},
-		#{rawendtime}, #{rawtimes}, #{rawmileage}, #{reviewedprice}, #{opinion}, #{raworderamount}, #{pricecopy}, #{rawpricecopy})
+		(#{id}, #{orderno}, #{price}, #{mileage}, #{times}, #{starttime}, #{endtime}, #{counttimes}, #{timesubsidies}, #{mileageprices},
+		#{reviewperson}, #{reason}, now(), #{operator}, now(), now(), '1', #{rawstarttime}, #{rawendtime}, #{rawtimes}, #{rawmileage},
+		#{reviewedprice}, #{opinion}, #{raworderamount}, #{pricecopy}, #{rawpricecopy}, #{reviewtype})
 	</insert>
 	
 	<!-- 添加退款记录 -->
@@ -1193,5 +1372,81 @@
     <update id="updatePubDriverLeisure" parameterType="string">
         update pub_driver set workstatus = "0", updatetime = now() where id = #{driverid}
     </update>
+
+    <!-- 获取订单列表中的服务车企(select2) -->
+    <select id="getBelongCompanySelect" resultType="map" parameterType="OrderManageQueryParam">
+        select id, shortname text from le_leasescompany
+        where id in
+          (select belongleasecompany from op_order left join op_ordercancel on op_order.orderno = op_ordercancel.orderno
+            where op_order.status = 1
+                <if test='"2" == type'>
+                    and op_order.orderstatus in ('2', '3', '4', '5', '6')
+                    <include refid="getOrderCitySQL"></include>
+                </if>
+                <if test='"3" == type'>
+                    and op_order.reviewstatus = "1"
+                    <include refid="getOrderLeaseSQL"></include>
+                </if>
+                <if test='"5" == type'>
+                    and (op_order.orderstatus = "7" or (op_order.orderstatus = "8" and op_ordercancel.cancelnature = 1))
+                    and op_order.paymentstatus = "0"
+                    <include refid="getOrderLeaseSQL"></include>
+                </if>
+                <if test='"6" == type'>
+                    and op_order.status = 1 and (op_order.orderstatus = "7" or (op_order.orderstatus = "8" and op_ordercancel.cancelnature = 1))
+                    and op_order.paymentstatus in ("1", "9")
+                    <include refid="getOrderLeaseSQL"></include>
+                </if>
+                <if test='"7" == type'>
+                    and op_order.status = 1 and op_order.orderstatus = "8"
+                    and ((not isnull(op_order.companyid) and op_order.companyid != "" <include refid="getOrderLeaseSQL"></include>)
+                    or ((isnull(op_order.companyid) or op_order.companyid = "") <include refid="getOrderCitySQL"></include>))
+                </if>
+            group by op_order.belongleasecompany
+          )
+    </select>
+
+    <!-- ======================================订单服务结束使用START====================================  -->
+
+    <!-- 查询订单详情 -->
+    <select id="getOpOrderInfoByOrderno" parameterType="string" resultType="OrderInfoDetail">
+        select
+			1 orderprop, pe_user.nickname username, pe_user.account userphone, 0 paymethod, op_platforminfo.servcietel contact,
+			op_vehiclemodels.name cartype, op_vehiclemodels.logo cartypelogo, null organid,
+			timestampdiff(second, op_order.starttime, op_order.endtime) times, pe_user.headportraitmin passengericonmin,
+			pe_user.headportraitmax passengericonmax, pub_cityaddr.city city, op_order.isusenow, op_order.ordersource, op_order.pricecopy,
+			op_order.undertime, op_order.ordertime, op_order.departuretime, op_order.arrivaltime, op_order.starttime, op_order.endtime,
+			op_order.completetime, op_order.canceltime, op_order.mileage, op_order.orderno, op_order.ordertype type, op_order.onaddress,
+			op_order.offaddress, op_order.usetime usetime, op_order.tripremark remark, op_order.orderstatus status, op_order.paymentstatus paystatus,
+			op_order.reviewstatus, op_order.onaddrlng onlng, op_order.onaddrlat onlat, op_order.offaddrlng offlng, op_order.offaddrlat offlat,
+			op_order.passengers passengers, op_order.passengerphone passengerphone, op_order.estimatedtime, op_order.estimatedmileage,
+			op_order.estimatedcost, op_order.orderamount, op_order.fltno, op_order.falltime, op_order.userrate, op_order.usercomment,
+			op_order.driverid, op_order.vehicleid, op_order.companyid, op_order.oncity cityid, op_order.usetype
+		from
+			op_order left join op_vehiclemodels on op_vehiclemodels.status = 1 and op_order.pricemodel = op_vehiclemodels.id
+            left join pub_cityaddr on pub_cityaddr.status = 1 and op_order.oncity = pub_cityaddr.id
+            left join pe_user on pe_user.status = 1 and op_order.userid = pe_user.id
+            left join op_platforminfo on op_platforminfo.status = 1
+		where op_order.status = 1 and op_order.orderno = #{orderno}
+    </select>
+
+    <!-- 更新订单信息 -->
+    <update id="updateOpOrderInfo" parameterType="OrderInfoDetail">
+        update op_order set updatetime = now(), orderstatus = #{status}, endcity = #{cityintime}, endaddress = #{addressintime},
+        endlng = #{lng}, endllat = #{lat}
+        where orderno = #{orderno}
+    </update>
+
+    <!-- 查询城市id -->
+    <select id="getPubCityByName" parameterType="string" resultType="PubCityAddr">
+        select * from pub_cityaddr where city = #{cityname} and status = 1
+    </select>
+
+    <!-- 更新司机信息 -->
+    <update id="updatePubDriver" parameterType="PubDriver">
+        update pub_driver set updatetime = now(), ordercount = #{orderCount}, workStatus = #{workStatus} where id = #{id}
+    </update>
+
+    <!-- ======================================订单服务结束使用END====================================  -->
 	
 </mapper>

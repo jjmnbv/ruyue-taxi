@@ -36,4 +36,8 @@ public interface PubCoooperateMapper {
     void createPubVehicleModelsRefHistory(PubVehicleModelsRef p);
 
     void updatePubVehicleModelsRef(PubVehicleModelsRef p);
+    
+    List<Map<String, Object>> select2QueryJobnum(PubCoooperateQueryParam queryParam);
+    
+    List<Map<String, Object>> select2QueryDriverInformation(PubCoooperateQueryParam queryParam);
 }

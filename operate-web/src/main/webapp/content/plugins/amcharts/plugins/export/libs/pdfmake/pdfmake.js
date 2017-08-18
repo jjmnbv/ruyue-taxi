@@ -31180,7 +31180,7 @@ PdfPrinter.prototype.fs = require('fs');
  */
 
 
-// per-version information (cf. JIS X 0510:2004 pp. 30--36, 71)
+// per-version information (cf. JIS X 0510:2004 pub. 30--36, 71)
 //
 // [0]: the degree of generator polynomial by ECC levels
 // [1]: # of code blocks by ECC levels

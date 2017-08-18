@@ -24,6 +24,7 @@ body {font-size:13px;font-family:"微软雅黑";background: #f1f1f1;color:#1a1a1
 .h{list-style-image:url(../img/icon_wddd.png);}
 .i{list-style-image:url(../img/icon_xglxfs.png);}
 .j{list-style-image:url(../img/icon_zhxx.png);}
+.l{list-style-image:url(../img/icon_dyq.png);}
 .a:hover,.a.current{list-style-image:url(../img/icon_ddgl_pre.png);}
 .b:hover,.b.current{list-style-image:url(../img/icon_yggl_pre.png);}
 .c:hover,.c.current{list-style-image:url(../img/icon_cwgl_pre.png);}
@@ -34,6 +35,7 @@ body {font-size:13px;font-family:"微软雅黑";background: #f1f1f1;color:#1a1a1
 .h:hover,.h.current{list-style-image:url(../img/icon_wddd_pre.png);}
 .i:hover,.i.current{list-style-image:url(../img/icon_xglxfs_pre.png);}
 .j:hover,.j.current{list-style-image:url(../img/icon_zhxx_pre.png);}
+.l:hover,.l.current{list-style-image:url(../img/icon_dyq_pre.png);}
 h1{display: inline-block;padding-right: 100px;padding-left:40px;text-align: center;}
 .header_logo{vertical-align: middle;margin-right: 8px;}
 .header{background: #fff;}

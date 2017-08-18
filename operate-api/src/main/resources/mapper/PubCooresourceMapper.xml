@@ -5,37 +5,59 @@
 <mapper namespace="com.szyciov.operate.mapper.PubCooresourceMapper">
 
     <select id="queryPubCooresourceData" parameterType="com.szyciov.op.param.QueryPubCooresourceParam" resultType="com.szyciov.op.vo.pubCooresource.QueryCooresourceVo">
+        select *,openresource-workresource ccc from (
         select
-            t1.id,
-            t1.coono,
-            le.name leasecompanyText,
-            t1.servicetype,
-            t1.leasecompanyid,
-            ifnull((select count(1) from pub_cooresource t2 where t1.id=t2.coooperateid and t2.status=1), 0) openresource,
-            ifnull((select count(1) from pub_cooresource t2 where t1.id=t2.coooperateid and t2.enabled=0 and t2.status=1), 0) workresource
+        t1.id,
+        t1.coono,
+        le.name leasecompanyText,
+        t1.servicetype,
+        t1.leasecompanyid,
+        ifnull((select count(1) from pub_cooresource t2 where t1.id=t2.coooperateid and t2.status=1), 0) openresource,
+        case when t1.servicetype=0 then ifnull((select count(1) c
+        from pub_cooresource res
+        inner join pub_vehicle ve on ve.id=res.vehicleid
+        inner join pub_driver_vehicle_ref dvref on dvref.vehicleid=res.vehicleid and dvref.status=1
+        left join pub_vehicle_models_ref vmref on vmref.vehicleid=res.vehicleid and vmref.status=1 and
+        vmref.companyid=res.companyid and vmref.leasecompanyid=res.leasecompanyid
+        where 1=1 and res.coooperateid=t1.id
+        and ifnull(vmref.vehiclemodelsid, '') != ''
+        and ve.vehicletype='0'), 0)
+        else ifnull((select count(1) c
+        from pub_cooresource res
+        inner join pub_vehicle ve on ve.id=res.vehicleid and ve.status=1
+        inner join pub_driver_vehicle_ref dvref on dvref.vehicleid=res.vehicleid and dvref.status=1
+        inner join pub_driver d on d.id=dvref.driverid and d.passworkstatus IN( '0' ,'1' ,'3') and d.status=1
+        where 1=1 and res.coooperateid=t1.id and ve.vehicletype='1' and res.status=1), 0)
+        end workresource
         from pub_coooperate t1
         inner join le_leasescompany le on le.id=t1.leasecompanyid
-        where  t1.status=1
-            and t1.platformtype='0'
-            and coostate=1
-            <if test='null != coono and "" != coono'>
-                and instr(t1.coono, #{coono}) > 0
+        where t1.status=1
+        and coostate=1
+        and t1.companyid = #{companyid}
+        <if test='null != coono and "" != coono'>and instr(t1.coono, #{coono}) > 0
+        </if>
+            <if test='
+        null != leasecompanyid and "" != leasecompanyid'>and t1.leasecompanyid = #{leasecompanyid}
             </if>
-            <if test='null != leasecompanyid and "" != leasecompanyid'>
-                and t1.leasecompanyid = #{leasecompanyid}
+            <if test='
+        null != servicetype'>and t1.servicetype = #{servicetype}
             </if>
-            <if test='null != servicetype'>
-                and t1.servicetype = #{servicetype}
-            </if>
+        ) tt
+        order by ccc,coono desc
+
     </select>
 
     <select id="queryHavingCooLeasecompany" parameterType="java.lang.String" resultType="com.szyciov.op.vo.pubCooresource.QueryHavingCooLeasecompanyVo">
         select distinct
         coo.leasecompanyid id,
-        le.name text
+        le.shortname text
         from pub_coooperate coo
         inner join le_leasescompany le on coo.leasecompanyid=le.id
-        where coo.status=1 and coo.companyid = #{companyid} and coostate=1 order by le.name asc
+        where coo.status=1 and coo.companyid = #{companyid} and coostate=1
+        <if test='null != keyword and "" != keyword'>
+            and instr(shortname, #{keyword}) > 0
+        </if>
+        order by le.name asc
     </select>
 
     <select id="queryPubCooresourceInfoData" parameterType="com.szyciov.op.param.QueryPubCooresourceInfoParam" resultType="com.szyciov.op.vo.pubCooresource.QueryPubCooresourceInfoVo">
@@ -46,14 +68,17 @@
         from pub_coooperate t1
         inner join pub_cooresource t2 on t1.id=t2.coooperateid and t2.status=1
         inner join pub_vehicle t3 on t3.id=t2.vehicleid and t3.status=1
-        left join  pub_driver_vehicle_ref t4 on t4.vehicleid=t3.id and t4.status=1
-        left join  ( select
-                        id,
-                        jobnum,
-                        concat(name, ' ', phone) driverinfo,
-                        passworkstatus
-                    from pub_driver t5
-                    where t5.status=1 ) t6 on ((t3.vehicletype='1' and t6.passworkstatus in ('0' ,'1' ,'3')) or t3.vehicletype='0') and t6.id=t4.driverid
+        left join (
+            select
+            ref.vehicleid refvehicleid,
+            d.id,
+            d.jobnum,
+            concat(d.name, ' ', d.phone) driverinfo,
+            d.passworkstatus
+            from pub_driver_vehicle_ref ref
+            inner join pub_driver d on d.id=ref.driverid
+            where d.vehicletype='1' and d.passworkstatus in ('0' ,'1' ,'3') and d.status=1 and ref.status=1
+            ) t6 on t6.refvehicleid=t3.id
         where 1=1
             and t1.status=1
             and t1.id=#{coooId}
@@ -67,6 +92,7 @@
         <if test='null != fullplateno and "" != fullplateno'>
             and instr(fullplateno, #{fullplateno}) > 0
         </if>
+        order by driverinfo asc
     </select>
 
     <select id="queryPubCooresourceInfoDriverSelect" parameterType="com.szyciov.op.param.QueryPubCooresourceInfoDriverSelectParam" resultType="com.szyciov.entity.Select2Entity">
@@ -104,22 +130,23 @@
         from (
             select
                 t1.id,
-                jobnum,
-                concat(t4.name, ' ', t4.phone) driverinfo,
+                ifnull(jobnum, '/') jobnum,
+                -- concat(t4.name, ' ', t4.phone) driverinfo,
+                case when t4.id is null then '/' else concat(t4.name, ' ', t4.phone) end driverinfo,
                 t4.id driverid,
                 concat(t6.name, ' ', t2.fullplateno) vehicleinfo,
                 ifnull(t8.name, '未分配') vehiclemodel,
-                ifnull(t7.updatetime, '0') updatetimesort,
+                case when t7.updatetime is null then 3 else t7.updatetime  end updatetimesort,
                 case when t7.updatetime is null then '/' else DATE_FORMAT(t7.updatetime,'%Y-%m-%d %H:%i:%s') end updatetime,
                 t8.id vehicleModelId
             from pub_cooresource t1
             inner join pub_coooperate cooo on cooo.id=t1.coooperateid and cooo.status=1
             inner join pub_vehicle t2 on t2.id=t1.vehicleid and t2.vehicletype=cooo.servicetype and t2.status=1
             left  join pub_driver_vehicle_ref t3 on t3.vehicleid=t2.id and t3.status=1
-            inner join pub_driver t4 on ((t2.vehicletype='1' and t4.passworkstatus in ('0' ,'1' ,'3')) or t2.vehicletype='0') and t4.id=t3.driverid
+            left join pub_driver t4 on ((t2.vehicletype='1' and t4.passworkstatus in ('0' ,'1' ,'3')) or t2.vehicletype='0') and t4.id=t3.driverid
             left  join le_vehcline_models_ref t5 on t5.vehclineid=t2.vehclineid and t5.status=1
             left  join le_vehiclemodels t6 on t6.Id=t5.vehiclemodelsid
-            left  join pub_vehicle_models_ref t7 on t7.vehicleid=t1.vehicleid and t7.status=1
+            left  join pub_vehicle_models_ref t7 on t7.vehicleid=t1.vehicleid and t7.status=1 and t7.companyid=t1.companyid and t7.leasecompanyid=t1.leasecompanyid
             left  join op_vehiclemodels t8 on t8.Id=t7.vehiclemodelsid
             where 1=1
             and t1.coooperateid=#{coooId} ) res
@@ -133,6 +160,9 @@
             <if test='null != vehicleModelId and "" != vehicleModelId'>
                 and vehicleModelId = #{vehicleModelId}
             </if>
+            <if test='null != jobnum and "" != jobnum'>
+                and instr(jobnum, #{jobnum}) > 0
+            </if>
         order by updatetimesort desc
     </select>
     <select id="queryPubCooresourceManageDriverSelect" parameterType="com.szyciov.op.param.QueryPubCooresourceManageDriverSelectParam" resultType="com.szyciov.entity.Select2Entity">
@@ -144,7 +174,7 @@
         inner join pub_coooperate cooo on cooo.id=t1.coooperateid and cooo.status=1
         inner join pub_vehicle t2 on t2.id=t1.vehicleid and t2.vehicletype=cooo.servicetype and t2.status=1
         left join pub_driver_vehicle_ref t3 on t3.vehicleid=t2.id and t3.status=1
-        inner join pub_driver t4 on ((t2.vehicletype='1' and t4.passworkstatus in ('0' ,'1' ,'3')) or
+        left join pub_driver t4 on ((t2.vehicletype='1' and t4.passworkstatus in ('0' ,'1' ,'3')) or
         t2.vehicletype='0') and t4.id=t3.driverid
         where t1.status=1
         and t1.coooperateid=#{coooId}
@@ -161,7 +191,7 @@
     </select>
     <select id="queryPubVehicleModelsRefByCoocId" resultType="com.szyciov.entity.PubVehicleModelsRef">
       select ref.* from pub_vehicle_models_ref ref
-        inner join pub_cooresource p on p.vehicleid=ref.vehicleid
+        inner join pub_cooresource p on p.vehicleid=ref.vehicleid and ref.companyid=p.companyid and ref.leasecompanyid=p.leasecompanyid and p.status=1
         where p.id=#{coocId} and ref.status=1
     </select>
 

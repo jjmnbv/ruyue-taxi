@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.carservice.mapper.PubVehicleModelsRefMapper">
+    <insert id="insertPubVehicleModelsRef"  >
+        insert into pub_vehicle_models_ref
+        (id, companyid, leasecompanyid,
+        vehicleid, vehiclemodelsid, createtime,
+        updatetime, creater, updater,
+        status, associationtype)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator="," >
+            (#{item.id,jdbcType=VARCHAR}, #{item.companyid,jdbcType=VARCHAR}, #{item.leasecompanyid,jdbcType=VARCHAR},
+            #{item.vehicleid,jdbcType=VARCHAR}, #{item.vehiclemodelsid,jdbcType=VARCHAR}, #{item.createtime,jdbcType=TIMESTAMP},
+            #{item.updatetime,jdbcType=TIMESTAMP}, #{item.creater,jdbcType=VARCHAR}, #{item.updater,jdbcType=VARCHAR},
+            #{item.status,jdbcType=INTEGER}, #{item.associationtype,jdbcType=INTEGER})
+        </foreach>
+    </insert>
+    <insert id="insertPubVehicleModelsRefHistory">
+        insert into pub_vehicle_models_ref_history (id, companyid, leasecompanyid,
+        vehicleid, vehiclemodelsid, createtime,
+        updatetime, creater, updater,
+        status, associationtype)
+        values
+        <foreach collection="list" item="item" index="index" separator="," >
+        (#{item.id,jdbcType=VARCHAR}, #{item.companyid,jdbcType=VARCHAR}, #{item.leasecompanyid,jdbcType=VARCHAR},
+        #{item.vehicleid,jdbcType=VARCHAR}, #{item.vehiclemodelsid,jdbcType=VARCHAR}, #{item.createtime,jdbcType=TIMESTAMP},
+        #{item.updatetime,jdbcType=TIMESTAMP}, #{item.creater,jdbcType=VARCHAR}, #{item.updater,jdbcType=VARCHAR},
+        #{item.status,jdbcType=INTEGER}, #{item.associationtype,jdbcType=INTEGER})
+        </foreach>
+    </insert>
+    <select id="queryVehicleByVehcline" resultType="java.lang.String" parameterType="java.util.Map">
+        select distinct id from pub_vehicle
+        where leasescompanyid=#{leasescompanyid}
+        and status=1
+        and platformtype=#{platformtype}
+        and vehclineid in
+        <foreach item="item" index="index" collection="vehclineid" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <delete id="deleteVehicleModeRef"  parameterType="java.util.Map">
+        delete from pub_vehicle_models_ref where companyid=#{companyid} and leasecompanyid=#{leasecompanyid}
+        and associationtype = 1
+        <if test="vehicleid != null and vehicleid != ''">
+            and vehicleid=#{vehicleid}
+        </if>
+        <if test="vehiclemodelsid != null and vehiclemodelsid != ''">
+            and vehiclemodelsid=#{vehiclemodelsid}
+        </if>
+    </delete>
+    <select id="queryVehiclemodelsByVehcline" resultType="java.lang.String" parameterType="java.util.Map">
+        <if test="platformtype != null and platformtype == 0">
+            select mo.id from op_vehcline_models_ref ref
+                inner join op_vehiclemodels mo on mo.id=ref.vehiclemodelsid
+                where mo.status=1 and ref.status=1 and ref.vehclineid=#{vehclineid}
+        </if>
+        <if test="platformtype != null and platformtype == 1">
+            select mo.id from le_vehcline_models_ref ref
+                inner join le_vehiclemodels mo on mo.id=ref.vehiclemodelsid
+                where mo.leasescompanyid=#{leasescompanyid} and mo.status=1 and ref.status=1 and ref.vehclineid=#{vehclineid}
+        </if>
+    </select>
+</mapper>

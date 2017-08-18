@@ -160,7 +160,8 @@ public class PubVehicleController extends BaseController {
 												HttpServletResponse response) throws IOException, BadHanyuPinyinOutputFormatCombination {
 		response.setContentType("text/html;charset=utf-8");
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-//		pubVehicle.setLeasesCompanyId(this.getLoginLeUser(request).getLeasescompanyid());
+		OpUser opUser = this.getLoginOpUser(request);
+		pubVehicle.setLeasesCompanyId(opUser.getOperateid());
 		pubVehicle.setUpdater(this.getLoginOpUser(request).getId());
 
 		pubVehicle.setPlatformType(PlatformTypeByDb.OPERATING.code);

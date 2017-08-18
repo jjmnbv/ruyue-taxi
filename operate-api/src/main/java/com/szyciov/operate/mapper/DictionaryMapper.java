@@ -29,4 +29,6 @@ public interface DictionaryMapper {
 	void createDictionary(Dictionary dictionary);
 
 	void updateDictionary(Dictionary dictionary);
+	
+	Dictionary getDictionaryText(Map<String, String> map);
 }

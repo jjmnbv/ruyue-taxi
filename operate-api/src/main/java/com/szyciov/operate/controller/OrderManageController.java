@@ -5,6 +5,16 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.szyciov.entity.PubOrderCancel;
+import com.szyciov.lease.param.OrderManageQueryParam;
+import com.szyciov.op.entity.OpAccountrules;
+import com.szyciov.op.entity.OpOrder;
+import com.szyciov.op.entity.OpOrderReview;
+import com.szyciov.op.entity.OpOrdercomment;
+import com.szyciov.operate.service.OrderManageService;
+import com.szyciov.param.OrdercommentQueryParam;
+import com.szyciov.util.BaseController;
+import com.szyciov.util.PageBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,15 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.szyciov.lease.param.OrderManageQueryParam;
-import com.szyciov.op.entity.OpAccountrules;
-import com.szyciov.op.entity.OpOrder;
-import com.szyciov.op.entity.OpOrdercomment;
-import com.szyciov.operate.service.OrderManageService;
-import com.szyciov.param.OrdercommentQueryParam;
-import com.szyciov.util.BaseController;
-import com.szyciov.util.PageBean;
 
 /**
  * 运营端订单管理
@@ -113,8 +114,6 @@ public class OrderManageController extends BaseController {
 
     /**
      * 人工派单
-     * 已于2017/05/26移动到carservice-api中
-     * 访问路径api/OrderManage/ManualSendOpOrder
      * @param object o
      * @return r
      */
@@ -208,8 +207,8 @@ public class OrderManageController extends BaseController {
 	 */
 	@RequestMapping(value = "api/OrderManage/OpOrderReview", method = RequestMethod.POST)
 	@ResponseBody
-	public Map<String, Object> opOrderReview(@RequestBody Map<String, Object> params) {
-		return orderManageService.opOrderReview(params);
+	public Map<String, Object> opOrderReview(@RequestBody OpOrderReview review) {
+		return orderManageService.opOrderReview(review);
 	}
 	
 	/**
@@ -278,5 +277,49 @@ public class OrderManageController extends BaseController {
 	public List<Map<String, Object>> exportOrder(@RequestBody OrderManageQueryParam queryParam) {
 		return orderManageService.exportOrder(queryParam);
 	}
+
+    /**
+     * 初始化订单查询参数
+     * @param queryParam
+     * @return
+     */
+	@RequestMapping(value = "api/OrderManage/GetBelongCompanySelect")
+    @ResponseBody
+	public List<Map<String, Object>> getBelongCompanySelect(@RequestBody OrderManageQueryParam queryParam) {
+        return orderManageService.getBelongCompanySelect(queryParam);
+    }
+
+    /**
+     * 查询订单取消规则明细
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "api/OrderManage/GetCancelPriceDetail")
+    @ResponseBody
+    public Map<String, Object> getCancelPriceDetail(@RequestBody Map<String, String> param) {
+        return orderManageService.getCancelPriceDetail(param);
+    }
+
+    /**
+     * 结束订单
+     * @param orderno
+     * @return
+     */
+    @RequestMapping(value = "api/OrderManage/EndOrder/{orderno}", method = RequestMethod.GET)
+    @ResponseBody
+    public Map<String, Object> endOrder(@PathVariable String orderno) {
+        return orderManageService.endOrder(orderno);
+    }
+
+    /**
+     * 免责处理
+     * @param object
+     * @return
+     */
+    @RequestMapping(value = "api/OrderManage/ExemptionOrder")
+    @ResponseBody
+    public Map<String, Object> exemptionOrder(@RequestBody PubOrderCancel object) {
+        return orderManageService.exemptionOrder(object);
+    }
 	
 }

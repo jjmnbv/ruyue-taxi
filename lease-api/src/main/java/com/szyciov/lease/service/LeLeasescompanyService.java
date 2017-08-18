@@ -139,4 +139,7 @@ public class LeLeasescompanyService {
 	public OpUser getOpUser(){
 		return dao.getOpUser();
 	};
+	public LeLeasescompany getLeLeasescompanyById(String leaseid){
+		return dao.getLeLeasescompanyById(leaseid);
+	};
 }

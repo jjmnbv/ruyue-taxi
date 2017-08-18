@@ -4,9 +4,9 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import com.szyciov.coupon.dto.CouponInfoDTO;
 import com.szyciov.coupon.mapper.PubCouponMapper;
 import com.szyciov.coupon.param.PubCouponQueryParam;
+import com.szyciov.dto.coupon.CouponInfoDTO;
 import com.szyciov.entity.coupon.PubCoupon;
 import org.springframework.stereotype.Repository;
 
@@ -71,5 +71,14 @@ public class PubCouponDao {
     public void removeCouponByUserId(PubCoupon pubCoupon){
         pubCouponMapper.removeCouponByUserId(pubCoupon);
     }
+
+    /**
+     * 删除未使用的抵用券 根据时间
+     * @param pubCoupon
+     */
+    public void timeOutCouponByTime(PubCoupon pubCoupon){
+        pubCouponMapper.timeOutCouponByTime(pubCoupon);
+    }
+
 }
  

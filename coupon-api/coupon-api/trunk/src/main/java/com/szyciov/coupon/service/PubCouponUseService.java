@@ -4,9 +4,7 @@ import java.time.LocalDateTime;
 
 import javax.annotation.Resource;
 
-import com.szyciov.coupon.dao.PubCouponUseCityDao;
 import com.szyciov.coupon.dao.PubCouponUseDao;
-import com.szyciov.coupon.dto.CouponInfoDTO;
 import com.szyciov.coupon.dto.CouponUseInfoDTO;
 import com.szyciov.entity.coupon.PubCouponUse;
 import com.szyciov.enums.coupon.CouponEnum;

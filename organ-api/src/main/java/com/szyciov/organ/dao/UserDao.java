@@ -275,4 +275,28 @@ public class UserDao {
 	public void updateUserInfo2OrgUserPassword(Map<String, Object> userinfo) {
 		mapper.updateUserInfo2OrgUserPassword(userinfo);
 	}
+
+	public List<Map<String, Object>> querySignCompanyByOrganid(String organid) {
+		return mapper.querySignCompanyByOrganid(organid);
+	}
+
+	public String queryOperateid() {
+		return mapper.queryOperateid();
+	}
+
+	public void updateExpireInviteInfos() {
+       mapper.updateExpireInviteInfos();		
+	}
+
+	public Map<String, Object> getInviteInfoByInvitee(String account) {
+		return mapper.getInviteInfoByInvitee(account);
+	}
+
+	public void updateInviteState(Map<String, Object> inviteparam) {
+		 mapper.updateInviteState(inviteparam);
+	}
+
+	public PeUser getUser4Op(String inviterphone) {
+		return mapper.getUser4Op(inviterphone);
+	}
 }

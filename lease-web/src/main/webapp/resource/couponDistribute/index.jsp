@@ -39,7 +39,7 @@
 		#pubCityaddr .kongjian_list{top:26px!important;}
 		#selectuser{position:absolute;display:inline-block;}
 		#selectuser>.adduserbtn{background: white;padding: 2px 10px;color:red;margin-left: 13px;}
-		#selectuser .kongjian_list{top:26px!important;}
+		/* #selectuser .kongjian_list{top:26px!important;} */
 		.added{display:inline-block;padding:2px 4px;}
 		.added .ico_x_a{float:right;margin-left: -6px;}
 		.addcbox{
@@ -294,7 +294,7 @@
 	            			<div class="col-6">
 	            			    <div>
 	            				<label>使用区域<em class="asterisk"></em></label>
-	            				<input type="radio" name="usetype" value="1" checked="checked" />限开放区域内可用 
+	            				<input type="radio" name="usetype" value="1" checked="checked" />限发放区域内可用 
 	            				</div>
 	            				<div>
 	            				<label style="opacity:0;">使用区域<em class="asterisk"></em></label>

@@ -22,12 +22,8 @@
           INNER join pub_coupon coupon on coupon.couponactivyidref=pcauc.couponactivityidref
           where pcauc.couponactivityidref in 
             (select id from pub_coupon_activity where platformtype=1 and sendruletarget=2 and lecompanyid=#{lecompanyid} and status=1)
-            <if test="usedstarttime != null and usedstarttime != ''">
               and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{usedstarttime}
-            </if>
-            <if test="usedendtime != null and usedendtime != ''">
               and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{usedendtime}
-            </if>
              <if test="city != null and city != ''">
               and pc.id=#{city}
             </if>
@@ -41,12 +37,8 @@
               INNER join pub_coupon coupon on coupon.couponactivyidref=pcauc.couponactivityidref
             where pcauc.couponactivityidref in 
               (select id from pub_coupon_activity where platformtype=1 and sendruletarget=2 and lecompanyid=#{lecompanyid} and status=1)
-              <if test="usedstarttime != null and usedstarttime != ''">
               and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{usedstarttime}
-              </if>
-              <if test="usedendtime != null and usedendtime != ''">
               and date_format(coupon.createtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{usedendtime}
-              </if>
               <if test="city != null and city != ''">
               and pc.id=#{city}
               </if>
@@ -84,12 +76,8 @@
             where organid in 
               (select organid from org_organ_company_ref where companyid=#{lecompanyid} and status='1')
               and status='1'
-              <if test="starttime != null and starttime != ''">
               and date_format(registertime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{starttime}
-              </if>
-              <if test="endtime != null and endtime != ''"> 
               and date_format(registertime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{endtime}
-              </if>
       </select>
       
       <select id="queryRechargeCount" parameterType="UserRechargeQueryParam" resultType="Integer">
@@ -99,12 +87,8 @@
              where ou.organid in 
               (select organid from org_organ_company_ref where companyid=#{lecompanyid} and status='1')
               and status='1'
-              <if test="starttime != null and starttime != ''">
               and date_format(registertime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{starttime}
-              </if>
-              <if test="endtime != null and endtime != ''"> 
               and date_format(registertime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{endtime}
-              </if>
              and ex.userid=ou.id
           ) and ex.tradetype='0'
             and ex.operateresult='0' 

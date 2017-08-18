@@ -1,7 +1,5 @@
 package com.szyciov.driver.param;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
@@ -99,6 +97,16 @@ public class OrderCostParam extends OrderApiParam{
 	 * 用车时间
 	 */
 	private Date usetime;
+	
+	/**
+	 * 优惠券ID
+	 */
+	private String couponid;
+	
+	/**
+	 * 优惠券金额
+	 */
+	private Integer couponprice;
 	
 	/**  
 	 * 获取计费规则(0-标准1-个性化)  
@@ -396,4 +404,37 @@ public class OrderCostParam extends OrderApiParam{
 			this.usetime = new Date((long)usetime);
 		}
 	}
+
+	/**  
+	 * 获取优惠券金额  
+	 * @return couponprice 优惠券金额  
+	 */
+	public Integer getCouponprice() {
+		return couponprice;
+	}
+	
+	/**  
+	 * 设置优惠券金额  
+	 * @param couponprice 优惠券金额  
+	 */
+	public void setCouponprice(Integer couponprice) {
+		this.couponprice = couponprice;
+	}
+
+	/**  
+	 * 获取优惠券ID  
+	 * @return couponid 优惠券ID  
+	 */
+	public String getCouponid() {
+		return couponid;
+	}
+
+	/**  
+	 * 设置优惠券ID  
+	 * @param couponid 优惠券ID  
+	 */
+	public void setCouponid(String couponid) {
+		this.couponid = couponid;
+	}
+	
 }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpPlatformBusinesslicenseScopeMapper">
+
+
+    <!--删除-->
+    <delete id = "deleteOther" parameterType="string"  >
+        DELETE FROM op_platform_businesslicense_scope   WHERE businesslicenseid = #{businesslicenseid}
+        <if test="operationareas != null and operationareas.size>0">
+            and operationarea not  in
+            <foreach item="operationarea" index="index" collection="operationareas"  open="(" separator="," close=")">
+                #{operationarea}
+            </foreach>
+        </if>
+    </delete>
+
+    <!--增加-->
+
+
+    <insert id="create" parameterType="OpPlatformBusinesslicenseScope">
+        INSERT INTO op_platform_businesslicense_scope(id,businesslicenseid,operationarea,createtime,updatetime,creater,updater,status)
+        VALUES (#{id},#{businesslicenseid},#{operationarea},now(),now(),#{creater},#{updater},1);
+    </insert>
+
+    <select id="find" resultType="OpPlatformBusinesslicenseScope">
+        SELECT  * from op_platform_businesslicense_scope where businesslicenseid=#{businesslicenseid} and operationarea=#{operationarea} and status=1
+    </select>
+
+
+</mapper>

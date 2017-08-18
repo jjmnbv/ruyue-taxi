@@ -45,27 +45,21 @@ function initGrid() {
                     if (full.balanceCount > 0) {
                     	html += '<button type="button" class="SSbtn pink"  onclick="searchBalanceDetail(' +"'"+ full.id + "','" + full.account +"'"+ ')"><i class="fa fa-times"></i>余额明细</button>';
                     }
+                    if (html != "") {
+                    	if (full.couponCount > 0) {
+                    		html += '&nbsp; ';
+                    	}
+                    }
+                    if (full.couponCount > 0) { 
+                    	html += '<button type="button" class="SSbtn pink"  onclick="searchCouponDetail(' +"'"+ full.id + "','" + full.account +"'"+ ')"><i class="fa fa-times"></i>抵用券明细</button>';
+                    }
                     return html;
                 }
             },
-
-	        //{mDataProp: "nickName", sTitle: "昵称", sClass: "center", sortable: true },
-	        /*{
-				mDataProp : "nickName",
-				sTitle : "昵称",
-				sClass : "center",
-				sortable : true,
-				mRender : function(data, type, full) {
-					if (data != null) {
-						return '<span class="font_green">' + full.nickName + '</span>';
-					} else {
-						return "";
-					}
-				}
-			},*/
 	        {mDataProp: "account", sTitle: "账号", sClass: "center", sortable: true },
 	        {mDataProp: "sex", sTitle: "性别", sClass: "center", sortable: true },
 	        {mDataProp: "balance", sTitle: "账户余额(元)", sClass: "center", sortable: true },
+	        {mDataProp: "validCoupon", sTitle: "抵用券(张)", sClass: "center", sortable: true },
 	        {mDataProp: "shortName", sTitle: "机构名称", sClass: "center", sortable: true }
         ]
     };
@@ -150,6 +144,13 @@ function searchDetail(id,account) {
 function searchBalanceDetail(id,account) {
 
 	window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") + "OrganUserAccount/BalanceDetail?userId=" + id +"&account=" + account;
+}
+
+/**
+ * 抵用券明细
+ */
+function searchCouponDetail(id,account){
+	window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") + "OrganUserAccount/CouponDetail?userid=" + id +"&account=" + account;
 }
 
 /**

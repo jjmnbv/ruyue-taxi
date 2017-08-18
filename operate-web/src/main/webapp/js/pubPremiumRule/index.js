@@ -11,6 +11,7 @@ function initGrid() {
 		id: "dataGrid",
 		iLeftColumn: 1,
 		scrollX: true,
+		language: {sEmptyTable: "暂无溢价规则信息"},
         sAjaxSource: "PubPremiumRule/GetPubPremiumRule",
         columns: [
 	        {mDataProp: "id", sTitle: "Id", sClass: "center", visible: false},
@@ -33,7 +34,7 @@ function initGrid() {
                      }else{
                        html += '<button type="button" class="SSbtn grey_q"  onclick="forbid(' +"'"+ full.id +"'"+ ')"><i class="fa fa-paste"></i>禁用</button>';
                      }
-                  html += '&nbsp; <button type="button" class="SSbtn green_q"  onclick="modify(' +"'"+ full.id +"'"+","+"'"+full.ruletype+"'"+')"><i class="fa fa-paste"></i>修改</button>';
+            	   html += '&nbsp; <button type="button" class="SSbtn green_q"  onclick="modify(' +"'"+ full.id +"'"+","+"'"+full.ruletype+"'"+","+"'"+full.rulestatus+"'"+')"><i class="fa fa-paste"></i>修改</button>';
                   if(full.isoperated == "1"){
                       html += '&nbsp; <button type="button" class="SSbtn grey_q"  onclick="history(' +"'"+ full.id +"'"+ ')"><i class="fa fa-paste"></i>历史记录</button>';
                     }
@@ -152,20 +153,24 @@ function disforbid(id,rulename){
 		data : JSON.stringify(data),
 		contentType : 'application/json; charset=utf-8',
 		async : false,
-		success : function(status) {
-			debugger;
-			if (status == 1) {
+		success : function(result) {
+			if (result.rulename == null || result.rulename == "") {
+				toastr.success('已经启用', "提示");
+				dataGrid._fnReDraw();
+			}else {
+				var allRulename = "";
+				for(var i=0;i<result.rulename.length;i++){
+					var rulename = result.rulename[i].rulename;
+					allRulename = allRulename +rulename+",";
+				}
 				var comfirmData={
 						tittle:"提示",
-						context:"当前启用规则与已存在【"+rulename+"】存在冲突,若要启用当前规则,请先禁用【"+rulename+"】",
+						context:"当前启用规则与已存在【"+allRulename+"】存在冲突,若要启用当前规则,请先禁用【"+allRulename+"】",
 						button_l:"我知道了",
 						click: "postchangestate2('" +id+"','"+1+"')",
 						htmltex:"<input type='hidden' placeholder='添加的html'> "
 					};
 				    Zconfirm1(comfirmData);
-			}else {
-				toastr.success('已经启用', "提示");
-				dataGrid._fnReDraw();
 			}
 		}
 	});
@@ -207,6 +212,6 @@ function history(id,ruletype){
 	window.location.href=base+"PubPremiumRule/HistoryIndex?id="+id;
 }
 //修改
-function modify(id,ruletype){
-	window.location.href=base+"PubPremiumRule/AddIndex?id="+id+"&ruletype="+ruletype;
+function modify(id,ruletype,rulestatus){
+	window.location.href=base+"PubPremiumRule/AddIndex?id="+id+"&ruletype="+ruletype+"&rulestatus="+rulestatus;;
 }

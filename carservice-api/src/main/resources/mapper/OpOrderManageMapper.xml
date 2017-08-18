@@ -39,8 +39,7 @@
         (select op_vehiclemodels.name from op_vehiclemodels where op_order.factmodel = op_vehiclemodels.id) factmodelname,
         (select op_vehiclemodels.name from op_vehiclemodels where op_order.pricemodel = op_vehiclemodels.id) pricemodelname,
         pub_vehcbrand.name vehcbrandname, pub_vehcline.name vehclinename,
-        concat((select text from pub_dictionary where type = '车牌省' and value = pub_vehicle.platenoprovince),
-        (select text from pub_dictionary where type = '车牌市' and value = pub_vehicle.platenocity), pub_vehicle.plateno) plateno
+        pub_vehicle.fullplateno plateno
         from
         op_order left join pub_vehicle on op_order.vehicleid = pub_vehicle.id
         left join pub_vehcline on pub_vehicle.vehclineid = pub_vehcline.id

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.coupon.mapper.OrgOrganMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+
+	<select id="listOrganByLecompanyId" parameterType="String" resultType="OrgOrganInfoDTO">
+
+		SELECT
+			t.id,t.city
+		FROM
+			org_organ t
+		WHERE
+			EXISTS (SELECT 1 FROM org_organ_company_ref a
+				WHERE a.organid = t.id
+				AND a.companyid = #{companyid}
+				AND a. STATUS = '1')
+	</select>
+</mapper>

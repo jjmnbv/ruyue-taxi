@@ -82,7 +82,7 @@
 							<option value="${leasesCompany.id}">${leasesCompany.name}</option>
 						</c:forEach>
 					</select> --%>
-					<input id="companyName" name="companyName" type="text" placeholder="请输入车企名称" value="">
+					<input id="companyName" name="companyName" type="text" placeholder="请输入车企名称" value="" maxlength="20">
 				</div>
 				<div class="col-4">
 					<label>服务类型<em class="asterisk"></em></label>

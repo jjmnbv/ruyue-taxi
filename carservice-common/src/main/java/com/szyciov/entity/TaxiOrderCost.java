@@ -64,7 +64,22 @@ public class TaxiOrderCost {
 	/**
 	 * 预约单附加费
 	 */
-	private double reversefee;
+	private Integer reversefee = 0;
+	
+	/**
+	 * 优惠券面额
+	 */
+	private Integer couponprice = 0;
+	
+	/**
+	 * 优惠券ID
+	 */
+	private String couponid;
+	
+	/**
+	 * 溢价倍率
+	 */
+	private Double premiumrate = 1.0D;
 	
 	public String getOrderno() {
 		return orderno;
@@ -166,15 +181,64 @@ public class TaxiOrderCost {
 	 * 获取预约单附加费  
 	 * @return reversefee 预约单附加费  
 	 */
-	public double getReversefee() {
+	public Integer getReversefee() {
 		return reversefee;
 	}
-
+	
 	/**  
 	 * 设置预约单附加费  
 	 * @param reversefee 预约单附加费  
 	 */
-	public void setReversefee(double reversefee) {
+	public void setReversefee(Integer reversefee) {
 		this.reversefee = reversefee;
 	}
+	
+	/**  
+	 * 获取优惠券面额  
+	 * @return couponprice 优惠券面额  
+	 */
+	public Integer getCouponprice() {
+		return couponprice;
+	}
+
+	/**  
+	 * 设置优惠券面额  
+	 * @param couponprice 优惠券面额  
+	 */
+	public void setCouponprice(Integer couponprice) {
+		this.couponprice = couponprice;
+	}
+
+	/**  
+	 * 获取溢价倍率  
+	 * @return premiumrate 溢价倍率  
+	 */
+	public Double getPremiumrate() {
+		return premiumrate;
+	}
+
+	/**  
+	 * 设置溢价倍率  
+	 * @param premiumrate 溢价倍率  
+	 */
+	public void setPremiumrate(Double premiumrate) {
+		this.premiumrate = premiumrate;
+	}
+
+	/**  
+	 * 获取优惠券ID  
+	 * @return couponid 优惠券ID  
+	 */
+	public String getCouponid() {
+		return couponid;
+	}
+
+	/**  
+	 * 设置优惠券ID  
+	 * @param couponid 优惠券ID  
+	 */
+	public void setCouponid(String couponid) {
+		this.couponid = couponid;
+	}
+	
 }

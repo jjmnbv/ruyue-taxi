@@ -46,29 +46,7 @@
 	
 	<select id="getPubDriverByPass" parameterType="LoginParam" resultType="PubDriver">
 		SELECT
-			CONCAT(
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌省'
-					AND pub_dictionary.`value` = pv.platenoprovince
-					AND pub_dictionary.`status` = 1
-				),
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌市'
-					AND pub_dictionary.`value` = pv.platenocity
-					AND pub_dictionary.`status` = 1
-				),
-				pv.plateno
-			) plateno,
+			pv.fullplateno plateno,
 			pv.id vehicleid,
 			pvc.`name` vehclinename,
 			pvb.`Name` vehcbrandname,
@@ -113,29 +91,7 @@
 	
 	<select id="getPubDriverById" parameterType="String" resultType="PubDriver">
 		SELECT
-			CONCAT(
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌省'
-					AND pub_dictionary.`value` = pv.platenoprovince
-					AND pub_dictionary.`status` = 1
-				),
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌市'
-					AND pub_dictionary.`value` = pv.platenocity
-					AND pub_dictionary.`status` = 1
-				),
-				pv.plateno
-			) plateno,
+			pv.fullplateno plateno,
 			pv.id vehicleid,
 			pvc.`name` vehclinename,
 			pvb.`Name` vehcbrandname,
@@ -179,29 +135,7 @@
 	
 	<select id="getPubDriverByToken" parameterType="String" resultType="PubDriver">
 		SELECT
-			CONCAT(
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌省'
-					AND pub_dictionary.`value` = pv.platenoprovince
-					AND pub_dictionary.`status` = 1
-				),
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌市'
-					AND pub_dictionary.`value` = pv.platenocity
-					AND pub_dictionary.`status` = 1
-				),
-				pv.plateno
-			) plateno,
+			pv.fullplateno plateno,
 			pv.id vehicleid,
 			pvc.`name` vehclinename,
 			pvb.`Name` vehcbrandname,
@@ -246,29 +180,7 @@
 	
 	<select id="getPubDriverByPhone" parameterType="String" resultType="PubDriver">
 		SELECT
-			CONCAT(
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌省'
-					AND pub_dictionary.`value` = pv.platenoprovince
-					AND pub_dictionary.`status` = 1
-				),
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌市'
-					AND pub_dictionary.`value` = pv.platenocity
-					AND pub_dictionary.`status` = 1
-				),
-				pv.plateno
-			) plateno,
+			pv.fullplateno plateno,
 			pv.id vehicleid,
 			pvc.`name` vehclinename,
 			pvb.`Name` vehcbrandname,
@@ -343,29 +255,7 @@
 	
 	<select id="getDriverInfoById" parameterType="String" resultType="DriverInfo">
 		SELECT
-			CONCAT(
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌省'
-					AND pub_dictionary.`value` = pv.platenoprovince
-					AND pub_dictionary.`status` = 1
-				),
-				(
-					SELECT
-						pub_dictionary.text
-					FROM
-						pub_dictionary
-					WHERE
-						pub_dictionary.type = '车牌市'
-					AND pub_dictionary.`value` = pv.platenocity
-					AND pub_dictionary.`status` = 1
-				),
-				pv.plateno
-			) plateno,
+			pv.fullplateno plateno,
 			pd.id,
 			pd.`name` drivername,
 			pd.phone driverphone,

@@ -62,7 +62,7 @@ public class PeDrivershiftPendingService {
 	 * @param savePending		待交班对象
 	 * @return
 	 */
-	@Transactional
+	@Transactional(rollbackFor = {Exception.class})
 	public PendInfoDto save(PendingSaveDto savePending)throws Exception{
 
 		//判断车辆与司机是否在绑定状态
@@ -317,7 +317,7 @@ public class PeDrivershiftPendingService {
 	 * @param pendingId   待处理交班ID
 	 * @return
 	 */
-	@Transactional
+	@Transactional(rollbackFor = {Exception.class})
 	public void removeShfitApply(String pendingId)throws Exception{
 		PeDrivershiftPending paramPend = new PeDrivershiftPending();
 		paramPend.setId(pendingId);
@@ -332,7 +332,7 @@ public class PeDrivershiftPendingService {
 	 * @param driverId		交班司机ID
 	 * @throws Exception
 	 */
-	@Transactional
+	@Transactional(rollbackFor = {Exception.class})
 	public void removeShfitApplyByDriver(String driverId)throws Exception{
 		PeDrivershiftPending paramPend = new PeDrivershiftPending();
 		paramPend.setDriverid(driverId);

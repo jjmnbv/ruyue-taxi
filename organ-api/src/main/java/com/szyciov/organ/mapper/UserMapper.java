@@ -3,6 +3,8 @@ package com.szyciov.organ.mapper;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.szyciov.op.entity.PeUser;
 import com.szyciov.org.entity.OrgUser;
 import com.szyciov.org.entity.TreeNode;
@@ -136,4 +138,16 @@ public interface UserMapper {
 	void updateUserInfo2PeUserPassword(Map<String, Object> userinfo);
 	
 	void updateUserInfo2OrgUserPassword(Map<String, Object> userinfo);
+
+	List<Map<String, Object>> querySignCompanyByOrganid(@Param("id") String organid);
+
+	String queryOperateid();
+
+	void updateExpireInviteInfos();
+
+	Map<String, Object> getInviteInfoByInvitee(String inviteephone);
+
+	void updateInviteState(Map<String, Object> inviteparam);
+
+	PeUser getUser4Op(String account);
 }

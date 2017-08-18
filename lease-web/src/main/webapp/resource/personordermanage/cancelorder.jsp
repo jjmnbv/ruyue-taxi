@@ -56,10 +56,10 @@
 			tbody tr td:first-child{
 				text-align:left;
 			}
-
             .ordermanage_css_body #s2id_orderperson {
                 float: none;
             }
+            .col-3{width: 23%;}
 		</style>
 	</head>
 	<body class="ordermanage_css_body">
@@ -144,7 +144,7 @@
                     </select>
                 </div>
                 <div class="col-3" style="white-space: nowrap">
-                    <label style="width: 15%;margin-left: -3px">用车时间</label>
+                    <label style="width: 31%;margin-left: -3px">用车时间</label>
                     <input style="width:19%;min-width: 140px" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始日期" value="" class="searchDate">
                     至
                     <input style="width:19%;min-width: 140px" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束日期" value="" class="searchDate">

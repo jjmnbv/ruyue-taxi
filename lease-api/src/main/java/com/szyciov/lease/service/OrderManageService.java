@@ -26,7 +26,7 @@ import com.szyciov.entity.UserNews;
 import com.szyciov.enums.DriverEnum;
 import com.szyciov.enums.OrderReviewEnum;
 import com.szyciov.enums.PubOrdercancelEnum;
-import com.szyciov.enums.SendRulesEnum;
+import com.szyciov.enums.ServiceState;
 import com.szyciov.lease.dao.OrderManageDao;
 import com.szyciov.lease.dao.OrgOrdercancelDao;
 import com.szyciov.lease.dao.SendRulesDao;
@@ -38,7 +38,6 @@ import com.szyciov.lease.entity.OrgSendrecord;
 import com.szyciov.lease.entity.OrgUserRefund;
 import com.szyciov.lease.entity.PubCityAddr;
 import com.szyciov.lease.entity.PubDriver;
-import com.szyciov.lease.param.GetSendInfoParam;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.message.OrderMessage;
 import com.szyciov.op.entity.PubSendRules;
@@ -48,6 +47,7 @@ import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.param.OrderApiParam;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.param.UserNewsParam;
+import com.szyciov.param.coupon.CouponUseParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.Constants;
 import com.szyciov.util.GUIDGenerator;
@@ -97,7 +97,7 @@ public class OrderManageService {
 		pageBean.setsEcho(queryParam.getsEcho());
 		List<Map<String, Object>> list = null;
 		int iTotalRecords = 0;
-		switch (Integer.valueOf(queryParam.getType()).intValue()) {
+		switch (Integer.valueOf(queryParam.getType())) {
 			case 1:
 				list = getOrgLabourOrderListByQuery(queryParam);
 				iTotalRecords = getOrgLabourOrderCountByQuery(queryParam);
@@ -134,60 +134,60 @@ public class OrderManageService {
 		return pageBean;
 	}
 	
-	public List<Map<String, Object>> getOrgLabourOrderListByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgLabourOrderListByQuery(queryParam);
-	}
-	
-	public int getOrgLabourOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgLabourOrderCountByQuery(queryParam);
-	}
-	
-	public List<Map<String, Object>> getOrgCurrentOrderListByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgCurrentOrderListByQuery(queryParam);
-	}
-	
-	public int getOrgCurrentOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgCurrentOrderCountByQuery(queryParam);
-	}
-	
-	public List<Map<String, Object>> getOrgAbnormalOrderListByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgAbnormalOrderListByQuery(queryParam);
-	}
-	
-	public int getOrgAbnormalOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgAbnormalOrderCountByQuery(queryParam);
-	}
-	
-	public List<Map<String, Object>> getOrgWasabnormalOrderListByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgWasabnormalOrderListByQuery(queryParam);
-	}
-	
-	public int getOrgWasabnormalOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgWasabnormalOrderCountByQuery(queryParam);
-	}
-	
-	public List<Map<String, Object>> getOrgWaitgatheringOrderListByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgWaitgatheringOrderListByQuery(queryParam);
-	}
-	
-	public int getOrgWaitgatheringOrderCountByQuery(OrderManageQueryParam queryParam) {
-		return this.orderManageDao.getOrgWaitgatheringOrderCountByQuery(queryParam);
+	private List<Map<String, Object>> getOrgLabourOrderListByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgLabourOrderListByQuery(queryParam);
 	}
 
-    public List<Map<String, Object>> getOrgCompleteOrderListByQuery(OrderManageQueryParam queryParam) {
-        return this.orderManageDao.getOrgCompleteOrderListByQuery(queryParam);
+    private int getOrgLabourOrderCountByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgLabourOrderCountByQuery(queryParam);
+	}
+
+    private List<Map<String, Object>> getOrgCurrentOrderListByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgCurrentOrderListByQuery(queryParam);
+	}
+
+    private int getOrgCurrentOrderCountByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgCurrentOrderCountByQuery(queryParam);
+	}
+
+    private List<Map<String, Object>> getOrgAbnormalOrderListByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgAbnormalOrderListByQuery(queryParam);
+	}
+
+    private int getOrgAbnormalOrderCountByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgAbnormalOrderCountByQuery(queryParam);
+	}
+
+    private List<Map<String, Object>> getOrgWasabnormalOrderListByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgWasabnormalOrderListByQuery(queryParam);
+	}
+
+    private int getOrgWasabnormalOrderCountByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgWasabnormalOrderCountByQuery(queryParam);
+	}
+
+    private List<Map<String, Object>> getOrgWaitgatheringOrderListByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgWaitgatheringOrderListByQuery(queryParam);
+	}
+
+    private int getOrgWaitgatheringOrderCountByQuery(OrderManageQueryParam queryParam) {
+		return orderManageDao.getOrgWaitgatheringOrderCountByQuery(queryParam);
+	}
+
+    private List<Map<String, Object>> getOrgCompleteOrderListByQuery(OrderManageQueryParam queryParam) {
+        return orderManageDao.getOrgCompleteOrderListByQuery(queryParam);
     }
 
-    public int getOrgCompleteOrderCountByQuery(OrderManageQueryParam queryParam) {
-        return this.orderManageDao.getOrgCompleteOrderCountByQuery(queryParam);
+    private int getOrgCompleteOrderCountByQuery(OrderManageQueryParam queryParam) {
+        return orderManageDao.getOrgCompleteOrderCountByQuery(queryParam);
     }
 
-    public List<Map<String, Object>> getOrgCancelOrderListByQuery(OrderManageQueryParam queryParam) {
-        return this.orderManageDao.getOrgCancelOrderListByQuery(queryParam);
+    private List<Map<String, Object>> getOrgCancelOrderListByQuery(OrderManageQueryParam queryParam) {
+        return orderManageDao.getOrgCancelOrderListByQuery(queryParam);
     }
 
-    public int getOrgCancelOrderCountByQuery(OrderManageQueryParam queryParam) {
-        return this.orderManageDao.getOrgCancelOrderCountByQuery(queryParam);
+    private int getOrgCancelOrderCountByQuery(OrderManageQueryParam queryParam) {
+        return orderManageDao.getOrgCancelOrderCountByQuery(queryParam);
     }
 	
 	/**
@@ -206,18 +206,16 @@ public class OrderManageService {
 		JSONObject json = this.templateHelper.dealRequestWithFullUrlToken(
 				SystemConfig.getSystemProperty("carserviceApi") + "/OrderApi/GetOrderCost", HttpMethod.POST, null,
 				param, JSONObject.class);
-		ret.put("cost", json.containsKey("cost") ? json.get("cost") : Integer.valueOf(0));
-		ret.put("rangecost", json.containsKey("rangecost") ? json.get("rangecost") : Integer.valueOf(0));
-		ret.put("timecost", json.containsKey("timecost") ? json.get("timecost") : Integer.valueOf(0));
-		ret.put("times", Integer.valueOf(
-				json.containsKey("times") ? (int) Math.ceil(((Integer) json.get("times")).intValue() / 60.0D) : 0));
-		ret.put("slowtimes", json.containsKey("slowtimes") ? json.get("slowtimes") : Integer.valueOf(0));
-		ret.put("mileage", Double.valueOf(json.containsKey("mileage")
-				? StringUtil.formatNum(((Double) json.get("mileage")).doubleValue() / 1000.0D, 1) : 0.0D));
-		ret.put("startprice", json.containsKey("startprice") ? json.get("startprice") : Integer.valueOf(0));
-		ret.put("timeprice", json.containsKey("timeprice") ? json.get("timeprice") : Integer.valueOf(0));
-		ret.put("rangeprice", json.containsKey("rangeprice") ? json.get("rangeprice") : Integer.valueOf(0));
-		ret.put("timetype", json.containsKey("timetype") ? json.get("timetype") : Integer.valueOf(0));
+		ret.put("cost", json.containsKey("cost") ? json.get("cost") : 0);
+		ret.put("rangecost", json.containsKey("rangecost") ? json.get("rangecost") : 0);
+		ret.put("timecost", json.containsKey("timecost") ? json.get("timecost") : 0);
+		ret.put("times", json.containsKey("times") ? (int) Math.ceil((Integer) json.get("times") / 60.0d) : 0);
+		ret.put("slowtimes", json.containsKey("slowtimes") ? json.get("slowtimes") : 0);
+		ret.put("mileage", json.containsKey("mileage") ? StringUtil.formatNum((Double) json.get("mileage") / 1000.0d, 1) : 0.0d);
+		ret.put("startprice", json.containsKey("startprice") ? json.get("startprice") : 0);
+		ret.put("timeprice", json.containsKey("timeprice") ? json.get("timeprice") : 0);
+		ret.put("rangeprice", json.containsKey("rangeprice") ? json.get("rangeprice") : 0);
+		ret.put("timetype", json.containsKey("timetype") ? json.get("timetype") : 0);
 
         ret.put("deadheadcost", json.containsKey("deadheadcost") ? json.get("deadheadcost") : 0); // 空驶费
         ret.put("nightcost", json.containsKey("nightcost") ? json.get("nightcost") : 0); // 夜间费
@@ -231,28 +229,24 @@ public class OrderManageService {
 	 * @param orderno
 	 * @return
 	 */
-	public OrgOrder getOrgOrder(String orderno) {
-		return this.orderManageDao.getOrgOrder(orderno);
+	private OrgOrder getOrgOrder(String orderno) {
+		return orderManageDao.getOrgOrder(orderno);
 	}
 	
 	public List<Map<String, Object>> getOrgUser(Map<String, Object> params) {
-		return this.orderManageDao.getOrgUser(params);
+		return orderManageDao.getOrgUser(params);
 	}
 	
 	public List<Map<String, Object>> getCompanyVehicleModel(Map<String, String> params) {
-		OrgOrder order = getOrgOrder(params.get("orderno").toString());
+		OrgOrder order = getOrgOrder(params.get("orderno"));
 		params.put("usetype", order.getUsetype());
 		params.put("oncity", order.getOncity());
 		params.put("orderType", order.getOrdertype());
 		params.put("organId", order.getOrganid());
 		params.put("usetype", order.getUsetype());
-		return this.orderManageDao.getCompanyVehicleModel(params);
+		return orderManageDao.getCompanyVehicleModel(params);
 	}
-	
-	public Map<String, Object> getOrgWaitingOrderByOrderno(String orderno) {
-		return this.orderManageDao.getOrgWaitingOrderByOrderno(orderno);
-	}
-	
+
 	/**
 	 * 查询附近司机
 	 * @param queryParam
@@ -279,7 +273,7 @@ public class OrderManageService {
 			queryParam.setMaxLat(around[2]);
 			queryParam.setMaxLon(around[3]);
 		}
-		String models = "0";
+		String models;
 		PubSendRules sendRules = new PubSendRules();
 		sendRules.setLeasesCompanyId(queryParam.getLeasescompanyid());
 		sendRules.setCity(queryParam.getOncity());
@@ -306,14 +300,14 @@ public class OrderManageService {
 				baiduparam.setOrderStartLat(queryParam.getOrderLat());
 				baiduparam.setOrderStartLng(queryParam.getOrderLon());
 				if (map.get("lat") != null) {
-					baiduparam.setOrderEndLat(((Double) map.get("lat")).doubleValue());
+					baiduparam.setOrderEndLat((Double) map.get("lat"));
 				} else {
-					baiduparam.setOrderEndLat(0.0D);
+					baiduparam.setOrderEndLat(0.0d);
 				}
 				if (map.get("lng") != null) {
-					baiduparam.setOrderEndLng(((Double) map.get("lng")).doubleValue());
+					baiduparam.setOrderEndLng((Double) map.get("lng"));
 				} else {
-					baiduparam.setOrderEndLng(0.0D);
+					baiduparam.setOrderEndLng(0.0d);
 				}
                 //计算预估距离和时间
 				double distance = LatLonUtil.getDistance(baiduparam.getOrderStartLng(), baiduparam.getOrderStartLat(), baiduparam.getOrderEndLng(), baiduparam.getOrderEndLat());
@@ -327,8 +321,7 @@ public class OrderManageService {
 			}
 		}
 		int iTotalRecords = this.orderManageDao.getOrgDriverCountByQuery(queryParam);
-		int iTotalDisplayRecords = iTotalRecords;
-		pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
+		pageBean.setiTotalDisplayRecords(iTotalRecords);
 		pageBean.setiTotalRecords(iTotalRecords);
 		pageBean.setAaData(list);
 		return pageBean;
@@ -435,7 +428,7 @@ public class OrderManageService {
         queryParam.setLeasescompanyid(order.getCompanyid());
 
         //查询当前派单规则
-        String models = "0";
+        String models;
         PubSendRules sendRules = new PubSendRules();
         sendRules.setLeasesCompanyId(order.getCompanyid());
         sendRules.setCity(order.getOncity());
@@ -444,7 +437,7 @@ public class OrderManageService {
         } else {
             sendRules.setUseType(0);
         }
-        List<PubSendRules> sendRulesList = this.sendRulesDao.getSendRulesList(sendRules);
+        List<PubSendRules> sendRulesList = sendRulesDao.getSendRulesList(sendRules);
         if ((sendRulesList != null) && (!sendRulesList.isEmpty())) {
             models = sendRulesList.get(0).getVehicleUpgrade() + "";
         } else {
@@ -507,11 +500,11 @@ public class OrderManageService {
 		return pageBean;
 	}
 	
-	public List<Map<String, Object>> getOrgChangeDriverListByQuery(OrderManageQueryParam queryParam) {
+	private List<Map<String, Object>> getOrgChangeDriverListByQuery(OrderManageQueryParam queryParam) {
 		return this.orderManageDao.getOrgChangeDriverListByQuery(queryParam);
 	}
-	
-	public int getOrgChangeDriverListCountByQuery(OrderManageQueryParam queryParam) {
+
+    private int getOrgChangeDriverListCountByQuery(OrderManageQueryParam queryParam) {
 		return this.orderManageDao.getOrgChangeDriverListCountByQuery(queryParam);
 	}
 	
@@ -526,12 +519,12 @@ public class OrderManageService {
 		pageBean.setAaData(list);
 		return pageBean;
 	}
-	
-	public List<Map<String, Object>> getOrgOrderReviewListRecord(OrderManageQueryParam queryParam) {
+
+    private List<Map<String, Object>> getOrgOrderReviewListRecord(OrderManageQueryParam queryParam) {
 		return this.orderManageDao.getOrgOrderReviewListRecord(queryParam);
 	}
 	
-	public int getOrgOrderReviewListCountRecord(OrderManageQueryParam queryParam) {
+	private int getOrgOrderReviewListCountRecord(OrderManageQueryParam queryParam) {
 		return this.orderManageDao.getOrgOrderReviewListCountRecord(queryParam);
 	}
 	
@@ -549,147 +542,191 @@ public class OrderManageService {
             resultMap.put("message", "当前订单状态无法复核");
             return resultMap;
         }
-
         String pricecopy = order.getPricecopy();
         if (StringUtils.isBlank(pricecopy)) {
             resultMap.put("status", "fail");
             resultMap.put("message", "操作失败");
             return resultMap;
         }
-        OrderCost orderCost = StringUtil.parseJSONToBean(pricecopy, OrderCost.class);
-        int slowtimes = orderCost.getSlowtimes();
+        //初始化复核数据
+        initOrderreview(review, order);
+        double driverPrice = order.getShouldpayamount() - review.getReviewedprice();
+        //重置订单金额
+        double differPrice = resetOrderCost(review, order);
+        //发送司机消息
+        order.setOrderamount(review.getReviewedprice());
+        order.setMileage(review.getMileage());
+        order.setStarttime(review.getStarttime());
+        order.setEndtime(review.getEndtime());
+        order.setPricecopy(review.getPricecopy());
+        if ("1".equals(review.getReviewperson())) {
+            createDriverNews(order, driverPrice, OrderMessageFactory.OrderMessageType.REVIEWORDER);
+        }
+        //退款处理
+        orderRefund(order, review, differPrice);
+        //推送消息
+        if (!order.getPaymethod().equals("2")) {
+            Map<String, Object> smsParams = new HashMap<String, Object>();
+            smsParams.put("reviewperson", review.getReviewperson());
+            smsParams.put("price", driverPrice);
+            OrderMessage message = new OrderMessage(order, "订单复核", smsParams);
+            MessageUtil.sendMessage(message);
+        }
+        resultMap.put("status", "success");
+        resultMap.put("message", "操作成功");
 
-        //填充复核数据
+		return resultMap;
+	}
+
+    /**
+     * 初始化订单复核数据
+     * @param review
+     * @param order
+     */
+	private void initOrderreview(OrgOrderReview review, OrgOrder order) {
+        OrderCost orderCost = StringUtil.parseJSONToBean(order.getPricecopy(), OrderCost.class);
+
         review.setId(GUIDGenerator.newGUID());
         review.setReviewstatus("1");
         review.setReason(order.getOrderreason());
         review.setStatus(1);
         review.setRawstarttime(order.getStarttime());
         review.setRawendtime(order.getEndtime());
-        review.setRawmileage(Double.valueOf(order.getMileage()));
-        review.setRawtimes((double) slowtimes);
-        review.setRawpricecopy(pricecopy);
+        review.setRawmileage(order.getMileage());
+        review.setRawtimes((double) orderCost.getSlowtimes());
+        review.setRawpricecopy(order.getPricecopy());
         review.setRaworderamount(order.getOriginalorderamount());
 
-        try {
-            //查询最近一次复核记录
-            OrgOrderReview orderReview = orderManageDao.getOrgOrderreviewLastByOrderno(review.getOrderno());
-            if(null != orderReview) {
-                review.setRaworderamount(orderReview.getReviewedprice());
-                review.setRawstarttime(orderReview.getStarttime());
-                review.setRawendtime(orderReview.getEndtime());
-                review.setRawtimes(orderReview.getCounttimes());
-                review.setRawmileage(orderReview.getMileage());
-                review.setRawpricecopy(orderReview.getPricecopy());
-            } else {
-                review.setRaworderamount(order.getOrderamount());
-                review.setRawstarttime(order.getStarttime());
-                review.setRawendtime(order.getEndtime());
-                review.setRawtimes((double) slowtimes);
-                review.setRawmileage(order.getMileage());
-                review.setRawpricecopy(pricecopy);
-            }
+        //查询最近一次复核记录
+        OrgOrderReview orderReview = orderManageDao.getOrgOrderreviewLastByOrderno(review.getOrderno());
+        if(null != orderReview) {
+            review.setRaworderamount(orderReview.getReviewedprice());
+            review.setRawstarttime(orderReview.getStarttime());
+            review.setRawendtime(orderReview.getEndtime());
+            review.setRawtimes(orderReview.getCounttimes());
+            review.setRawmileage(orderReview.getMileage());
+            review.setRawpricecopy(orderReview.getPricecopy());
+        }
 
-            int reviewtype = review.getReviewtype();
-            if(OrderReviewEnum.REVIEWTYPE_COST.icode == reviewtype) { //按固定金额
-                OrderCost rawOrderCost = StringUtil.parseJSONToBean(review.getRawpricecopy(), OrderCost.class);
-                review.setTimesubsidies(rawOrderCost.getTimecost());
-                review.setMileageprices(rawOrderCost.getRangecost());
-                review.setMileage(review.getRawmileage());
-                review.setCounttimes(review.getRawtimes());
-                review.setStarttime(review.getRawstarttime());
-                review.setEndtime(review.getRawendtime());
-                int rawtimes = (int) Math.ceil((review.getEndtime().getTime() - review.getStarttime().getTime()) / 1000.0d / 60);
-                review.setTimes(rawtimes * 60);
-                rawOrderCost.setCost(review.getReviewedprice());
-                review.setPricecopy(StringUtil.parseBeanToJSON(rawOrderCost));
-            } else { //按里程时长
-                int times = (int) Math.ceil((review.getEndtime().getTime() - review.getStarttime().getTime()) / 1000.0d / 60);
-                orderCost.setMileage(review.getMileage() * 1000);
-                orderCost.setTimes(times * 60);
-                orderCost.setSlowtimes((int) review.getCounttimes());
-                orderCost = StringUtil.countCost(orderCost, review.getStarttime(), false);
-                StringUtil.formatOrderCost2Int(orderCost);
+        int reviewtype = review.getReviewtype();
+        if(OrderReviewEnum.REVIEWTYPE_COST.icode == reviewtype) { //按固定金额
+            OrderCost rawOrderCost = StringUtil.parseJSONToBean(review.getRawpricecopy(), OrderCost.class);
+            review.setTimesubsidies(rawOrderCost.getTimecost());
+            review.setMileageprices(rawOrderCost.getRangecost());
+            review.setMileage(review.getRawmileage());
+            review.setCounttimes(review.getRawtimes());
+            review.setStarttime(review.getRawstarttime());
+            review.setEndtime(review.getRawendtime());
+            int rawtimes = (int) Math.ceil((review.getEndtime().getTime() - review.getStarttime().getTime()) / 1000.0d / 60);
+            review.setTimes(rawtimes * 60);
+            rawOrderCost.setCost(review.getReviewedprice());
+            review.setPricecopy(StringUtil.parseBeanToJSON(rawOrderCost));
+        } else { //按里程时长
+            int times = (int) Math.ceil((review.getEndtime().getTime() - review.getStarttime().getTime()) / 1000.0d / 60);
+            orderCost.setMileage(review.getMileage() * 1000);
+            orderCost.setTimes(times * 60);
+            orderCost.setSlowtimes((int) review.getCounttimes());
+            orderCost = StringUtil.countCost(orderCost, review.getStarttime(), false);
+            StringUtil.formatOrderCost2Int(orderCost);
 
-                review.setTimesubsidies(orderCost.getTimecost());
-                review.setMileage(formatDouble(review.getMileage() * 1000.0d, 1));
-                review.setTimes(times * 60);
-                review.setMileageprices(formatDouble(orderCost.getRangecost(), 1));
-                review.setReviewedprice(orderCost.getCost());
-                review.setPricecopy(JSONObject.fromObject(orderCost).toString());
-            }
+            review.setTimesubsidies(orderCost.getTimecost());
+            review.setMileage(formatDouble(review.getMileage() * 1000.0d, 1));
+            review.setTimes(times * 60);
+            review.setMileageprices(formatDouble(orderCost.getRangecost(), 1));
+            review.setReviewedprice(orderCost.getCost());
+            review.setPricecopy(JSONObject.fromObject(orderCost).toString());
+        }
+    }
 
-            //费用计算
-            Double actualpayamount = order.getActualpayamount();
-            double price = review.getReviewedprice();
-            if((price < actualpayamount.doubleValue()) || (order.getPaymethod().equals("2"))) { //复核后金额小于实付金额或机构支付时修改实付金额
-                order.setActualpayamount(price);
-            }
-            order.setShouldpayamount(price);
-            review.setPrice(0); //待修改
-            //请求接口，获取实际抵扣金额
-            JSONObject json = new JSONObject(); //待修改
-            double differPrice = 0; //待修改
-            if ((StringUtils.isBlank(order.getPaymentstatus())) || (order.getPaymentstatus().equals("0"))
-                || (order.getPaymethod().equals("2"))) {
-                order.setOrderamount(review.getReviewedprice());
-                order.setActualpayamount(review.getReviewedprice());
-                order.setMileage(review.getMileage());
-                order.setStarttime(review.getStarttime());
-                order.setEndtime(review.getEndtime());
-                order.setPricecopy(review.getPricecopy());
-            }
-            if(review.getReviewedprice() == 0) { //待修改，复核后金额或实付金额为0时，订单金额改为已关闭
-                order.setPaymentstatus(PayState.CLOSE.state);
-            }
-            order.setReviewstatus(ReviewState.REVIEWED.state);
-
-            orderManageDao.applyOrgOrderReview(review);
-            orderManageDao.updateOrderState(order);
-
-            order.setOrderamount(review.getReviewedprice());
+    /**
+     * 重置订单相关金额
+     * @param review
+     * @param order
+     * @return 返回乘客支付的差异金额
+     */
+    private double resetOrderCost(OrgOrderReview review, OrgOrder order) {
+        double price = review.getReviewedprice(), differPrice; //复核后金额、退款金额
+        if(order.getPaymethod().equals("2")) { //机构支付
+            differPrice = order.getActualpayamount() - price;
+            order.setActualpayamount(price);
+            order.setOrderamount(price);
             order.setMileage(review.getMileage());
             order.setStarttime(review.getStarttime());
             order.setEndtime(review.getEndtime());
             order.setPricecopy(review.getPricecopy());
-            if ("1".equals(review.getReviewperson())) {
-                createDriverNews(order, differPrice, OrderMessageFactory.OrderMessageType.REVIEWORDER);
+        } else if(order.getPaymentstatus().equals("0")) { //个人支付或个人垫付(未支付)
+            differPrice = 0;
+            order.setActualpayamount(price);
+            order.setOrderamount(price);
+            order.setMileage(review.getMileage());
+            order.setStarttime(review.getStarttime());
+            order.setEndtime(review.getEndtime());
+            order.setPricecopy(review.getPricecopy());
+        } else { //个人支付或个人垫付(已支付)
+            double actualamountCoupon = 0, discountamountCoupon = 0;
+            //调用优惠券接口查询实际抵扣金额
+            CouponUseParam useParam = new CouponUseParam();
+            useParam.setOrderId(order.getOrderno());
+            useParam.setMoney(review.getReviewedprice());
+            String couponRet = templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi") + "/coupon/update/actualamount",
+                HttpMethod.POST, null, useParam, String.class);
+            if(StringUtils.isNotBlank(couponRet)) {
+                JSONObject retData = JSONObject.fromObject(couponRet);
+                if(retData.getInt("status") == ServiceState.SUCCESS.code) {
+                    JSONObject data = JSONObject.fromObject(retData.getString("data"));
+                    actualamountCoupon = data.getDouble("actualamount");
+                    discountamountCoupon = data.getDouble("discountamount");
+                }
             }
-            if(order.getPaymentstatus().equals("4")) {
-                updateOrganCompanyRef(order, differPrice);
+            double disPayamount = order.getActualpayamount() - discountamountCoupon; //复核前乘客实际支付的金额(优惠后)
+            double payamount = review.getReviewedprice() - actualamountCoupon; //复核后乘客应该支付的金额(优惠后)
+            if(payamount >= disPayamount) {
+                order.setActualpayamount(disPayamount + actualamountCoupon);
+            } else {
+                order.setActualpayamount(payamount + actualamountCoupon);
             }
-            if (order.getPaymentstatus().equals("1") && differPrice > 0.0D) {
-                OrgUserRefund userRefund = new OrgUserRefund();
-                userRefund.setId(GUIDGenerator.newGUID());
-                userRefund.setUserId(order.getUserid());
-                userRefund.setLeasesCompanyId(review.getLeasescompanyid());
-                userRefund.setOrderNo(review.getOrderno());
-                userRefund.setAmount(BigDecimal.valueOf(differPrice));
-                userRefund.setRefundStatus("0");
-                userRefund.setRemark(review.getOpinion());
-                userRefund.setCreater(review.getOperator());
-                userRefund.setUpdater(review.getOperator());
-                userRefund.setStatus(1);
-                orderManageDao.insertOrgUserrefund(userRefund);
+            differPrice = disPayamount - payamount;
+            if(payamount == 0) {
+                order.setPaymentstatus(PayState.CLOSE.state);
             }
-            if (!order.getPaymethod().equals("2")) {
-                Map<String, Object> smsParams = new HashMap<String, Object>();
-                smsParams.put("reviewperson", review.getReviewperson());
-                smsParams.put("price", Double.valueOf(differPrice));
-                OrderMessage message = new OrderMessage(order, "订单复核", smsParams);
-                MessageUtil.sendMessage(message);
-            }
-            resultMap.put("status", "success");
-            resultMap.put("message", "操作成功");
-
-        } catch (Exception e) {
-            LOGGER.error("订单复核异常", e);
-            resultMap.put("status", "fail");
-            resultMap.put("message", "操作失败");
         }
-		return resultMap;
-	}
-	
+        order.setShouldpayamount(price);
+        review.setPrice(order.getShouldpayamount() - order.getActualpayamount());
+        if(price == 0) {
+            order.setPaymentstatus(PayState.CLOSE.state);
+        }
+        order.setReviewstatus(ReviewState.REVIEWED.state);
+        orderManageDao.applyOrgOrderReview(review);
+        orderManageDao.updateOrderState(order);
+        return differPrice;
+    }
+
+    /**
+     * 退款处理
+     * @param order
+     * @param review
+     * @param differPrice
+     */
+    private void orderRefund(OrgOrder order, OrgOrderReview review, double differPrice) {
+        if(order.getPaymentstatus().equals("4")) {
+            updateOrganCompanyRef(order, differPrice);
+        }
+        if (order.getPaymentstatus().equals("1") && differPrice > 0) {
+            OrgUserRefund userRefund = new OrgUserRefund();
+            userRefund.setId(GUIDGenerator.newGUID());
+            userRefund.setUserId(order.getUserid());
+            userRefund.setLeasesCompanyId(review.getLeasescompanyid());
+            userRefund.setOrderNo(review.getOrderno());
+            userRefund.setAmount(BigDecimal.valueOf(differPrice));
+            userRefund.setRefundStatus("0");
+            userRefund.setRemark(review.getOpinion());
+            userRefund.setCreater(review.getOperator());
+            userRefund.setUpdater(review.getOperator());
+            userRefund.setStatus(1);
+            orderManageDao.insertOrgUserrefund(userRefund);
+        }
+    }
+
 	/**
 	 * 拒绝订单复核
 	 * @param params
@@ -926,43 +963,43 @@ public class OrderManageService {
 		return list;
 	}
 	
-	public OrgOrganCompanyRef getOrgOrganCompanyRefByOrgCom(OrgOrganCompanyRef object) {
+	private OrgOrganCompanyRef getOrgOrganCompanyRefByOrgCom(OrgOrganCompanyRef object) {
 		return this.orderManageDao.getOrgOrganCompanyRefByOrgCom(object);
 	}
-	
-	public int updateOrgOrganCompanyRef(OrgOrganCompanyRef object) {
+
+    private int updateOrgOrganCompanyRef(OrgOrganCompanyRef object) {
 		return this.orderManageDao.updateOrgOrganCompanyRef(object);
 	}
 	
 	public List<Map<String, Object>> getOrganByName(Map<String, Object> params) {
 		return this.orderManageDao.getOrganByName(params);
 	}
-	
-	public int updatePubDriverWorkstatus(PubDriver object) {
+
+    private int updatePubDriverWorkstatus(PubDriver object) {
 		return this.orderManageDao.updatePubDriverWorkstatus(object);
 	}
 	
 	public Map<String, Object> getFirstOrderByOrderno(String orderno) {
 		return this.orderManageDao.getFirstOrderByOrderno(orderno);
 	}
-	
-	public Map<String, String> getOrgOrderVehicleByOrder(String orderno) {
+
+    private Map<String, String> getOrgOrderVehicleByOrder(String orderno) {
 		return this.orderManageDao.getOrgOrderVehicleByOrder(orderno);
 	}
-	
-	public void updateOrgOrderVehicleByOrderno(OrgOrder object) {
+
+    private void updateOrgOrderVehicleByOrderno(OrgOrder object) {
 		this.orderManageDao.updateOrgOrderVehicleByOrderno(object);
 	}
-	
-	public List<Map<String, Object>> getOrgOrderCommentListByQuery(OrdercommentQueryParam queryParam) {
+
+    private List<Map<String, Object>> getOrgOrderCommentListByQuery(OrdercommentQueryParam queryParam) {
 		return this.orderManageDao.getOrgOrderCommentListByQuery(queryParam);
 	}
-	  
-	public int getOrgOrderCommentCountByQuery(OrdercommentQueryParam queryParam) {
+
+    private int getOrgOrderCommentCountByQuery(OrdercommentQueryParam queryParam) {
 		return this.orderManageDao.getOrgOrderCommentCountByQuery(queryParam);
 	}
-	
-	public void insertOrgOrdercomment(OrgOrdercomment object) {
+
+    private void insertOrgOrdercomment(OrgOrdercomment object) {
 		this.orderManageDao.insertOrgOrdercomment(object);
 	}
 	
@@ -974,13 +1011,13 @@ public class OrderManageService {
 		JSONObject json = null;
 		if (StringUtils.isBlank(pricecopy)) {
 			json = new JSONObject();
-			json.put("cost", Integer.valueOf(0));
-			json.put("mileage", Integer.valueOf(0));
+			json.put("cost", 0);
+			json.put("mileage", 0);
 			json.put("orderno", "");
-			json.put("rangecost", Integer.valueOf(0));
-			json.put("timecost", Integer.valueOf(0));
-			json.put("times", Integer.valueOf(0));
-			json.put("slowtimes", Integer.valueOf(0));
+			json.put("rangecost", 0);
+			json.put("timecost", 0);
+			json.put("times", 0);
+			json.put("slowtimes", 0);
 		} else {
 			json = JSONObject.fromObject(pricecopy);
 		}
@@ -1012,40 +1049,9 @@ public class OrderManageService {
 			sb.append("#");
 		}
 		DecimalFormat df = new DecimalFormat(sb.toString());
-		return Double.valueOf(df.format(num)).doubleValue();
+		return Double.valueOf(df.format(num));
 	}
-	private Boolean getOrderIsUseNow(OrgOrder order) {
-		boolean isusenow = order.isIsusenow();
-		if (isusenow) {
-			return Boolean.valueOf(true);
-		}
-		GetSendInfoParam param = new GetSendInfoParam();
-		param.setCompanyid(order.getCompanyid());
-		param.setCity(order.getOncity());
-        param.setUsetype(SendRulesEnum.USETYPE_APPOINTMENT.code);
-		param.setOrderprop(0);
-		JSONObject json = (JSONObject) this.templateHelper.dealRequestWithFullUrlToken(
-				SystemConfig.getSystemProperty("carserviceApi") + "/OrderApi/GetSendRule", HttpMethod.POST, null, param,
-				JSONObject.class);
-		if (json == null) {
-			return null;
-		}
-		if (json.getInt("status") == Retcode.OK.code) {
-            if(json.containsKey("sendrule") && null != json.get("sendrule")) {
-                long carsinterval = json.getJSONObject("sendrule").getLong("carsInterval") * 60L * 1000L;
-                long usetime = order.getUsetime().getTime();
-                long nowtime = System.currentTimeMillis();
-                if (usetime - nowtime > carsinterval) {
-                    return Boolean.valueOf(false);
-                }
-                return Boolean.valueOf(true);
-            } else {
-                return true;
-            }
-		}
-		return null;
-	}
-	
+
 	private void createDriverNews(OrgOrder order, double price, OrderMessageFactory.OrderMessageType type) {
 		String content = "";
 		String title = "";
@@ -1053,12 +1059,12 @@ public class OrderManageService {
 		if (OrderMessageFactory.OrderMessageType.REVIEWORDER.equals(type)) {
 			Double orderamount = order.getShouldpayamount();
 			if (orderamount == null) {
-				orderamount = Double.valueOf(order.getOrderamount());
+				orderamount = order.getOrderamount();
 			}
-			if (price > 0.0D) {
+			if (price > 0) {
 				title = "复核反馈";
 				content = "订单复核完成，车费金额应为" + orderamount + "元，差额部分不计入贡献。";
-			} else if (price < 0.0D) {
+			} else if (price < 0) {
 				title = "复核反馈";
 				content = "订单复核完成，车费金额应为" + orderamount + "元。";
 			} else {
@@ -1147,7 +1153,7 @@ public class OrderManageService {
         orderCancel.setCancelamount((int) ret.get("price"));
         int pricereason = (int) ret.get("pricereason");
         orderCancel.setCancelnature(PubOrdercancelEnum.getCancelnature(pricereason).code);
-        orderCancel.setCancelrule(ret.get("ordercancelrule").toString());
+        orderCancel.setCancelrule(StringUtil.parseBeanToJSON(ret.get("ordercancelrule")));
         orderCancel.setIdentifying(GUIDGenerator.newGUID());
         orgOrdercancelDao.updateOrgOrdercancelById(orderCancel);
 

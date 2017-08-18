@@ -631,7 +631,7 @@
 						AND le_leasescompany.`Status` = 1
 						AND org_order.userid = org_user.id
 						AND org_order.usetype = '0'
-						AND org_order.paymethod != '0'
+						AND org_order.paymethod = '2'
 						AND org_order.companyid = le_leasescompany.id
 						AND org_order.organid IN (
 							SELECT

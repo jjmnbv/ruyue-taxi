@@ -10,6 +10,15 @@ import java.util.Set;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+
 import com.szyciov.carservice.dao.AwardPassengerDao;
 import com.szyciov.carservice.dao.DriverDao;
 import com.szyciov.carservice.dao.OrderApiDao;
@@ -35,6 +44,7 @@ import com.szyciov.driver.enums.ReviewState;
 import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.driver.param.OrderListParam;
 import com.szyciov.driver.param.OrderStatisticsParam;
+import com.szyciov.dto.coupon.CouponInfoDTO;
 import com.szyciov.entity.AbstractOrder;
 import com.szyciov.entity.CancelParty;
 import com.szyciov.entity.CommonRabbitData;
@@ -51,6 +61,7 @@ import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.PubJpushlog;
 import com.szyciov.entity.PubOrderCancel;
+import com.szyciov.entity.PubOrderCancelRule;
 import com.szyciov.entity.PubSendrules;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.TaxiOrderCost;
@@ -94,23 +105,18 @@ import com.szyciov.param.PubPushLogParam;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.GsonUtil;
 import com.szyciov.util.JedisUtil;
 import com.szyciov.util.PasswordEncoder;
+import com.szyciov.util.ResultData;
 import com.szyciov.util.SMMessageUtil;
 import com.szyciov.util.SMSTempPropertyConfigurer;
 import com.szyciov.util.StringUtil;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
 
 @Service("OrderApiService")
 public class OrderApiService {
@@ -612,6 +618,9 @@ public class OrderApiService {
 	 */
 	private boolean checkUserCanOrder(OrgUser user,OrgOrder orderInfo,JSONObject result){
 		OrgUserParam oup = new OrgUserParam();
+		if(PayMethod.ORGAN.code.equals(orderInfo.getPaymethod())){  //机构支付,默认支付状态是未结算
+			oup.setPaymentstatus(PayState.MENTED.state);
+		}
 		oup.setUserid(user.getId());
 		if(user.isNotpay()){
 			result.clear();
@@ -1210,6 +1219,23 @@ public class OrderApiService {
 		}
 		return user;
 	}
+	
+	/**
+	 * 根据手机号查询个人用户
+	 * @param userPhone
+	 * @param result
+	 * @return
+	 */
+	private PeUser getPeUser(String userPhone){
+		PeUser user = new PeUser();
+		user.setAccount(userPhone);
+		user = dao.getPeUserByPhone(user);
+//		if(user == null){
+//			result.put("status", Retcode.FAILED.code);
+//			result.put("message", "未找到下单人");
+//		}
+		return user;
+	}
 
     /**
      * 验证机构用户是否存在用车规则
@@ -1264,7 +1290,13 @@ public class OrderApiService {
 		int[] reInt = updateSendTime(orderInfo,sendRule);
 		labourTime = reInt[0];
 		sendinterval = reInt[1];
+		
+		orderInfo.setCouponprice(oc.getCouponprice());
+		orderInfo.setCouponid(oc.getCouponid());
+		
 		doCreateOpTaxiOrder(orderInfo,oc);
+		doLockCoupon(orderInfo);
+		checkUserRegisterCity(orderInfo, user.getAccount());  //检查用户最近5单是否同一城市
 		
         //推送消息
 		if("1".equals(manualDriver)){
@@ -1319,8 +1351,15 @@ public class OrderApiService {
         int[] reInt = updateSendTime(orderInfo,sendRule,false);
         labourTime = reInt[0];
         sendinterval = reInt[1];
-        doCreateOpOrder(orderInfo,oc);
         
+		orderInfo.setCouponprice(oc.getCouponprice());
+		orderInfo.setCouponid(oc.getCouponid());
+		
+        
+        doCreateOpOrder(orderInfo,oc);   //创建订单
+		doLockCoupon(orderInfo);            //锁定优惠券
+		checkUserRegisterCity(orderInfo, user.getAccount());  //检查用户最近5单是否同一城市
+		
 		 //推送消息
 		if("1".equals(manualDriver)){
             com.szyciov.op.entity.PubDriver driver = this.opOrderApiService.getOpPubDriver(orderInfo.getDriverid());
@@ -1377,9 +1416,14 @@ public class OrderApiService {
 		int[] reInt = updateSendTime(orderInfo,sendRule,specialUser);
 		labourTime = reInt[0];
 		sendinterval = reInt[1];
-		//创建订单
-		doCreateOrgOrder(orderInfo,oc);
-
+		
+		orderInfo.setCouponprice(oc.getCouponprice());
+		orderInfo.setCouponid(oc.getCouponid());
+		
+		doCreateOrgOrder(orderInfo,oc);  //创建订单
+		doLockCoupon(orderInfo);            //锁定优惠券
+		checkUserRegisterCity(orderInfo, user.getAccount());  //检查用户最近5单是否同一城市
+		
         //推送消息
 		if("1".equals(manualDriver)){
             com.szyciov.lease.entity.PubDriver driver = this.dao.getPubDriver(orderInfo.getDriverid());
@@ -1405,6 +1449,38 @@ public class OrderApiService {
 		return result;
 	}
 
+	/**
+	 * 检查用户注册城市
+	 * 1.如果用户没有注册城市,更新为当前订单的上车城市
+	 * 2.如果连续5单为同一城市,更新用户的注册城市为该城市
+	 * @param orderInfo
+	 * @param userPhone
+	 */
+	private void checkUserRegisterCity(AbstractOrder orderInfo,String userPhone){
+		try{
+			PeUser user = getPeUser(userPhone);
+			if(null == user.getRegistercity()){
+				user.setRegistercity(orderInfo.getOncity());
+			}else if(checkUserLastOrders(userPhone)){
+				user.setRegistercity(orderInfo.getOncity());
+			}
+			dao.updatePeUserCity(user);
+		}catch(Exception e){
+			logger.error("检查用户注册城市出错",e);
+		}
+	}
+		
+	/**
+	 * 检查用户最近完成的5单是否是同一城市
+	 * @param orderInfo
+	 * @return
+	 */
+	private boolean checkUserLastOrders(String userPhone){
+		List<OrderInfoDetail> list = dao.getLastOrders(userPhone);
+		if(list != null && list.size() > 1) return false;
+		return true;
+	}
+	
     /**
      * 判断司机是否下线
      * @param driverId
@@ -1418,8 +1494,6 @@ public class OrderApiService {
             return false;
         }
     }
-
-
 
     /**
      * 获取订单信息
@@ -1494,10 +1568,10 @@ public class OrderApiService {
 		}
 		//计算价格
 		Date starttime = oid != null ? oid.getStarttime() : null;
+		doPremium(param,oc,null);                      //获取溢价倍率
+		doDiscount(oc,param.getOrderprop() == 0);  //打折
+		doGetCanUseCounpon(param,oc,null);   //获取优惠券
 		oc = StringUtil.countCost(oc, starttime, oid == null,param.isIsusenow());
-		doPremium(oid,oc);    //获取溢价倍率
-//		doDiscount(oc,param.getOrderprop() == 0);
-		
 		if(param.isHasunit()){
 			result = convertOrderCost(oc);
 		}else{
@@ -1511,46 +1585,135 @@ public class OrderApiService {
 	 * @param oid
 	 * @param orderCost
 	 */
-	private void doPremium(OrderInfoDetail oid,OrderCost oc){
-		PremiumRuleParam prp = new PremiumRuleParam();
-		PubPremiumRuleEnum platform = oid.getOrderprop() == 0 ? PubPremiumRuleEnum.PLATFORMTYPE_LEASE
-				: PubPremiumRuleEnum.PLATFORMTYPE_OPERATE;
-		prp.setCartype(PubPremiumRuleEnum.CARTYPE_NET.code);
-		prp.setCitycode(oid.getCityid());
-		prp.setLeasescompanyid(oid.getCompanyid());
-		prp.setPlatformtype(platform.code);
-		prp.setUsetime(oid.getUsetime());
-		Map<String,Object> result = premiumRuleService.getPremiumrate(prp);
-		if((int)result.get("status") != Retcode.OK.code) return;
-		oc.setPremiumrate((double)result.get("premiumrate"));
+	private void doPremium(OrderCostParam param,OrderCost oc,TaxiOrderCost toc){
+		if(OrderEnum.USETYPE_PUBLIC.code.equals(param.getUsetype())){
+			return;  //因公用车,无溢价
+		}
+		try {
+			PremiumRuleParam prp = new PremiumRuleParam();
+			PubPremiumRuleEnum platform = param.getOrderprop() == 0 ? PubPremiumRuleEnum.PLATFORMTYPE_LEASE
+					: PubPremiumRuleEnum.PLATFORMTYPE_OPERATE;
+			prp.setCartype(PubPremiumRuleEnum.CARTYPE_NET.code);
+			prp.setCitycode(param.getCity());
+			prp.setLeasescompanyid(param.getCompanyid());
+			prp.setPlatformtype(platform.code);
+			prp.setUsetime(param.getUsetime());
+			Map<String,Object> result = premiumRuleService.getPremiumrate(prp);
+			if((int)result.get("status") != Retcode.OK.code) return;
+			if(oc != null){
+				oc.setPremiumrate((double)result.get("premiumrate"));
+			}else if (toc != null) {
+				toc.setPremiumrate((double)result.get("premiumrate"));
+			}
+		} catch (Exception e) {
+			logger.error("计算溢价倍率异常",e);
+		}
 	}
 	
 	/**
 	 * 锁定优惠券
+	 * @param oid
+	 * @param oc
+	 * @param couponId
 	 */
-	private void doLockCoupon(OrderInfoDetail oid,OrderCost oc,String couponId){
-//		templateHelper.dealRequestWithFullUrl(url, method, entity, responseType, uriVariables)
-		
+	@SuppressWarnings("unchecked")
+	private void doLockCoupon(AbstractOrder order){
+		if(order instanceof OrgOrder){
+			OrgOrder orgOrder = (OrgOrder)order;
+			if(OrderEnum.USETYPE_PUBLIC.code.equals(orgOrder.getUsetype()) 
+					&& PayMethod.ORGAN.code.equals(orgOrder.getPaymethod())){
+				return;  //因公机构支付不能使用优惠券
+			}
+		}
+		try {
+			String url = SystemConfig.getSystemProperty("couponApi") + "/coupon/reserve";
+			Map<String,Object> map = new HashMap<>();
+			map.put("couponId", order.getCouponid());
+			map.put("orderId", order.getOrderno());
+			map.put("useType", "2");  //使用类型 1-账单 2-订单
+			map.put("money", order.getCouponprice());
+			map.put("userId", order.getUserid());
+			map.put("city", order.getOncity());
+			map.put("version", "V4.0.0");
+			String jsonStr = templateHelper.dealRequestWithFullUrlToken(url, HttpMethod.POST, null,map, String.class);
+			ResultData couponResult = GsonUtil.fromJson(jsonStr, ResultData.class);
+			if(Retcode.OK.code != couponResult.getStatus()) return;
+			if("single".equals(couponResult.getDataType())){
+				Map<String, Object> coupon = GsonUtil.fromJson(couponResult.getData(), Map.class);
+				boolean isReserve = (boolean) coupon.get("isReserve");
+				if(!isReserve) {
+					logger.info("锁定优惠券失败:" + coupon.get("Msg"));
+				}else{
+					logger.info("锁定优惠券成功,金额:" + order.getCouponprice() + " " + order.getCouponid());
+				}
+//			}else{
+//				JSONArray dataList = json.getJSONArray("data");
+			}
+		} catch (Exception e) {
+			logger.error("锁定优惠券异常",e);
+		}
 	}
 	
 	/**
-	 * 
+	 * 获取可用优惠券
+	 * @param oid
+	 * @param oc
 	 */
-	private void doGetCanUseCounpon(){
-		
+	private void doGetCanUseCounpon(OrderCostParam param,OrderCost oc,TaxiOrderCost toc){
+		if(OrderEnum.USETYPE_PUBLIC.code.equals(param.getUsetype()) 
+			&& PayMethod.ORGAN.code.equals(param.getPaymethod())){
+			return;  //因公机构支付不能使用优惠券
+		}else if (OrderEnum.USETYPE_PERSONAL.code.equals(param.getUsetype())
+			&& PayMethod.OFFLINE.code.equals(param.getPaymethod())) {
+			return;  //出租车线下支付不能使用优惠券
+		}
+		try {
+			String url = SystemConfig.getSystemProperty("couponApi") + "/coupon/get/max";
+			String usertype = param.getOrderprop() == 0 ? "2" : "3";
+			String serviceType = param.getOrderprop() == 2 ? "1" : "2";
+			Map<String,Object> map = new HashMap<>();
+			map.put("serviceType", serviceType);   //使用业务 1-出租车 2-网约车
+			map.put("usetId", param.getUserid());
+			map.put("companyId", param.getCompanyid());
+			map.put("cityCode", param.getCity());
+			map.put("version", "V4.0.0");
+			map.put("userType", usertype);
+			String jsonStr = templateHelper.dealRequestWithFullUrlToken(url, HttpMethod.POST, null,map, String.class);
+			ResultData couponResult = GsonUtil.fromJson(jsonStr, ResultData.class);
+			if(Retcode.OK.code != couponResult.getStatus()) return;
+			if("single".equals(couponResult.getDataType())){
+				CouponInfoDTO coupon = GsonUtil.fromJson(couponResult.getData(), CouponInfoDTO.class);
+				logger.info("获取到的优惠券信息:" + couponResult.getData());
+				if(oc != null) {
+					oc.setCouponid(coupon.getId());
+					oc.setCouponprice(parseInt(coupon.getMoney().intValue()));
+//					oc.setCost(oc.getCost() - oc.getCouponprice());   //所有计算放入StringUtil.countCost方法中
+				}else if (toc != null) {
+					toc.setCouponid(coupon.getId());
+					toc.setCouponprice(parseInt(coupon.getMoney().intValue()));
+				}
+//			}else{
+//				JSONArray dataList = json.getJSONArray("data");
+			}
+		} catch (Exception e) {
+			logger.error("获取优惠券异常",e);
+		}
 	}
 	
 	/**
 	 * 费用打折
+	 * @param oc
+	 * @param isorg
 	 */
-	@SuppressWarnings("unused")
 	private void doDiscount(OrderCost oc,boolean isorg){
-		boolean takeOff = checkCanTakeOff();
-		if(takeOff){  //如果折扣开关开启,使用折扣价
-			double takeOffPoint = getTakeOffPoint(isorg);
-			double amount = Math.round(oc.getCost() * takeOffPoint);
-			oc.setCost(amount);
-		}
+		oc.setDiscount(1.0);  //取消打折
+		return;
+//		boolean takeOff = checkCanTakeOff();
+//		if(takeOff){  //如果折扣开关开启,使用折扣价
+//			double takeOffPoint = getTakeOffPoint(isorg);
+//			double amount = Math.round(oc.getCost() * takeOffPoint);
+//			oc.setCost(amount);  //所有计算放入StringUtil.countCost方法中
+//		}
 	}
 	
 	/**
@@ -1561,7 +1724,7 @@ public class OrderApiService {
 	private JSONObject convertOrderCost(OrderCost oc){
 		JSONObject result = new JSONObject();
 		result.put("orderno", oc.getOrderno());
-		result.put("cost", oc.getCost()+"元");
+		result.put("cost", StringUtil.formatNum(oc.getCost(), 1)+"元");
 		result.put("mileage", StringUtil.formatNum(oc.getMileage()/1000, 1)+"公里");
 		result.put("startprice", oc.getStartprice()+"元");
 		result.put("rangeprice", oc.getRangeprice()+"元/公里");
@@ -1581,6 +1744,8 @@ public class OrderApiService {
 		result.put("nightstarttime", oc.getNightstarttime());
 		result.put("nightendtime", oc.getNightendtime());
 		result.put("nighteprice", oc.getNighteprice()+"元/公里");
+		result.put("premiumrate", oc.getPremiumrate()+"倍");
+		result.put("couponprice", oc.getCouponprice()+"元");
 		return result;
 	}
 	
@@ -1637,6 +1802,9 @@ public class OrderApiService {
 						+ orderCost.getSurcharge();
 				orderCost.setRangecost(StringUtil.formatNum(rangecost, 1));
 				orderCost.setCost(orderCost.getRangecost() + orderCost.getSchedulefee());
+				doGetCanUseCounpon(param, null,orderCost);
+				doPremium(param,null,orderCost);
+				orderCost.setCost(StringUtil.formatNum(orderCost.getCost() * orderCost.getPremiumrate(), 1));
 				result.put("status", Retcode.OK.code);
 				result.put("message", Retcode.OK.msg);
 				result.put("taxiOrderCost", orderCost);
@@ -1757,7 +1925,7 @@ public class OrderApiService {
 		if(CancelParty.LEASE.code.equals(param.getReqsrc()) 
 		|| CancelParty.OPERATOR.code.equals(param.getReqsrc())){  //客服取消
 			poc = saveOrUpdateCancelInfo(order,param,null,result);
-			if(poc == null) return cancellorder;
+			if(result != null && !result.isEmpty()) return cancellorder;
 		}else{   //乘客(机构端算乘客)取消
 			Map<String,Object> map = doCancelPunish(order);
 			poc = saveOrUpdateCancelInfo(order,param,map,result);
@@ -1769,12 +1937,19 @@ public class OrderApiService {
 		} else {
 			cancellorder = doCancelOpTaxiOrder(order, param);
 		}
+		
 		handleDriverStatus(order,param,pd);
-		rollbackUserBalance(order);
+		rollbackUserBalance(order,poc);
+
+		param.setRemind(false);   //取消订单同时取消行程提醒
+		removeDriverMessage(param,pd);
+        removeDriverTravelReminder(order.getOrderno(), order.getUsetype());
+		cancelOrderRemind(param);
 		
 		order.setStatus(OrderState.CANCEL.state);
 		order.setCanceltime(new Date());
 		order.setCancelparty(param.getReqsrc());
+		order.setExpensetype(parseInt(OrderEnum.EXPENSETYPE_CANCEL_PUNISH.code));
 		
 		result.clear();
 		result.put("status", Retcode.OK.code);
@@ -1790,35 +1965,47 @@ public class OrderApiService {
 	 * @param cancelrule
 	 */
 	private PubOrderCancel saveOrUpdateCancelInfo(OrderInfoDetail order,OrderApiParam param,Map<String, Object> cancelrule,JSONObject result){
-		int ordertype = order.getOrderprop() == 0 ? 1 : 
-									order.getOrderprop() == 1 ? 2 : 
-									order.getOrderprop() == 2 ? 3 : 1;
-		PubOrderCancel poc = dao.getOrderCancelInfo(order.getOrderno(),ordertype);
-		if(poc == null) {
-			poc = new PubOrderCancel();
-			poc.setId(GUIDGenerator.newGUID());
-			poc.setStatus(DataStatus.OK.code);
-		}
-		if(CancelParty.PASSENGER.code.equals(param.getReqsrc()) 
-		|| CancelParty.ORGAN.code.equals(param.getReqsrc())){  //乘客取消(机构端属于乘客取消)
-			int cancelnature = PubOrdercancelEnum.getCancelnature((int)cancelrule.get("pricereason")).code;
-			poc.setOrderno(order.getOrderno());
-			poc.setCancelamount((int)cancelrule.get("price"));
-			poc.setCancelnature(cancelnature);
-			poc.setCancelreason(param.getCancelreason());
-			poc.setDutyparty(param.getDutyparty());	
-			poc.setCancelrule((String)cancelrule.get("ordercancelrule"));
-		}else{     //客服取消
-			if(!poc.getIdentifying().equals(param.getIdentifying())){  //如果唯一标识不相同,则表示被其他客服操作了
-				result.clear();
-//				result.put("status", Retcode.ANOTHEREXCUTE.code);
-//				result.put("message", Retcode.ANOTHEREXCUTE.msg);
-				return null;
+		PubOrderCancel poc = null;
+		try {
+			int ordertype = order.getOrderprop() == 0 ? 2 : 
+										order.getOrderprop() == 1 ? 1 : 
+										order.getOrderprop() == 2 ? 3 : 1;
+			poc = dao.getOrderCancelInfo(order.getOrderno(),ordertype);
+			if(poc == null) {
+				poc = new PubOrderCancel();
+				poc.setId(GUIDGenerator.newGUID());
+				poc.setStatus(DataStatus.OK.code);
 			}
-			poc.setDutyparty(param.getDutyparty());	
-			poc.setCancelreason(param.getCancelreason());
+			if(CancelParty.PASSENGER.code.equals(param.getReqsrc()) 
+					|| CancelParty.ORGAN.code.equals(param.getReqsrc())){  //乘客取消(机构端属于乘客取消)
+				int cancelnature = PubOrdercancelEnum.getCancelnature((int)cancelrule.get("pricereason")).code;
+				if(cancelrule.get("ordercancelrule").equals(""));
+				poc.setOrderno(order.getOrderno());
+				poc.setCancelamount((int)cancelrule.get("price"));
+				poc.setCancelnature(cancelnature);
+				poc.setCancelreason(param.getCancelreason() == null ? 0 : param.getCancelreason());
+				poc.setCancelrule((String)cancelrule.get("ordercancelrule"));
+			}else{     //客服取消
+				if(!poc.getIdentifying().equals(param.getIdentifying())){  //如果唯一标识不相同,则表示被其他客服操作了
+					logger.warn("该订单已被其他客服操作:" + poc.getOrderno());
+					result.clear();
+					result.put("status", Retcode.ANOTHEREXCUTE.code);
+					result.put("message", Retcode.ANOTHEREXCUTE.msg);
+					return poc;
+				}
+				poc.setDutyparty(param.getDutyparty());	
+				poc.setCancelreason(param.getCancelreason());
+                poc.setCanceloperator(param.getCanceloperator());
+			}
+			poc.setOrderprop(ordertype);
+			dao.saveOrUpdateOrderCancelInfo(poc);
+			return poc;
+		} catch (Exception e) {
+			logger.error("保存取消明细异常",e);
+			poc = new PubOrderCancel();
+			poc.setCancelamount(0);
+			poc.setCancelnature(PubOrdercancelEnum.CANCELNATURE_NODUTY.code);
 		}
-		dao.saveOrUpdateOrderCancelInfo(poc, ordertype);
 		return poc;
 	}
 	
@@ -1826,7 +2013,7 @@ public class OrderApiService {
 	 * 退回下单人预扣款
 	 * @param order
 	 */
-	private void rollbackUserBalance(OrderInfoDetail order){
+	private void rollbackUserBalance(OrderInfoDetail order,PubOrderCancel poc){
 		if(order.getOrderprop() == OrderVarietyEnum.LEASE_NET.icode){ //如果是机构订单,并且是机构支付,还需退回预扣款
 			OrgOrder orgOrder = dao.getOrgOrder(order.getOrderno());
 			if(PayMethod.ORGAN.code.equals(orgOrder.getPaymethod())){
@@ -1834,7 +2021,7 @@ public class OrderApiService {
 				ocp.setUserid(orgOrder.getUserid());
 				ocp.setCompanyid(orgOrder.getCompanyid());
 				OrgOrganCompanyRef oocr = dao.getOrgBalance(ocp);
-				oocr.setBalance(oocr.getBalance() + orgOrder.getEstimatedcost());
+				oocr.setBalance(oocr.getBalance() + orgOrder.getEstimatedcost() - poc.getCancelamount());
 				dao.updateOrgBalance(oocr);
 			}
 		}
@@ -1948,7 +2135,7 @@ public class OrderApiService {
 		}
 		//订单完成时保存费用,耗时
 		OrderCost oc = StringUtil.parseJSONToBean(cost.toString(), OrderCost.class);
-		StringUtil.formatOrderCost2Int(oc);   //完成时总费用不保留小数
+//		StringUtil.formatOrderCost2Int(oc);   //完成时总费用不保留小数
 		order.setPricecopy(cost.toString());     //保存计费副本(其中包含低速时长)
 		order.setOrderamount(oc.getCost());
 		order.setTimecost(oc.getTimecost());
@@ -2034,8 +2221,6 @@ public class OrderApiService {
 				pd = dao.getPubDriverById(order.getDriverid());
 			}
 			ordermessage = orderCancel(order,param,pd,result);
-			removeDriverMessage(param,pd);
-            removeDriverTravelReminder(order.getOrderno(), order.getUsetype());
 		}else if(OrderState.SERVICEDONE.state.equals(param.getOrderstate())){
 			ordermessage = orderDone(order,param,result);
 			if(ordermessage == null) return result;
@@ -2282,16 +2467,18 @@ public class OrderApiService {
 	private void doOrgPayOrder(OrderInfoDetail order,OrgOrder orgOrder,OrderCostParam ocp){
 		//还需要判断是否选择的机构支付
 		if(!PayMethod.ORGAN.code.equals(orgOrder.getPaymethod())) return;
-		if(!order.getUserphone().equals(order.getPassengerphone())){
-			PeUser user = doAwardPoint(orgOrder);       //完成时积分返积分(必须先返还,扣款后可能使用折扣)
-			takeOffOrgBalance(orgOrder,ocp);                 //机构用户扣款(先扣款,明细中要保存打折后)
-			doSavePeUserExpenses(order,user);                //如果需要返积分则保存明细
-		}else{
-			logger.info("下单人与乘车人相同,不返还积分");
+//		if(!order.getUserphone().equals(orgOrder.getPassengerphone())){
+//			PeUser user = doAwardPoint(orgOrder);       //完成时积分返积分(必须先返还,扣款后可能使用折扣)
+//			takeOffOrgBalance(orgOrder,ocp);                 //机构用户扣款(先扣款,明细中要保存打折后)
+//			doSavePeUserExpenses(order,user);                //如果需要返积分则保存明细
+//		}else{
+//			logger.info("下单人与乘车人相同,不返还积分");
 			takeOffOrgBalance(orgOrder,ocp);      //机构用户扣款
-		}
+//		}
 		order.setPaystatus(PayState.MENTED.state);
 		order.setCompletetime(new Date());
+		orgOrder.setPaymentstatus(PayState.MENTED.state);
+		orgOrder.setCompletetime(new Date());
 	}
 	
 	/**
@@ -2300,6 +2487,14 @@ public class OrderApiService {
 	 * @param opOrder
 	 */
 	private void doOpPayOrder(OrderInfoDetail order,OpOrder opOrder){
+		if(opOrder.getOrderamount() == 0){    //如果金额为0,直接完成订单,不用支付
+			order.setPaystatus(PayState.PAYED.state);
+			order.setCompletetime(new Date());
+			opOrder.setPaymentstatus(PayState.PAYED.state);
+			opOrder.setCompletetime(new Date());
+		}else{
+			
+		}
 		//获取费用时已经打折,不需要再次打折
 //		boolean takeOff = checkCanTakeOff();
 //		if(takeOff){  //如果折扣开关开启,使用折扣价
@@ -2327,7 +2522,7 @@ public class OrderApiService {
 			orgOrder.setOrderamount(oc.getCost());
 			orgOrder.setShouldpayamount(oc.getCost());
 			orgOrder.setActualpayamount(oc.getCost());
-			orgOrder.setOriginalorderamount((double)Math.round(oc.getCost()/oc.getDiscount()));
+			orgOrder.setOriginalorderamount(StringUtil.formatNum(oc.getCost()/oc.getDiscount(), 1));
 			orgOrder.setEndtime(order.getEndtime());
 			orgOrder.setUpdatetime(new Date());
 			orgOrder.setOrderstatus(OrderState.SERVICEDONE.state);
@@ -2351,6 +2546,7 @@ public class OrderApiService {
 			dao.updateOpOrder(opOrder);
 			completeOrder = new OrderMessage(opOrder, OrderMessage.FINISHORDER);	
 		}
+		order.setExpensetype(parseInt(OrderEnum.EXPENSETYPE_SERVICE_DONE.code));
 		return completeOrder;
 	}
 	
@@ -2386,6 +2582,16 @@ public class OrderApiService {
 		if(OrderState.CANCEL.state.equals(param.getOrderstatus()) && 
 			(OrderState.INSERVICE.state.equals(order.getStatus()) 
 			|| OrderState.SERVICEDONE.state.equals(order.getStatus()))){
+			result.put("status", Retcode.INVALIDORDERSTATUS.code);
+			result.put("message", "当前订单不可取消");
+			return false;
+		}
+		//出租车司机出发,抵达时,如果打表里程不为0,不允许取消
+		if(OrderEnum.ORDERTYPE_TAXI.code.equals(param.getOrdertype())
+			&& order.getMeterrange() > 0
+			&& OrderState.START.state.equals(order.getStatus())
+			&& OrderState.ARRIVAL.state.equals(order.getStatus())
+			){
 			result.put("status", Retcode.INVALIDORDERSTATUS.code);
 			result.put("message", "当前订单不可取消");
 			return false;
@@ -2456,7 +2662,9 @@ public class OrderApiService {
 		List<OrgOrder> orgOrderList = dao.getOverTimeOrgOrderList();
 		if(null != orgOrderList && !orgOrderList.isEmpty()) {
 			for (OrgOrder order : orgOrderList) {
+                addOrdercancel(order);
 				order.setOrderstatus("8");
+				order.setExpensetype(Integer.valueOf(OrderEnum.EXPENSETYPE_CANCEL_PUNISH.code));
 				order.setCancelparty(CancelParty.SYSTEM.code);
 				dao.cancelOverTimeOrgOrder(order);
 				//修改机构可用金额
@@ -2482,8 +2690,10 @@ public class OrderApiService {
 		List<OpOrder> opOrderList = dao.getOverTimeOpOrderList();
 		if(null != opOrderList && !opOrderList.isEmpty()) {
 			for (OpOrder order : opOrderList) {
+                addOrdercancel(order);
 				order.setOrderstatus("8");
 				order.setCancelparty(CancelParty.SYSTEM.code);
+				order.setExpensetype(Integer.valueOf(OrderEnum.EXPENSETYPE_CANCEL_PUNISH.code));
 				dao.cancelOverTimeOpOrder(order);
                 removeDriverTravelReminder(order.getOrderno(), order.getUsetype());
 				//发送消息
@@ -2497,9 +2707,11 @@ public class OrderApiService {
 		List<OpTaxiOrder> opTaxiOrderList = dao.getOverTimeOpTaxiOrderList();
 		if(null != opTaxiOrderList && !opTaxiOrderList.isEmpty()) {
 			for (OpTaxiOrder opTaxiOrder : opTaxiOrderList) {
+                addOrdercancel(opTaxiOrder);
 				opTaxiOrder.setOrderstatus("8");
 				opTaxiOrder.setCancelparty(CancelParty.SYSTEM.code);
 				opTaxiOrder.setOrdersortcolumn(OrdersortColumn.CANCEL.state);
+				opTaxiOrder.setExpensetype(Integer.valueOf(OrderEnum.EXPENSETYPE_CANCEL_PUNISH.code));
 				dao.cancelOverTimeOpTaxiOrder(opTaxiOrder);
                 removeDriverTravelReminder(opTaxiOrder.getOrderno(), opTaxiOrder.getUsetype());
 				//发送消息
@@ -2515,8 +2727,47 @@ public class OrderApiService {
 		
 		return resultMap;
 	}
-	
-	
+
+    /**
+     * 设置订单取消信息
+     * @param order
+     * @return
+     */
+    public void addOrdercancel(AbstractOrder order) {
+        int ordertype = 1;
+        if(order instanceof OpOrder) {
+            ordertype = 1;
+        } else if(order instanceof OrgOrder) {
+            ordertype = 2;
+        } else if(order instanceof OpTaxiOrder) {
+            ordertype = 3;
+        }
+        PubOrderCancel orderCancel = dao.getOrderCancelInfo(order.getOrderno(), ordertype);
+        if(null == orderCancel) {
+            orderCancel = new PubOrderCancel();
+            orderCancel.setId(GUIDGenerator.newGUID());
+            orderCancel.setOrderno(order.getOrderno());
+        }
+        orderCancel.setDutyparty(null);
+        orderCancel.setCancelamount(0);
+        orderCancel.setCancelnature(null);
+        orderCancel.setCancelreason(PubOrdercancelEnum.CANCELREASON_SYSTEM_FAIL.code);
+        orderCancel.setIdentifying(null);
+
+        //查询订单取消信息
+        Map<String, String> param = new HashMap<String, String>();
+        param.put("orderno", order.getOrderno());
+        param.put("ordertype", order.getOrdertype());
+        param.put("usetype", order.getUsetype());
+        Map<String, Object> ret = orderCancelRuleService.getCancelPrice(param, true);
+        if(null == ret || !ret.get("status").equals(Retcode.OK.code)) {
+            return;
+        }
+        orderCancel.setCancelrule(StringUtil.parseBeanToJSON(ret.get("ordercancelrule")));
+        orderCancel.setOrderprop(ordertype);
+        dao.saveOrUpdateOrderCancelInfo(orderCancel);
+    }
+
 	public OrgOrder getBeArtificialOrgOrder(Map<String, Object> params) {
 		String companyId = (String) params.get("companyId");
 		Map<String, OrgOrder> orgOrderMap = OrderMessageUtil.getbeArtificialOrgOrderInstance();

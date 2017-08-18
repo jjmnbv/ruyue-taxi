@@ -14,6 +14,8 @@
 			(case when ISNULL(sum(paidmoney)) then 0 else sum(paidmoney) end) AS payedmoney,
 			(case when ISNULL(sum(paidmoney+bepaidmoney)) then 0 else sum(paidmoney+bepaidmoney) end) as incomemoney,
 			(case when ISNULL(sum(diffmoney)) then 0 else sum(diffmoney) end)  as diffmoney,
+			(case when ISNULL(sum(cancelmoney)) then 0 else sum(cancelmoney) end)  as cancelmoney,
+			(case when ISNULL(sum(couponmoney)) then 0 else sum(couponmoney) end)  as couponmoney,
 			(case when ISNULL(sum(paidmoney+bepaidmoney+diffmoney)) then 0 else sum(paidmoney+bepaidmoney+diffmoney) end)  as ordersmoney
 		FROM
 			op_indexorderstatistics

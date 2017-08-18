@@ -87,5 +87,7 @@
 		
 		<typeAlias type="com.szyciov.lease.entity.PubDictionary" alias="PubDictionary"/>
         <typeAlias type="com.szyciov.dto.coupon.PubCouponActivityDto" alias="pubcouponactivitydto"/>
+
+		<typeAlias type="com.szyciov.lease.entity.PubCityAddr" alias="PubCityAddr"/>
 	</typeAliases>
 </configuration>

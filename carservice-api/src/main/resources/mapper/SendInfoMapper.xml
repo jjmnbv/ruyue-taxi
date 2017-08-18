@@ -282,30 +282,7 @@
 			pub_driver_vehicle_ref.vehicleid,
 			pub_vehcline.name as vehclinename,
       		pub_vehcbrand.name as vehcbrandname,
-      		concat((
-					SELECT
-							pub_dictionary.text
-						FROM
-							pub_dictionary
-						WHERE
-							pub_dictionary.type = '车牌省'
-						AND pub_dictionary.value = pub_vehicle.platenoprovince
-						AND pub_dictionary.status = 1
-						limit 0,1
-					),
-					(
-						SELECT
-							pub_dictionary.text
-						FROM
-							pub_dictionary
-						WHERE
-							pub_dictionary.type = '车牌市'
-						AND pub_dictionary.value = pub_vehicle.platenocity
-						AND pub_dictionary.status = 1
-						limit 0,1
-					),
-					pub_vehicle.plateno
-			) as plateno
+      		pub_vehicle.fullplateno plateno
 		FROM
 			pub_driver
 		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id
@@ -352,22 +329,27 @@
 	<select id="listOpOrderDriver" resultType="PubDriver" parameterType="SendOrderDriverQueryParam">
 		SELECT
 		DISTINCT pub_driver.*,
-		pub_driver_vehicle_ref.vehicleid,
+		ref.vehicleid,
 		pub_vehcline.name as vehclinename,
 		pub_vehcbrand.name as vehcbrandname,
-		getPlatenoStr(pub_vehicle.platenoprovince,pub_vehicle.platenocity,pub_vehicle.plateno) as plateno
-		,op_vehiclemodels.`level` vehiclelevel
+		vehicle.fullplateno as plateno
+		,models.`level` vehiclelevel
 		FROM
 		pub_driver
-		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id AND pub_driver_vehicle_ref.status = 1
-		LEFT JOIN pub_vehicle ON pub_driver_vehicle_ref.vehicleid = pub_vehicle.id AND pub_vehicle.status=1
-		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.id AND pub_vehcline.status=1
+		LEFT JOIN pub_driver_vehicle_ref ref ON ref.driverid = pub_driver.id AND ref.status = 1
+		LEFT JOIN pub_vehicle vehicle ON ref.vehicleid = vehicle.id AND vehicle.status=1
+		LEFT JOIN pub_vehcline ON vehicle.vehclineid = pub_vehcline.id AND pub_vehcline.status=1
 		LEFT JOIN pub_vehcbrand ON pub_vehcbrand.id = pub_vehcline.vehcBrandID AND pub_vehcbrand.status=1
-		LEFT JOIN pub_vehicle_scope ON pub_vehicle.id = pub_vehicle_scope.vehicleid AND pub_vehicle_scope.status=1
-		LEFT JOIN op_vehcline_models_ref  ON pub_vehicle.vehclineid = op_vehcline_models_ref.vehclineid and op_vehcline_models_ref.`Status` ='1'
-		LEFT JOIN op_vehiclemodels_vehicle_ref ref on	  ref.vehicleid = pub_vehicle.id and ref.status =1
-		LEFT JOIN op_vehiclemodels on op_vehiclemodels.`Status` = '1'
-		and (ref.vehiclemodelsid = op_vehiclemodels.id or op_vehiclemodels.id = op_vehcline_models_ref.vehiclemodelsid)
+		LEFT JOIN pub_vehicle_scope ON vehicle.id = pub_vehicle_scope.vehicleid AND pub_vehicle_scope.status=1
+		LEFT JOIN pub_cooresource a on a.vehicleid = vehicle.id and a.status =1
+		left join pub_coooperate t on t.id = a.coooperateid
+		<if test="companyid!=null and companyid!=''">
+			and T.companyid =#{companyid}
+		</if>
+		AND T.`status` = 1 and t.coostate = '1' and t.cootype = '1'
+		LEFT JOIN pub_vehicle_models_ref modelref on modelref.companyid = modelref.companyid
+		and modelref.vehicleid = vehicle.id   and modelref.status =1
+		LEFT JOIN op_vehiclemodels models on models.`Status` = '1' and models.id = modelref.vehiclemodelsid
 		WHERE pub_driver.status = 1
 		and pub_driver.jobstatus =0
 		<if test="userid != null and userid != ''">
@@ -375,7 +357,7 @@
 		</if>
 		AND pub_driver.vehicletype=#{vehicleType}
 		<if test="vehicleType==0">
-			and op_vehiclemodels.id is not null
+			and models.id is not null
 		</if>
 		AND (pub_driver.passworkstatus in ('0','1','') or pub_driver.passworkstatus is null)
 
@@ -390,12 +372,7 @@
 		AND(pub_vehicle_scope.cityid=#{city} or pub_vehicle_scope.cityid=#{offcity})
 
 		<if test="queryModelIds!=null">
-			and (ref.vehiclemodelsid in
-
-			<foreach collection="queryModelIds" index="index" item="modelId" open="(" separator="," close=")">
-				#{modelId}
-			</foreach>
-			or op_vehcline_models_ref.vehiclemodelsid in
+			and (modelref.vehiclemodelsid in
 
 			<foreach collection="queryModelIds" index="index" item="modelId" open="(" separator="," close=")">
 				#{modelId}
@@ -403,18 +380,8 @@
 			)
 		</if>
 
-		<!--<if test="companyid != null and companyid != ''">-->
-			<!--AND pub_driver.leasescompanyid = #{companyid}-->
-		<!--</if>-->
-        <if test="belongleasecompany != null and belongleasecompany != ''">
-            AND pub_driver.belongleasecompany = #{belongleasecompany}
-        </if>
-		<if test='platformType!=null and platformType="0"' >
-			and ((pub_driver.leasescompanyid in
-			(select le_leasescompany.id from le_leasescompany
-			where le_leasescompany.tocstate = "2" and le_leasescompany.status = 1)
-			and pub_driver.platformtype = "1")
-			or pub_driver.platformtype = "0")
+		<if test="belongleasecompany != null and belongleasecompany != ''">
+			AND pub_driver.belongleasecompany = #{belongleasecompany}
 		</if>
 
 		<![CDATA[
@@ -430,29 +397,34 @@
 	<select id="listOpOrderDriver4Reverve" resultType="PubDriver" parameterType="SendOrderDriverQueryParam">
 		SELECT
 		DISTINCT pub_driver.*,
-		pub_driver_vehicle_ref.vehicleid,
+		ref.vehicleid,
 		pub_vehcline.name as vehclinename,
 		pub_vehcbrand.name as vehcbrandname,
-		getPlatenoStr(pub_vehicle.platenoprovince,pub_vehicle.platenocity,pub_vehicle.plateno) as plateno
-        ,op_vehiclemodels.`level` vehiclelevel
+		vehicle.fullplateno as plateno
+        ,models.`level` vehiclelevel
 		FROM
 		pub_driver
-		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id AND pub_driver_vehicle_ref.status = 1
-		LEFT JOIN pub_vehicle ON pub_driver_vehicle_ref.vehicleid = pub_vehicle.id AND pub_vehicle.status=1
-		LEFT JOIN pub_vehcline ON pub_vehicle.vehclineid = pub_vehcline.id AND pub_vehcline.status=1
+		LEFT JOIN pub_driver_vehicle_ref ref ON ref.driverid = pub_driver.id AND ref.status = 1
+		LEFT JOIN pub_vehicle vehicle ON ref.vehicleid = vehicle.id AND vehicle.status=1
+		LEFT JOIN pub_vehcline ON vehicle.vehclineid = pub_vehcline.id AND pub_vehcline.status=1
 		LEFT JOIN pub_vehcbrand ON pub_vehcbrand.id = pub_vehcline.vehcBrandID AND pub_vehcbrand.status=1
-		LEFT JOIN pub_vehicle_scope ON pub_vehicle.id = pub_vehicle_scope.vehicleid AND pub_vehicle_scope.status=1
-		LEFT JOIN op_vehcline_models_ref  ON pub_vehicle.vehclineid = op_vehcline_models_ref.vehclineid and op_vehcline_models_ref.`Status` ='1'
-		LEFT JOIN op_vehiclemodels_vehicle_ref ref on	  ref.vehicleid = pub_vehicle.id and ref.status =1
-		LEFT JOIN op_vehiclemodels on op_vehiclemodels.`Status` = '1'
-		and (ref.vehiclemodelsid = op_vehiclemodels.id or op_vehiclemodels.id = op_vehcline_models_ref.vehiclemodelsid)
+		LEFT JOIN pub_vehicle_scope ON vehicle.id = pub_vehicle_scope.vehicleid AND pub_vehicle_scope.status=1
+		LEFT JOIN pub_cooresource a on a.vehicleid = vehicle.id and a.status =1
+		left join pub_coooperate t on t.id = a.coooperateid
+		<if test="companyid!=null and companyid!=''">
+			and T.companyid =#{companyid}
+		</if>
+		AND T.`status` = 1 and t.coostate = '1' and t.cootype = '1'
+	  	LEFT JOIN pub_vehicle_models_ref modelref on modelref.companyid = modelref.companyid
+		and modelref.vehicleid = vehicle.id   and modelref.status =1
+		LEFT JOIN op_vehiclemodels models on models.`Status` = '1' and models.id = modelref.vehiclemodelsid
 		<if test="nextCount!=null and nextCount!=''">
 			<choose>
 				<when test="nextCount==99">
-					and op_vehiclemodels.`level` >= (SELECT t1.`level`FROM op_vehiclemodels t1 WHERE t1.id = #{selectedModelId})
+					and models.`level` >= (SELECT t1.`level`FROM op_vehiclemodels t1 WHERE t1.id = #{selectedModelId})
 				</when>
 				<otherwise>
-					and op_vehiclemodels.id = #{selectedModelId}
+					and models.id = #{selectedModelId}
 				</otherwise>
 			</choose>
 		</if>
@@ -463,7 +435,7 @@
 		</if>
 		AND pub_driver.vehicletype=#{vehicleType}
 		<if test="vehicleType==0">
-			and op_vehiclemodels.id is not null
+			and models.id is not null
 		</if>
 		AND (pub_driver.passworkstatus in ('0','1','') or pub_driver.passworkstatus is null)
 
@@ -474,20 +446,10 @@
 			</foreach>
 		</if>
 		AND(pub_vehicle_scope.cityid=#{city} or pub_vehicle_scope.cityid=#{offcity})
-		<!--<if test="companyid != null and companyid != ''">-->
-			<!-- AND pub_driver.leasescompanyid = #{companyid}-->
-		<!--</if>-->
-        <if test="belongleasecompany != null and belongleasecompany != ''">
-            AND pub_driver.belongleasecompany = #{belongleasecompany}
-        </if>
-		<if test='platformType!=null and platformType="0"' >
-			and ((pub_driver.leasescompanyid in
-			(select le_leasescompany.id from le_leasescompany
-			where le_leasescompany.tocstate = "2" and le_leasescompany.status = 1)
-			and pub_driver.platformtype = "1")
-			or pub_driver.platformtype = "0")
-		</if>
 
+		<if test="belongleasecompany != null and belongleasecompany != ''">
+			AND pub_driver.belongleasecompany = #{belongleasecompany}
+		</if>
 
 		<![CDATA[
 			AND pub_driver.lng >= #{minLng}
@@ -495,7 +457,7 @@
 			AND pub_driver.lat >= #{minLat}
 			AND pub_driver.lat <= #{maxLat}
 		]]>
-		order by op_vehiclemodels.level asc
+		order by models.level asc
 	</select>
 
 
@@ -777,30 +739,7 @@
 			pub_driver_vehicle_ref.vehicleid,
 			pub_vehcline.name as vehclinename,
       		pub_vehcbrand.name as vehcbrandname,
-      		concat((
-					SELECT
-							pub_dictionary.text
-						FROM
-							pub_dictionary
-						WHERE
-							pub_dictionary.type = '车牌省'
-						AND pub_dictionary.value = pub_vehicle.platenoprovince
-						AND pub_dictionary.status = 1
-						limit 0,1
-					),
-					(
-						SELECT
-							pub_dictionary.text
-						FROM
-							pub_dictionary
-						WHERE
-							pub_dictionary.type = '车牌市'
-						AND pub_dictionary.value = pub_vehicle.platenocity
-						AND pub_dictionary.status = 1
-						limit 0,1
-					),
-					pub_vehicle.plateno
-			) as plateno
+      		pub_vehicle.fullplateno plateno
 		FROM
 			pub_driver
 		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id
@@ -869,30 +808,7 @@
 			pub_driver_vehicle_ref.vehicleid,
 			pub_vehcline.name as vehclinename,
       		pub_vehcbrand.name as vehcbrandname,
-      		concat((
-					SELECT
-							pub_dictionary.text
-						FROM
-							pub_dictionary
-						WHERE
-							pub_dictionary.type = '车牌省'
-						AND pub_dictionary.value = pub_vehicle.platenoprovince
-						AND pub_dictionary.status = 1
-						limit 0,1
-					),
-					(
-						SELECT
-							pub_dictionary.text
-						FROM
-							pub_dictionary
-						WHERE
-							pub_dictionary.type = '车牌市'
-						AND pub_dictionary.value = pub_vehicle.platenocity
-						AND pub_dictionary.status = 1
-						limit 0,1
-					),
-					pub_vehicle.plateno
-			) as plateno
+      		pub_vehicle.fullplateno plateno
 		FROM
 			pub_driver
 		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id

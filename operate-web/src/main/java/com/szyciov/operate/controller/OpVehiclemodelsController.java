@@ -232,6 +232,7 @@ public class OpVehiclemodelsController extends BaseController {
 		String userToken = this.getUserToken(request);
 		params.put("creater", this.getLoginOpUser(request).getNickname());
 		params.put("updater", this.getLoginOpUser(request).getNickname());
+		params.put("leaseCompanyId",this.getLoginOpUser(request).getOperateid());
 		return opVehiclemodelsService.saveLeVehclineModelsRef(params, userToken);
 	}
 	

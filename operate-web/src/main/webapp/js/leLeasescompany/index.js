@@ -27,7 +27,7 @@ var dataGrid;
 		                "mDataProp": "ZDY",
 		                "sClass": "center",
 		                "sTitle": "操作",
-		                "sWidth": 260,
+		                "sWidth": 160,
 		                "bSearchable": false,
 		                "sortable": false,
 		                "mRender": function (data, type, full) {
@@ -38,15 +38,15 @@ var dataGrid;
 		                    	html += '<button type="button" class="SSbtn red_q" onclick="disable(' +"'"+ full.id +"'"+ ",'"+full.account+"'"+')"><i class="fa fa-paste"></i>禁用账号</button>';
 		                    }
 		                    // 厦门公仆  需求  屏蔽  toc业务   start
-		                    if(full.tocState == '已加入'){
-			                    html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="disableToc(' +"'"+ full.id +"'"+ ",'"+full.name+"'"+')"><i class="fa fa-times"></i> 禁用toC</button>';
-		                    }else if(full.tocState == '加入待审批'){
-		                    	html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="examineToc(' +"'"+ full.id +"'"+ ",'"+full.name+"'"+')"><i class="fa fa-times"></i> toC审核</button>';
-		                    }
+//		                    if(full.tocState == '已加入'){
+//			                    html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="disableToc(' +"'"+ full.id +"'"+ ",'"+full.name+"'"+')"><i class="fa fa-times"></i> 禁用toC</button>';
+//		                    }else if(full.tocState == '加入待审批'){
+//		                    	html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="examineToc(' +"'"+ full.id +"'"+ ",'"+full.name+"'"+')"><i class="fa fa-times"></i> toC审核</button>';
+//		                    }
 		                    html += '&nbsp; <button type="button" class="SSbtn grey_q"  onclick="resetPassword(' +"'"+ full.id +"'"+ ",'"+full.account+"'"+')"><i class="fa fa-times"></i> 重置密码</button>';
-		                    if(full.tocState == '已加入'){
-			                    html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="see(' +"'"+ full.id +"'"+ ')"><i class="fa fa-times"></i> 加盟资源</button>';
-		                    }
+//		                    if(full.tocState == '已加入'){
+//			                    html += '&nbsp; <button type="button" class="SSbtn red_q"  onclick="see(' +"'"+ full.id +"'"+ ')"><i class="fa fa-times"></i> 加盟资源</button>';
+//		                    }
 					        //厦门公仆  需求  屏蔽  toc业务   end 加盟资源
 		                    return html;
 		                }
@@ -63,7 +63,7 @@ var dataGrid;
 			        {mDataProp: "account", sTitle: "账号名称", sClass: "center", sortable: true },
 			        {mDataProp: "companyStateShow", sTitle: "账号状态", sClass: "center", sortable: true },
 			        // 厦门公仆  需求  屏蔽  toc业务   start
-			        {mDataProp: "tocState", sTitle: "是否加入toC", sClass: "center", sortable: true },
+//			        {mDataProp: "tocState", sTitle: "是否加入toC", sClass: "center", sortable: true },
 			        //厦门公仆  需求  屏蔽  toc业务   end
 			        {mDataProp: "contacts", sTitle: "联系人", sClass: "center", sortable: true },
 			        {mDataProp: "phone", sTitle: "联系方式", sClass: "center", sortable: true },

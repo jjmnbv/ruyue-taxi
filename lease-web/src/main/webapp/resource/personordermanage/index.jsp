@@ -48,6 +48,17 @@
 			  width: $(window).width();
 			  margin: 0 auto;
 			}
+            #cancelDetail table{
+                width: 100%;
+            }
+            #cancelDetail td{
+                padding-right: 18px;
+                padding-bottom: 5px;
+                color:#9e9e9e;
+            }
+            .form label.error{
+                padding-left: 3%;
+            }
 		</style>
 	</head>
 	<body class="ordermanage_css_body">
@@ -115,6 +126,7 @@
                     <input type="hidden" id="ordertypeHide">
                     <input type="hidden" id="usetypeHide">
                     <input type="hidden" id="identifyingHide">
+                    <input type="hidden" id="orderstatusHide">
                     <form id="cancelpartyForm" method="get" class="form">
                         <div class="row" style="padding-bottom: 18px">
                             <label style="float: left;">责任方<em class="asterisk"></em></label>

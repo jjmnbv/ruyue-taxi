@@ -60,7 +60,7 @@ function manualOrderdataGrid() {
 	var gridObj = {
 		id: "manualOrderdataGrid",
         sAjaxSource: $("#baseUrl").val() + "TaxiOrderManage/GetOpTaxiOrderByQuery",
-        userQueryParam: [{name: "type", value: "0"}],
+        userQueryParam: [{name: "type", value: "1"}],
         iLeftColumn: 3,
         scrollX: true,
         language: {
@@ -76,7 +76,10 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                    return '<button type="button" class="SSbtn red"  onclick="cancelOrder(' +"'"+ full.orderno +"'"+ ')"><i class="fa fa-times"></i> 取消</button>';
+                    var html = "";
+                    html += '<button type="button" class="SSbtn blue" onclick="manualSendOrder(' +"'"+ full.orderno +"'"+ ')"><i class="fa fa-paste"></i>人工派单</button>';
+                    html += '&nbsp; <button type="button" class="SSbtn red"  onclick="cancelOrder(' +"'"+ full.orderno +"','" + full.ordertype + "','" + full.usetype + "'"+ ')"><i class="fa fa-times"></i> 取消</button>';
+                    return html;
                 }
             },
             {
@@ -99,7 +102,8 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "订单号",
                 "mRender": function (data, type, full) {
-                	return '<a href="' + $("#baseUrl").val() + 'TaxiOrderManage/OrderDetailIndex?orderno=' + full.orderno + '">' + full.orderno + '</a>';
+                    return "<a href='" + $("#baseUrl").val() + "TaxiOrderManage/OrderDetailIndex?orderno="
+                        + full.orderno + "'>" + full.orderno + "</a>";
                 }
             },
 	        {
@@ -126,25 +130,39 @@ function manualOrderdataGrid() {
                 	}
                 }
             },
-	        {mDataProp: "undertime", sTitle: "下单时间", sClass: "center", sortable: true },
-	        {mDataProp: "usetime", sTitle: "用车时间", sClass: "center", sortable: true },
-	        {mDataProp: "schedulefee", sTitle: "调度费用(元)", sClass: "center", sortable: true },
-	        {
-                "mDataProp": "SCDZ",
+            {
+                "mDataProp": "undertime",
                 "sClass": "center",
-                "sTitle": "上车地址",
+                "sTitle": "下单时间",
                 "mRender": function (data, type, full) {
-                	var address = "(" + full.oncity + ")" + full.onaddress;
-                	return showToolTips(address, 10);
+                    if(null == full.undertime) {
+                        return "/";
+                    } else {
+                        return dateFtt(full.undertime, "yyyy/MM/dd hh:mm");
+                    }
                 }
             },
             {
-                "mDataProp": "XCDZ",
+                "mDataProp": "usetime",
                 "sClass": "center",
-                "sTitle": "下车地址",
+                "sTitle": "用车时间",
                 "mRender": function (data, type, full) {
-                	var address = "(" + full.offcity + ')' + full.offaddress;
-                	return showToolTips(address, 10);
+                    if(null == full.usetime) {
+                        return "/";
+                    } else {
+                        return dateFtt(full.usetime, "yyyy-MM-dd hh:mm");
+                    }
+                }
+            },
+	        {mDataProp: "schedulefee", sTitle: "调度费用(元)", sClass: "center", sortable: true },
+            {
+                "mDataProp": "SXCDZ",
+                "sClass": "center",
+                "sTitle": "上下车地址",
+                "mRender": function (data, type, full) {
+                    var onaddress = "(" + full.oncityname + ")" + full.onaddress;
+                    var offaddress = "(" + full.offcityname + ")" + full.offaddress;
+                    return showToolTips(onaddress, 12, undefined, offaddress);
                 }
             }
         ]
@@ -157,11 +175,11 @@ function manualOrderdataGrid() {
  */
 function search() {
 	var conditionArr = [
+        {"name":"ordersource", "value":$("#ordersource").val()},
 		{"name":"orderNo", "value":$("#orderno").val()},
 		{"name":"userId", "value":$("#orderperson").val()},
 		{"name":"minUseTime", "value":$("#minUseTime").val()},
-		{"name":"maxUseTime", "value":$("#maxUseTime").val()},
-		{"name":"ordersource", "value":$("#ordersource").val()}
+		{"name":"maxUseTime", "value":$("#maxUseTime").val()}
 	];
 	dataGrid.fnSearch(conditionArr);
 }
@@ -202,24 +220,13 @@ function canel() {
 }
 
 /**
- * 显示长度限制
- * @param addr
- */
-function limitLength(text) {
-	if(null != text && text.length > 18) {
-		return text.substr(0, 18) + "...";
-	}
-	return text;
-}
-
-/**
  * 初始化查询
  */
 function initSearch() {
+    $("#ordersource").val("");
 	$("#orderno").val("");
 	$("#orderperson").select2("val", "");
 	$("#minUseTime").val("");
 	$("#maxUseTime").val("");
-	$("#ordersource").val("");
 	search();
 }

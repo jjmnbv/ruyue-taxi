@@ -73,9 +73,10 @@
 		<div class="content">
 		<input id="aaid" name="aaid" value="${aaid}"type="hidden"/>
 		<input id="aaruletype" name="aaruletype" value="${aaruletype}"type="hidden"/>
+		<input id="aaoperationtype" name="aaoperationtype" value="${aaoperationtype}"type="hidden"/>
 		<div class="row">
 				<div  style="margin-top: 15px;">
-					<h4>详情界面</h4>
+					<h4>溢价规则信息<span id="">【${rulename.rulename}】</span></h4>
 				</div>
 			</div>
 			<table id="dataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>

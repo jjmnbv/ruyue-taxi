@@ -1,16 +1,11 @@
 package com.szyciov.lease.mapper;
 
-import com.szyciov.entity.PubCooagreement;
-import com.szyciov.entity.PubCoooperate;
-import com.szyciov.entity.PubCooresource;
-import com.szyciov.entity.Select2Entity;
+import com.szyciov.entity.*;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.param.pubCoooperateUnion.*;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryApplyResourceVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryCooagreementViewVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryPubCoooperateVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryResourceVo;
+import com.szyciov.lease.vo.pubCoooperateUnion.*;
 import com.szyciov.op.entity.OpPlatformInfo;
+import com.szyciov.param.Select2Param;
 
 import java.util.List;
 
@@ -21,7 +16,9 @@ public interface PubCoooperateUnionMapper {
 
     List<QueryPubCoooperateVo> queryPubCoooperateData(QueryPubCoooperateParam param);
 
-    List<Select2Entity> queryLeasecompany(String companyid);
+    List<Select2Entity> queryCoonoSelect2(Select2Param param);
+
+    List<Select2Entity> queryLeasecompany(Select2Param param);
 
     QueryCooagreementViewVo queryCooagreementView(String coooperateId);
 
@@ -60,4 +57,8 @@ public interface PubCoooperateUnionMapper {
     List<Select2Entity> queryApplyCooVehicleModeSelect2(QueryApplyResourceCitySelect2Param param);
 
     int insertPubCoooperateSelective(PubCoooperate pubCoooperate);
+
+    int insertOpUserNews(OpUsernews news);
+
+    List<QueryApplayCooCompanyAdminVo> queryApplayCooCompanyAdmin(String company);
 }

@@ -14,6 +14,9 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Service;
 
 /**
@@ -113,8 +116,9 @@ public class RedisService {
      */
     public void removePattern(final String pattern) {
         Set<String> keys = redisTemplate.keys(pattern);
-        if (keys.size() > 0)
+        if (keys.size() > 0) {
             redisTemplate.delete(keys);
+        }
     }
     /**
      * 删除对应的value
@@ -265,6 +269,24 @@ public class RedisService {
         boolean result = false;
         try {
             redisTemplate.expire(key, expireTime, timeUnit);
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+     * 执行lua脚本
+     * @return
+     */
+    public boolean eval(ResourceScriptSource scriptSource, List<String> keys, Object... val) {
+        boolean result = false;
+        try {
+
+            DefaultRedisScript script = new DefaultRedisScript();
+            script.setScriptSource(scriptSource);
+            redisTemplate.execute(script,new StringRedisSerializer(),new StringRedisSerializer(), keys, val);
             result = true;
         } catch (Exception e) {
             e.printStackTrace();

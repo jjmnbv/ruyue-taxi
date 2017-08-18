@@ -95,6 +95,21 @@ public class MessageController extends BaseController {
 		return res;
 	}
 
+
+	/**
+	 * 添加抵用券消息
+	 * @param couponMessage
+	 */
+	@RequestMapping(value="api/Message/SendCouponMessage", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String,String> sendCouponMessage(@RequestBody CouponMessage couponMessage){
+		Map<String,String> res = new HashMap<String,String>();
+		MessageConnection.add(couponMessage);
+		res.put("status", "success");
+		res.put("message", "已放入队列");
+		return res;
+	}
+
 	/**
 	 * 添加交接班类消息
 	 * @param usermessage

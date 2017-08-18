@@ -1,5 +1,6 @@
 package com.szyciov.carservice.service;
 
+import com.szyciov.dto.coupon.PubCouponActivityDto;
 import com.szyciov.entity.CommonRabbitData;
 import com.szyciov.entity.PubOrdergpsdata;
 import com.szyciov.enums.CommonRabbitEnum;
@@ -30,6 +31,10 @@ public class RabbitService {
 
     private static final String COMMON_DLX_PATTERN = SystemConfig.getSystemProperty("rabbit.commonDlxPattern");
 
+    private static final String COUPON_PATTERN = SystemConfig.getSystemProperty("rabbit.couponPattern");
+
+
+
     @Resource(name = "amqpTemplate")
     private AmqpTemplate amqpTemplate;
 
@@ -39,6 +44,15 @@ public class RabbitService {
      */
     public void sendAppgpsRabbit(PubOrdergpsdata object) {
         amqpTemplate.convertAndSend(APP_EXCHANGE, APP_PATTERN, object);
+    }
+
+
+    /**
+     * 推送数据到APPGPS队列
+     * @param jsonStr
+     */
+    public void sendCouponRabbit(PubCouponActivityDto jsonStr) {
+        amqpTemplate.convertAndSend(COMMON_EXCHANGE, COUPON_PATTERN, jsonStr);
     }
 
     /**

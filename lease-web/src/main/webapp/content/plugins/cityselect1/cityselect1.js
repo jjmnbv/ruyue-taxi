@@ -33,7 +33,7 @@ var citySelect = function(options){
                 if(provinceSpan == 0) {
                     return;
                 }
-                var tnow=$(this).next(".city_container").css("display");
+                var tnow=$(opts.container).find(".city_container").css("display");
                 if(tnow==="none"){
                     _this.showPopup();
                     return false;

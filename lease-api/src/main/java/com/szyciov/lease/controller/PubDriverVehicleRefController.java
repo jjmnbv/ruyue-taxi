@@ -241,9 +241,9 @@ public class PubDriverVehicleRefController {
         if(!vehicle.getCity().equals(driver.getCity())){
         	return "司机与车辆登记城市不一致，不可绑定！";
         }
-        if(!vehicle.getBelongleasecompany().equals(driver.getBelongleasecompany())){
-        	return "司机与车辆归属车企不一致，不可绑定！";
-        }
+//        if(!vehicle.getBelongleasecompany().equals(driver.getBelongleasecompany())){
+//        	return "司机与车辆归属车企不一致，不可绑定！";
+//        }
         return null;
     }
 
@@ -267,9 +267,9 @@ public class PubDriverVehicleRefController {
         if(!vehicle.getCity().equals(driver.getCity())){
         	return "车辆与司机登记城市不一致，不可绑定！";
         }
-        if(!vehicle.getBelongleasecompany().equals(driver.getBelongleasecompany())){
-        	return "车辆与司机归属车企不一致，不可绑定！";
-        }
+//        if(!vehicle.getBelongleasecompany().equals(driver.getBelongleasecompany())){
+//        	return "车辆与司机归属车企不一致，不可绑定！";
+//        }
         return null;
     }
 

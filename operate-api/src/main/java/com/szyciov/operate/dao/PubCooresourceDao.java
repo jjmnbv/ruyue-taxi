@@ -28,8 +28,8 @@ public class PubCooresourceDao {
         return list;
     }
 
-    public List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(String companyid) {
-        List<QueryHavingCooLeasecompanyVo> list = this.pubCooresourceMapper.queryHavingCooLeasecompany(companyid);
+    public List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(String companyid, String keyword) {
+        List<QueryHavingCooLeasecompanyVo> list = this.pubCooresourceMapper.queryHavingCooLeasecompany(companyid, keyword);
         return list;
     }
 

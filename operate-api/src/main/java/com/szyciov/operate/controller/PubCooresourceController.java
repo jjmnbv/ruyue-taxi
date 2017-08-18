@@ -43,8 +43,8 @@ public class PubCooresourceController extends ApiExceptionHandle {
      * @return 战略伙伴集合
      */
     @RequestMapping(value = "queryHavingCooLeasecompany", method = RequestMethod.GET)
-    public List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(String companyid) {
-        return this.pubCooresourceService.queryHavingCooLeasecompany(companyid);
+    public List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(String companyid, String keyword) {
+        return this.pubCooresourceService.queryHavingCooLeasecompany(companyid, keyword);
     }
 
     /**

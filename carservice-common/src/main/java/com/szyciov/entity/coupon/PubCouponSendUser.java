@@ -10,6 +10,9 @@ public class PubCouponSendUser {
 	private String id;
 	private String couponactivityidref;
 	private String phone;
+	private String userid;
+	private String lecompanyid;
+	private Integer platformtype;
 	private String createtime;
 	private String updatetime;
 	public String getId() {
@@ -41,6 +44,25 @@ public class PubCouponSendUser {
 	}
 	public void setUpdatetime(String updatetime) {
 		this.updatetime = updatetime;
+	}
+	public String getUserid() {
+		return userid;
+	}
+	public void setUserid(String userid) {
+		this.userid = userid;
+	}
+	public String getLecompanyid() {
+		return lecompanyid;
+	}
+	public void setLecompanyid(String lecompanyid) {
+		this.lecompanyid = lecompanyid;
+	}
+ 
+	public Integer getPlatformtype() {
+		return platformtype;
+	}
+	public void setPlatformtype(Integer platformtype) {
+		this.platformtype = platformtype;
 	}
 	public PubCouponSendUser() {
 		super();

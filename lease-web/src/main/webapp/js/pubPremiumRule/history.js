@@ -24,7 +24,7 @@ function initGrid() {
 	            "sortable": false,
 	            "mRender": function (data, type, full) {
 	                var html = "";
-	                  html += '<button type="button" class="SSbtn red_q"  onclick="check(' +"'"+ full.id +"'"+","+"'"+full.ruletype+"'"+')"><i class="fa fa-paste"></i>查看</button>';
+	                  html += '<button type="button" class="SSbtn red_q"  onclick="check(' +"'"+ full.id +"'"+","+"'"+full.ruletype+"'"+","+"'"+full.operationtype+"'"+')"><i class="fa fa-paste"></i>查看</button>';
 	                  return html;
 	              }
 	          },
@@ -38,6 +38,6 @@ function initGrid() {
     
 	dataGrid = renderGrid(gridObj);
 }
-function check(id,ruletype){
-	window.location.href = base + "PubPremiumRule/Historydetail?id="+id+"&ruletype="+ruletype
+function check(id,ruletype,operationtype){
+	window.location.href = base + "PubPremiumRule/Historydetail?id="+id+"&ruletype="+ruletype+"&ruleId="+$("#aaid").val()+"&operationtype="+operationtype;
 }

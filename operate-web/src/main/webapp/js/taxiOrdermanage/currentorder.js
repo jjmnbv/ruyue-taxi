@@ -48,18 +48,19 @@ function initForm() {
             }
         }
     });
-	
-	$("#leasescompanyid").select2({
+
+    $("#belongleasecompany").select2({
         placeholder: "服务车企",
         minimumInputLength: 0,
         allowClear: true,
         ajax: {
-            url: $("#baseUrl").val() + "OrderManage/GetToCCompanySelect",
+            url: $("#baseUrl").val() + "TaxiOrderManage/GetBelongCompanySelect",
             dataType: 'json',
             data: function (term, page) {
-            	$(".datetimepicker").hide();
+                $(".datetimepicker").hide();
                 return {
-                	shortname: term
+                    belongleasecompany: term,
+                    type: "2",
                 };
             },
             results: function (data, page) {
@@ -106,13 +107,16 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                	var html = '';
-                	//服务中之前的状态才显示取消和更换司机按钮
-                	if(full.orderstatus == "2") {
-                		html += '<button type="button" class="SSbtn red" onclick="cancelOrder(\'' + full.orderno + '\')"><i class="fa fa-paste"></i>取消</button>';
-                		html += '&nbsp;';
-                		html += '<button type="button" class="SSbtn green" onclick="changeDriver(\'' + full.orderno + '\')"><i class="fa fa-paste"></i>更换车辆</button>';
-                	}
+                    var html = '';
+                    //服务中之前的状态才显示取消和更换司机按钮
+                    if(full.orderstatus == 2 || ((full.orderstatus == 3 || full.orderstatus == 4) && (null == full.meterrange || full.meterrange == 0))) {
+                        html += '<button type="button" class="SSbtn red"  onclick="cancelOrder(' +"'"+ full.orderno +"','" + full.ordertype + "','" + full.usetype + "'"+ ')"><i class="fa fa-times"></i> 取消</button>';
+                        html += '&nbsp;';
+                        html += '<button type="button" class="SSbtn green" onclick="changeDriver(\'' + full.orderno + '\')"><i class="fa fa-paste"></i>更换车辆</button>';
+                    }
+                    if(full.orderstatus == 6) {
+                        html += '<button type="button" class="SSbtn red" onclick="endOrder(\'' + full.orderno + '\')"><i class="fa fa-paste"></i>结束订单</button>';
+                    }
                     return html;
                 }
             },
@@ -136,7 +140,8 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "订单号",
                 "mRender": function (data, type, full) {
-                	return '<a href="' + $("#baseUrl").val() + 'TaxiOrderManage/OrderDetailIndex?orderno=' + full.orderno + '">' + full.orderno + '</a>';
+                    return "<a href='" + $("#baseUrl").val() + "TaxiOrderManage/OrderDetailIndex?orderno="
+                        + full.orderno + "'>" + full.orderno + "</a>";
                 }
             },
             {
@@ -180,8 +185,29 @@ function manualOrderdataGrid() {
                 }
             },
 	        {mDataProp: "drivername", sTitle: "司机信息", sClass: "center", sortable: true },
-	        {mDataProp: "usetime", sTitle: "用车时间", sClass: "center", sortable: true },
-	        {mDataProp: "shortname", sTitle: "服务车企", sClass: "center", sortable: true}
+            {
+                "mDataProp": "usetime",
+                "sClass": "center",
+                "sTitle": "用车时间",
+                "mRender": function (data, type, full) {
+                    if(null == full.usetime) {
+                        return "/";
+                    } else {
+                        return dateFtt(full.usetime, "yyyy-MM-dd hh:mm");
+                    }
+                }
+            },
+            {
+                "mDataProp": "SCDZ",
+                "sClass": "left",
+                "sTitle": "上下车地址",
+                "mRender": function (data, type, full) {
+                    var onaddress = "(" + full.oncityname + ")" + full.onaddress;
+                    var offaddress = "(" + full.offcityname + ")" + full.offaddress;
+                    return showToolTips(onaddress, 12, undefined, offaddress);
+                }
+            },
+	        {mDataProp: "belongcompanyname", sTitle: "服务车企", sClass: "center", sortable: true}
         ]
     };
 	dataGrid = renderGrid(gridObj);
@@ -192,15 +218,14 @@ function manualOrderdataGrid() {
  */
 function search() {
 	var conditionArr = [
-		{"name":"orderNo", "value":$("#orderno").val()},
-		{"name":"orderstatus", "value":$("#orderstatus").val()},
-		{"name":"userId", "value":$("#orderperson").val()},
-		{"name":"driverid", "value":$("#drivername").val()},
-		{"name":"ordersource", "value":$("#ordersource").val()},
-		// {"name":"leasescompanyid", "value":$("#leasescompanyid").val()},
-        {"name":"belongleasecompany", "value":$("#leasescompanyid").val()},
-		{"name":"minUseTime", "value":$("#minUseTime").val()},
-		{"name":"maxUseTime", "value":$("#maxUseTime").val()}
+        {"name":"ordersource", "value":$("#ordersource").val()},
+        {"name":"belongleasecompany", "value":$("#belongleasecompany").val()},
+        {"name":"driverid", "value":$("#drivername").val()},
+        {"name":"userId", "value":$("#orderperson").val()},
+        {"name":"orderNo", "value":$("#orderno").val()},
+        {"name":"orderstatus", "value":$("#orderstatus").val()},
+        {"name":"minUseTime", "value":$("#minUseTime").val()},
+        {"name":"maxUseTime", "value":$("#maxUseTime").val()}
 	];
 	dataGrid.fnSearch(conditionArr);
 }
@@ -267,13 +292,13 @@ function canel() {
  * 初始化查询
  */
 function initSearch() {
-	$("#orderno").val("");
-	$("#orderstatus").val("");
-	$("#orderperson").select2("val", "");
-	$("#drivername").select2("val", "");
-	$("#ordersource").val("");
-	$("#leasescompanyid").select2("val", "");
-	$("#minUseTime").val("");
-	$("#maxUseTime").val("");
+    $("#ordersource").val("");
+    $("#belongleasecompany").select2("val", "");
+    $("#drivername").select2("val", "");
+    $("#orderperson").select2("val", "");
+    $("#orderno").val("");
+    $("#orderstatus").val("");
+    $("#minUseTime").val("");
+    $("#maxUseTime").val("");
 	search();
 }

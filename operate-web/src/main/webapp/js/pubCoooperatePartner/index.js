@@ -28,8 +28,8 @@ function initDate(){
         autoclose:true,
         clearBtn: true,
         todayBtn:  1
-    }).on("click",function(){
-        $("#startTime").datetimepicker("setEndDate",$("#endTime").val())
+    }).on("change",function(){
+        $("#endTime").datetimepicker("setStartDate",$("#startTime").val())
     });
     $("#endTime").datetimepicker({
         format: 'yyyy-mm-dd',
@@ -38,8 +38,8 @@ function initDate(){
         autoclose:true,
         clearBtn: true,
         todayBtn:  1
-    }).on("click",function(){
-        $("#endTime").datetimepicker("setStartDate",$("#startTime").val())
+    }).on("change",function(){
+        $("#startTime").datetimepicker("setEndDate",$("#endTime").val())
     });
 
     $("#validateTimeStart").datetimepicker({
@@ -50,8 +50,8 @@ function initDate(){
         clearBtn: true,
         startDate: new Date(),
         todayBtn:  1
-    }).on("click",function(){
-        $("#validateTimeStart").datetimepicker("setEndDate",$("#validateTimeEnd").val())
+    }).on("change",function(){
+        $("#validateTimeEnd").datetimepicker("setStartDate",$("#validateTimeStart").val())
     });
     $("#validateTimeEnd").datetimepicker({
         format: 'yyyy-mm-dd',
@@ -61,8 +61,8 @@ function initDate(){
         startDate: new Date(),
         clearBtn: true,
         todayBtn:  1
-    }).on("click",function(){
-        $("#validateTimeEnd").datetimepicker("setStartDate",$("#validateTimeStart").val())
+    }).on("change",function(){
+        $("#validateTimeStart").datetimepicker("setEndDate",$("#validateTimeEnd").val())
     });
 }
 
@@ -112,7 +112,7 @@ function initGrid() {
                     }
 
                     if(full.coostate == 1){
-                        html += '<button type="button" class="SSbtn" onclick="disable(\'' + data + '\',\'' + full.leasecompanytext + '\')"><i class="fa fa-paste"></i>禁用</button>';
+                        html += '<button type="button" class="SSbtn" onclick="disable(\'' + data + '\',\'' + full.leasecompanyshorttext + '\')"><i class="fa fa-paste"></i>禁用</button>';
                         html += '&nbsp;';
                     }
 
@@ -161,7 +161,7 @@ function initGrid() {
                 "mRender": function (data, type, full) {
                     switch (data) {
                         case 0:
-                            return "审核中";
+                            return "待审核";
                         case 1:
                             return "合作中";
                         case 2:
@@ -213,7 +213,7 @@ function search(grid) {
 /** 清空 **/
 function clearSearchBox() {
     $("#coono").val("");
-    $("#leasecompany").val("");
+    $("#leasecompany").select2("val", "");
     $("#servicetype").val("");
     $("#coostate").val("");
     $("#startTime").val("");

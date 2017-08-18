@@ -1,5 +1,6 @@
 package com.szyciov.lease.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,8 +9,10 @@ import javax.annotation.Resource;
 
 import com.szyciov.enums.VehicleEnum;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
+import com.szyciov.dto.pubVehicleModelsRef.UpdateVehicleModelsRefByVehicleDto;
 import com.szyciov.entity.City;
 import com.szyciov.entity.Dictionary;
 import com.szyciov.enums.BindingStateEnum;
@@ -23,9 +26,13 @@ import com.szyciov.lease.entity.PubVehicleScope;
 import com.szyciov.lease.param.PubVehicleQueryParam;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.PageBean;
+import com.szyciov.util.TemplateHelper;
+
+import net.sf.json.JSONObject;
 
 @Service("PubVehicleService")
 public class PubVehicleService {
+	private TemplateHelper templateHelper = new TemplateHelper();
 	private PubVehicleDao dao;
 	@Resource(name = "PubVehicleDao")
 	public void setDao(PubVehicleDao dao) {
@@ -33,7 +40,8 @@ public class PubVehicleService {
 	}
 
 	private PubVehicleScopeService pubVehicleScopeService;
-
+	@Autowired
+	private DictionaryService dictionaryService;
 	@Autowired
 	private PubDriverVehicleRefService refService;
 
@@ -51,7 +59,35 @@ public class PubVehicleService {
 		}else{
 			ret.put("ResultSign", "Successful");
 			ret.put("MessageKey", "创建成功");
+			//加个完整车牌
+			Map<String,String> map = new HashMap<>();
+			StringBuffer fullplateno = new StringBuffer();
+			map.put("type","车牌省");
+			map.put("value",pubVehicle.getPlateNoProvince());
+			fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+			map.put("type","车牌市");
+			map.put("value",pubVehicle.getPlateNoCity());
+			fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+			fullplateno.append(pubVehicle.getPlateNo());
+			pubVehicle.setFullplateno(fullplateno.toString());
+			pubVehicle.setBelongleasecompany(pubVehicle.getLeasesCompanyId());
 			dao.createPubVehicle(pubVehicle);
+			String leaseCompanyId = pubVehicle.getLeasesCompanyId();
+			int platform = 1;
+			List<String> vehclineId = new ArrayList<>();
+			vehclineId.add(pubVehicle.getVehclineId());
+			String updater = pubVehicle.getUpdater();
+			String vehicleId = pubVehicle.getId();
+			UpdateVehicleModelsRefByVehicleDto uvmrvd = new UpdateVehicleModelsRefByVehicleDto();
+			uvmrvd.setLeaseCompanyId(leaseCompanyId);
+			uvmrvd.setPlatform(platform);
+			uvmrvd.setUpdater(updater);
+			uvmrvd.setVehclineId(vehclineId);
+			uvmrvd.setVehicleId(vehicleId);
+			if(pubVehicle.getVehicleType().equals("0")){
+				templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehicle", HttpMethod.POST, null, uvmrvd,
+						JSONObject.class);
+			}
 			if(pubVehicle.getBusinessScope()!=null){
 				String businessScopeTemp = pubVehicle.getBusinessScope();
 				String[] businessScope = businessScopeTemp.split(",");
@@ -99,7 +135,32 @@ public class PubVehicleService {
 //					pubVehicle.setDriverId("");
 //				}
 //			}
+			//加个完整车牌
+			Map<String,String> map = new HashMap<>();
+			StringBuffer fullplateno = new StringBuffer();
+			map.put("type","车牌省");
+			map.put("value",pubVehicle.getPlateNoProvince());
+			fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+			map.put("type","车牌市");
+			map.put("value",pubVehicle.getPlateNoCity());
+			fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+			fullplateno.append(pubVehicle.getPlateNo());
+			pubVehicle.setFullplateno(fullplateno.toString());
 			dao.updatePubVehicle(pubVehicle);
+			String leaseCompanyId = pubVehicle.getLeasesCompanyId();
+			int platform = 1;
+			List<String> vehclineId = new ArrayList<>();
+			vehclineId.add(pubVehicle.getVehclineId());
+			String updater = pubVehicle.getUpdater();
+			String vehicleId = pubVehicle.getId();
+			UpdateVehicleModelsRefByVehicleDto uvmrvd = new UpdateVehicleModelsRefByVehicleDto();
+			uvmrvd.setLeaseCompanyId(leaseCompanyId);
+			uvmrvd.setPlatform(platform);
+			uvmrvd.setUpdater(updater);
+			uvmrvd.setVehclineId(vehclineId);
+			uvmrvd.setVehicleId(vehicleId);
+			templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehicle", HttpMethod.POST, null, uvmrvd,
+					JSONObject.class);
 			if(pubVehicle.getBusinessScope()!=null){
 				pubVehicleScopeService.deletePubVehicleScope(pubVehicle.getId());
 				String businessScopeTemp = pubVehicle.getBusinessScope();
@@ -168,8 +229,17 @@ public class PubVehicleService {
 		PageBean pageBean = new PageBean();
 		pageBean.setsEcho(pubVehicleQueryParam.getsEcho());
 		List<PubVehicle> list = getPubVehicleListByQuery(pubVehicleQueryParam);
-		for(PubVehicle l : list){
-			List<PubVehicleScope> l1 = getVehicleidByVehicleScope(l.getId());
+		List<PubVehicleScope> l1 = getVehicleidByVehicleScope(list);
+		for(PubVehicle v:list){
+			for(PubVehicleScope s:l1){
+				if(s.getVehicleId().equals(v.getId())){
+					v.setBusinessScope(s.getCityName());
+					break;
+				}
+			}
+		}
+	/*	for(PubVehicle l : list){
+			List<PubVehicleScope> l1 = getVehicleidByVehicleScope(list);
 			String cityName = "";
 			if(l1.size()>0){
 				for(PubVehicleScope ll : l1){
@@ -180,7 +250,7 @@ public class PubVehicleService {
 				l.setBusinessScope("");
 			}
 			
-		}
+		}*/
 		int iTotalRecords = getPubVehicleListCountByQuery(pubVehicleQueryParam);
 		int iTotalDisplayRecords = iTotalRecords;
 		pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
@@ -241,17 +311,28 @@ public class PubVehicleService {
 	
 	public List<PubVehicle> exportExcel(PubVehicleQueryParam pubVehicleQueryParam){
 		List<PubVehicle> list = dao.exportExcel(pubVehicleQueryParam);
-		for(PubVehicle l : list){
-			List<PubVehicleScope> l1 = getVehicleidByVehicleScope(l.getId());
+		List<PubVehicleScope> l1 = getVehicleidByVehicleScope(list);
+		for(PubVehicle v:list){
+			for(PubVehicleScope s:l1){
+				if(s.getVehicleId().equals(v.getId())){
+					v.setBusinessScope(s.getCityName().replace(",", "、"));
+				}
+			}
+			if(VehicleEnum.VEHICLE_TYPE_TAXI.code.equals(v.getVehicleType())){
+				v.setServiceCars("/");
+			}
+		}
+		/*for(PubVehicle l : list){
+			List<PubVehicleScope> l1 = getVehicleidByVehicleScope(list);
 			String cityName = "";
 			for(PubVehicleScope ll : l1){
 				cityName+=ll.getCityName()+"、";
 			}
+			l.setBusinessScope(cityName.substring(0, cityName.length()-1));
 			if(VehicleEnum.VEHICLE_TYPE_TAXI.code.equals(l.getVehicleType())){
 				l.setServiceCars("/");
 			}
-			l.setBusinessScope(cityName.substring(0, cityName.length()-1));
-		}
+		}*/
 		return list;
 	};
 	public PubDictionary getPlateCode(String plateOne) {
@@ -267,8 +348,8 @@ public class PubVehicleService {
 		return dao.getVehclineId(vehcline);
 	}
 	//根据车辆id查经营区域
-	public List<PubVehicleScope> getVehicleidByVehicleScope(String id){
-		return dao.getVehicleidByVehicleScope(id);
+	public List<PubVehicleScope> getVehicleidByVehicleScope(List<PubVehicle> list){
+		return dao.getVehicleidByVehicleScope(list);
 	};
 
 

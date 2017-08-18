@@ -230,5 +230,16 @@ public class TaxiOrderManageController extends BaseController {
 	public List<Map<String, Object>> exportOrder(@RequestBody OrderManageQueryParam queryParam) {
 		return orderService.exportOrder(queryParam);
 	}
+
+	/**
+	 * 获取订单列表中的服务车企(select2)
+	 * @param queryParam
+	 * @return
+	 */
+	@RequestMapping(value = "api/TaxiOrderManage/GetBelongCompanySelect", method = RequestMethod.POST)
+	@ResponseBody
+	public List<Map<String, Object>> getBelongCompanySelect(@RequestBody OrderManageQueryParam queryParam) {
+		return orderService.getBelongCompanySelect(queryParam);
+	}
 	
 }

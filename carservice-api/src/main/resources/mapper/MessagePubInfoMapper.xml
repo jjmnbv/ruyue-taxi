@@ -71,11 +71,7 @@
 			pub_vehicle.color as color,
 			(SELECT pub_vehcline.name from pub_vehcline where  pub_vehcline.status=1 and pub_vehcline.Id=pub_vehicle.vehclineid) as vehclinename,
 			(SELECT pub_vehcbrand.Name from pub_vehcline,pub_vehcbrand where pub_vehcline.status=1 and pub_vehcbrand.status=1 and pub_vehcbrand.id=pub_vehcline.vehcBrandID and pub_vehcline.Id=pub_vehicle.vehclineid) as vehcbrandname,
-			CONCAT(
-				(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='车牌省' and pub_dictionary.value=pub_vehicle.platenoprovince LIMIT 0,1),
-				(select pub_dictionary.text from pub_dictionary where pub_dictionary.status=1 and pub_dictionary.type='车牌市' and pub_dictionary.value=pub_vehicle.platenocity LIMIT 0,1),
-				pub_vehicle.plateno
-			) as plateno
+			pub_vehicle.fullplateno plateno
 		FROM
 			pub_vehicle
 		WHERE

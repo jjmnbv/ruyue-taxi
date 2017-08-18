@@ -50,6 +50,8 @@
                 text-align: left;
             }
 
+            .pop_box{z-index: 1111 !important;}
+
             .select2-chosen{
                 float: left;
             }
@@ -113,6 +115,11 @@
                     <div class="col-6" >
                         <button class="Mbtn grey_w" onclick="clearParameter();" style="float: right;">清空</button>
                         <button class="Mbtn green_a" style="float: right;margin-right: 12px;" type="button" onclick="searchGridResource()">查询</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">
+                        <h4 style="text-align: left ;   margin-bottom: -15px;font-size: 16px;">已选择车<span id="selectVeCount">0</span>辆</h4>
                     </div>
                 </div>
                 <div class="row">

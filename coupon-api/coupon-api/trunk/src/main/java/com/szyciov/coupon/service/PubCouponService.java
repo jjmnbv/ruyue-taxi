@@ -2,25 +2,33 @@ package com.szyciov.coupon.service;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.szyciov.coupon.dao.OrgOrganDao;
 import com.szyciov.coupon.dao.PubCouponDao;
 import com.szyciov.coupon.dao.PubCouponUseCityDao;
 import com.szyciov.coupon.dao.PubCouponUseDao;
-import com.szyciov.coupon.dto.CouponInfoDTO;
+import com.szyciov.coupon.dto.OrgOrganInfoDTO;
 import com.szyciov.coupon.param.PubCouponQueryParam;
+import com.szyciov.coupon.rabbitMq.coupon.SenderCouponQueue;
+import com.szyciov.dto.coupon.CouponInfoDTO;
+import com.szyciov.dto.coupon.PubCouponActivityDto;
 import com.szyciov.entity.coupon.PubCoupon;
 import com.szyciov.entity.coupon.PubCouponUse;
 import com.szyciov.entity.coupon.PubCouponUseCity;
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.enums.DataStateEnum;
 import com.szyciov.enums.coupon.CouponEnum;
 import com.szyciov.param.coupon.CouponExpenseParam;
 import com.szyciov.param.coupon.CouponReserveParam;
+import com.szyciov.param.coupon.GenerateCouponParam;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.GsonUtil;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +48,16 @@ public class PubCouponService {
 
     @Resource
     private PubCouponUseCityDao couponUseCityDao;
+
+    @Resource
+    private RedisService redisService;
+
+    @Resource
+    private OrgOrganDao organDao;
+
+    @Resource
+    private SenderCouponQueue senderCouponQueue;
+
     /**
      * 返回抵用券列表
      * @param param
@@ -48,13 +66,11 @@ public class PubCouponService {
     public List<CouponInfoDTO> listAllCoupon(PubCouponQueryParam param)throws Exception{
 
         //获取不限范围的抵用券
-        List<CouponInfoDTO> couponInfoDTOS = couponDao.listAllScopeCoupon(param);
-        if(couponInfoDTOS!=null && couponInfoDTOS.size()>0) {
-            couponInfoDTOS.addAll(couponDao.listCityScopeCoupon(param));
+        List<CouponInfoDTO> couponInfoDTOS = new ArrayList<CouponInfoDTO>() ;
+        couponInfoDTOS.addAll(couponDao.listAllScopeCoupon(param));
+        couponInfoDTOS.addAll(couponDao.listCityScopeCoupon(param));
 
-            return couponInfoDTOS;
-        }
-        return null;
+        return couponInfoDTOS;
     }
 
 
@@ -310,6 +326,78 @@ public class PubCouponService {
         couponDao.removeCouponByUserId(pubCoupon);
     }
 
+    /**
+     * 自动生成抵用券
+     * @param jsonStr
+     */
+    public void aotuGenerateCoupon(String jsonStr){
+
+        PubCouponActivityDto dto = GsonUtil.fromJson(jsonStr,PubCouponActivityDto.class);
+
+        if(CouponRuleTypeEnum.ACTIVITY.value.equals(dto.getSendruletype())){
+            generateOrganCoupon(dto);
+        }
+        if(CouponRuleTypeEnum.MANUAL.value.equals(dto.getSendruletype())){
+            generateManualCoupon(dto);
+        }
+    }
+
+    /**
+     * 生成机构客户活动抵用券
+     * @param dto
+     */
+    private void generateOrganCoupon(PubCouponActivityDto dto){
+        List<OrgOrganInfoDTO> organList = organDao.listOrganByLecompanyId(dto.getLecompanyid());
+        if(organList!=null && organList.size()>0){
+            for(OrgOrganInfoDTO orgorgan:organList){
+                //机构发券
+                GenerateCouponParam param = new GenerateCouponParam();
+                param.setType(CouponRuleTypeEnum.ACTIVITY.value);
+                param.setUserType(dto.getSendruletarget());
+                param.setCompanyId(dto.getLecompanyid());
+                param.setUserId(orgorgan.getId());
+                param.setCityCode(orgorgan.getCity());
+                //放入队列执行生成抵用券
+                senderCouponQueue.pushGenerateMsg(GsonUtil.toJson(param));
+            }
+
+        }
+
+    }
+
+    /**
+     * 生成人工抵用券
+     * @param dto
+     */
+    private void generateManualCoupon(PubCouponActivityDto dto){
+        //发放用户不为空
+        if(StringUtils.isNotEmpty(dto.getUsers())) {
+            String[] userArray = dto.getUsers().split(",");
+            //发放用户数
+            for (String userId : userArray) {
+                //每人发放张数
+                for (int i = 0; i < dto.getSendcount(); i++) {
+                    //人工发券
+                    GenerateCouponParam param = new GenerateCouponParam();
+                    param.setType(CouponRuleTypeEnum.MANUAL.value);
+                    param.setUserType(dto.getSendruletarget());
+                    param.setCompanyId(dto.getLecompanyid());
+                    param.setUserId(userId);
+                    //放入队列执行生成抵用券
+                    senderCouponQueue.pushGenerateMsg(GsonUtil.toJson(param));
+                }
+            }
+        }
+
+    }
+
+    /**
+     * 删除未使用的抵用券 根据时间
+     * @param pubCoupon
+     */
+    public void timeOutCouponByTime(PubCoupon pubCoupon){
+        couponDao.timeOutCouponByTime(pubCoupon);
+    }
 
 
 
@@ -322,7 +410,5 @@ public class PubCouponService {
             return p2.getMoney().compareTo(p1.getMoney());
         }
     }
-
-
 }
  

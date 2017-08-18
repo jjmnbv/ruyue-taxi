@@ -87,20 +87,8 @@
 					<input type="text" placeholder="机构简称" id="shortName" name="shortName" value="${orgOrgan.shortName}" disabled="disabled">
 				</div>
 				<div class="col-4">
-					<label>客户类型<em class="asterisk"></em></label>
-					<!-- 客户类型(0-非渠道客户，1-渠道客户) -->
-					<select id="customertype" name="customertype" disabled="disabled">
-						<c:choose>
-							<c:when test="${orgOrgan.customertype == 1}"> 
-								<option value="0">非渠道客户</option>
-								<option value="1" selected="selected">渠道客户</option>
-							</c:when>
-							<c:otherwise> 
-								<option value="0" selected="selected">非渠道客户</option>
-								<option value="1">渠道客户</option>
-							</c:otherwise>
-						</c:choose>
-					</select>
+					<label>机构账号<em class="asterisk"></em></label>
+					<input id="account" name="account" type="text" placeholder="机构账号" value="${orgOrgan.account}" disabled="disabled">
 				</div>
 			</div>
 			<div class="row">
@@ -169,8 +157,34 @@
 			</div>
 			<div class="row">
 				<div class="col-4">
-					<label>机构账号<em class="asterisk"></em></label>
-					<input id="account" name="account" type="text" placeholder="机构账号" value="${orgOrgan.account}" disabled="disabled">
+					<label>客户类型<em class="asterisk"></em></label>
+					<!-- 客户类型(0-非渠道客户，1-渠道客户) -->
+					<select id="customertype" name="customertype" disabled="disabled">
+						<c:choose>
+							<c:when test="${orgOrgan.customertype == 1}"> 
+								<option value="0">非渠道客户</option>
+								<option value="1" selected="selected">渠道客户</option>
+							</c:when>
+							<c:otherwise> 
+								<option value="0" selected="selected">非渠道客户</option>
+								<option value="1">渠道客户</option>
+							</c:otherwise>
+						</c:choose>
+					</select>
+				</div>
+				<div class="col-4">
+					<label>供车主体<em class="asterisk"></em></label>
+					<input type="hidden" id="forTheCarBodyId" name="forTheCarBodyId" value="">
+					<div style="border:1px solid #E0E0E0;width: 260px;height: 100px;overflow-y:scroll">
+						<ul id="forTheCarBody" name="forTheCarBody" >
+							<li data-value="${leLeasescompany.id}">${leLeasescompany.shortName}</li>
+						</ul>
+					</div>
+					<!-- <div style="height: 90px;margin-top: -95px;margin-left: 424px;">
+						<button type="button" onclick="addForTheCarBody();" style="width: 35px; height: 35px;">+</button>
+						<br><br>
+						<button type="button" onclick="updateForTheCarBody();" style="width: 35px; height: 35px;">-</button>
+					</div> -->
 				</div>
 			</div>
 			<!-- <div class="row">
@@ -213,7 +227,7 @@
 				</div>
 			</div> -->
 			<div class="row">
-				<div class="col-12" style="padding:8px 0px;font-size:24px;border-bottom:1px solid #ccc;margin-bottom:20px;">工商执照
+				<div class="col-12" style="padding:8px 0px;font-size:24px;border-bottom:1px solid #ccc;margin-bottom:20px;">工商营业执照/事业单位法人证书
 			</div>
 			<div class="row">
 				<div class="col-4"> 
@@ -373,6 +387,23 @@
 				$("#openImg1").html(html);
 				$("#openImg").show();
 			});
+			if($("#id").val() != null && $("#id").val() != ''){
+				$.ajax({
+					type : "GET",
+					url : "OrgOrgan/GetPubLeaseOrganRelationById",
+					cache : false,
+					data : {
+						id : $("#id").val()
+					},
+					success : function(json) {
+						var html = "";
+						for(var i=0;i<json.length;i++){
+							html+='<li data-value="'+json[i].leasecompanyid+'">'+json[i].shortName+'</li>';
+						}
+						$("#forTheCarBody").html(html);
+					}
+				});
+			}
 		})
 		function callBack(){
 			window.location.href=base+"OrgOrgan/Index";

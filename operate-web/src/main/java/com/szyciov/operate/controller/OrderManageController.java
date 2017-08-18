@@ -1,11 +1,22 @@
 package com.szyciov.operate.controller;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.szyciov.entity.CancelParty;
 import com.szyciov.entity.OrderCost;
-import com.szyciov.enums.OrderEnum;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpAccountrules;
 import com.szyciov.op.entity.OpOrder;
+import com.szyciov.op.entity.OpOrderReview;
 import com.szyciov.op.entity.OpOrdercomment;
 import com.szyciov.op.entity.OpUser;
 import com.szyciov.operate.service.OrderManageService;
@@ -19,20 +30,12 @@ import com.szyciov.util.SystemConfig;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 运营端订单管理
@@ -99,6 +102,11 @@ public class OrderManageController extends BaseController {
 	public String getWaitgatheringOrderIndex() {
 		return "resource/ordermanage/waitgatheringorder";
 	}
+
+	@RequestMapping(value = "OrderManage/CancelOrderIndex")
+	public String getCancelOrderIndex() {
+        return "resource/ordermanage/cancelorder";
+    }
 	
 	/**
 	 * 跳转到待人工派单详情界面
@@ -196,13 +204,11 @@ public class OrderManageController extends BaseController {
 	 */
 	@RequestMapping(value = "/OrderManage/CancelOpOrder")
 	@ResponseBody
-	public Map<String, Object> cancelOpOrder(@RequestParam String orderno, @RequestParam String ordertype, HttpServletRequest request, HttpServletResponse response) {
+	public Map<String, Object> cancelOpOrder(@RequestBody OrderApiParam param, HttpServletRequest request, HttpServletResponse response) {
 		response.setContentType("text/html;charset=utf-8");
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-		OrderApiParam param = new OrderApiParam();
-		param.setOrderno(orderno);
-		param.setOrdertype(ordertype);
-		param.setUsetype(OrderEnum.USETYPE_PERSONAL.code);
+		OpUser user = getLoginOpUser(request);
+        param.setCanceloperator(user.getId());
 		param.setOrderstate("8");
 		param.setReqsrc(CancelParty.OPERATOR.code);
 		return orderManageService.cancelOpOrder(param, userToken);
@@ -416,12 +422,12 @@ public class OrderManageController extends BaseController {
 	 */
 	@RequestMapping(value = "/OrderManage/OpOrderReview")
 	@ResponseBody
-	public Map<String, Object> opOrderReview(@RequestBody Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
+	public Map<String, Object> opOrderReview(@RequestBody OpOrderReview review, HttpServletRequest request, HttpServletResponse response) {
 		response.setContentType("text/html;charset=utf-8");
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		OpUser user = getLoginOpUser(request);
-		params.put("operator", user.getId());
-		return orderManageService.opOrderReview(params, userToken);
+        review.setOperator(user.getId());
+		return orderManageService.opOrderReview(review, userToken);
 	}
 	
 	/**
@@ -557,6 +563,31 @@ public class OrderManageController extends BaseController {
         }
         return ret;
     }
+
+    /**
+     * 获取服务车企
+     * @param belongleasecompany 车企名字
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "OrderManage/GetBelongCompanySelect")
+    @ResponseBody
+    public List<Map<String, Object>> getBelongCompanySelect(
+            @RequestParam(value = "belongleasecompany", required = false) String belongleasecompany,
+            @RequestParam(value = "type") String type,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        response.setContentType("text/html;charset=utf-8");
+        String userToken = getUserToken(request);
+        OpUser user = getLoginOpUser(request);
+        OrderManageQueryParam queryParam = new OrderManageQueryParam();
+        queryParam.setBelongleasecompany(belongleasecompany);
+        queryParam.setType(type);
+        queryParam.setOpUserId(user.getId());
+        queryParam.setUsertype(user.getUsertype());
+        return orderManageService.getBelongCompanySelect(queryParam, userToken);
+    }
 	
 	/**
 	 * 初始化订单查询参数
@@ -581,5 +612,45 @@ public class OrderManageController extends BaseController {
         queryParam.setBelongleasecompany(request.getParameter("belongleasecompany"));
 		return queryParam;
 	}
+
+    /**
+     * 查询订单取消规则
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "OrderManage/GetCancelPriceDetail")
+    @ResponseBody
+    public Map<String, Object> getCancelPriceDetail(@RequestBody Map<String, String> param, HttpServletRequest request) {
+        String userToken = getUserToken(request);
+        return orderManageService.getCancelPriceDetail(param, userToken);
+    }
+
+    /**
+     * 结束订单
+     * @param orderno
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "OrderManage/EndOrder/{orderno}")
+    @ResponseBody
+    public Map<String, Object> endOrder(@PathVariable String orderno, HttpServletRequest request) {
+        String usertoken = getUserToken(request);
+        return orderManageService.endOrder(orderno, usertoken);
+    }
+
+    /**
+     * 订单免责处理
+     * @param object
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "OrderManage/ExemptionOrder")
+    @ResponseBody
+    public Map<String, Object> exemptionOrder(@RequestBody PubOrderCancel object, HttpServletRequest request) {
+        String userToken = getUserToken(request);
+        OpUser user = getLoginOpUser(request);
+        object.setExemptionoperator(user.getId());
+        return orderManageService.exemptionOrder(object, userToken);
+    }
 	
 }

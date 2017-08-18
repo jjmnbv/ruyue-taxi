@@ -85,7 +85,7 @@ public class OpCashManageService {
 	 * @param params
 	 * @return
 	 */
-	@Transactional
+	@Transactional(rollbackFor = {Exception.class})
 	public synchronized Map<String, Object> cashReject(Map<String, String> params)throws Exception {
 		Map<String,Object> res = new HashMap<String,Object>();
 		res.put("status", "success");

@@ -213,7 +213,8 @@
 			op_accountrules.timetype,
 			op_accountrules.perhour,
 			op_accountrules.deadheadmileage,
-			op_accountrules.deadheadprice
+			op_accountrules.deadheadprice,
+			op_accountrules.reservationprice
 		FROM
 			op_accountrules
 		WHERE

@@ -48,6 +48,8 @@
 		<typeAlias type="com.szyciov.lease.entity.OrgOrganBillState" alias="OrgOrganBillState"/>
 		<typeAlias type="com.szyciov.lease.entity.OrgOrderInfo" alias="OrgOrderInfo"/>					
 		<typeAlias type="com.szyciov.lease.entity.OrganUserAccountInfo" alias="OrganUserAccountInfo"/>
+		<typeAlias type="com.szyciov.lease.entity.OrganUserCouponInfo" alias="OrganUserCouponInfo"/>
+		<typeAlias type="com.szyciov.lease.param.OrganUserCouponQueryParam" alias="OrganUserCouponQueryParam"/>
 		<typeAlias type="com.szyciov.lease.entity.OrgUserExpenses" alias="OrgUserExpenses"/>
 		<typeAlias type="com.szyciov.lease.entity.PubVehicleScope" alias="PubVehicleScope"/>
 		<typeAlias type="com.szyciov.lease.entity.Menu" alias="Menu"/>
@@ -101,6 +103,7 @@
 		<typeAlias type="com.szyciov.lease.param.PubAlarmprocessParam" alias="PubAlarmprocessParam"/>
 		<typeAlias type="com.szyciov.lease.entity.OrgOrganCreditRecord" alias="OrgOrganCreditRecord"/>
 		<typeAlias type="com.szyciov.lease.param.TocOrderManageQueryParam" alias="TocOrderManageQueryParam"/>
+		<typeAlias type="com.szyciov.lease.param.TobOrderManageQueryParam" alias="TobOrderManageQueryParam"/>
 		<typeAlias type="com.szyciov.op.entity.OpOrdercomment" alias="OpOrdercomment"/>
 		<typeAlias type="com.szyciov.entity.PeDrivershiftPending" alias="PeDrivershiftPending"/>
 		<typeAlias type="com.szyciov.entity.PeDrivershiftProcessed" alias="PeDrivershiftProcessed"/>
@@ -167,5 +170,9 @@
 		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumAdd" alias="PubPremiumAdd"/>
 		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumModify" alias="PubPremiumModify"/>
 		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumHistory" alias="PubPremiumHistory"/>
+        <typeAlias type="com.szyciov.entity.PubCouponDetail" alias="PubCouponDetail"/>
+        <typeAlias type="com.szyciov.dto.pubOrderCancelRule.PubOrderCancelRule" alias="PubOrderCancelRule"/>
+		<typeAlias type="com.szyciov.dto.pubOrderCancelRule.PubOrderCancelRuleHistory" alias="PubOrderCancelRuleHistory"/>
+		<typeAlias type="com.szyciov.lease.entity.PubLeaseOrganRelation" alias="PubLeaseOrganRelation"/>
 	</typeAliases>
 </configuration>

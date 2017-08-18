@@ -192,7 +192,7 @@ public class PubVehicleController extends BaseController {
 		List<Object> colData9 = new ArrayList<Object>();
 		List<Object> colData10 = new ArrayList<Object>();
 		List<Object> colData11= new ArrayList<Object>();
-		List<Object> colData12= new ArrayList<Object>();
+		/*List<Object> colData12= new ArrayList<Object>();*/
 		
 		String leasesCompanyId = this.getLoginLeUser(request).getLeasescompanyid();
 		String queryBrandCars = request.getParameter("queryBrandCars");
@@ -285,11 +285,11 @@ public class PubVehicleController extends BaseController {
 			}else{
 				colData8.add("");
 			}
-			if(pubVehicle.get(i).get("belongleasecompanyName") != null){
+			/*if(pubVehicle.get(i).get("belongleasecompanyName") != null){
 				colData12.add(pubVehicle.get(i).get("belongleasecompanyName"));
 			}else{
 				colData12.add("");
-			}
+			}*/
 		}
 		Excel excel = new Excel();
 		// excel文件
@@ -306,7 +306,7 @@ public class PubVehicleController extends BaseController {
 		colName.add("颜色");
 		colName.add("荷载人数");
 		colName.add("登记城市");
-		colName.add("归属车企");
+		/*colName.add("归属车企");*/
 		colName.add("经营区域");
 		excel.setColName(colName);
 		colData.put("车辆类型",colData9);
@@ -319,7 +319,7 @@ public class PubVehicleController extends BaseController {
 		colData.put("颜色",colData5);
 		colData.put("荷载人数",colData7);
 		colData.put("登记城市",colData6);
-		colData.put("归属车企",colData12);
+		/*colData.put("归属车企",colData12);*/
 		colData.put("经营区域",colData8);
 		
 //		colData.put("车牌号", colData1);
@@ -356,7 +356,7 @@ public class PubVehicleController extends BaseController {
 		MultipartFile mulfile = files.get("importfile");
 		String fileName = mulfile.getOriginalFilename();
 		String fileNames = fileName.substring(fileName.length()-3);
-		String[] titles = new String[]{"车辆类型","车牌号","品牌车系","车架号","颜色","荷载人数","登记城市","归属车企","经营区域"};
+		String[] titles = new String[]{"车辆类型","车牌号","品牌车系","车架号","颜色","荷载人数","登记城市","经营区域"};
 		if(fileNames.equals("xls")){
 			new ExcelImp().excelImp(mulfile, new ExcelRuleImport(){
 				@Override
@@ -489,7 +489,7 @@ public class PubVehicleController extends BaseController {
 						return false;
 					}
 					//归属车企
-					String belongleasecompanyValue = "";
+		/*			String belongleasecompanyValue = "";
 					if(map.get("归属车企").equals("") || map.get("归属车企") == null){
 						rets.append("第"+index+"行 【"+map.get("车牌号")+"】归属车企为空<br>");
 						ret.put("ResultSign", "Successful");
@@ -511,7 +511,7 @@ public class PubVehicleController extends BaseController {
 							ret.put("MessageKey",rets.toString());
 							return false;
 						}
-					}
+					}*/
 					//经营区域
 					String cityScope = map.get("经营区域");
 					boolean flag = true;
@@ -588,7 +588,7 @@ public class PubVehicleController extends BaseController {
 							pubVehicle1.setVehicleType(DriverEnum.DRIVER_TYPE_TAXI.code);
 						}
 						pubVehicle1.setBusinessScope(s.substring(0, s.length()-1));
-						pubVehicle1.setBelongleasecompany(belongleasecompanyValue);
+						pubVehicle1.setBelongleasecompany(leasesCompanyId);
 						templateHelper.dealRequestWithToken("/PubVehicle/CreatePubVehicle", HttpMethod.POST, userToken, pubVehicle1,
 								Map.class);
 //						ret.put("MessageKey", "导入成功");
@@ -641,7 +641,7 @@ public class PubVehicleController extends BaseController {
 		List<Object> colData6 = new ArrayList<Object>();
 		List<Object> colData7 = new ArrayList<Object>();
 		List<Object> colData8 = new ArrayList<Object>();
-		List<Object> colData9 = new ArrayList<Object>();
+		/*List<Object> colData9 = new ArrayList<Object>();*/
 		
 		String leasesCompanyId = this.getLoginLeUser(request).getLeasescompanyid();
 		PubVehicle pubVehicle = new PubVehicle();
@@ -657,7 +657,7 @@ public class PubVehicleController extends BaseController {
 		colData5.add("红色");
 		colData6.add("5");
 		colData7.add("北京市");
-		colData9.add(belongleasecompany.get(0).get("text").toString());
+		/*colData9.add(belongleasecompany.get(0).get("text").toString());*/
 		colData8.add("北京市、武汉");
 		
 		Map<String, List<Object>> colData = new HashMap<String, List<Object>>();
@@ -673,7 +673,7 @@ public class PubVehicleController extends BaseController {
 		colName.add("颜色");
 		colName.add("荷载人数");
 		colName.add("登记城市");
-		colName.add("归属车企");
+		/*colName.add("归属车企");*/
 		colName.add("经营区域");
 		excel.setColName(colName);
 		
@@ -684,7 +684,7 @@ public class PubVehicleController extends BaseController {
 		colData.put("颜色", colData5);
 		colData.put("荷载人数", colData6);
 		colData.put("登记城市", colData7);
-		colData.put("归属车企", colData9);
+		/*colData.put("归属车企", colData9);*/
 		colData.put("经营区域", colData8);
 		
 		excel.setColData(colData);

@@ -151,7 +151,14 @@ public class PubVehicle {
 	//服务车企
 	private String belongleasecompanyName;
 	private String  identitytype;//特殊司机
+	private String fullplateno;
 	
+	public String getFullplateno() {
+		return fullplateno;
+	}
+	public void setFullplateno(String fullplateno) {
+		this.fullplateno = fullplateno;
+	}
 	public String getIdentitytype() {
 		return identitytype;
 	}

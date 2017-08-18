@@ -56,18 +56,18 @@ var dataGrid;
 	 */
 	$(function () {
 		initGrid();
-		initSelectQueryKeyword();
+		initSelectQueryDriverInformation();
+		initSelectQueryJobnum();
 	});
 
 	/**
 	 * 表格初始化
 	 */
 	function initGrid() {
-		var leasescompanyid = $("#leasescompanyid").val();
-		var servicetype = $("#servicetype").val();
+		var coooperateid = $("#coooperateid").val();
 		var gridObj = {
 			id: "dataGrid",
-	        sAjaxSource: "PubCoooperate/GetDriverInformationByQuery?leasescompanyid="+leasescompanyid+"&servicetype="+servicetype,
+	        sAjaxSource: "PubCoooperate/GetDriverInformationByQuery?coooperateid="+coooperateid,
 	        iLeftColumn: 1,//（固定表头，1代表固定几列）
 	        scrollX: true,//（加入横向滚动条）
 	        language: {
@@ -88,11 +88,12 @@ var dataGrid;
 	                    if(full.vehicletype == '1'){
 	                    	return html;
 	                    }else{
-		                    if(full.distributionVel == '未分配'){
-		                    	html += '&nbsp;<button type="button" class="SSbtn blue" onclick="edit(' +"'"+ full.id +"'"+",'"+full.leasescompanyid+"'"+ ','+"'分配车型'"+')"><i class="fa fa-paste"></i>分配车型</button>';
-		                    }else{
-		                    	html += '&nbsp;<button type="button" class="SSbtn blue" onclick="edit(' +"'"+ full.id +"'"+",'"+full.leasescompanyid+"'"+ ','+"'修改车型'"+')"><i class="fa fa-paste"></i>修改车型</button>';
-		                    }
+//		                    if(full.distributionVel == '未分配'){
+//		                    	html += '&nbsp;<button type="button" class="SSbtn blue" onclick="edit(' +"'"+ full.id +"'"+",'"+full.leasescompanyid+"'"+ ','+"'分配车型'"+')"><i class="fa fa-paste"></i>分配车型</button>';
+//		                    }else{
+//		                    	html += '&nbsp;<button type="button" class="SSbtn blue" onclick="edit(' +"'"+ full.id +"'"+",'"+full.leasescompanyid+"'"+ ','+"'修改车型'"+')"><i class="fa fa-paste"></i>修改车型</button>';
+//		                    }
+	                    	html += '&nbsp;<button type="button" class="SSbtn blue" onclick="edit(' +"'"+ full.id +"'"+",'"+full.vehicleid+"'"+",'"+full.leasecompanyid+"'"+')"><i class="fa fa-paste"></i>分配车型</button>';
 	                    }
                     	return html;
 	                }
@@ -130,14 +131,12 @@ var dataGrid;
 	/**
 	 * 修改 验证
 	 * */
-	function edit(vehicleid,leasescompanyid,obj){
-		$("#titleForm").html(obj);
-		$("#id").val("");
+	function edit(coooperateid,vehicleid,leasescompanyid){
 		$("#vehicleid").val(vehicleid);
 		$("#leasecompanyid").val(leasescompanyid);
 		var data ={
-			vehicleid :vehicleid,
-			leasescompanyid : leasescompanyid
+			coooperateid :coooperateid,
+			vehicleid : vehicleid
 		}
 		//加载原服务车型
 		$.post("PubCoooperate/GetOriginalModels", data, function (status) {
@@ -147,13 +146,14 @@ var dataGrid;
 			}
 			//加载现在的服务车型
 			$.post("PubCoooperate/GetLeVehiclemodels", function (data) {
-				var html="<option value='' selected='selected'>未分配</option>";
+				var html="<option value='' selected='selected'>请选择</option>";
 				for(var i=0;i<data.length;i++){
-					if(status.nowName == data[i].name){
-						html+="<option value='"+data[i].id+"' selected='selected'>"+data[i].name+"</option>";
-					}else{
-						html+="<option value='"+data[i].id+"'>"+data[i].name+"</option>";
-					}
+//					if(status.nowName == data[i].name){
+//						html+="<option value='"+data[i].id+"' selected='selected'>"+data[i].name+"</option>";
+//					}else{
+//						html+="<option value='"+data[i].id+"'>"+data[i].name+"</option>";
+//					}
+					html+="<option value='"+data[i].id+"'>"+data[i].name+"</option>";
 				}
 				$("#vehiclemodelsid").html(html);
 			});
@@ -170,6 +170,10 @@ var dataGrid;
 		var leasecompanyid = $("#leasecompanyid").val();
 		var vehiclemodelsid = $("#vehiclemodelsid").val();
 		var id = $("#id").val();
+		if(vehiclemodelsid == '' || vehiclemodelsid == null){
+			toastr.error("请选择服务车型", "提示");
+			return;
+		}
 		var data ={
 				vehicleid :vehicleid,
 				leasecompanyid : leasecompanyid,
@@ -193,8 +197,54 @@ var dataGrid;
 	}
 	function emptys(){
 		$("#queryPlateno").val("");
-		$("#queryJobnum").val("");
-		$("#queryDriverInformation").val("");
+		$("#queryJobnum").select2("val","");
+		$("#queryDriverInformation").select2("val","");
 		$("#queryModels").val("");
 		search();
+	}
+	function initSelectQueryJobnum() {
+		var coooperateid = $("#coooperateid").val();
+		$("#queryJobnum").select2({
+			placeholder : "",
+			minimumInputLength : 0,
+			multiple : false, //控制是否多选
+			allowClear : true,
+			ajax : {
+				url : "PubCoooperate/Select2QueryJobnum?coooperateid="+coooperateid,
+				dataType : 'json',
+				data : function(term, page) {
+					return {
+						queryJobnum : term
+					};
+				},
+				results : function(data, page) {
+					return {
+						results : data
+					};
+				}
+			}
+		});
+	}
+	function initSelectQueryDriverInformation() {
+		var coooperateid = $("#coooperateid").val();
+		$("#queryDriverInformation").select2({
+			placeholder : "",
+			minimumInputLength : 0,
+			multiple : false, //控制是否多选
+			allowClear : true,
+			ajax : {
+				url : "PubCoooperate/Select2QueryDriverInformation?coooperateid="+coooperateid,
+				dataType : 'json',
+				data : function(term, page) {
+					return {
+						queryDriverInformation : term
+					};
+				},
+				results : function(data, page) {
+					return {
+						results : data
+					};
+				}
+			}
+		});
 	}

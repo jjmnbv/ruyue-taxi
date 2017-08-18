@@ -59,6 +59,9 @@ function initGrid() {
         sAjaxSource: "PubCooresource/manage/queryPubCooresourceManageData/" + $("body").attr("coooid"),
         userQueryParam: [],
         bAutoWidth: false,
+        language: {
+            sEmptyTable: "没有查询到相关信息"
+        },
         columns: [
             {
                 mDataProp: "id",
@@ -66,8 +69,13 @@ function initGrid() {
                 sTitle: "操作",
                 sortable: false,
                 "mRender": function (data, type, full) {
+                    var vehicleno = "";
+                    if(full.vehicleinfo.split(" ").length > 1){
+                        vehicleno = full.vehicleinfo.split(" ")[1];
+                    }
+
                     var html = "";
-                    html += '<button type="button" class="SSbtn green" onclick="openVehicleModelPop(\'' + data + '\')"><i class="fa fa-paste"></i>资源管理</button>';
+                    html += '<button type="button" class="SSbtn green" onclick="openVehicleModelPop(\'' + data + '\',\'' + vehicleno + '\')"><i class="fa fa-paste"></i>分配车型</button>';
                     return html;
                 }
             },
@@ -91,6 +99,7 @@ function search(grid) {
     var userQueryParam = [
         {name: "driverinfo", value: $("#driverinfo").val()},
         {name: "fullplateno", value: $("#fullplateno").val()},
+        {name: "jobnum", value: $("#jobnum").val()},
         {name: "vehicleModelId", value: $("#vehicleModelId").val()}
     ]
     grid.fnSearch(userQueryParam);
@@ -101,12 +110,14 @@ function clearSearchBox() {
     $("#driverinfo").select2("val", "");
     $("#vehicleModelId").val("");
     $("#fullplateno").val("");
+    $("#jobnum").val("");
     $("#search").click();
 }
 
-function openVehicleModelPop(coorId){
+function openVehicleModelPop(coorId, vehicleno){
     $("#vehicleModelPop").show();
     $("#vehicleModelPop").attr("dataid", coorId);
+    $("#vehicleModelOrg").html(vehicleno);
 }
 
 function updateVehicleModel(coorId) {

@@ -4,6 +4,7 @@ import com.szyciov.dto.PagingResponse;
 import com.szyciov.entity.Select2Entity;
 import com.szyciov.op.entity.OpUser;
 import com.szyciov.op.param.*;
+import com.szyciov.op.param.pubCoooperatePartner.QueryPubCoooperatePartnerLeaseCompanyParam;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.TemplateHelper;
 import net.sf.json.JSONObject;
@@ -81,10 +82,10 @@ public class PubCooresourceController extends BaseController {
      */
     @RequestMapping(value = "queryHavingCooLeasecompany", method = RequestMethod.GET)
     @ResponseBody
-    public List queryHavingCooLeasecompany() {
+    public List queryHavingCooLeasecompany(String keyword) {
         OpUser user = getLoginOpUser();
         String companyid = user.getOperateid();
-        List list = templateHelper.dealRequestWithToken("/PubCooresource/queryHavingCooLeasecompany?companyid=" + companyid, HttpMethod.GET, getUserToken(),
+        List list = templateHelper.dealRequestWithToken("/PubCooresource/queryHavingCooLeasecompany?companyid=" + companyid + "&keyword=" + keyword, HttpMethod.GET, getUserToken(),
                 companyid, List.class);
         return list;
     }

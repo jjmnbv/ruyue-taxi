@@ -104,7 +104,7 @@
 								WHEN '1' THEN 2
 								WHEN '7' THEN (CASE org_order.paymentstatus WHEN '0' then 3 else 5 END)
 								WHEN '2' THEN 4
-								WHEN '8' THEN 6
+								WHEN '8' THEN (CASE (select org_ordercancel.cancelamount>0 from org_ordercancel where org_order.orderno=org_ordercancel.orderno) WHEN 1 then (CASE org_order.paymentstatus WHEN '0' then 3 else 5 END) else 6 END)
 								ELSE 5
 							END
 						)as ordernum,
@@ -164,7 +164,7 @@
 										WHEN '1' THEN 2
 										WHEN '7' THEN (CASE org_order.paymentstatus WHEN '0' then 3 else 5 END)
 										WHEN '2' THEN 4
-										WHEN '8' THEN 6
+										WHEN '8' THEN (CASE (select org_ordercancel.cancelamount>0 from org_ordercancel where org_order.orderno=org_ordercancel.orderno) WHEN 1 then (CASE org_order.paymentstatus WHEN '0' then 3 else 5 END) else 6 END)
 										ELSE 5
 									END
 								)as ordernum,
@@ -971,6 +971,9 @@
 		<result column="color" property="color" javaType="String"></result>
 		<result column="vehcline" property="vehcline" javaType="String"></result>
 		<result column="vehcbrand" property="vehcbrand" javaType="String"></result>
+		
+		<result column="cancelfee" property="cancelfee" javaType="double"></result>
+		<result column="meterrange" property="meterrange" javaType="int"></result>
 	</resultMap>
 	
 	<select id="getOrders4OpSec" parameterType="Map" resultMap="orderdetail">
@@ -1093,7 +1096,7 @@
 												WHEN '1' THEN 2
 												WHEN '7' THEN (CASE op_order.paymentstatus WHEN '0' then 3 else 5 END)
 												WHEN '2' THEN 4
-												WHEN '8' THEN 6
+												WHEN '8' THEN (CASE (select op_ordercancel.cancelamount>0 from op_ordercancel where op_order.orderno=op_ordercancel.orderno) WHEN 1 then (CASE op_order.paymentstatus WHEN '0' then 3 else 5 END) else 6 END)
 												ELSE 5
 											END
 										)as ordernum,
@@ -1159,7 +1162,7 @@
 																    END
 																   )
 													WHEN '2' THEN 4
-													WHEN '8' THEN 6
+													WHEN '8' THEN (CASE (select op_taxiordercancel.cancelamount>0 from op_taxiordercancel where op_taxiorder.orderno=op_taxiordercancel.orderno) WHEN 1 then (CASE op_taxiorder.paymentstatus WHEN '0' then 3 else 5 END) else 6 END)
 													ELSE 5
 												END
 											)as ordernum,
@@ -1431,6 +1434,7 @@
 		FROM
 			(
 				SELECT
+					op_taxiorder.meterrange,
 					<include refid="optaxiselect"></include>
 				FROM
 					op_taxiorder
@@ -1843,6 +1847,7 @@
 				WHERE
 					org_order. STATUS = 1
 				AND org_order.userhidden = '1'
+				
 				AND org_order.orderno=#{orderno}
 			) allorders
 		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
@@ -2192,34 +2197,45 @@
 	
 	<!-- 获取订单的优惠券信息 -->
 	<select id="getOrderCouponInfo" parameterType="String" resultType="Map">
-		select * from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.usetype=2 and pub_coupon_use.billingorderid=#{orderno}
+		SELECT
+			pub_coupon_use.id,
+			pub_coupon_use.couponidref,
+			pub_coupon_use.billingorderid,
+			pub_coupon.money AS couponmoney,
+			pub_coupon_use.discountamount,
+			pub_coupon_use.usetype,
+			pub_coupon_use.createtime,
+			pub_coupon_use.updatetime,
+			pub_coupon_use.creater,
+			pub_coupon_use.updater,
+			pub_coupon_use.usestate,
+			pub_coupon_use.actualamount
+		FROM
+			pub_coupon_use,
+			pub_coupon
+		WHERE
+			pub_coupon_use.status = 1
+		AND pub_coupon_use.couponidref = pub_coupon.id
+		AND pub_coupon_use.usetype = 2
+		AND pub_coupon_use.billingorderid = #{orderno}
 	</select>
 	
 	<!-- 获取机构订单的取消信息 -->
 	<select id="getCancelInfo4Org" parameterType="String" resultType="Map">
 		select * from org_ordercancel where org_ordercancel.status=1 and org_ordercancel.cancelnature=1 
-		<![CDATA[
-			and org_ordercancel.cancelamount>0
-			and org_ordercancel.orderno=#{orderno}
-		]]>
+		and org_ordercancel.orderno=#{orderno}
 	</select>
 	
 	<!-- 获取出租车订单的取消信息 -->
 	<select id="getCancelInfo4Optaxi" parameterType="String" resultType="Map">
 		select * from op_taxiordercancel where op_taxiordercancel.status=1 and op_taxiordercancel.cancelnature=1 
-		<![CDATA[
-			and op_taxiordercancel.cancelamount>0
-			and op_taxiordercancel.orderno=#{orderno}
-		]]>
+		and op_taxiordercancel.orderno=#{orderno}
 	</select>
 	
 	<!-- 获取个人网约车订单的取消信息 -->
 	<select id="getCancelInfo4Opnetcar" parameterType="String" resultType="Map">
 		select * from op_ordercancel where op_ordercancel.status=1 and op_ordercancel.cancelnature=1 
-		<![CDATA[
-			and op_ordercancel.cancelamount>0
-			and op_ordercancel.orderno=#{orderno}
-		]]>
+		and op_ordercancel.orderno=#{orderno}
 	</select>
 	
 	<!-- 更新取消原因 -->
@@ -2250,4 +2266,378 @@
 			op_ordercancel.orderno=#{orderno}
 	</update>
 	
+	<!-- 获取机构未支付订单（取消的） -->
+	<select id="getUnpayOrder4OrgNetCar_cancel" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					le_vehiclemodels.name
+				FROM
+					le_vehiclemodels
+				WHERE
+					le_vehiclemodels. STATUS = 1
+				AND le_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					le_vehiclemodels.logo
+				FROM
+					le_vehiclemodels
+				WHERE
+					le_vehiclemodels. STATUS = 1
+				AND le_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					org_ordercancel.cancelamount as cancelfee,
+					<include refid="orgnetcarselect"></include>
+				FROM
+					org_order,
+					org_ordercancel,
+					org_user
+				WHERE
+					org_order. STATUS = 1
+				<![CDATA[
+					AND org_ordercancel.cancelamount>0 and org_ordercancel.cancelnature=1
+					AND org_ordercancel.orderno=org_order.orderno
+				]]>
+				AND org_order.paymentstatus in ('0','5','6')
+				AND org_order.orderstatus = '8'
+				AND org_order.userhidden = '1'
+				AND org_user.account = #{account}
+				AND org_user.id = org_order.userid
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		limit 1
+	</select>
+	
+	<!-- 获取网约车未支付订单（取消的） -->
+	<select id="getUnpayOrder4OpNetCar_cancel" parameterType="Map" resultMap="orderdetail">
+		SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					op_ordercancel.cancelamount as cancelfee,
+					<include refid="opnetcarselect"></include>
+				FROM
+					op_order
+					,pe_user
+					,op_ordercancel
+				WHERE
+					op_order. STATUS = 1
+				AND op_order.userhidden = '1'
+				<![CDATA[
+					AND op_ordercancel.cancelamount>0 and op_ordercancel.cancelnature=1
+					AND op_ordercancel.orderno=op_order.orderno
+				]]>
+				AND op_order.paymentstatus in ('0','5','6')
+				AND op_order.orderstatus = '8'
+				AND pe_user.account = #{account}
+				AND pe_user.id = op_order.userid
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		limit 1
+	</select>
+	
+	<!-- 获取出租车未支付订单（取消的） -->
+	<select id="getUnpayOrder4OpTaxi_cancel" parameterType="Map" resultMap="orderdetail">
+	SELECT
+			pub_driver.name,
+			pub_driver.phone,
+			pub_driver.sex,
+			pub_driver.headportraitmin AS driverimg,
+			pub_driver.avgrate,
+			pub_driver.ordercount,
+			(
+				SELECT
+					op_vehiclemodels.name
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelcaption,
+			(
+				SELECT
+					op_vehiclemodels.logo
+				FROM
+					op_vehiclemodels
+				WHERE
+					op_vehiclemodels. STATUS = 1
+				AND op_vehiclemodels.id = allorders.pricemodel
+			) AS selectedmodelpath,
+			(
+				SELECT
+					CONCAT(
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenoprovince
+							AND pub_dictionary.type = '车牌省'
+						),
+						(
+							SELECT
+								pub_dictionary.text
+							FROM
+								pub_dictionary
+							WHERE
+								pub_dictionary. STATUS = 1
+							AND pub_dictionary.
+							VALUE
+								= pub_vehicle.platenocity
+							AND pub_dictionary.type = '车牌市'
+						),
+						pub_vehicle.plateno
+					)
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS carnum,
+			(
+				SELECT
+					pub_vehicle.color
+				FROM
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+			) AS color,
+			(
+				SELECT
+					pub_vehcline.name
+				FROM
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+			) AS vehcline,
+			(
+				SELECT
+					pub_vehcbrand.name
+				FROM
+					pub_vehcbrand,
+					pub_vehcline,
+					pub_vehicle
+				WHERE
+					pub_vehicle. STATUS = 1
+				AND pub_vehicle.id = pub_driver_vehicle_ref.vehicleId
+				AND pub_vehcline. STATUS = 1
+				AND pub_vehcline.id = pub_vehicle.vehclineid
+				AND pub_vehcbrand. STATUS = 1
+				AND pub_vehcbrand.Id = pub_vehcline.vehcBrandID
+			) AS vehcbrand,
+			allorders.*
+		FROM
+			(
+				SELECT
+					op_taxiordercancel.cancelamount as cancelfee,
+					<include refid="optaxiselect"></include>
+				FROM
+					op_taxiorder
+					,pe_user
+					,op_taxiordercancel
+				WHERE
+					op_taxiorder. STATUS = 1
+				AND op_taxiorder.userhidden = '1'
+				<![CDATA[
+					AND op_taxiordercancel.cancelamount>0 and op_taxiordercancel.cancelnature=1
+					AND op_taxiordercancel.orderno=op_taxiorder.orderno
+				]]>
+				AND op_taxiorder.paymentstatus in ('0','5','6')
+				AND op_taxiorder.orderstatus = '8'
+				AND pe_user.account = #{account}
+				AND pe_user.id = op_taxiorder.userid
+			) allorders
+		LEFT JOIN pub_driver ON pub_driver.id = allorders.driverid and pub_driver.status=1
+		LEFT JOIN pub_driver_vehicle_ref ON pub_driver_vehicle_ref.driverid = pub_driver.id and pub_driver_vehicle_ref.status=1
+		limit 1
+	</select>
 </mapper>

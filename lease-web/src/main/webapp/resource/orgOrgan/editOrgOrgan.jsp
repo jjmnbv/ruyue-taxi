@@ -17,33 +17,28 @@
 <base href="<%=basePath%>">
 <link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/bootstrap.css" />
 <link rel="stylesheet" type="text/css" href="content/css/style.css" />
-<link rel="stylesheet" type="text/css"
-	href="content/plugins/toastr/toastr.css" />
-<link rel="stylesheet" type="text/css"
-	href="content/plugins/select2/select2.css" rel="stylesheet">
-<link rel="stylesheet" type="text/css"
-	href="content/plugins/select2/select2_metro.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="content/plugins/toastr/toastr.css" />
+<link rel="stylesheet" type="text/css" href="content/plugins/select2/select2.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="content/plugins/select2/select2_metro.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="content/plugins/letterselect/letterselect.css">
 <link rel="stylesheet" type="text/css" href="content/css/orgorgan_media.css" />
+<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/dataTables.bootstrap.css"/>
+<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/fixedColumns.bootstrap.css"/>
 <link rel="stylesheet" type="text/css" href="content/plugins/cityselect1/cityselect1.css">
-
 <script type="text/javascript" src="content/js/jquery.js"></script>
 <script type="text/javascript" src="content/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
 <script type="text/javascript" src="content/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="content/js/common.js"></script>
-<script type="text/javascript"
-	src="content/plugins/data-tables/js/jquery.dataTables.js"></script>
-<script type="text/javascript"
-	src="content/plugins/data-tables/js/dataTables.fnSearch.js"></script>
-<script type="text/javascript"
-	src="content/plugins/jquery-validate/js/jquery.validate.js"></script>
-<script type="text/javascript"
-	src="content/plugins/toastr/toastr.min.js"></script>
+<script type="text/javascript" src="content/plugins/data-tables/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="content/plugins/data-tables/js/dataTables.bootstrap.js"></script>
+<script type="text/javascript" src="content/plugins/data-tables/js/dataTables.fnSearch.js"></script>
+<script type="text/javascript" src="content/plugins/data-tables/js/dataTables.fixedColumns.js"></script>
+<script type="text/javascript" src="content/plugins/jquery-validate/js/jquery.validate.js"></script>
+<script type="text/javascript" src="content/plugins/toastr/toastr.min.js"></script>
 <script type="text/javascript" src="js/basecommon.js"></script>
 <script type="text/javascript"  src="content/plugins/cityselect1/cityselect1.js"></script>
 <script type="text/javascript" src="content/plugins/select2/select2.js"></script>
-<script type="text/javascript"
-	src="content/plugins/select2/select2_locale_zh-CN.js"></script>
+<script type="text/javascript" src="content/plugins/select2/select2_locale_zh-CN.js"></script>
 <script type="text/javascript" src="content/plugins/select2/app.js"></script>
 <script src="content/plugins/fileupload/jquery.ui.widget.js"></script>
 <script src="content/plugins/fileupload/jquery.iframe-transport.js"></script>
@@ -56,6 +51,7 @@
 		}
 		.form select,.form input[type=text]{
 			width:70%;
+			float:left;
 		}
 		.form label{
 			line-height: 30px;
@@ -66,16 +62,33 @@
 			float:left;
 			margin-top: -5px;
 		}
-		.tip_box_c{
-		    max-height: 726px;
+		th, td { white-space: nowrap; }
+		div.dataTables_wrapper {
+		  width: $(window).width();
+		  margin: 0 auto;
 		}
+		.DTFC_ScrollWrapper{
+		margin-top:-20px;
+		}
+		.pop_box{z-index: 1111 !important;}
 		.breadcrumb{text-decoration:underline;}
-		.content{padding-top:20px;}
-		.tangram-suggestion-main{z-index:10000;}
-		
-		
-		select option{
-			padding:1px 10px;
+		.tip_box_d .row {
+            margin-right: -5px;
+            margin-left: -5px;
+        }
+        @media screen and (min-width: 790px) and (max-width: 1100px) {
+			.form label{
+				padding-right:0;
+			}
+			.editdriver_css_col_1 input{
+				margin-left:13px;
+			}
+		}
+		.editdriver_css_col_1{
+			line-height:200%;
+		}
+		#inp_box1>.city_container{
+			margin-top: 30px;
 		}
 	</style>
 </head>
@@ -90,6 +103,8 @@
 				<div class="col-4">
 					<label>机构全称<em class="asterisk"></em></label>
 					<input id="id" name="id" value="${orgOrgan.id}" type="hidden"/>
+					<input id="nowleLeasescompanyid" value="${leLeasescompany.id}" type="hidden">
+					<input id="nowleLeasescompanyname" value="${leLeasescompany.shortName}" type="hidden">
 					<input type="text" placeholder="机构全称" name="fullName" id="fullName" value="${orgOrgan.fullName}" maxlength="20" onkeyup="value=value.replace(/[ -~]/g,'')" onkeydown="if(event.keyCode==13)event.keyCode=9" >
 				</div>
 				<div class="col-4">
@@ -97,20 +112,8 @@
 					<input type="text" placeholder="机构简称" id="shortName" name="shortName" value="${orgOrgan.shortName}" maxlength="6">
 				</div>
 				<div class="col-4">
-					<label>客户类型<em class="asterisk"></em></label>
-					<!-- 客户类型(0-非渠道客户，1-渠道客户) -->
-					<select id="customertype" name="customertype">
-						<c:choose>
-							<c:when test="${orgOrgan.customertype == 1}"> 
-								<option value="0">非渠道客户</option>
-								<option value="1" selected="selected">渠道客户</option>
-							</c:when>
-							<c:otherwise> 
-								<option value="0" selected="selected">非渠道客户</option>
-								<option value="1">渠道客户</option>
-							</c:otherwise>
-						</c:choose>
-					</select>
+					<label>机构账号<em class="asterisk"></em></label>
+					<input id="account" name="account" type="text" placeholder="机构账号" value="${orgOrgan.account}" maxlength="15">
 				</div>
 			</div>	
 			<div class="row">
@@ -216,8 +219,35 @@
 			</div>
 			<div class="row">
 				<div class="col-4">
-					<label>机构账号<em class="asterisk"></em></label>
-					<input id="account" name="account" type="text" placeholder="机构账号" value="${orgOrgan.account}" maxlength="15">
+					<label>客户类型<em class="asterisk"></em></label>
+					<!-- 客户类型(0-非渠道客户，1-渠道客户) -->
+					<select id="customertype" name="customertype">
+						<c:choose>
+							<c:when test="${orgOrgan.customertype == 1}"> 
+								<option value="0">非渠道客户</option>
+								<option value="1" selected="selected">渠道客户</option>
+							</c:when>
+							<c:otherwise> 
+								<option value="0" selected="selected">非渠道客户</option>
+								<option value="1">渠道客户</option>
+							</c:otherwise>
+						</c:choose>
+					</select>
+				</div>
+				
+				<div class="col-4">
+					<label>供车主体<em class="asterisk"></em></label>
+					<input type="hidden" id="forTheCarBodyId" name="forTheCarBodyId" value="">
+					<div style="border:1px solid #E0E0E0;width: 260px;height: 100px;overflow-y:scroll">
+						<ul id="forTheCarBody" name="forTheCarBody" >
+							<li data-value="${leLeasescompany.id}">${leLeasescompany.shortName}</li>
+						</ul>
+					</div>
+					<div style="height: 90px;margin-top: -95px;margin-left: 424px;">
+						<button type="button" onclick="addForTheCarBody();" style="width: 35px; height: 35px;">+</button>
+						<br><br>
+						<button type="button" onclick="updateForTheCarBody();" style="width: 35px; height: 35px;">-</button>
+					</div>
 				</div>
 			</div>
 			<div class="row">
@@ -260,7 +290,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-12" style="padding:8px 0px;font-size:24px;border-bottom:1px solid #ccc;margin-bottom:20px;">工商执照
+				<div class="col-12" style="padding:8px 0px;font-size:24px;border-bottom:1px solid #ccc;margin-bottom:20px;">工商营业执照/事业单位法人证书
 			</div>
 			</div>
 			<div class="row">
@@ -294,7 +324,7 @@
 				</div>
 				<div class="col-4">
 					<label></label>
-					<input id="businessLicense" name="businessLicense" type="text" placeholder="请填写执照编码" value="${orgOrgan.businessLicense}" style="margin-top: 50px;" maxlength="15">
+					<input id="businessLicense" name="businessLicense" type="text" placeholder="请填写执照或证书编码" value="${orgOrgan.businessLicense}" style="margin-top: 50px;" maxlength="30">
 				</div>
 			</div>
 			<div class="row">
@@ -396,31 +426,50 @@
 	</div>
 	<!-- 百度地图弹窗 end-->
 	<div class="kongjian_list" id="kongjian_list">
-			<div class="box">
-				<div class="title">
-					<span>ABCDE</span>
-					<span>FGHIJ</span>
-					<span>KLMNO</span>
-					<span>PQRST</span>
-					<span>UVWXYZ</span>
-				</div>
-				<div class="con">
+		<div class="box">
+			<div class="title">
+				<span>ABCDE</span>
+				<span>FGHIJ</span>
+				<span>KLMNO</span>
+				<span>PQRST</span>
+				<span>UVWXYZ</span>
+			</div>
+			<div class="con">
 
-				</div>
-				<div class="con">
+			</div>
+			<div class="con">
 
-				</div>
-				<div class="con">
+			</div>
+			<div class="con">
 
-				</div>
-				<div class="con">
+			</div>
+			<div class="con">
 
+			</div>
+			<div class="con">
+				
+			</div>
+		</div> 
+	</div>
+		
+	<div class="pop_box" id="addForTheCarBody" style="display: none;">
+		<div class="tip_box_d form" style="max-height: 800px;overflow-y:hidden;overflow-x:hidden;">
+            <img src="content/img/btn_guanbi.png" class="close" style="margin-top: 10px;" alt="关闭">
+            <h3 id="bindingVelTitleForm">添加供车主体</h3>
+            <div class="row form">
+            	<input type="hidden" id="driid" name="driid">
+	            <div class="col-10"><label>战略伙伴</label>
+					<input id="queryForTheCarBody" name="queryForTheCarBody" placeholder="请选择" type="text" onclick="loadForTheCarBody();"/>
 				</div>
-				<div class="con">
-					
-				</div>
-			</div> 
-		</div>
+            </div>
+	        <table id=forTheCarBodyTable class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
+	        <div class="row">
+	        	<div  class="col-10" style="text-align: right;">
+	                <button class="Mbtn red" style="margin-left: 20px;" onclick="cancle();">关闭</button>
+           		</div>
+	        </div>
+        </div>
+	</div>
 	<script type="text/javascript" src="js/orgOrgan/editOrgOrgan.js"></script>
 	<script type="text/javascript" src="js/orgOrgan/reg.js"></script>
 	<script type="text/javascript" src="js/orgOrgan/baidu.js"></script>
@@ -442,9 +491,8 @@
 			        $("#billDate").focus(function(){  
 			            $(this).attr("size","10");  
 			        })  
-			    }   
+			    } 
 		})
-			
 	</script>
 </body>
 </html>

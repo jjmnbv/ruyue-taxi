@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.szyciov.dto.coupon.CouponInfoDTO;
 import org.apache.commons.lang.StringUtils;
 
 import com.szyciov.driver.entity.OrderInfo;
@@ -193,6 +194,12 @@ public class PushObjFactory {
 	 * @return
 	 */
 	public static final String HINT_SHIFT_RECYCLE = "shiftCashreject";
+
+
+	/**
+	 * 生成抵用券
+	 */
+	public static final String GENERATE_COUPON = "generateCoupon";
 
 
 
@@ -1133,7 +1140,7 @@ public class PushObjFactory {
 					.setOptions(getPushOptions())
 					.build();
 	}
-	
+
 	/**
 	 * 解绑车辆pushobj
 	 * @param order
@@ -1540,4 +1547,53 @@ public class PushObjFactory {
 				.setOptions(getPushOptions())
 				.build();
 	}
+
+
+	/**
+	 * 新增抵用券IOS
+	 * @param order
+	 * @param userids
+	 * @return
+	 */
+	public static PushPayload createCouponObj4IOS(List<String> userids,CouponInfoDTO content){
+		return PushPayload.newBuilder()
+			.setPlatform(Platform.ios())
+			.setAudience(getAudience(userids, null))
+			.setNotification(Notification.newBuilder()
+				.addPlatformNotification(IosNotification.newBuilder()
+					.setAlert("新的抵用券")
+					//消息类型
+					.addExtra("type", GENERATE_COUPON)
+					.addExtra("name", content.getName())
+					.addExtra("money", content.getMoney())
+					.build())
+				.build())
+			.setOptions(getPushOptions())
+			.build();
+	}
+
+	/**
+	 * 新增抵用券安卓
+	 * @param order
+	 * @param userids
+	 * @return
+	 */
+	public static PushPayload createCouponObj4Android(List<String> userids,CouponInfoDTO content){
+		String alert = "新的抵用券";
+		return PushPayload.newBuilder()
+			.setPlatform(Platform.android())
+			.setAudience(getAudience(userids, null))
+			.setMessage(Message.newBuilder()
+				.setContentType("text")
+				.setTitle(alert)
+				.setMsgContent("新的抵用券")
+				//消息类型
+				.addExtra("type", GENERATE_COUPON)
+				.addExtra("name", content.getName())
+				.addExtra("money", content.getMoney())
+				.build())
+			.setOptions(getPushOptions())
+			.build();
+	}
+
 }

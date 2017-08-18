@@ -7,6 +7,7 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Repository;
 
+import com.szyciov.entity.PubCouponDetail;
 import com.szyciov.lease.entity.OrgOrganExpenses;
 import com.szyciov.lease.entity.OrganAccountInfo;
 import com.szyciov.lease.entity.PubCityAddr;
@@ -65,4 +66,39 @@ public class OrganAccountDao {
 		return mapper.getOrganExpensesListExport(organAccountQueryParam);
 	}
 	
+    public List<PubCouponDetail> getPubCouponDetailListByQuery(OrganAccountQueryParam organAccountQueryParam) {
+    	return mapper.getPubCouponDetailListByQuery(organAccountQueryParam);
+    }
+	
+	public int getPubCouponDetailListCountByQuery(OrganAccountQueryParam organAccountQueryParam) {
+		return mapper.getPubCouponDetailListCountByQuery(organAccountQueryParam);
+	}
+	
+	public List<PubCouponDetail> getPubCouponDetailExport(OrganAccountQueryParam organAccountQueryParam) {
+		return mapper.getPubCouponDetailExport(organAccountQueryParam);
+	}
+	
+	public void addOrganCouponValue(Map<String, Object> map) {
+		mapper.addOrganCouponValue(map);
+	}
+	
+    public void addCouponDetail(Map<String, Object> map) {
+    	mapper.addCouponDetail(map);
+    }
+	
+    public void clearOrganCouponValue(Map<String, Object> map) {
+    	mapper.clearOrganCouponValue(map);
+    }
+	
+    public double getOrganCouponValue(Map<String, Object> map) {
+    	return mapper.getOrganCouponValue(map);
+    }
+	
+    public void clearCouponDetail(Map<String, Object> map) {
+    	mapper.clearCouponDetail(map);
+    }
+    
+    public String getCityByOrganid(String id) {
+    	return mapper.getCityByOrganid(id);
+    }
 }

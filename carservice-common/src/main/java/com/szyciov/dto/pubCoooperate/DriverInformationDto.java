@@ -12,8 +12,8 @@ public class DriverInformationDto {
 	/**
 	 * 所属租赁公司
 	 */
-	public String leasescompanyid;
-	
+	public String leasecompanyid;
+	public String vehicleid;
 	public String name;
 
 	/**
@@ -38,6 +38,12 @@ public class DriverInformationDto {
 	public String nowName;//现在的服务车型
 	
 	
+	public String getVehicleid() {
+		return vehicleid;
+	}
+	public void setVehicleid(String vehicleid) {
+		this.vehicleid = vehicleid;
+	}
 	public String getOriginalName() {
 		return originalName;
 	}
@@ -56,11 +62,11 @@ public class DriverInformationDto {
 	public void setId(String id) {
 		this.id = id;
 	}
-	public String getLeasescompanyid() {
-		return leasescompanyid;
+	public String getLeasecompanyid() {
+		return leasecompanyid;
 	}
-	public void setLeasescompanyid(String leasescompanyid) {
-		this.leasescompanyid = leasescompanyid;
+	public void setLeasecompanyid(String leasecompanyid) {
+		this.leasecompanyid = leasecompanyid;
 	}
 	public String getName() {
 		return name;

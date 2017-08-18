@@ -34,7 +34,7 @@ public class PremiumRuleService {
         Map<String, Object> ret = new HashMap<String, Object>();
         ret.put("status", Retcode.OK.code);
         ret.put("message", Retcode.OK.msg);
-        ret.put("premiumrate", 1);
+        ret.put("premiumrate", 1.0d);
         ret.put("ruletype", null);
         ret.put("premiumdetailid", null);
 

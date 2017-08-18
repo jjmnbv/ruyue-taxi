@@ -4,11 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.szyciov.entity.PubCoooperate;
 import com.szyciov.lease.entity.OrgOrgan;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
 import com.szyciov.lease.entity.OrgOrganCreditRecord;
 import com.szyciov.lease.entity.PubCityAddr;
+import com.szyciov.lease.entity.PubLeaseOrganRelation;
 import com.szyciov.lease.param.OrgOrganQueryParam;
+import com.szyciov.op.param.PubCoooperateQueryParam;
 import com.szyciov.org.entity.OrgUser;
 
 public interface OrgOrganMapper {
@@ -60,4 +63,20 @@ public interface OrgOrganMapper {
 	int CheckChInfo(String id);
 	
 	void DeleteChInfo(String id);
+	
+	List<PubCoooperate> getPubCoooperateList(PubCoooperateQueryParam queryParam);
+
+    int getPubCoooperateListCount(PubCoooperateQueryParam queryParam);
+    
+    void insertPubLeaseOrganRelation(PubLeaseOrganRelation po);
+    
+    void deletePubLeaseOrganRelation(String id);
+    
+    List<PubLeaseOrganRelation> getPubLeaseOrganRelationById(String id);
+    
+    List<PubLeaseOrganRelation> getIndexList(String id);
+    
+    List<Map<String, Object>> getPubCoooperateSelect(PubCoooperateQueryParam queryParam);
+    
+    List<Map<String, Object>> queryOrgUserByOrganid(String id);
 }

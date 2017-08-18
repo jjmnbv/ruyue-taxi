@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.PubComplaintManageMapper">
+    <select id="queryPubComplaints" resultType="com.szyciov.op.vo.pubComplaintManage.QueryPubComplaintsVo"
+            parameterType="com.szyciov.op.param.pubComplaintManage.QueryPubComplaintsParam">
+        select
+        cp.id,
+        cp.orderno, -- 订单编号
+        d.jobnum, -- 资格证号
+        d.name, -- 司机
+        d.phone, -- 司机手机号
+        pv.fullplateno, -- 车牌号
+        u.nickname, -- 下单人
+        u.account, -- 下单人手机号
+        cp.complainttype, -- 投诉类型
+        cp.complaintcontent, -- 投诉内容
+        DATE_FORMAT(cp.createtime, '%Y/%m/%d %H:%i') createtime, -- 投诉时间
+        op_user.nickname creater, -- 操作人
+        DATE_FORMAT(cp.processtime, '%Y/%m/%d %H:%i') processtime, -- 处理时间
+        cp.processresult, -- 核实结果
+        cp.processrecord -- 处理意见
+        from pub_complaint cp
+        inner join op_order o on o.orderno=cp.orderno and o.status=1
+        inner join pub_driver d on d.id=o.driverid and d.status=1
+        inner join pub_driver_vehicle_ref pdvfr on pdvfr.driverid=d.id and pdvfr.status=1
+        inner join pub_vehicle pv on pv.id=pdvfr.vehicleid and pv.status=1
+        inner join pub_dictionary pd on pd.value=cp.complainttype and pd.type='投诉列表' and pd.status=1
+        inner join pe_user u on u.id=o.userid and u.status=1
+        left join op_user on op_user.id=cp.processor
+        where 1=1
+        and cp.platformtype=0
+        and cp.status=1
+        and cp.processstatus=#{processstatus}
+        and cp.leasecompanyid=#{leasecompanyid}
+        <if test="orderno != null and orderno != '' ">
+            and cp.orderno=#{orderno}
+        </if>
+        <if test="userid != null and userid != '' ">
+            and o.userid=#{userid}
+        </if>
+        <if test="jobnum != null and jobnum != '' ">
+            and d.jobnum=#{jobnum}
+        </if>
+        <if test="driverid != null and driverid != '' ">
+            and d.id=#{driverid}
+        </if>
+        <if test="fullplateno != null and fullplateno != '' ">
+            and pv.fullplateno=#{fullplateno}
+        </if>
+        <if test="processresult != null and processresult != '' ">
+            and cp.processresult=#{processresult}
+        </if>
+        <if test="type != null and type != '' ">
+            and pd.value=#{type}
+        </if>
+        <if test="processtimestart != null">
+            and cp.processtime > #{processtimestart}
+        </if>
+        <if test="processtimeend != null">
+            and cp.processtime &#60; #{processtimeend}
+        </if>
+        <if test="complainttimestart != null">
+            and cp.createtime > #{complainttimestart}
+        </if>
+        <if test="complainttimeend != null">
+            and cp.createtime &#60; #{complainttimeend}
+        </if>
+        order by cp.createtime desc
+    </select>
+    <select id="queryPubComplaintsordernos" resultType="com.szyciov.entity.Select2Entity"
+            parameterType="com.szyciov.param.Select2Param">
+        select * from (
+        select DISTINCT
+        cp.orderno id, -- 订单编号
+        cp.orderno text -- 订单编号
+        from pub_complaint cp
+        inner join op_order o on o.orderno=cp.orderno and o.status=1
+        inner join pub_driver d on d.id=o.driverid and d.status=1
+        inner join pub_driver_vehicle_ref pdvfr on pdvfr.driverid=d.id and pdvfr.status=1
+        inner join pub_vehicle pv on pv.id=pdvfr.vehicleid and pv.status=1
+        inner join pub_dictionary pd on pd.value=cp.complainttype and pd.type='投诉列表' and pd.status=1
+        inner join pe_user u on u.id=o.userid and u.status=1
+        where 1=1
+        and cp.platformtype=0
+        and cp.status=1
+        and cp.processstatus=#{key}
+        and cp.leasecompanyid=#{companyid}
+        ) t where 1=1
+        <if test='null != sSearch and "" != sSearch'>
+            and instr(text, #{sSearch}) > 0
+        </if>
+    </select>
+    <select id="queryPubComplaintsUsers" resultType="com.szyciov.entity.Select2Entity"
+            parameterType="com.szyciov.param.Select2Param">
+        select * from (
+        select
+        u.id id,
+        concat(u.nickname, ' ',u.account) text
+        from pub_complaint cp
+        inner join op_order o on o.orderno=cp.orderno and o.status=1
+        inner join pub_driver d on d.id=o.driverid and d.status=1
+        inner join pub_driver_vehicle_ref pdvfr on pdvfr.driverid=d.id and pdvfr.status=1
+        inner join pub_vehicle pv on pv.id=pdvfr.vehicleid and pv.status=1
+        inner join pub_dictionary pd on pd.value=cp.complainttype and pd.type='投诉列表' and pd.status=1
+        inner join pe_user u on u.id=o.userid and u.status=1
+        where 1=1
+        and cp.platformtype=0
+        and cp.status=1
+        and cp.processstatus=#{key}
+        and cp.leasecompanyid=#{companyid}
+        ) t where 1=1
+        <if test='null != sSearch and "" != sSearch'>
+            and instr(text, #{sSearch}) > 0
+        </if>
+    </select>
+    <select id="queryPubComplaintsJobNum" resultType="com.szyciov.entity.Select2Entity"
+            parameterType="com.szyciov.param.Select2Param">
+        select * from (
+        select distinct
+        d.jobnum id,
+        d.jobnum text
+        from pub_complaint cp
+        inner join op_order o on o.orderno=cp.orderno and o.status=1
+        inner join pub_driver d on d.id=o.driverid and d.status=1
+        inner join pub_driver_vehicle_ref pdvfr on pdvfr.driverid=d.id and pdvfr.status=1
+        inner join pub_vehicle pv on pv.id=pdvfr.vehicleid and pv.status=1
+        inner join pub_dictionary pd on pd.value=cp.complainttype and pd.type='投诉列表' and pd.status=1
+        inner join pe_user u on u.id=o.userid and u.status=1
+        where 1=1
+        and cp.platformtype=0
+        and cp.status=1
+        and cp.processstatus=#{key}
+        and cp.leasecompanyid=#{companyid}
+        ) t where 1=1
+        <if test='null != sSearch and "" != sSearch'>
+            and instr(text, #{sSearch}) > 0
+        </if>
+    </select>
+    <select id="queryPubComplaintsDrivers" resultType="com.szyciov.entity.Select2Entity"
+            parameterType="com.szyciov.param.Select2Param">
+        select * from (
+        select
+        d.id id,
+        concat(d.name, ' ',d.phone) text
+        from pub_complaint cp
+        inner join op_order o on o.orderno=cp.orderno and o.status=1
+        inner join pub_driver d on d.id=o.driverid and d.status=1
+        inner join pub_driver_vehicle_ref pdvfr on pdvfr.driverid=d.id and pdvfr.status=1
+        inner join pub_vehicle pv on pv.id=pdvfr.vehicleid and pv.status=1
+        inner join pub_dictionary pd on pd.value=cp.complainttype and pd.type='投诉列表' and pd.status=1
+        inner join pe_user u on u.id=o.userid and u.status=1
+        where 1=1
+        and cp.platformtype=0
+        and cp.status=1
+        and cp.processstatus=#{key}
+        and cp.leasecompanyid=#{companyid}
+        ) t where 1=1
+        <if test='null != sSearch and "" != sSearch'>
+            and instr(text, #{sSearch}) > 0
+        </if>
+    </select>
+    <select id="queryPubComplaintsFullplateno" resultType="com.szyciov.entity.Select2Entity"
+            parameterType="com.szyciov.param.Select2Param">
+        select * from (
+        select
+        pv.fullplateno id,
+        pv.fullplateno text
+        from pub_complaint cp
+        inner join op_order o on o.orderno=cp.orderno and o.status=1
+        inner join pub_driver d on d.id=o.driverid and d.status=1
+        inner join pub_driver_vehicle_ref pdvfr on pdvfr.driverid=d.id and pdvfr.status=1
+        inner join pub_vehicle pv on pv.id=pdvfr.vehicleid and pv.status=1
+        inner join pub_dictionary pd on pd.value=cp.complainttype and pd.type='投诉列表' and pd.status=1
+        inner join pe_user u on u.id=o.userid and u.status=1
+        where 1=1
+        and cp.platformtype=0
+        and cp.status=1
+        and cp.processstatus=#{key}
+        and cp.leasecompanyid=#{companyid}
+        ) t where 1=1
+        <if test='null != sSearch and "" != sSearch'>
+            and instr(text, #{sSearch}) > 0
+        </if>
+    </select>
+    <select id="queryPubComplaintsTypes" resultType="com.szyciov.entity.Select2Entity"
+            parameterType="com.szyciov.param.Select2Param">
+      select value id, text from pub_dictionary where type='投诉列表' ;
+    </select>
+    <update id="updateProcessRecord" parameterType="com.szyciov.op.param.pubComplaintManage.UpdateProcessRecordParam">
+        update pub_complaint set processstatus=1,
+        processor=#{processor},
+        updater=#{updater},
+        processrecord=#{processrecord},
+        updatetime=#{updatetime}
+        <if test='processtime != null'>
+            ,processtime=#{processtime}
+        </if>
+        <if test='processresult != null and processresult != ""'>
+            , processresult=#{processresult}
+        </if>
+        where id=#{id}
+    </update>
+</mapper>

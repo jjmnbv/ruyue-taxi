@@ -41,7 +41,7 @@
 			<package name="com.szyciov.param"/>
 			<package name="com.szyciov.coupon.param"/>
 		<!-- all DTO-->
-			<package name="com.szyciov.dto"/>
+			<package name="com.szyciov.dto.coupon"/>
 			<package name="com.szyciov.coupon.dto"/>
 	</typeAliases>
 </configuration>

@@ -992,11 +992,18 @@ function initHintEvent(){
 	   manticOrder();
    });
    $("#sendorder :button").eq(2).click(function(){
-	   cancelOrder();
+	   getCancelCost();
    });
    //余额不足弹窗按钮事件
    $("#unpayable :button").eq(0).click(function(){
 	   $("#unpayable").hide();
+   });
+   //取消责任方弹窗按钮事件
+   $("#cancelpartyFormDiv :button").eq(0).click(function(){
+	   cancelOrder();
+   });
+   $("#cancelpartyFormDiv :button").eq(1).click(function(){
+	   cancel();
    });
 }
 
@@ -1140,10 +1147,18 @@ function showResult(data){
  * 取消订单
  */
 function cancelOrder(){
+    var form = $("#cancelpartyForm");
+    if(!form.valid()) {
+        return;
+    }
+    
     var p = {
-	    		"orderno":$("#orderno").val(), 
-	    		"ordertype": $("#ordertype").val()
-    		};
+		orderno: $("#orderno").val(), 
+		ordertype: $("#ordertype").val(),
+        dutyparty: $("#dutyparty").val(),
+        cancelreason: $("#cancelreason").val(),
+        identifying: $("#identifyingHide").val()
+	};
    	$.ajax({
 	    type: 'POST',
 	    url: "Order/CancelOrder" ,
@@ -1152,15 +1167,104 @@ function cancelOrder(){
 	    contentType:"application/json",
 	    success:function(data){
 	    	if(data.status == 0 || data.status == 2003){
-				$("#sendorder").hide();
+	    		$("#sendorder").hide();
+				$("#cancelpartyFormDiv").hide();
 				toastr.success("订单已被取消", "提示");
 	    	}else if(data.status == 2007){
+	    		$("#sendorder").hide();
+	    		$("#cancelpartyFormDiv").hide();
 	    		toastr.error("当前订单不可取消", "提示");
 	    	}else{
 	    		toastr.error(data.message, "提示");
 	    	}
 	    }
 	});
+}
+
+/**
+ * 查询取消费用
+ */
+function getCancelCost(){
+    showObjectOnForm("cancelpartyForm", null);
+    showCancelreason();
+    var editForm = $("#cancelpartyForm").validate();
+    editForm.resetForm();
+    editForm.reset();
+    var data = {
+		"orderno":$("#orderno").val(), 
+		"ordertype": $("#ordertype").val(), 
+		"usetype":"2"
+	};
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "OrderManage/GetCancelPriceDetail",
+        data: JSON.stringify(data),
+        contentType: "application/json; charset=utf-8",
+        async: false,
+        success: function (result) {
+            if (result.status == 0) {
+                $("#identifyingHide").val(result.identifying);
+                var pricereason = result.pricereason;
+                if(pricereason == 2) { //orderstatusHide的值为1表示没有司机接单，值为2表示司机已接单
+                    $("#orderstatusHide").val(1);
+                } else {
+                    $("#orderstatusHide").val(2);
+                }
+                initCancelWindow();
+                if(pricereason == 2 || pricereason == 3) {
+                    $("#cancelDetail").html("");
+                } else {
+                    $("#cancelDetail").html(getCancelShowTable(result));
+                }
+                $("#cancelpartyFormDiv").show();
+            } else if(result.status == 2003){
+            	$(".pop_box").hide();
+            	toastr.info("订单已取消", "提示");
+            } else if(result.status == 2007){
+            	$(".pop_box").hide();
+            	toastr.info("当前订单不可取消", "提示");
+            } else {
+                toastr.error(result.message, "提示");
+            }
+        }
+    });
+}
+
+/**
+ * 责任方和取消原因显示
+ */
+function initCancelWindow() {
+    var orderstatus = $("#orderstatusHide").val();
+    //责任方下拉框显示
+    var dutypartyHtml = '<option value="">请选择</option>';
+    if(orderstatus == 1) { //没有司机接单
+        dutypartyHtml += '<option value="1">乘客</option>';
+        dutypartyHtml += '<option value="3">客服</option>';
+        dutypartyHtml += '<option value="4">平台</option>';
+    } else {
+        dutypartyHtml += '<option value="1">乘客</option>';
+        dutypartyHtml += '<option value="2">司机</option>';
+        dutypartyHtml += '<option value="3">客服</option>';
+        dutypartyHtml += '<option value="4">平台</option>';
+    }
+    $("#dutyparty").html(dutypartyHtml);
+
+    //取消原因显示
+    var cancelreasonHtml = '<option value="">请选择</option>';
+    if(orderstatus == 1) { //没有司机接单
+        cancelreasonHtml += '<option value="1">不再需要用车</option>';
+        cancelreasonHtml += '<option value="5">业务操作错误</option>';
+        cancelreasonHtml += '<option value="6">暂停供车服务</option>';
+    } else {
+        cancelreasonHtml += '<option value="1">不再需要用车</option>';
+        cancelreasonHtml += '<option value="2">乘客迟到违约</option>';
+        cancelreasonHtml += '<option value="3">司机迟到违约</option>';
+        cancelreasonHtml += '<option value="4">司机不愿接乘客</option>';
+        cancelreasonHtml += '<option value="5">业务操作错误</option>';
+        cancelreasonHtml += '<option value="6">暂停供车服务</option>';
+    }
+    $("#cancelreason").html(cancelreasonHtml);
 }
 
 /**
@@ -1283,12 +1387,13 @@ function resetCost(){
  */
 function getCost(){
 	var cartype = $("#cartype").val();
-	var usetype= $("#usetype").find("input[type='radio']:checked").val();
+	var usetype= 2;
 	var usetime = $("#usetime").val();
 	var rulestype = usetype == "0"?"1":"0";
 	var city       = $("#onCity").val();
 	var ordertype=$("#ordertype").val();
 	var userid = $("#userid").val();
+	var paymethod = $("#paymethod").find("input[type='radio']:checked").val();
 	params.onLng = mapParam.onaddrlng;
 	params.onLat = mapParam.onaddrlat;
 	params.offLng = mapParam.offaddrlng;
@@ -1318,6 +1423,7 @@ function getCost(){
 			ordertype:ordertype,
 			userid:userid,
 			rulestype:rulestype,
+			paymethod:paymethod,
 //			distance:distance,
 //			duration:duration,
 			onaddrlng:params.onLng,
@@ -1333,15 +1439,29 @@ function getCost(){
 	    dataType: "json",
 	    success: function(data){
 	    	if(data.status == 0){
-	    		if($("#usetype input[type='radio']:checked").val() == "0"){
-	    			if(!data.payable){
-	    				$("#payable").show();
-		    			$("#paymethod input[type='radio']").eq(0).attr("disabled","disabled");
-		    			$("#paymethod input[type='radio']").eq(1).click();
-	    			}else{
-	    				$("#payable").hide();
-	    				$("#paymethod input[type='radio']").eq(0).removeAttr("disabled");
-	    			}
+//	    		if($("#usetype input[type='radio']:checked").val() == "0"){   //是否是机构支付
+//	    			if(!data.payable){   //余额是否足够
+//	    				$("#payable").show();
+//		    			$("#paymethod input[type='radio']").eq(0).attr("disabled","disabled");
+//		    			$("#paymethod input[type='radio']").eq(1).click();
+//	    			}else{
+//	    				$("#payable").hide();
+//	    				$("#paymethod input[type='radio']").eq(0).removeAttr("disabled");
+//	    			}
+//	    		}
+	    		if(data.premiumrate != "1.0倍"){    //是否是溢价时段
+	    			$("#premiumrateSpan").show();
+	    			$("#premiumrate").text(data.premiumrate);
+	    		}else{
+	    			$("#premiumrateSpan").hide();
+	    		}
+	    		if(data.couponprice != "0元"){    //是否有可用优惠券
+	    			$("#couponpriceSpan").show();
+	    			$("#couponprice").text(data.couponprice);
+	    			//优惠券金额需要页面单独计算
+	    			data.cost = (data.cost.replace("元","") - data.couponprice.replace("元","")) + "元";
+	    		}else{
+	    			$("#couponpriceSpan").hide();
 	    		}
 	    		$("#estimatedcost").text(data.cost);
 	    		$("#estimatedmileage").text(data.mileage);
@@ -1467,7 +1587,26 @@ function validData(){
 		ignore: "",
 		rules : rules,
 		messages : messages
-    })
+    });
+	
+    $("#cancelpartyForm").validate({
+        rules : {
+            dutyparty : {
+                required : true
+            },
+            cancelreason : {
+                required : true
+            }
+        },
+        messages : {
+            dutyparty : {
+                required : "请选择责任方"
+            },
+            cancelreason : {
+                required : "请选择取消原因"
+            }
+        }
+    });
 }
 
 function initManualSelectDriver(){
@@ -1556,4 +1695,105 @@ function initManualSelectPop(){
     $("#manualDriverJobNum").val("");
     $("#manualDriverPlateNo").val("");
     $("#manualSelectDriverPopSearch").click();
+}
+
+/**
+ * 取消费用说明
+ * @param result
+ * @returns {string}
+ */
+function getCancelShowTable(result) {
+    var ordercancelrule = result.ordercancelrule;
+    var html = '<table>';
+    if(result.pricereason == 4) { //司机迟到
+        html += '<tr><td colspan="4" style="text-align: left;">说明</td></tr>';
+        html += '<tr><td>取消时差(分钟)</td><td>免责取消时限(分钟)</td><td>司机迟到时长(分钟)</td><td>迟到免责时限(分钟)</td></tr>';
+        html += '<tr><td>' + result.canceltimelag + '</td><td>' + ordercancelrule.cancelcount + '</td><td>' + result.driverlate + '</td><td>' + ordercancelrule.latecount + '</td></tr>';
+    } else {
+        html += '<tr><td colspan="3" style="text-align: left;">说明</td></tr>';
+        if(result.pricereason != 1) {
+			html += '<tr><td colspan="3" style="text-align: left;">乘客需支付取消费用<span class="font_red">' + result.price + '</span></td></tr>';
+		}
+        html += '<tr><td>取消时差(分钟)</td><td>免责取消时限(分钟)</td><td>司机是否抵达</td></tr>';
+        html += '<tr><td>' + result.canceltimelag + '</td><td>' + ordercancelrule.cancelcount + '</td>';
+        if(result.driverarraival == true) {
+            html += '<td>正常抵达</td></tr>';
+        } else {
+            html += '<td>未抵达</td></tr>';
+        }
+    }
+    html += '</table>';
+    return html;
+}
+
+/**
+ * 根据责任方对应显示取消原因
+ */
+function showCancelreason() {
+    var dutyparty = $("#dutyparty").val();
+    var html = '';
+
+    var orderstatus = $("#orderstatusHide").val();
+    if(orderstatus == 1) { //没有司机接单
+        if(dutyparty == 1) {
+            html += '<option value="1">不再需要用车</option>';
+        } else if(dutyparty == 3) {
+            html += '<option value="5">业务操作错误</option>';
+        } else if(dutyparty == 4) {
+            html += '<option value="6">暂停供车服务</option>';
+        } else {
+            html += '<option value="">请选择</option>';
+            html += '<option value="1">不再需要用车</option>';
+            html += '<option value="5">业务操作错误</option>';
+            html += '<option value="6">暂停供车服务</option>';
+        }
+    } else {
+        if(dutyparty == 1) {
+            html += '<option value="">请选择</option>';
+            html += '<option value="1">不再需要用车</option>';
+            html += '<option value="2">乘客迟到违约</option>';
+        } else if(dutyparty == 2) {
+            html += '<option value="">请选择</option>';
+            html += '<option value="3">司机迟到违约</option>';
+            html += '<option value="4">司机不愿接乘客</option>';
+        } else if(dutyparty == 3) {
+            html += '<option value="5">业务操作错误</option>';
+        } else if(dutyparty == 4) {
+            html += '<option value="6">暂停供车服务</option>';
+        } else {
+            html += '<option value="">请选择</option>';
+            html += '<option value="1">不再需要用车</option>';
+            html += '<option value="2">乘客迟到违约</option>';
+            html += '<option value="3">司机迟到违约</option>';
+            html += '<option value="4">司机不愿接乘客</option>';
+            html += '<option value="5">业务操作错误</option>';
+            html += '<option value="6">暂停供车服务</option>';
+        }
+    }
+    $("#cancelreason").html(html);
+}
+
+/**
+ * 根据取消原因对应显示责任方
+ */
+function showDutyparty() {
+    var cancelreason = $("#cancelreason").val();
+    if(cancelreason == 1 || cancelreason == 2) {
+        $("#dutyparty").val(1);
+    } else if(cancelreason == 3 || cancelreason == 4) {
+        $("#dutyparty").val(2);
+    } else if(cancelreason == 5) {
+        $("#dutyparty").val(3);
+    } else if(cancelreason == 6) {
+        $("#dutyparty").val(4);
+    }
+    showCancelreason();
+    $("#cancelreason").val(cancelreason);
+}
+
+/**
+ * 取消
+ */
+function cancel() {
+	$("#cancelpartyFormDiv").hide();
 }

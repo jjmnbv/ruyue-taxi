@@ -1866,7 +1866,7 @@ getJasmineRequireObj().Timer = function() {
 };
 
 getJasmineRequireObj().matchersUtil = function(j$) {
-  // TODO: what to do about jasmine.pp not being inject? move to JSON.stringify? gut PrettyPrinter?
+  // TODO: what to do about jasmine.pub not being inject? move to JSON.stringify? gut PrettyPrinter?
 
   return {
     equals: function(a, b, customTesters) {

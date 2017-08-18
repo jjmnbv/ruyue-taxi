@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.lease.mapper.PubVehInsurMapper">
+	
+	<!-- 查询车辆保险信息 -->
+	<select id="getPubVehInsurListByQuery" parameterType="QueryParam" resultType="com.szyciov.dto.pubVehInsur.PubVehInsurQueryDto">
+		SELECT
+			t.*
+		FROM
+			(
+				SELECT
+					    (@rownum := @rownum + 1) AS indexnum,
+						m.*
+					FROM
+						(
+							select	pvi.id, 
+									pvi.vehicleid, 
+									pv.fullplateno,
+									IFNULL(pv.engineid,'') as engineid,
+									IFNULL(pv.vin, '') as vin,
+									IFNULL(pvi.insurcom, '') as insurcom,
+									IFNULL(dic.text,'') as insurtypename,
+									IFNULL(pvi.insurnum, '') as insurnum,
+									IFNULL(pvi.insurcount, '') as insurcount,
+									CONCAT(DATE_FORMAT(pvi.insureff,"%Y/%m/%d"),' - ',DATE_FORMAT(pvi.insurexp,"%Y/%m/%d")) as insurvalidate
+										
+							from	pub_vehicle_insurance pvi 
+									left join  pub_vehicle pv on pvi.vehicleid = pv.id
+									left join pub_dictionary dic on pvi.insurtype = dic.value and dic.type = '保险类型' 
+			        		where	pv.`Status` = 1
+							and		pvi.`status` = 1	
+			        		<if test = "queryVehicleType != null and queryVehicleType != '' ">
+								and pv.vehicletype = #{queryVehicleType}
+			        		</if>
+			        		<if test = "queryinsurType != null and queryinsurType !='' ">
+			        			and pvi.insurtype = #{queryinsurType} 
+			        		</if>
+			        		<if test="queryPlateNo != null and queryPlateNo !='' ">
+								and pv.fullplateno like "%"#{queryPlateNo}"%"
+							</if>
+			       			<if test = "queryVin != null and queryVin != '' ">
+			       				and pv.vin like "%"#{queryVin}"%"
+			       			</if>
+			       			<if test = "queryInsurNum != null and queryInsurNum != ''">
+			       				and pvi.insurnum like "%"#{queryInsurNum}"%"
+			       			</if>
+			       			<if test ="queryInsurCom != null and queryInsurCom != '' ">
+			       				and pvi.insurcom like "%"#{queryInsurCom}"%"
+			       			</if>
+			       			order by pv.fullplateno, pvi.insurcom,dic.text,pvi.insurnum,pvi.insurcount
+							) m,(SELECT @rownum := 0) r
+		) t
+		WHERE
+		<![CDATA[
+		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>	
+	
+	<!-- 查询车辆保险信息返回结果数 -->
+	<select id = "getPubVehInsurListCountByQuery"  parameterType="QueryParam" resultType="int">
+		select	count(*)
+		from	pub_vehicle_insurance pvi left join  pub_vehicle pv on pvi.vehicleid = pv.id
+				left join pub_dictionary dic on pvi.insurtype = dic.value and dic.type = '保险类型' 
+      	where	pv.`Status` = 1
+		and		pvi.`status` = 1	
+     	<if test = "queryVehicleType != null and queryVehicleType != '' ">
+			and pv.vehicletype = #{queryVehicleType}
+     	</if>
+		<if test = "queryinsurType != null and queryinsurType !='' ">
+			and pvi.insurtype = #{queryinsurType} 
+		</if>
+     	<if test="queryPlateNo != null and queryPlateNo !='' ">
+			and pv.fullplateno like "%"#{queryPlateNo}"%"
+		</if>
+		<if test = "queryVin != null and queryVin != '' ">
+			and pv.vin like "%"#{queryVin}"%"
+		</if>
+		<if test = "queryInsurNum != null and queryInsurNum != ''">
+			and pvi.insurnum like "%"#{queryInsurNum}"%"
+		</if>
+		<if test ="queryInsurCom!= null and queryInsurCom != '' ">
+			and pvi.insurcom like "%"#{queryInsurCom}"%"
+		</if>	
+	</select>
+	
+	<!-- 删除车辆保险信息 -->
+	<update id = "deletePubVehInsur">
+		UPDATE pub_vehicle_insurance set `status`=2 WHERE id = #{id} 
+	</update>
+	
+	<!-- 更新车辆保险信息 -->
+	<update id = "updatePubVehInsur" parameterType = "com.szyciov.entity.PubVehInsur">
+		UPDATE pub_vehicle_insurance 
+		set 
+			insurcom = #{insurcom},
+		    insurtype = #{insurtype},
+		    insurnum = #{insurnum},
+		    insurcount = #{insurcount},
+		    insureff = #{insureff},
+		    insurexp = #{insurexp},
+			updateTime=now(),
+			updater=#{updater} 
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 根据id查询车辆保险信息 -->
+	<select id = "getPubVehInsurById" parameterType = "java.lang.String" resultType="com.szyciov.dto.pubVehInsur.PubVehInsurQueryDto">
+		select	pvi.id, 
+				pvi.vehicleid,
+				pv.fullplateno,
+				pv.engineid,
+				pv.vin,
+				pvi.insurcom,
+				pvi.insurtype,
+				pvi.insurnum,
+				pvi.insurcount,
+				pvi.insureff,
+				pvi.insurexp
+		from	pub_vehicle_insurance pvi, pub_vehicle pv
+		where	pvi.vehicleid = pv.id
+		and 	pvi.id = #{value}
+	</select>
+	
+	<!-- 批量插入车辆保险信息 -->
+	<insert id = "addPubVehInsurs" parameterType = "com.szyciov.lease.param.pubVehInsurance.AddPubVehInsurs">
+		insert into pub_vehicle_insurance (
+			id, 				vehicleid, 				insurcom, 			insurtype, 
+			insurnum,			insurcount,				insureff,			insurexp,
+			platformtype,		leasescompanyid,		createtime,			updatetime,
+			creater,			status		
+		)
+		values
+		<foreach collection="insurList" item="item"  separator="," >  
+        	(#{item.id},		#{vehicleid},			#{item.insurcom},	#{item.insurtype},
+        	#{item.insurnum},	#{item.insurcount},		str_to_date(#{item.insureff},'%Y-%m-%d %H:%m:%s') ,  	str_to_date(#{item.insurexp},'%Y-%m-%d %H:%m:%s'),
+        	1,					#{leasescompanyid},		now(),				now(),
+        	#{creater},			1)
+    	</foreach>
+	</insert>
+	
+	<!-- 根据车牌号获取车辆信息 -->
+	<select id="getPubVehicleByPlateNo" resultType = "com.szyciov.lease.entity.PubVehicle">
+		select * from pub_vehicle where fullplateno = #{value} limit 1
+	</select>
+	
+	<!-- 查询车辆保险是否存在 -->
+	<select id = "checkPubVehInsur" parameterType = "com.szyciov.entity.PubVehInsur" resultType = "int">
+		select	count(*) 
+		from	pub_vehicle_insurance 
+		where	vehicleid = #{vehicleid}
+		and 	insurcom = #{insurcom}
+		and		insurtype = #{insurtype}
+		and 	insurnum = #{insurnum}
+		limit 1
+	</select>
+	
+	<!-- 导出数据查询 -->
+	<select id="exportExcel" parameterType="QueryParam" resultType="com.szyciov.dto.pubVehInsur.PubVehInsurQueryDto">
+		select	pvi.id, 
+				pvi.vehicleid, 
+				pv.fullplateno,
+				IFNULL(pv.engineid,'') as engineid,
+				IFNULL(pv.vin, '') as vin,
+				IFNULL(pvi.insurcom, '') as insurcom,
+				IFNULL(dic.text,'') as insurtypename,
+				IFNULL(pvi.insurnum, '') as insurnum,
+				IFNULL(pvi.insurcount, '') as insurcount,
+				CONCAT(DATE_FORMAT(pvi.insureff,"%Y/%m/%d"),' - ',DATE_FORMAT(pvi.insurexp,"%Y/%m/%d")) as insurvalidate
+					
+		from	pub_vehicle_insurance pvi 
+				left join  pub_vehicle pv on pvi.vehicleid = pv.id
+				left join pub_dictionary dic on pvi.insurtype = dic.value and dic.type = '保险类型' 
+      	where	pv.`Status` = 1
+		and		pvi.`status` = 1	
+      	<if test = "queryVehicleType != null and queryVehicleType != '' ">
+			and pv.vehicletype = #{queryVehicleType}
+      	</if>
+      	<if test = "queryinsurType != null and queryinsurType !='' ">
+      		and pvi.insurtype = #{queryinsurType} 
+      	</if>
+      	<if test="queryPlateNo != null and queryPlateNo !='' ">
+			and pv.fullplateno like "%"#{queryPlateNo}"%"
+		</if>
+     	<if test = "queryVin != null and queryVin != '' ">
+     		and pv.vin like "%"#{queryVin}"%"
+     	</if>
+     	<if test = "queryInsurNum != null and queryInsurNum != ''">
+     		and pvi.insurnum like "%"#{queryInsurNum}"%"
+     	</if>
+     	<if test ="queryInsurCom != null and queryInsurCom != '' ">
+     		and pvi.insurcom like "%"#{queryInsurCom}"%"
+     	</if>
+				       			
+	</select>
+
+</mapper>

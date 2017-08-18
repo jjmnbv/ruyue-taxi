@@ -159,7 +159,7 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                    if(full.orderstatus == '7' && full.paymentstatus == "1") {
+                    if(full.orderstatus == '7' && full.paymentstatus != "9" && full.shouldpayamount > 0 && full.actualpayamount > 0) {
                         return "<button type='button' class='SSbtn red' onclick='applyReview(\"" + full.orderno + "\")'><i class='fa fa-paste'></i>申请复核</button>";
                     } else {
                         return "";
@@ -314,7 +314,7 @@ function manualOrderdataGrid() {
                 sClass : "center",
                 sortable : true,
                 "mRender" : function(data, type, full) {
-                    if(full.paymethod == "1" && full.shouldpayamount > 0) {
+                    if(full.paymethod == "1" && full.paymentstatus == "1") {
                         if(null == full.actualamount) {
                             return "0";
                         } else {
@@ -428,8 +428,8 @@ function manualOrderdataGrid() {
                 "sClass": "left",
                 "sTitle": "上下车地址",
                 "mRender": function (data, type, full) {
-                	var onaddress = "(" + full.oncity + ")" + full.onaddress;
-                	var offaddress = "(" + full.offcity + ")" + full.offaddress;
+                	var onaddress = "(" + full.oncityname + ")" + full.onaddress;
+                	var offaddress = "(" + full.offcityname + ")" + full.offaddress;
                 	return showToolTips(onaddress, 12, undefined, offaddress);
                 }
             },

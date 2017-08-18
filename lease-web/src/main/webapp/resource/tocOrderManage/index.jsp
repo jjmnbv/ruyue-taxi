@@ -11,7 +11,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>toC订单</title>
+		<title>B2C联营订单</title>
 		<base href="<%=basePath%>" >
 		<link rel="stylesheet" type="text/css" href="content/plugins/data-tables/css/bootstrap.css" />
 		<link rel="stylesheet" type="text/css" href="content/css/style.css" />
@@ -39,6 +39,10 @@
 		<script type="text/javascript" src="js/basecommon.js"></script>
 		
 		<style type="text/css">
+		    .orderhref{
+		    	text-decoration:underline;
+		    	color:green;
+		    }
 			.form select{width:68%;}
 			.select2-container .select2-choice{height:30px;}
 			.select2-container{width:68%;padding:0px;}
@@ -56,7 +60,7 @@
 	</head>
 	<body>
 		<input name="baseUrl" id="baseUrl" value="<%=basePath%>" type="hidden">
-		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > toC订单</div>
+		<div class="crumbs"><a class="breadcrumb" href="javascript:void(0);" onclick="homeHref()">首页</a> > B2C联营订单</div>
 		<div class="content">
 			<ul class="tabmenu" style="padding-top: 20px;">
 				<li class="on">网约车订单</li>
@@ -78,7 +82,12 @@
 
 			<div class="row form" style="margin-top:20px;">
 				<div class="col-3">
-					<label>订单号</label><input id="orderNo" type="text" placeholder="订单号">
+					<label>订单来源</label>
+					<select id="orderSource" style="margin-left: -3px;">
+						<option value="">全部</option>
+						<option value="CG">乘客端 | 个人</option>
+						<option value="CY">运管端</option>
+					</select>
 				</div>
 				<div class="col-3">
 					<label>订单类型</label>
@@ -99,16 +108,7 @@
 						<option value="6">服务中</option>
 						<option value="70">未支付</option>
 						<option value="71">已支付</option>
-						<option value="8">已取消</option>
 					</select>
-				</div>
-				<div class="col-3">
-					<label>下单人</label><input id="orderPerson" type="text" placeholder="请选择下单人">
-				</div>
-			</div>
-			<div class="row form">
-				<div class="col-3">
-					<label>司机</label><input id="driver" type="text" placeholder="姓名/手机号">
 				</div>
 				<div class="col-3">
 					<label>支付渠道</label>
@@ -119,7 +119,18 @@
 						<option value="1">余额支付</option>
 					</select>
 				</div>
+			</div>
+			<div class="row form">
 				<div class="col-3">
+					<label>订单号</label><input id="orderNo" type="text" placeholder="订单号">
+				</div>
+				<div class="col-3">
+					<label>司机</label><input id="driver" type="text" placeholder="姓名/手机号">
+				</div>
+				<div class="col-3">
+					<label>下单人</label><input id="orderPerson" type="text" placeholder="请选择下单人">
+				</div>
+				<!-- <div class="col-3">
 					<label>取消方</label>
 					<select id="cancelParty">
 						<option value="">全部</option>
@@ -127,30 +138,22 @@
 						<option value="1">客服</option>
 						<option value="4">系统</option>
 					</select>
-				</div>
-				<div class="col-3">
-					<label>订单来源</label>
-					<select id="orderSource" style="margin-left: -3px;">
-						<option value="">全部</option>
-						<option value="CG">乘客端 | 个人</option>
-						<option value="CY">运管端</option>
-					</select>
-				</div>
-			</div>
-			<div class="row form">
+				</div> -->
 				<div class="col-3">
 					<label>交易流水号</label><input id="tradeNo" type="text" placeholder="交易流水号">
 				</div>
-                <div class="col-3">
+			</div>
+			<div class="row form">
+                <!-- <div class="col-3">
                     <label>服务车企</label><input id="leasescompanyid" type="hidden" placeholder="服务车企">
-                </div>
+                </div> -->
 				<div class="col-4">
 					<label style="width:22.5%;padding-right:11px;" >用车时间</label>
 					<input style="width:30%;margin-left:-3px" id="minUseTime" name="minUseTime" readonly="readonly" type="text" placeholder="开始时间" value="" class="searchDate">
 					至
 			        <input style="width:30%;" id="maxUseTime" name="maxUseTime" readonly="readonly" type="text" placeholder="结束时间" value="" class="searchDate">
 				</div>
-				<div class="col-2" style="text-align: right;">
+				<div class="col-8" style="text-align: right;">
 					<button class="Mbtn green_a" onclick="search();">查询</button>
 					<button class="Mbtn grey" onclick="clearParameter();">清空</button>
 				</div>

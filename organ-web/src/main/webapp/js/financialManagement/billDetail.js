@@ -232,13 +232,32 @@ $("#billButton").click(function(event){
 	} else if (billState == "4") {
 		var money = $("#money").val();
 		var message = "确定支付账单<span class='font-red'>" + money + "元</span>？";
+		
+		var actualBalance = 0.0;
+		var couponamount = 0.0;
+		$.ajax({
+			type: 'GET',
+			dataType: 'json',
+			url: "FinancialManagement/GetActualBalance?leasesCompanyId=" + $("#leasesCompanyId").val() + "&organId=" + $("#organId").val() + "&datetime=" + new Date().getTime(),
+			data: null,
+			contentType: 'application/json; charset=utf-8',
+			async: false,
+			success: function (json) {
+				actualBalance = json.actualBalance;
+				couponamount = json.couponamount;
+			}
+		});
+		// 如果余额+抵用劵 不够支付 订单，则 不显示 支付提示信息；如果 够 支付，则显示 支付提示信息
+		if (actualBalance < money && (actualBalance + couponamount >= money)) {
+			message += "<br><span style='color:#888;'>(余额支付" + actualBalance.toFixed(1) + "元，抵用券支付" + (money - actualBalance).toFixed(1) + "元)</span>";
+		}
 
 		var comfirmData={
 				tittle:"支付账单",
 				context:message,
 				button_l:"取消",
 				button_r:"确定",
-				click: "confirm('"+money+"')",
+				click: "confirm('"+money+"','"+actualBalance+"','"+couponamount+"')",
 				htmltex:"<input type='hidden' placeholder='添加的html'> "
 		};
 		confirmBill(comfirmData);
@@ -247,36 +266,26 @@ $("#billButton").click(function(event){
 	}
 });
 
-function confirm(money) {
-	$.ajax({
-		type: 'GET',
-		dataType: 'json',
-		url: "FinancialManagement/GetActualBalance?leasesCompanyId=" + $("#leasesCompanyId").val() + "&organId=" + $("#organId").val() + "&datetime=" + new Date().getTime(),
-		data: null,
-		contentType: 'application/json; charset=utf-8',
-		async: false,
-		success: function (json) {
-			
-			if(json.actualBalance >= money) {
+function confirm(money,actualBalance,couponamount) {
+	
+	if(parseFloat(actualBalance) + parseFloat(couponamount) >= parseFloat(money)) {
 
-				confirmAccount();
-				
-			} else {
-				$(".pop_box").hide();
-				$(window.parent.document).find(".pop_index").hide();
-				//toastr.error("账户余额不足，请充值", "提示");
-				var comfirmData={
-						tittle:"支付账单",
-						context:"账户余额不足，请先充值，再进行支付",
-						button_l:"取消",
-						button_r:"确定",
-						click: "",
-						htmltex:"<input type='hidden' placeholder='添加的html'> "
-				};
-				confirmYuE(comfirmData);
-			}
-		}
-	});
+		confirmAccount();
+		
+	} else {
+		$(".pop_box").hide();
+		$(window.parent.document).find(".pop_index").hide();
+		//toastr.error("账户余额不足，请充值", "提示");
+		var comfirmData={
+				tittle:"支付账单",
+				context:"账户余额不足，请先充值，再进行支付",
+				button_l:"取消",
+				button_r:"确定",
+				click: "",
+				htmltex:"<input type='hidden' placeholder='添加的html'> "
+		};
+		confirmYuE(comfirmData);
+	}
 }
 
 //confirm封装
@@ -321,7 +330,8 @@ function confirmAccount(){
 	var data = {id: $("#billsId").val(),
 			    leasesCompanyId: $("#leasesCompanyId").val(),
 			    money: $("#money").val(),
-			    organId: $("#organId").val()
+			    organId: $("#organId").val(),
+			    name: $("#name").val()
 			   };
 	$.ajax({
 		type: 'POST',
@@ -340,7 +350,10 @@ function confirmAccount(){
 				$("#billDiv").hide();
             	$(window.parent.document).find(".pop_index").hide();
 			} else {
-				
+				var message = status.MessageKey == null ? status : status.MessageKey;
+				toastr.error(message, "提示");
+				$("#billDiv").hide();
+				$(window.parent.document).find(".pop_index").hide();
 			}	
 		}
 	});

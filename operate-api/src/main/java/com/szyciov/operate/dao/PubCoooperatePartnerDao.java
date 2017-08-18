@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ZF on 2017/7/24.
@@ -49,6 +48,14 @@ public class PubCoooperatePartnerDao {
 
     public List<QueryLeaseCompanyAdminVo> queryLeaseCompanyAdminByCoooId(String coooid) {
         return this.pubCoooperatePartnerMapper.queryLeaseCompanyAdminByCoooId(coooid);
+    }
+
+    public int deleteLeaseOrganRef(String coooId) {
+        return this.pubCoooperatePartnerMapper.deleteLeaseOrganRef(coooId);
+    }
+
+    public int deleteVehicleModelRef(String coooId) {
+        return this.pubCoooperatePartnerMapper.deleteVehicleModelRef(coooId);
     }
 
     public int insertLeUserNews(LeUserNews news) {

@@ -159,6 +159,7 @@ public class PubDriverVehicleRefController extends BaseController {
 
         bindDto.setCreater(user.getId());
         bindDto.setDrivertype(VehicleEnum.VEHICLE_TYPE_CAR.code);
+        bindDto.setLeaseCompanyId(user.getLeasescompanyid());
         return templateHelper.dealRequestWithToken("/PubDriverVehicleRef/saveBind", HttpMethod.POST, usertoken,
                 bindDto,JSONObject.class);
     }
@@ -182,6 +183,7 @@ public class PubDriverVehicleRefController extends BaseController {
 
         unBindDto.setCreater(user.getId());
         unBindDto.setDrivertype(VehicleEnum.VEHICLE_TYPE_CAR.code);
+        unBindDto.setLeaseCompanyId(user.getLeasescompanyid());
         return templateHelper.dealRequestWithToken("/PubDriverVehicleRef/unBind", HttpMethod.POST, usertoken,
                 unBindDto,JSONObject.class);
     }
@@ -220,6 +222,7 @@ public class PubDriverVehicleRefController extends BaseController {
 
         unBindDto.setCreater(user.getId());
         unBindDto.setDrivertype(VehicleEnum.VEHICLE_TYPE_TAXI.code);
+        unBindDto.setLeaseCompanyId(user.getLeasescompanyid());
         return templateHelper.dealRequestWithToken("/PubDriverVehicleRef/unBind", HttpMethod.POST, usertoken,
                 unBindDto,JSONObject.class);
     }
@@ -242,6 +245,7 @@ public class PubDriverVehicleRefController extends BaseController {
 
         bindDto.setCreater(user.getId());
         bindDto.setDrivertype(VehicleEnum.VEHICLE_TYPE_TAXI.code);
+        bindDto.setLeaseCompanyId(user.getLeasescompanyid());
         return templateHelper.dealRequestWithToken("/PubDriverVehicleRef/saveBind", HttpMethod.POST, usertoken,
                 bindDto,JSONObject.class);
     }

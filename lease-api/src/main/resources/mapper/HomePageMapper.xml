@@ -39,6 +39,26 @@
 			status = 1
 		AND leasescompanyid = #{companyid}
 	</select>
+	<!-- 取消金额 -->
+	<select id="addCancelmoney" parameterType="String" resultType="Object">
+		SELECT
+			ifnull(sum(cancelmoney),0) as cancelmoney
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		AND leasescompanyid = #{companyid}
+	</select>
+	<!-- 优惠金额 -->
+	<select id="addCouponmoney" parameterType="String" resultType="Object">
+		SELECT
+			ifnull(sum(couponmoney),0) as couponmoney
+		FROM
+			le_indexorderstatistics
+		WHERE
+			status = 1
+		AND leasescompanyid = #{companyid}
+	</select>
 	
 	<!-- 获取差异金额 -->
 	<select id="getCYTotalMoney" parameterType="String" resultType="Object">

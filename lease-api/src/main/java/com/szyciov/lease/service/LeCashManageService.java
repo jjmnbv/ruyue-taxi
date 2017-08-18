@@ -11,6 +11,7 @@ import javax.annotation.Resource;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +27,6 @@ import com.szyciov.util.PageBean;
 import com.szyciov.util.PushObjFactory;
 import com.szyciov.util.SMSTempPropertyConfigurer;
 
-import cn.jpush.api.push.model.PushPayload;
 import net.sf.json.JSONObject;
 
 @Service("leCashManageService")
@@ -47,6 +47,9 @@ public class LeCashManageService {
 	public List<Map<String, Object>> getNames(Map<String, String> params) {
 		return leCashManageDao.getNames(params);
 	}
+	
+	@Autowired
+	public OrganAccountService organAccountService;
 
 	public PageBean getCashByQuery(CashManageQueryParam queryParam) {
 		PageBean pageBean = new PageBean();
@@ -68,7 +71,7 @@ public class LeCashManageService {
 		return leCashManageDao.getCashListByQuery(queryParam);
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = {Exception.class})
 	public synchronized Map<String, Object> cashReject(Map<String, String> params) {
 		Map<String,Object> res = new HashMap<String,Object>();
 		res.put("status", "success");
@@ -318,6 +321,9 @@ public class LeCashManageService {
 							param.put("newsstate", "0");
 							leCashManageDao.addNews2Org(param);
 						}
+						
+						// 清空机构优惠券
+						organAccountService.clearOrganCouponValue(organid, companyid);
 					}catch(Exception e){
 						logger.error(e);
 					}

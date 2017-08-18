@@ -8,6 +8,7 @@ import com.szyciov.lease.entity.User;
 import com.szyciov.lease.param.pubCoooperateUnion.*;
 import com.szyciov.lease.vo.pubCoooperateUnion.QueryCooagreementViewVo;
 import com.szyciov.op.param.pubCoooperatePartner.DisableCoooperateParam;
+import com.szyciov.param.Select2Param;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.TemplateHelper;
 import net.sf.json.JSONObject;
@@ -64,17 +65,33 @@ public class PubCoooperateUnionController extends BaseController {
     }
 
     /**
+     * 查询合作运营合作编号下拉
+     *
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "queryCoonoSelect2", method = RequestMethod.GET)
+    @ResponseBody
+    public List queryCoonoSelect2(Select2Param param) {
+        User user = getLoginLeUser();
+        param.setKey(user.getLeasescompanyid());
+        List list = templateHelper.dealRequestWithToken("/PubCoooperateUnion/queryCoonoSelect2", HttpMethod.POST, getUserToken(),
+                param, List.class);
+        return list;
+    }
+
+    /**
      * 查询合作运营合作方下拉
      *
      * @return 合作方下拉集合
      */
     @RequestMapping(value = "queryLeasecompany", method = RequestMethod.GET)
     @ResponseBody
-    public List queryLeasecompany() {
+    public List queryLeasecompany(Select2Param param) {
         User user = getLoginLeUser();
-        String companyid = user.getLeasescompanyid();
-        List list = templateHelper.dealRequestWithToken("/PubCoooperateUnion/queryLeasecompany?companyid=" + companyid, HttpMethod.GET, getUserToken(),
-                companyid, List.class);
+        param.setKey(user.getLeasescompanyid());
+        List list = templateHelper.dealRequestWithToken("/PubCoooperateUnion/queryLeasecompany", HttpMethod.POST, getUserToken(),
+                param, List.class);
         return list;
     }
 

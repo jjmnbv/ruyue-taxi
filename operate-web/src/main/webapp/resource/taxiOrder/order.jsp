@@ -247,8 +247,14 @@ response.setDateHeader ("Expires", 0);
         </div>
 		<br/><br/>
 		<div class="row" style="padding-left: 12px;" id="estimateCostDiv">
-			<div class="col-1"><h2>预估费用</h2></div>
-			<div class="col-3"><h2>¥<span id="estimatedcost">0.0元</span></h2></div>
+        	<div class="col-1" style="margin-right:2%;width:auto;"><h2>预估费用</h2></div>
+        	<div class="col-3"><h2>¥<span id="estimatedcost">0.0元</span></h2></div>
+        	<div class="col-4" style="width:auto;">
+        		<h2>
+        		<span id="premiumrateSpan" style="display:none;">溢价<span id="premiumrate">1.0倍</span></span> 
+        		<span id="couponpriceSpan" style="display:none;">券已抵扣<span id="couponprice">0元</span>
+        		</h2>
+        	</div>
 		</div>
 		<hr>
 		<div class="row">

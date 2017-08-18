@@ -187,7 +187,8 @@
 			createtime,
 			updatetime,
 			STATUS,
-			wdpwdchangestate
+			wdpwdchangestate,
+			registercity
 		)
 		VALUES
 			(
@@ -209,7 +210,8 @@
 				now(),
 				now(),
 				1,
-				0
+				0,
+				#{registercity}
 			)
 	</insert>
 	
@@ -1193,6 +1195,7 @@
 			(
 				le_leasescompany.platformtype = '0'
 			)
+		order by CONVERT(le_leasescompany.name USING gbk )
 	</select>
 	
 	<!-- ##########################################二期的接口############################################## -->
@@ -1369,10 +1372,10 @@
 			                pe_userexpenses.amount AS dealmoney,
               				CASE WHEN pe_userexpenses.expensetype='1' THEN '微信'
 								 WHEN pe_userexpenses.expensetype='2' THEN '支付宝'
-                  				 WHEN pe_userexpenses.expensetype='3' THEN '积分'
-								 WHEN pe_userexpenses.expensetype='4' THEN '积分'
+                  				 WHEN pe_userexpenses.expensetype='3' THEN '元'
+								 WHEN pe_userexpenses.expensetype='4' THEN '元'
 								 WHEN pe_userexpenses.expensetype='5' THEN '付现'
-								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '积分' END)
+								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '元' END)
 								 WHEN pe_userexpenses.expensetype='6' THEN '机构支付'
 								 ELSE ''
               				END AS dealtype,
@@ -1529,10 +1532,10 @@
 			                pe_userexpenses.amount AS dealmoney,
               				CASE WHEN pe_userexpenses.expensetype='1' THEN '微信'
 								 WHEN pe_userexpenses.expensetype='2' THEN '支付宝'
-                  				 WHEN pe_userexpenses.expensetype='3' THEN '积分'
-								 WHEN pe_userexpenses.expensetype='4' THEN '积分'
+                  				 WHEN pe_userexpenses.expensetype='3' THEN '元'
+								 WHEN pe_userexpenses.expensetype='4' THEN '元'
 								 WHEN pe_userexpenses.expensetype='5' THEN '付现'
-								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '积分' END)
+								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '元' END)
 								 ELSE ''
               				END AS dealtype,
 							CASE WHEN pe_userexpenses.tradetype='0' THEN 0
@@ -2275,7 +2278,21 @@
 	<!-- 四期 -->
 	<!-- 获取可用优惠券数目 -->
 	<select id="getCouponCount" parameterType="Map" resultType="int">
-		select count(*) from pub_coupon where pub_coupon.status=1 and pub_coupon.couponstatus=0 and pub_coupon.platformtype=0 and pub_coupon.userid=#{userid}
+		select count(*) from pub_coupon 
+		where 
+			pub_coupon.status=1 
+		and pub_coupon.couponstatus=0 
+		and pub_coupon.platformtype=0 
+		and pub_coupon.userid=#{userid}
+		<if test=" city!=null and city!='' ">
+			<![CDATA[
+				AND (
+					pub_coupon.usetype=2 
+				OR
+					(select count(*)>0 from pub_coupon_use_city where pub_coupon_use_city.city=#{city})
+				)
+			]]>
+		</if>
 	</select>
 	
 	<!-- 获取可用优惠券的明细 -->
@@ -2297,10 +2314,18 @@
 						AND pub_coupon.couponstatus = 0
 						AND pub_coupon.platformtype = 0
 						AND pub_coupon.userid = #{userid}
+						<if test=" city!=null and city!='' ">
+							<![CDATA[
+								AND (
+									pub_coupon.usetype=2 
+								OR
+									(select count(*)>0 from pub_coupon_use_city where pub_coupon_use_city.city=#{city})
+								)
+							]]>
+						</if>
 					) info,
 					(SELECT @rownum := 0) r
-				ORDER BY
-					info.createtime DESC
+					ORDER BY info.money desc,info.outimestart,info.servicetype
 			) t
 		<![CDATA[
 			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
@@ -2371,7 +2396,7 @@
 	<update id="updateInviteState" parameterType="Map">
 		UPDATE pub_inviteinfo
 		SET 
-			pub_inviteinfo.invitecode=#{invitecode},
+			pub_inviteinfo.invitestate=#{invitestate},
 			pub_inviteinfo.updatetime=now()
 		WHERE
 			pub_inviteinfo.status=1
@@ -2457,6 +2482,7 @@
 				AND organ.customertype != 1
 			)
 		)
+		order by CONVERT(le_leasescompany.name USING gbk )
 	</select>
 	
 	<!-- 获取可用的优惠券列表，选择优惠券使用 -->
@@ -2469,17 +2495,6 @@
 		WHERE
 			pub_coupon.status = 1
 		AND pub_coupon.couponstatus = 0
-		AND pub_coupon.id NOT IN (
-			SELECT
-				pub_coupon_use.couponidref
-			FROM
-				pub_coupon_use
-			WHERE
-				pub_coupon_use.status = 1
-			<![CDATA[
-		 		AND pub_coupon_use.billingorderid <> #{orderno}
-		 	]]>
-		)
 		and pub_coupon.servicetype=#{servicetype}
 		<![CDATA[
 			and (
@@ -2494,7 +2509,26 @@
 	
 	<!-- 获取订单使用优惠券的信息 -->
 	<select id="getOrderCouponUseInfo" parameterType="Map" resultType="Map">
-		select * from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.billingorderid=#{orderno} and pub_coupon_use.usestate=0
+		SELECT
+			pub_coupon_use.id,
+			pub_coupon_use.couponidref,
+			pub_coupon_use.billingorderid,
+			pub_coupon.money as couponmoney,
+			pub_coupon_use.discountamount,
+			pub_coupon_use.usetype,
+		 	pub_coupon_use.createtime,
+			pub_coupon_use.updatetime,
+			pub_coupon_use.creater,
+			pub_coupon_use.updater,
+			pub_coupon_use.usestate,
+			pub_coupon_use.actualamount
+		FROM
+			pub_coupon_use,
+			pub_coupon
+		WHERE pub_coupon_use.status=1 
+		and pub_coupon_use.couponidref=pub_coupon.id 
+		and pub_coupon_use.billingorderid=#{orderno} 
+		and pub_coupon_use.usestate=0
 	</select>
 	
 	<!-- 获取优惠券的信息 -->
@@ -2540,7 +2574,7 @@
 		UPDATE pub_coupon_use
 		SET 
 		 couponidref = #{couponidref},
-		 couponmoney = #{couponidref},
+		 couponmoney = #{couponmoney},
 		 updatetime = now(),
 		 updater = #{userid}
 		WHERE
@@ -2641,6 +2675,7 @@
 	<select id="updateCouponDiscountamount" parameterType="Map">
 		UPDATE pub_coupon_use
 		SET 
+		 couponmoney = #{couponmoney},
 		 discountamount = #{discountamount},
 		 actualamount = #{discountamount},
 		 usestate = 1,
@@ -2659,6 +2694,8 @@
 		amount,
 		balance,
 		remark,
+		lecompanyid,
+		platformtype,
 		updatetime,
 		createtime,
 		status
@@ -2672,10 +2709,17 @@
 			#{amount},
 			(select sum(pub_coupon.money) from pub_coupon where pub_coupon.status=1 and pub_coupon.couponstatus=0 and pub_coupon.userid='07423FBA-CE1B-4ED0-8A0C-333A920BEB0C'),
 			#{remark},
+			#{lecompanyid},
+			#{platformtype},
 			now(),
 			now(),
 			1
 		)
 	</insert>
+	
+	<!-- 不使用优惠券 -->
+	<delete id="deleteUseCouponOrder" parameterType="Map">
+		delete from pub_coupon_use where pub_coupon_use.billingorderid=#{billingorderid}
+	</delete>
 	
 </mapper>

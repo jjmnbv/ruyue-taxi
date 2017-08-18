@@ -123,25 +123,27 @@ public class OpAccountrules {
 	 * 回空里程
 	 * 
 	 */
-	public BigDecimal deadheadmileage;
+	private BigDecimal deadheadmileage;
 	
 	/**
 	 * 回空费价
 	 * 
 	 */
-	public BigDecimal deadheadprice;
+	private BigDecimal deadheadprice;
 	
 	/**
 	 * 夜间费价
 	 * 
 	 */
-	public BigDecimal nighteprice;
+	private BigDecimal nighteprice;
 	/**
 	 * 夜间征收时段
 	 */
-	public String nightetimes;
-	public String nightstarttime;//夜间服务开始时间
-	public String nightendtime;//夜间服务结束时间
+	private String nightetimes;
+	private String nightstarttime;//夜间服务开始时间
+	private String nightendtime;//夜间服务结束时间
+	
+	private double reservationprice;
 	
 	public BigDecimal getDeadheadmileage() {
 		return deadheadmileage;

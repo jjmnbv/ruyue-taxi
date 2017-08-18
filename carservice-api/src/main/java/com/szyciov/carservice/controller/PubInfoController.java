@@ -4,14 +4,14 @@
 package com.szyciov.carservice.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.szyciov.lease.entity.PubCityAddr;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import com.szyciov.carservice.service.PubInfoService;
 import com.szyciov.entity.PubAdImage;
@@ -39,7 +39,6 @@ public class PubInfoController extends ApiExceptionHandle{
 	
 	/**
 	 * 获取机场列表
-	 * @param param
 	 * @return
 	 */
 	@ResponseBody
@@ -53,8 +52,6 @@ public class PubInfoController extends ApiExceptionHandle{
 	
 	/**
 	 * 获取城市列表
-	 * @param request
-	 * @param response
 	 * @return
 	 */
 	@ResponseBody
@@ -141,5 +138,37 @@ public class PubInfoController extends ApiExceptionHandle{
 	public JSONObject getCitySelect1() {
 		return service.getCitySelect1();
 	}
-	
+
+	/**
+	 * 城市控件2，通过字母选择城市
+	 * @return
+	 */
+	@RequestMapping(value = "api/PubInfoApi/GetCitySelect2")
+	@ResponseBody
+	public JSONObject getCitySelect2() {
+		return service.getCitySelect2();
+	}
+
+	/**
+	 * 获取城市ID
+	 * @param name
+	 * @return
+	 */
+	@RequestMapping(value = "api/PubInfoApi/GetCityIdByName/{name}")
+	@ResponseBody
+	public Map<String, String> getCityIdByName(@PathVariable String name) {
+		return service.getCityIdByName(name);
+	}
+
+
+	/**
+	 * 查询城市列表（联想查询城市）
+	 * @param pubCityAddr
+	 * @return
+	 */
+	@RequestMapping(value = "api/PubInfoApi/GetSearchCitySelect", method = RequestMethod.POST)
+	@ResponseBody
+	public List<Map<String,String>> getSearchCitySelect(@RequestBody PubCityAddr pubCityAddr) {
+		return service.getSearchCitySelect(pubCityAddr);
+	}
 }

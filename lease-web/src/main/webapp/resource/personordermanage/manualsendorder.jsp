@@ -61,13 +61,17 @@
 				width: 91%!important;
 				float: right;
 			}
+            #cancelDetail table{
+                width: 100%;
+            }
             #cancelDetail td{
                 padding-right: 10px;
                 padding-bottom: 5px;
                 color:#9e9e9e;
             }
             #cancelpartyFormDiv .form label.error{
-                padding-left: 3%;
+                padding-left: 0%;
+                margin-left: 0%!important;
             }
 	   </style>
 	   <script type="text/javascript">
@@ -203,6 +207,7 @@
                     <input type="hidden" id="ordertypeHide">
                     <input type="hidden" id="usetypeHide">
                     <input type="hidden" id="identifyingHide">
+                    <input type="hidden" id="orderstatusHide">
                     <form id="cancelpartyForm" method="get" class="form">
                         <div class="row" style="padding-bottom: 18px">
                             <label style="float: left;">责任方<em class="asterisk"></em></label>

@@ -49,6 +49,7 @@ import com.szyciov.entity.OrderCost;
 import com.szyciov.entity.OrderSource4WithdrawNO;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.UserType;
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.PlatformTypeByDb;
 import com.szyciov.enums.RedisKeyEnum;
@@ -2891,6 +2892,27 @@ public class PassengerService4Sec {
 		    						}catch(Exception e){
 		    							logger.error("乘客端异常",e);
 		    						}
+		    						//用户充值触发优惠券发放
+		    						try{
+		    							Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+		    							String companyid = (String) opinfo.get("id");
+		    							String userid = (String) tradeinfo.get("userid");
+		    							PeUser user = userdao.getPeUserById(userid);
+		    							if(user!=null){
+		    								Map<String,Object> couponparams = new HashMap<String,Object>();
+		    								couponparams.put("type", CouponRuleTypeEnum.RECHARGE.value);
+		    								couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+		    								couponparams.put("companyId", companyid);
+		    								couponparams.put("cityCode", user.getRegistercity());
+		    								couponparams.put("userId", userid);
+		    								couponparams.put("version", "v3.0.1");
+		    								couponparams.put("userPhone", user.getAccount());
+		    								couponparams.put("money", parseDouble(tradeinfo.get("amount")));
+		    								Const.grenerateCoupon(templateHelper, couponparams);
+		    							}
+		    						}catch(Exception e){
+		    							logger.error("个人用户充值发券触发出错",e);
+		    						}
 		                    	}
 	    		            }else{
 	    		            	//签名失败记录日志并且返回失败
@@ -3106,6 +3128,28 @@ public class PassengerService4Sec {
 							addNews4OpUsers(json);
 						}catch(Exception e){
 							logger.error("乘客端异常",e);
+						}
+						
+						//用户充值触发优惠券发放
+						try{
+							Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+							String companyid = (String) opinfo.get("id");
+							String userid = (String) tradeinfo.get("userid");
+							PeUser user = userdao.getPeUserById(userid);
+							if(user!=null){
+								Map<String,Object> couponparams = new HashMap<String,Object>();
+								couponparams.put("type", CouponRuleTypeEnum.RECHARGE.value);
+								couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+								couponparams.put("companyId", companyid);
+								couponparams.put("cityCode", user.getRegistercity());
+								couponparams.put("userId", userid);
+								couponparams.put("version", "v3.0.1");
+								couponparams.put("userPhone", user.getAccount());
+								couponparams.put("money", parseDouble(tradeinfo.get("amount")));
+								Const.grenerateCoupon(templateHelper, couponparams);
+							}
+						}catch(Exception e){
+							logger.error("个人用户充值发券触发出错",e);
 						}
 					}else{
 						//签名失败

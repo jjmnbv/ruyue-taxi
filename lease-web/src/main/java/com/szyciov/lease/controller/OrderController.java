@@ -15,6 +15,7 @@ import com.szyciov.dto.PagingResponse;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.Select2Entity;
 import com.szyciov.enums.OrderEnum;
+import com.szyciov.enums.OrderVarietyEnum;
 import com.szyciov.lease.dto.request.GetFreeDriverRequest;
 import com.szyciov.lease.entity.User;
 import com.szyciov.lease.param.GetCarTypesParam;
@@ -101,6 +102,8 @@ public class OrderController extends WebExceptionHandle {
 	public JSONObject getOrgOrderCost(@RequestBody OrderCostParam param,HttpServletRequest request){
 		starttime.set(System.currentTimeMillis());
 		User user = getLoginLeUser(request);
+		param.setToken(getUserToken(request));
+		param.setOrderprop(OrderVarietyEnum.LEASE_NET.icode);
 		param.setCompanyid(user.getLeasescompanyid());
 		JSONObject result = os.getOrgOrderCost(param);
 		releaseResource(os);

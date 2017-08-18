@@ -138,15 +138,17 @@
 					<td class="grey_c">下单来源</td>
 					<td id="xdly"></td>
 				</tr>
+                <tr>
+                    <td class="grey_c">行程备注</td>
+                    <td colspan=5 style="border-top-style: none;white-space: normal;"><span id="xcbz" class="font_grey"></span></td>
+                </tr>
 				<tr>
 					<td id="hbhtitle" class="grey_c">航班号</td>
 					<td id="hbhtd"><span id="hbh" class="font_grey"></span></td>
 					<td id="jlsjtitle" class="grey_c">落地时间</td>
 					<td id="qfsj"></td>
-					<%--<td class="grey_c">更新时间</td>--%>
-					<%--<td id="gxsjtd" style="border-top-style: none;"><span id="gxsj" class="font_grey"></span></td>--%>
-                    <td class="grey_c">服务车企</td>
-                    <td id="fwcqtd" style="border-top-style: none;"></td>
+					<td class="grey_c">更新时间</td>
+					<td id="gxsjtd" style="border-top-style: none;"><span id="gxsj" class="font_grey"></span></td>
 				</tr>
 				<tr id="qxtr">
 					<td class="grey_c">取消时间</td>
@@ -169,24 +171,16 @@
 					<td id="sjcx"></td>
 					<td class="grey_c">计费车型</td>
 					<td id="jfcx"></td>
-					<td class="grey_c">支付状态</td>
+					<td class="grey_c"></td>
 					<td id="zfzttd"><span id="zfzt" class="font_red"></span></td>
 				</tr>
-				<tr class="sjtitle">
-					<td class="grey_c" id="ssjetd">实时金额</td>
-					<td><span id="ssje" class="font_grey"></span></td>
-                    <td class="grey_c" id="qbjtd">起步价</td>
-                    <td id="qbj"></td>
-					<td class="grey_c" id="sslcftd">实时里程费</td>
-					<td id="sslcf"></td>
-				</tr>
-                <tr class="sjtitle">
-                    <td class="grey_c" id="sssjbttd">时长费</td>
-                    <td id="sssjbt"></td>
-                    <td class="grey_c" id="ksftd">空驶费</td>
-                    <td id="ksf"></td>
-                    <td class="grey_c" id="yjftd">夜间费</td>
-                    <td id="yjf"></td>
+                <tr id="sjtitle">
+                    <td class="grey_c" id="ssjetd">实时金额</td>
+                    <td id="ssje"></td>
+                    <td class="grey_c" id="cffytd">处罚费用</td>
+                    <td id="cffy"></td>
+                    <td class="grey_c"></td>
+                    <td></td>
                 </tr>
 			</table>
 			
@@ -364,6 +358,70 @@
 	            </div>
 	        </div>
 		</div>
+
+        <div class="pop_box" id="costDetailDiv" style="display: none;">
+            <div class="tip_box_e">
+                <h3>订单金额明细</h3>
+                <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+                <div class="e_con">
+                    <form id="costDetailForm" method="get">
+                        <div class="e_red">
+                            <span id="sfjeDetailTitle">实付金额</span><span id="sfjeDetail"></span>
+                        </div>
+                        <div class="e_title">
+                            <span id="xcfyDetailTitle">行程费用</span>
+                            <div class="fr" id="xcfyDetail"></div>
+                        </div>
+                        <div class="e_child">
+                            <em>起步价</em>
+                            <div class="fr" id="qbjDetail"></div>
+                        </div>
+                        <div class="e_child">
+                            <em>时长费(<span id="scDetail"></span>)</em>
+                            <div class="fr" id="scfDetail"></div>
+                        </div>
+                        <div class="e_child">
+                            <em>里程费(<span id="lcDetail"></span>)</em>
+                            <div class="fr" id="lcfDetail"></div>
+                        </div>
+                        <div class="e_title">
+                            券已抵扣
+                            <div class="fr" id="qydkDetail"></div>
+                        </div>
+
+                        <div class="e_title e_margin">
+                            计费规则
+                            <div class="fr"></div>
+                        </div>
+                        <div class="e_box">
+                            <div class="e_child">
+                                <em>起步价</em>
+                                <div class="fr" id="qbjRule"></div>
+                            </div>
+                            <div class="e_child">
+                                <em>里程费</em>
+                                <div class="fr" id="lcfRule"></div>
+                            </div>
+                            <div class="e_child">
+                                <em>时间补贴</em>
+                                <div class="fr" id="sjbtRule"></div>
+                            </div>
+                            <div class="e_child">
+                                <em>夜间费</em>
+                                <div class="e_child_child">
+                                    <em id="yjsdRule"></em>
+                                    <div class="fr" id="yjfRule"></div>
+                                </div>
+                            </div>
+                            <div class="e_child" id="yrfRuleDiv">
+                                <em>预约费</em>
+                                <div class="fr" id="yrfRule"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 		
 		<script type="text/javascript">
 			var orderObj = {

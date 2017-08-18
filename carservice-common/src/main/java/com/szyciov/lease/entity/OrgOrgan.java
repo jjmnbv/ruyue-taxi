@@ -153,6 +153,14 @@ public class OrgOrgan {
 	 * */
 	public String customertype;
 	
+	public String forTheCarBodyId;//供车主体
+	
+	public String getForTheCarBodyId() {
+		return forTheCarBodyId;
+	}
+	public void setForTheCarBodyId(String forTheCarBodyId) {
+		this.forTheCarBodyId = forTheCarBodyId;
+	}
 	public String getCustomertype() {
 		return customertype;
 	}

@@ -40,15 +40,31 @@
             <if test='null != applicationtimeEnd and "" != applicationtimeEnd'>
                 and t1.applicationtime &#60; #{applicationtimeEnd}
             </if>
-            order by applicationtime desc
+            order by t1.applicationtime desc
     </select>
-    <select id="queryLeasecompany" parameterType="java.lang.String" resultType="com.szyciov.entity.Select2Entity">
+    <select id="queryCoonoSelect2" parameterType="com.szyciov.param.Select2Param" resultType="com.szyciov.entity.Select2Entity">
+     select distinct
+            coo.coono id,
+            coo.coono text
+          from pub_coooperate coo
+      where coo.status=1 and coo.leasecompanyid =#{key}
+        <if test='null != sSearch and "" != sSearch'>
+            and instr(coono, #{sSearch}) > 0
+        </if>
+      order by coo.coono asc
+    </select>
+
+    <select id="queryLeasecompany" parameterType="com.szyciov.param.Select2Param" resultType="com.szyciov.entity.Select2Entity">
       select distinct
-        coo.leasecompanyid id,
+        coo.companyid id,
         le.name text
       from pub_coooperate coo
       inner join le_leasescompany le on coo.companyid=le.id
-      where coo.status=1 and coo.leasecompanyid = #{companyid} order by le.name asc
+      where coo.status=1 and coo.leasecompanyid = #{key}
+        <if test='null != sSearch and "" != sSearch'>
+            and instr(le.name, #{sSearch}) > 0
+        </if>
+      order by le.name asc
     </select>
     <select id="queryCooagreementView" parameterType="java.lang.String" resultType="com.szyciov.lease.vo.pubCoooperateUnion.QueryCooagreementViewVo">
         select cooname,
@@ -81,12 +97,13 @@
             concat(mo.name,'(', ve.loads, '座)') vehiclemodelsname, -- 服务车型
             mo.id vehiclemodels,
             ci.city cityname,
-            case d.workstatus when null then 0 when 2 then 1 when 0 then 2 when 1 then 3 else 4 end
+            case d.workstatus when null or '' then 0 when 2 then 1 when 0 then 2 when 1 then 3 else 0 end
             workOrder,
             case when cooc.id is null then 0 else 1 end resource,
             ci.fullpinyin,
             ve.id vehicleid,
-            ci.id cityaddr
+            ci.id cityaddr,
+            mo.level
             from pub_coooperate  cooo
             inner join pub_vehicle ve on ve.leasescompanyid=cooo.leasecompanyid and ve.vehicletype=cooo.servicetype and ve.status=1
             inner join pub_vehcline li on li.id=ve.vehclineid
@@ -100,11 +117,14 @@
             left  join le_vehiclemodels mo on mo.Id=mref.vehiclemodelsid
             inner join pub_cityaddr ci on ci.id=ve.city
             left  join pub_cooresource cooc on cooo.id=cooc.coooperateid and cooc.vehicleid=ve.id
+            where cooo.id=#{coooid}
         ) t
         where 1=1
-        and coooid=#{coooid}
-        <if test='null != resource and "" != resource'>
-        and resource=#{resource}
+        <if test='null != resource and "1" == resource'>
+            and resource='1'
+        </if>
+        <if test='null != resource and "0" == resource'>
+            and ((resource='0' and driverInfo != '') or resource='1' )
         </if>
         <if test='null != vehclineid and "" != vehclineid'>
         and vehclineid=#{vehclineid}
@@ -124,18 +144,17 @@
         <if test='null != fullplateno and "" != fullplateno'>
         and instr(fullplateno, #{fullplateno}) > 0
         </if>
-        order by fullpinyin,workOrder,fullplateno asc
+        order by fullpinyin,level,workOrder,fullplateno asc
     </select>
     <select id="queryResourceVehclineSelect2" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryResourceCitySelect2Param" resultType="com.szyciov.entity.Select2Entity">
         select * from (
         select
-            distinct
-            concat(br.name, '.', li.name) text, -- 品牌车系
-            li.id id,
+        distinct
+        concat(br.name, '.', li.name) text, -- 品牌车系
+        li.id id,
         cooo.id coooid
         from pub_coooperate  cooo
-        inner join pub_vehicle ve on ve.leasescompanyid=cooo.leasecompanyid and ve.vehicletype=cooo.servicetype and ve.status=1
-        inner join pub_vehcline li on li.id=ve.vehclineid
+        inner join pub_vehcline li on li.leasescompanyid=cooo.leasecompanyid
         inner join pub_vehcbrand br on br.id=li.vehcBrandID
         ) t
         where 1=1
@@ -185,17 +204,15 @@
         </foreach>
     </delete>
     <select id="queryCooVehicleModeSelect2" resultType="com.szyciov.entity.Select2Entity" parameterType="java.lang.String" >
-    select
-    distinct
-    mo.name text, -- 服务车型
-    mo.id id
-    from pub_coooperate  cooo
-    inner join pub_vehicle ve on ve.leasescompanyid=cooo.leasecompanyid and ve.vehicletype=cooo.servicetype and ve.status=1
-    inner join pub_vehcline li on li.id=ve.vehclineid
-    left  join le_vehcline_models_ref mref on mref.vehclineid=li.id
-    left  join le_vehiclemodels mo on mo.Id=mref.vehiclemodelsid
-    where  mo.id is not null and cooo.id=#{coooId}
-    order by text asc
+        select
+            distinct
+            le.name text, -- 服务车型
+            le.id id
+            from le_vehiclemodels le
+            inner join pub_coooperate p on p.leasecompanyid=le.leasescompanyid
+            where le.status=1
+            and p.id=#{coooId}
+            order by text ASC
     </select>
     <select id="selectPubCoooopertateByPrimaryKey" resultType="com.szyciov.entity.PubCoooperate" parameterType="java.lang.String" >
         select
@@ -221,7 +238,7 @@
         concat(mo.name,'(', ve.loads, '座)') vehiclemodelsname, -- 服务车型
         mo.id vehiclemodels,
         ci.city cityname,
-        case d.workstatus when null then 0 when 2 then 1 when 0 then 2 when 1 then 3 else 4 end
+        case d.workstatus when null then 0 when 2 then 1 when 0 then 2 when 1 then 3 else 0 end
         workOrder,
         ci.fullpinyin,
         ve.id vehicleid,
@@ -260,7 +277,7 @@
         <if test='null != fullplateno and "" != fullplateno'>
             and instr(fullplateno, #{fullplateno}) > 0
         </if>
-        order by fullpinyin,level,fullplateno asc
+        order by fullpinyin,workOrder,level,fullplateno asc
     </select>
     <select id="queryApplyResourceVehclineSelect2" parameterType="com.szyciov.lease.param.pubCoooperateUnion.QueryApplyResourceVehclineSelect2Param" resultType="com.szyciov.entity.Select2Entity">
         select * from (
@@ -433,6 +450,32 @@
             </if>
         </trim>
     </insert>
-
-
+    <insert id="insertOpUserNews" parameterType="com.szyciov.entity.OpUsernews" >
+        insert into op_usernews (id, userid, type,
+        content, newsstate, createtime,
+        updatetime, status)
+        values (#{id,jdbcType=VARCHAR}, #{userid,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR},
+        #{content,jdbcType=VARCHAR}, #{newsstate,jdbcType=VARCHAR}, #{createtime,jdbcType=TIMESTAMP},
+        #{updatetime,jdbcType=TIMESTAMP}, #{status,jdbcType=INTEGER})
+    </insert>
+    <select id="queryApplayCooCompanyAdmin" resultType="com.szyciov.lease.vo.pubCoooperateUnion.QueryApplayCooCompanyAdminVo" parameterType="java.lang.String" >
+    select distinct
+    le_leasescompany.name leaseCompany,
+    le_user.telphone phone,
+    le_user.id adminId
+    from le_user
+    inner join le_leasescompany on le_user.leasescompanyid=le_leasescompany.id
+    where le_user.specialstate=1
+    and le_user.status=1
+    and leasescompanyid=#{company}
+    union
+    select distinct
+    op_platforminfo.companyname leaseCompany,
+    op_user.telphone phone,
+    op_user.id adminId
+    from op_user,op_platforminfo
+    where op_user.usertype=1
+    and op_user.status=1
+    and op_platforminfo.id = #{company}
+    </select>
 </mapper>

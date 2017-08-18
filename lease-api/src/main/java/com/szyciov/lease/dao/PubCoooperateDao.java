@@ -73,4 +73,12 @@ public class PubCoooperateDao {
     public void updatePubVehicleModelsRef(PubVehicleModelsRef p){
         mapper.updatePubVehicleModelsRef(p);
     };
+    
+    public List<Map<String, Object>> select2QueryJobnum(PubCoooperateQueryParam queryParam){
+    	return mapper.select2QueryJobnum(queryParam);
+    };
+    
+    public List<Map<String, Object>> select2QueryDriverInformation(PubCoooperateQueryParam queryParam){
+    	return mapper.select2QueryDriverInformation(queryParam);
+    };
 }

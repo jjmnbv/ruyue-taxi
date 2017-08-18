@@ -8,18 +8,19 @@ import com.szyciov.lease.dao.PubCoooperatePartnerDao;
 import com.szyciov.lease.entity.LeUserNews;
 import com.szyciov.lease.param.pubCoooperatePartner.DisableCoooperateParam;
 import com.szyciov.lease.param.pubCoooperatePartner.QueryPubCoooperateParam;
+import com.szyciov.lease.param.pubCoooperatePartner.QueryPubCoooperatePartnerLeaseCompanyParam;
 import com.szyciov.lease.param.pubCoooperatePartner.ReviewLeasecompanyParam;
 import com.szyciov.lease.vo.pubCoooperatePartner.QueryCooagreementViewVo;
+import com.szyciov.lease.vo.pubCoooperatePartner.QueryLeaseCompanyAdminVo;
 import com.szyciov.lease.vo.pubCoooperatePartner.QueryPubCoooperateVo;
 import com.szyciov.message.UserMessage;
-import com.szyciov.lease.param.pubCoooperatePartner.QueryPubCoooperatePartnerLeaseCompanyParam;
-import com.szyciov.lease.vo.pubCoooperatePartner.QueryLeaseCompanyAdminVo;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.SMSTempPropertyConfigurer;
 import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -106,8 +107,11 @@ public class PubCoooperatePartnerService {
      *
      * @param model 禁用所需数据
      */
+    @Transactional(rollbackFor = Exception.class)
     public void disableCoooperate(DisableCoooperateParam model) {
         this.pubCoooperatePartnerDao.disableCoooperate(model);
+        this.pubCoooperatePartnerDao.deleteLeaseOrganRef(model.getId());
+        this.pubCoooperatePartnerDao.deleteVehicleModelRef(model.getId());
     }
 
     /**

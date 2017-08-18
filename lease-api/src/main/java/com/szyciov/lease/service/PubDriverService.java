@@ -63,6 +63,7 @@ public class PubDriverService {
 			if(pubDriver.getVehicleType().equals("1")){
 				pubDriver.setIdEntityType("2");
 			}
+			pubDriver.setBelongleasecompany(pubDriver.getLeasesCompanyId());
 			dao.createPubDriver(pubDriver);
 			//添加司机账户
 			PubDriverAccount orgDriverAccount = new PubDriverAccount();

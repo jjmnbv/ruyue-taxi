@@ -30,9 +30,12 @@ import com.szyciov.driver.param.OrderCostParam;
 import com.szyciov.entity.OrderCost;
 import com.szyciov.entity.PubOrderCancelRule;
 import com.szyciov.entity.Retcode;
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.PubOrdercancelEnum;
 import com.szyciov.enums.RedisKeyEnum;
+import com.szyciov.enums.coupon.CouponActivityEnum;
+import com.szyciov.enums.coupon.CouponEnum;
 import com.szyciov.message.UserMessage;
 import com.szyciov.op.entity.PeUser;
 import com.szyciov.org.entity.OrgUser;
@@ -165,6 +168,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 	    res.put("status", Retcode.OK.code);
 	    res.put("message",Retcode.OK.msg);
 	    String usertoken = (String) params.get("usertoken");
+	    String city = (String) params.get("city");
 		if(StringUtils.isBlank(usertoken)){
 			res.put("status",Retcode.EXCEPTION.code);
 			res.put("message","参数不全");
@@ -181,6 +185,9 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
         PeUser user = userdao.getUser4Op(account);
         Map<String,Object> couponparams = new HashMap<String,Object>();
         couponparams.put("userid", user.getId());
+        if(StringUtils.isBlank(city)){
+	    	params.put("city", dicdao.getCityNo(city));
+		}
         int totalcount = userdao.getCouponCount(couponparams);
         res.put("totalcount",totalcount);
 		return res;
@@ -199,6 +206,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 	    String iDisplayStart = (String) params.get("iDisplayStart");
         String iDisplayLength = (String) params.get("iDisplayLength");
 	    String usertoken = (String) params.get("usertoken");
+	    String city = (String) params.get("city");
 		if(StringUtils.isBlank(usertoken)||StringUtils.isBlank(iDisplayStart)||StringUtils.isBlank(iDisplayLength)){
 			res.put("status",Retcode.EXCEPTION.code);
 			res.put("message","参数不全");
@@ -209,6 +217,9 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 	    String account = Const.getUserInfo(usertoken).get("account");
 	    PeUser user = userdao.getUser4Op(account);
 	    params.put("userid", user.getId());
+	    if(StringUtils.isBlank(city)){
+	    	params.put("city", dicdao.getCityNo(city));
+		}
 	    List<Map<String,Object>> details = userdao.getCouponDetail(params);
         List<Map<String,Object>> coupons = dillWithCoupons(details);
         res.put("details",coupons);
@@ -438,6 +449,9 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 		String userid = GUIDGenerator.newGUID();
 		loginlog.put("userid", userid);
 		peuser.setId(userid);
+		String city = registerparam.getCity();
+		String citycode = dicdao.getCityNo(city);
+		peuser.setRegistercity(citycode);
 		peuser.setUserpassword(registerparam.getPassword());
 		encodePwd(peuser);
 		try{
@@ -448,19 +462,44 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			res.put("message", Retcode.OK.msg);
 			addUserInfo(res,registerparam.getUuid(), peuser);
 			try{
-				//将已过期的数据置为已过期
-				userdao.updateExpireInviteInfos();
+				Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+				String companyid = (String) opinfo.get("id");
+				//1.注册发券接口调用
+				Map<String,Object> registcouponparam = new HashMap<String,Object>();
+				registcouponparam.put("type", CouponRuleTypeEnum.REGISTER.value);
+				registcouponparam.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+				registcouponparam.put("companyId", companyid);
+				registcouponparam.put("cityCode", citycode);
+				registcouponparam.put("userId", userid);
+				registcouponparam.put("version", "v3.0.1");
+				registcouponparam.put("userPhone",phone);
+				Const.grenerateCoupon(templateHelper, registcouponparam);
 				//邀请人已注册
-				Map<String,Object> inviteparam = new HashMap<String,Object>();
-				inviteparam.put("inviteephone", registerparam.getPhone());
-				inviteparam.put("invitecode", registerparam.getInvitecode());
-				inviteparam.put("invitestate", 1);
-				userdao.updateInviteState(inviteparam);
-				//判断邀请用户是否可以发券
-				//1.todo注册发券接口调用
-				
-				//2.todo邀请注册接口调用
-				
+				//将已过期的数据置为已过期
+				//2.邀请注册接口调用
+				userdao.updateExpireInviteInfos();
+				Map<String,Object> invitinfo = userdao.getInviteInfoByInvitee(phone);
+				if(invitinfo!=null){
+					Map<String,Object> inviteparam = new HashMap<String,Object>();
+					inviteparam.put("inviteephone", phone);
+					inviteparam.put("invitecode", registerparam.getInvitecode());
+					inviteparam.put("invitestate", 1);
+					userdao.updateInviteState(inviteparam);
+					//判断邀请用户是否可以发券
+					String inviterphone = (String) invitinfo.get("inviterphone");
+					PeUser user = userdao.getUser4Op(inviterphone);
+					if(user!=null){
+						Map<String,Object> inviteregistcouponparam = new HashMap<String,Object>();
+						inviteregistcouponparam.put("type", CouponRuleTypeEnum.INVITE.value);
+						inviteregistcouponparam.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+						inviteregistcouponparam.put("companyId", companyid);
+						inviteregistcouponparam.put("cityCode", citycode);
+						inviteregistcouponparam.put("userId", user.getId());
+						inviteregistcouponparam.put("version", "v3.0.1");
+						registcouponparam.put("userPhone",inviterphone);
+						Const.grenerateCoupon(templateHelper, inviteregistcouponparam);
+					}
+				}
 			}catch(Exception e){
 				logger.error("注册优惠券地方出差错",e);
 			}
@@ -687,6 +726,14 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 					Map<String,Object> cancelinfo = orderdao.getCancelInfo4Optaxi((String)orderinfo.get("orderno"));
 					if(cancelinfo!=null){
 						orderinfo.put("cancelfee",parseDouble(cancelinfo.get("cancelamount")));
+						String cancelrule = (String) cancelinfo.get("cancelrule");
+						if(StringUtils.isBlank(cancelrule)){
+							orderinfo.put("hascancelrule", false);
+						}else{
+							orderinfo.put("hascancelrule", true);
+						}
+					}else{
+						orderinfo.put("hascancelrule", false);
 					}
 				}else{
 					//个人网约车
@@ -694,11 +741,57 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 					Map<String,Object> cancelinfo = orderdao.getCancelInfo4Opnetcar((String)orderinfo.get("orderno"));
 					if(cancelinfo!=null){
 						orderinfo.put("cancelfee",parseDouble(cancelinfo.get("cancelamount")));
+						String cancelrule = (String) cancelinfo.get("cancelrule");
+						if(StringUtils.isBlank(cancelrule)){
+							orderinfo.put("hascancelrule", false);
+						}else{
+							orderinfo.put("hascancelrule", true);
+						}
+					}else{
+						orderinfo.put("hascancelrule", false);
 					}
 				}
 			}
 		}catch(Exception e){
 			logger.error("乘客端异常",e);
+		}
+		
+		//获取实际支付金额
+		try{
+			String orderno = (String) orderinfo.get("orderno");
+			String paymentstatus = (String) orderinfo.get("paymentstatus");
+			if(PayState.PAYED.state.equals(paymentstatus)||PayState.DRIVERNOPAY.state.equals(paymentstatus)){
+				//都支付完成的才有realpayamount
+				String orderstatus = (String) orderinfo.get("orderstatus");
+				if(OrderState.SERVICEDONE.state.equals(orderstatus)){
+					//行程结束的
+					Map<String,Object> cpinfo = orderdao.getOrderCouponInfo(orderno);
+					if(cpinfo!=null&&cpinfo.size()>0){
+						String ordertype = (String) orderinfo.get("ordertype");
+						double orderamount = parseDouble(orderinfo.get("orderamount"));
+						if(isTaxiOrder(ordertype)){
+							//出租车
+							String paymentmethod = (String) orderinfo.get("paymentmethod");
+							if("0".equals(paymentmethod)){
+								//线上支付
+								orderamount += parseDouble(orderinfo.get("schedulefee"));
+							}
+						}
+						double discountamount = parseDouble(cpinfo.get("discountamount"));
+						if(orderamount<=discountamount){
+							orderinfo.put("realpayamount", 0.0);
+						}else{
+							orderinfo.put("realpayamount", new BigDecimal(orderamount).subtract(new BigDecimal(discountamount)).doubleValue());
+						}
+					}else{
+						orderinfo.put("realpayamount", orderinfo.get("orderamount"));
+					}
+				}else{
+					orderinfo.put("realpayamount", orderinfo.get("cancelfee"));
+				}
+			}
+		}catch(Exception e){
+			logger.error("获取实际支付金额",e);
 		}
 		
 		//地址路径加上绝对路径
@@ -790,7 +883,8 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 		Map<String,Object> cpinfo = orderdao.getOrderCouponInfo(orderno);
 		if(cpinfo!=null&&cpinfo.size()>0){
 			couponinfo.put("id", cpinfo.get("couponidref"));
-			couponinfo.put("couponmoney", cpinfo.get("couponmoney"));
+			couponinfo.put("couponmoney", parseDouble(cpinfo.get("couponmoney")));
+			couponinfo.put("discountamount", parseDouble(cpinfo.get("discountamount")));
 		}
 		costinfo.put("couponinfo", couponinfo);
 		return costinfo;
@@ -805,13 +899,15 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 		JSONObject obj = getCostDetails(costinfo);
 		
 		//添加溢价倍数
-		Object value = costinfo.get("premiumrate");
-		double premium = (value==null?1:parseDouble(value));
+		String copyprice = (String) orderinfo.get("pricecopy");
+		OrderCost cost = (OrderCost)JSONObject.toBean(JSONObject.fromObject(copyprice), OrderCost.class);
+		double premium = cost.getPremiumrate();
 		obj.put("premium", premium);
+		
 		//订单的金额信息
 		String paymentstatus = (String) orderinfo.get("paymentstatus");
 		double orderamount = parseDouble(orderinfo.get("orderamount"));
-		double srcamount = getSrcOrderAmount((String)orderinfo.get("copyprice"));
+		double srcamount = getSrcOrderAmount(copyprice);
 		obj.put("srcamount", srcamount);//原始
 		if(PayState.NOTPAY.state.equals(paymentstatus)||PayState.ALLNOPAY.state.equals(paymentstatus)){
 			//未支付
@@ -822,7 +918,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			Map<String,Object> cpinfo = orderdao.getOrderCouponInfo(orderno);
 			if(cpinfo!=null&&cpinfo.size()>0){
 				couponinfo.put("id", cpinfo.get("couponidref"));
-				couponinfo.put("couponmoney", cpinfo.get("couponmoney"));
+				couponinfo.put("couponmoney", parseDouble(cpinfo.get("couponmoney")));
 			}
 			obj.put("couponinfo", couponinfo);
 		}else{
@@ -830,14 +926,14 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			Map<String,Object> couponinfo = new HashMap<String,Object>();
 			String orderno = (String) orderinfo.get("orderno");
 			Map<String,Object> cpinfo = orderdao.getOrderCouponInfo(orderno);
-			double discountamount = parseDouble(cpinfo.get("discountamount"));
 			if(cpinfo!=null&&cpinfo.size()>0){
 				couponinfo.put("id", cpinfo.get("couponidref"));
-				couponinfo.put("couponmoney", discountamount);
+				couponinfo.put("couponmoney", parseDouble(cpinfo.get("couponmoney")));
+				couponinfo.put("discountamount", parseDouble(cpinfo.get("discountamount")));
 			}
 			obj.put("couponinfo", couponinfo);
 			//已支付
-			obj.put("orderamount", orderamount+discountamount);//取整后没有减优惠券
+			obj.put("orderamount", orderamount);//取整后没有减优惠券
 		}
 		
 //		obj.put("orderamount", orderamount);
@@ -1396,6 +1492,14 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 				Map<String,Object> cancelinfo = orderdao.getCancelInfo4Org(order.getOrderno());
 				if(cancelinfo!=null){
 					order.setCancelfee(parseDouble(cancelinfo.get("cancelamount")));
+					String cancelrule = (String) cancelinfo.get("cancelrule");
+					if(StringUtils.isBlank(cancelrule)){
+						order.setHascancelrule(false);
+					}else{
+						order.setHascancelrule(true);
+					}
+				}else{
+					order.setHascancelrule(false);
 				}
 			}
 		}catch(Exception e){
@@ -1485,16 +1589,20 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 	private JSONObject addCostInfo(JSONObject costinfo, PassengerOrder order) {
 		JSONObject obj = getCostDetails(costinfo);
 		//添加溢价倍数
-		Object value = costinfo.get("premiumrate");
-		double premium = (value==null?1:parseDouble(value));
-		obj.put("premium", premium);
+//		String value = (String) costinfo.get("premiumrate");
+//		double premium = (value==null?1:parseDouble(value.replace("倍", "")));
+//		obj.put("premium", premium);
+		//机构溢价是1
+		obj.put("premium", 1);
 		//添加抵用券信息
 		Map<String,Object> couponinfo = new HashMap<String,Object>();
 		String orderno = order.getOrderno();
 		Map<String,Object> cpinfo = orderdao.getOrderCouponInfo(orderno);
 		if(cpinfo!=null&&cpinfo.size()>0){
 			couponinfo.put("id", cpinfo.get("couponidref"));
-			couponinfo.put("couponmoney", cpinfo.get("couponmoney"));
+			couponinfo.put("couponmoney", parseDouble(cpinfo.get("couponmoney")));
+			couponinfo.put("discountamount", parseDouble(cpinfo.get("discountamount")));
+			
 		}
 		obj.put("couponinfo", couponinfo);
 		//订单的金额信息
@@ -1839,7 +1947,44 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			Map<String,Object> cancelinfo = orderdao.getCancelInfo4Org(order.getOrderno());
 			if(cancelinfo!=null){
 				order.setCancelfee(parseDouble(cancelinfo.get("cancelamount")));
+				String cancelrule = (String) cancelinfo.get("cancelrule");
+				if(StringUtils.isBlank(cancelrule)){
+					order.setHascancelrule(false);
+				}else{
+					order.setHascancelrule(true);
+				}
+			}else{
+				order.setHascancelrule(false);
 			}
+		}
+		
+		//获取实际支付金额
+		try{
+			String orderno = order.getOrderno();
+			String paymentstatus = order.getPaymentstatus();
+			if(!(PayState.NOTPAY.state.equals(paymentstatus))){
+				//都支付完成的才有realpayamount
+				String orderstatus = order.getOrderstatus();
+				if(OrderState.SERVICEDONE.state.equals(orderstatus)){
+					//行程结束的
+					Map<String,Object> cpinfo = orderdao.getOrderCouponInfo(orderno);
+					if(cpinfo!=null&&cpinfo.size()>0){
+						double orderamount = parseDouble(order.getOrderamount());
+						double discountamount = parseDouble(cpinfo.get("discountamount"));
+						if(orderamount<=discountamount){
+							order.setRealpayamount(0.0);
+						}else{
+							order.setRealpayamount(new BigDecimal(orderamount).subtract(new BigDecimal(discountamount)).doubleValue());
+						}
+					}else{
+						order.setRealpayamount(order.getOrderamount());
+					}
+				}else{
+					order.setRealpayamount(order.getCancelfee());
+				}
+			}
+		}catch(Exception e){
+			logger.error("获取实际支付金额",e);
 		}
 	}
 
@@ -1954,7 +2099,6 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			}
 			Map<String,Object> costinfo = (Map<String, Object>)escostinfo.get("costinfo");
 			double cost = parseDouble(costinfo.get("cost"));
-			obj.put("cost", cost);
             obj.put("awardpint", 0);
 			JSONArray paydetail = new JSONArray();
 			JSONObject obj3 = new JSONObject();
@@ -1984,6 +2128,9 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			//添加溢价倍数
             params.put("orderstyle", "0");
             dillPremium(obj,params);
+            double premium = (double)obj.get("premium");
+            cost = StringUtil.formatNum(new BigDecimal(cost).multiply(new BigDecimal(premium)).doubleValue(), 1);
+            obj.put("cost", cost);
             //添加实际费用
             double actualcost = 0;
             double couponmoney = parseDouble(obj.get("couponmoney"));
@@ -2023,7 +2170,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			Map<String,Object> couponobj = userdao.getHighestAbleCoupon(couponp);
 			if(couponobj!=null){
 				obj.put("couponid", couponobj.get("id"));
-		    	obj.put("couponmoney", couponobj.get("money"));
+		    	obj.put("couponmoney", parseDouble(couponobj.get("money")));
 			}else{
 				obj.put("couponid", "");
 		    	obj.put("couponmoney", 0);
@@ -2153,16 +2300,18 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
     		if(StringUtils.isBlank(companyid)){
     			//个人订单，运管端
     			premiump.put("platformtype", 0);
+    			Map<String,Object> result = carserviceapi.dealRequestWithToken("/PremiumRule/GetPremiumrate", HttpMethod.POST, null, premiump, Map.class);
+        		if(result!=null&&(int)result.get("status")==0){
+        			obj.put("premium", result.get("premiumrate"));
+        		}else{
+        			obj.put("premium", 1);
+        		}
     		}else{
     			//机构订单，租赁端
     			premiump.put("platformtype", 1);
-    		}
-    		Map<String,Object> result = carserviceapi.dealRequestWithToken("/PremiumRule/GetPremiumrate", HttpMethod.POST, null, premiump, Map.class);
-    		if(result!=null&&(int)result.get("status")==0){
-    			obj.put("premium", result.get("premiumrate"));
-    		}else{
     			obj.put("premium", 1);
     		}
+    		
     	}catch(Exception e){
     		obj.put("premium", 1);
     		logger.error("添加溢价信息出错，溢价回归1倍", e);
@@ -2225,14 +2374,14 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
                             Date usetimeobj = format.parse(usetime);
                             if(usetimeobj.after(yydate)){
                                 //预约时间
-                                Map<String,Object> yyparams = new HashMap<String,Object>();
-                                yyparams.put("type","个人用户出租车下单预约附加费用");
+//                                Map<String,Object> yyparams = new HashMap<String,Object>();
+//                                yyparams.put("type","个人用户出租车下单预约附加费用");
 //                                tempprice += parseDouble(getYYFJF(yyparams));
                             }
                         }else{
                             //预约时间
-                            Map<String,Object> yyparams = new HashMap<String,Object>();
-                            yyparams.put("type","个人用户出租车下单预约附加费用");
+//                            Map<String,Object> yyparams = new HashMap<String,Object>();
+//                            yyparams.put("type","个人用户出租车下单预约附加费用");
 //                            tempprice += parseDouble(getYYFJF(yyparams));
                         }
                     }
@@ -2307,15 +2456,17 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
                             Date usetimeobj = format.parse(usetime);
                             if(usetimeobj.after(yydate)){
                                 //预约时间
-                                Map<String,Object> yyparams = new HashMap<String,Object>();
-                                yyparams.put("type","个人用户下单预约附加费用");
+//                                Map<String,Object> yyparams = new HashMap<String,Object>();
+//                                yyparams.put("type","个人用户下单预约附加费用");
 //                                tempprice += parseDouble(getYYFJF(yyparams));
+                            	tempprice += parseDouble(accountrules.get("reservationpricep"));
                             }
                         }else{
                             //预约时间
-                            Map<String,Object> yyparams = new HashMap<String,Object>();
-                            yyparams.put("type","个人用户下单预约附加费用");
+//                            Map<String,Object> yyparams = new HashMap<String,Object>();
+//                            yyparams.put("type","个人用户下单预约附加费用");
 //                            tempprice += parseDouble(getYYFJF(yyparams));
+                            tempprice += parseDouble(accountrules.get("reservationpricep"));
                         }
                     }
                 }catch (Exception e){
@@ -2395,14 +2546,15 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 		if(StringUtils.isBlank(companyid)){
 			//个人订单，运管端
 			premiump.put("platformtype", 0);
+			Map<String,Object> result = carserviceapi.dealRequestWithToken("/PremiumRule/GetPremiumrate", HttpMethod.POST, null, premiump, Map.class);
+			if(result!=null&&(int)result.get("status")==0){
+				res.put("premium", result.get("premiumrate")==null?1:result.get("premiumrate"));
+			}else{
+				res.put("premium", 1);
+			}
 		}else{
-			//机构订单，租赁端
-			premiump.put("platformtype", 1);
-		}
-		Map<String,Object> result = carserviceapi.dealRequestWithToken("/PremiumRule/GetPremiumrate", HttpMethod.POST, null, premiump, Map.class);
-		if(result!=null&&(int)result.get("status")==0){
-			res.put("premium", result.get("premiumrate")==null?1:result.get("premiumrate"));
-		}else{
+			//机构订单，租赁端机构订单没有溢价倍数
+//			premiump.put("platformtype", 1);
 			res.put("premium", 1);
 		}
 		return res;
@@ -2483,7 +2635,9 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 				//机构网约车
 				cancelinfo.put("title", (String)orderinfo.get("selectedmodelcaption")+"▪"+citycaption);
 				Map<String,Object> canceldetail = orderdao.getCancelInfo4Org(orderno);
-				cancelrule = (String) canceldetail.get("cancelrule");
+				if(canceldetail!=null){
+					cancelrule = (String) canceldetail.get("cancelrule");
+				}
 				cancelinfo.put("img",  SystemConfig.getSystemProperty("fileserver")+File.separator+orderinfo.get("selectedmodelpath"));
 			}else{
 				if(isTaxiOrder(ordertype)){
@@ -2498,15 +2652,21 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 					//个人网约车
 					cancelinfo.put("title", (String)orderinfo.get("selectedmodelcaption")+"▪"+citycaption);
 					Map<String,Object> canceldetail = orderdao.getCancelInfo4Opnetcar(orderno);
-					cancelrule = (String) canceldetail.get("cancelrule");
+					if(canceldetail!=null){
+						cancelrule = (String) canceldetail.get("cancelrule");
+					}
 					cancelinfo.put("img",  SystemConfig.getSystemProperty("fileserver")+File.separator+orderinfo.get("selectedmodelpath"));
 				}
 			}
 			if(StringUtils.isNotBlank(cancelrule)){
-				PubOrderCancelRule cost = (PubOrderCancelRule)JSONObject.toBean(JSONObject.fromObject(cancelrule), PubOrderCancelRule.class);
-				cancelinfo.put("cancelcount", cost.getCancelcount());
-				cancelinfo.put("watingcount", cost.getWatingcount());
-				cancelinfo.put("price", cost.getPrice());
+				try{
+					PubOrderCancelRule cost = (PubOrderCancelRule)JSONObject.toBean(JSONObject.fromObject(cancelrule), PubOrderCancelRule.class);
+					cancelinfo.put("cancelcount", cost.getCancelcount());
+					cancelinfo.put("watingcount", cost.getWatingcount());
+					cancelinfo.put("price", cost.getPrice());
+				}catch(Exception e){
+					logger.error("转换取消规则",e);
+				}
 			}
 			VelocityContext context = new VelocityContext();
 	        context.put("cancelinfo", cancelinfo);
@@ -2583,7 +2743,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 		String usetype = (String) params.get("usetype");
 		String couponid = (String) params.get("couponid");
 		String usertoken = (String) params.get("usertoken");
-		if(StringUtils.isBlank(orderno)||StringUtils.isBlank(usertoken)||StringUtils.isBlank(couponid)||StringUtils.isBlank(ordertype)||StringUtils.isBlank(usetype)){
+		if(StringUtils.isBlank(orderno)||StringUtils.isBlank(usertoken)||StringUtils.isBlank(ordertype)||StringUtils.isBlank(usetype)){
 			res.put("status", Retcode.FAILED.code);
 			res.put("message", "参数不全");
 			return res;
@@ -2605,15 +2765,21 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			usecouponp.put("discountamount", null);
 			usecouponp.put("usestate", 0);
 			usecouponp.put("userid", user==null?"":user.getId());
-			Map<String,Object> couponuseinfo = userdao.getOrderCouponUseInfo(params);
-			if(couponuseinfo==null){
-				//没有使用过优惠券，从新添加
-				usecouponp.put("id", GUIDGenerator.newGUID());
-				userdao.addCouponUseOrder(usecouponp);
+			if(StringUtils.isBlank(couponid)){
+				//没有优惠券不使用
+				userdao.deleteUseCouponOrder(usecouponp);
 			}else{
-				//有优惠券，直接更新
-				userdao.updateCouponUseOrder(usecouponp);
+				Map<String,Object> couponuseinfo = userdao.getOrderCouponUseInfo(params);
+				if(couponuseinfo==null){
+					//没有使用过优惠券，从新添加
+					usecouponp.put("id", GUIDGenerator.newGUID());
+					userdao.addCouponUseOrder(usecouponp);
+				}else{
+					//有优惠券，直接更新
+					userdao.updateCouponUseOrder(usecouponp);
+				}
 			}
+			
 		}
 		return res;
 	}
@@ -2637,7 +2803,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			}
 			Map<String,Object> costinfo = (Map<String, Object>)res.get("costinfo");
 			double cost = parseDouble(costinfo.get("cost"));
-			obj.put("cost", cost);
+			
             obj.put("awardpint", 0);
 			JSONArray paydetail = new JSONArray();
 			JSONObject obj1 = new JSONObject();
@@ -2655,6 +2821,10 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			//添加溢价倍数
             params.put("orderstyle", "1");
             dillPremium(obj,params);
+            double premium = (double)obj.get("premium");
+            double schedulefee = parseDouble(costinfo.get("schedulefee"));
+            cost = StringUtil.formatNum(((new BigDecimal(cost).subtract(new BigDecimal(schedulefee))).multiply(new BigDecimal(premium))).add(new BigDecimal(schedulefee)).doubleValue(), 1);
+            obj.put("cost", cost);
             //添加实际费用
             double actualcost = 0;
             double couponmoney = parseDouble(obj.get("couponmoney"));
@@ -2698,7 +2868,10 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
             Map<String,Object> orderinfo = (Map<String, Object>)validinfo.get("order");
             if(!"2".equals(usetype)){
             	//机构订单
-            	payOrgOrder(orderinfo,params,res,request);
+//            	payOrgOrder(orderinfo,params,res,request);
+            	res.put("status", Retcode.INVALIDORDERSTATUS.code);
+                res.put("message", "订单不需要支付");
+                return res;
             }else{
             	//个人订单
             	if(isTaxiOrder(ordertype)){
@@ -2870,9 +3043,9 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 	                 	orderdao.payed4OpTaxiOrder(orderparam);
 	 	            	//更新优惠券的使用
 	 	                dillCouponUseInfo4Op(orderinfo);
+	 	                res.put("needpay", false);
+		 	            return ;
 	 	            }
-	 	            res.put("needpay", false);
-	 	            return ;
 	            }
 			}catch(Exception e){
 				logger.error("支付异常",e);
@@ -3265,9 +3438,9 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 		                 orderdao.payed4OpOrder(orderparam);
 		            	//更新优惠券的使用
 		                dillCouponUseInfo4Op(orderinfo);
+		                res.put("needpay", false);
+			            return ;
 		            }
-		            res.put("needpay", false);
-		            return ;
 	            }
 			}catch(Exception e){
 				logger.error("支付异常",e);
@@ -3607,6 +3780,8 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			params.put("usetype", 2);
 			params.put("amount", couponmoney);
 			params.put("remark", couponinfo!=null?couponinfo.get("name"):"");
+			params.put("lecompanyid", couponinfo.get("couponinfo"));
+			params.put("platformtype", couponinfo.get("platformtype"));
 			userdao.addCouponDetail(params);
 		}
 	}
@@ -3647,6 +3822,8 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			params.put("usetype", 2);
 			params.put("amount", couponmoney);
 			params.put("remark", couponinfo!=null?couponinfo.get("name"):"");
+			params.put("lecompanyid", couponinfo.get("couponinfo"));
+			params.put("platformtype", couponinfo.get("platformtype"));
 			userdao.addCouponDetail(params);
 		}
 	}
@@ -3671,40 +3848,40 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
             params.put("orderno", orderno);
             if(!"2".equals(usetype)){
             	//机构端
-            	Map<String,Object> orderinfo = orderdao.getOrder4OrgNetCar(params);
-            	res.put("order", orderinfo);
-        		if(orderinfo==null){
-        			 res.put("status", Retcode.ORDERNOTEXIT.code);
-                     res.put("message", Retcode.ORDERNOTEXIT.msg);
-                     return res;
-        		}
-        		String orderstatus = (String) orderinfo.get("orderstatus");
-        		String paymentstatus = (String) orderinfo.get("paymentstatus");
-        		//订单状态查看
-        		if(OrderState.CANCEL.state.equals(orderstatus)){
-        			if(OrderState.CANCEL.state.equals(orderstatus)){
-        				//取消查看有没有取消费
-        				//取消就去查看这个订单有没有取消费
-    					Map<String,Object> cancelinfo = orderdao.getCancelInfo4Opnetcar((String)orderinfo.get("orderno"));
-    					if(cancelinfo!=null){
-    						orderinfo.put("cancelfee",parseDouble(cancelinfo.get("cancelamount")));
-    					}else{
-    						res.put("status", Retcode.INVALIDORDERSTATUS.code);
-                            res.put("message", "订单不需要支付");
-                            return res;
-    					}
-        			}
-        		}else{
+//            	Map<String,Object> orderinfo = orderdao.getOrder4OrgNetCar(params);
+//            	res.put("order", orderinfo);
+//        		if(orderinfo==null){
+//        			 res.put("status", Retcode.ORDERNOTEXIT.code);
+//                     res.put("message", Retcode.ORDERNOTEXIT.msg);
+//                     return res;
+//        		}
+//        		String orderstatus = (String) orderinfo.get("orderstatus");
+//        		String paymentstatus = (String) orderinfo.get("paymentstatus");
+//        		//订单状态查看
+//        		if(OrderState.CANCEL.state.equals(orderstatus)){
+//        			if(OrderState.CANCEL.state.equals(orderstatus)){
+//        				//取消查看有没有取消费
+//        				//取消就去查看这个订单有没有取消费
+//    					Map<String,Object> cancelinfo = orderdao.getCancelInfo4Org((String)orderinfo.get("orderno"));
+//    					if(PayState.NOTPAY.state.equalsIgnoreCase(paymentstatus)&&cancelinfo!=null&&parseDouble(cancelinfo.get("cancelamount"))>0){
+//    						orderinfo.put("cancelfee",parseDouble(cancelinfo.get("cancelamount")));
+//    					}else{
+//    						res.put("status", Retcode.INVALIDORDERSTATUS.code);
+//                            res.put("message", "订单不需要支付");
+//                            return res;
+//    					}
+//        			}
+//        		}else{
         			res.put("status", Retcode.INVALIDORDERSTATUS.code);
                     res.put("message", "订单不需要支付");
                     return res;
-        		}
-        		//订单支付状态
-        		if(PayState.PAYED.state.equalsIgnoreCase(paymentstatus)){
-                    res.put("status", Retcode.INVALIDORDERSTATUS.code);
-                    res.put("message", "订单已经支付过");
-                    return res;
-                }
+//        		}
+//        		//订单支付状态
+//        		if(PayState.PAYED.state.equalsIgnoreCase(paymentstatus)){
+//                    res.put("status", Retcode.INVALIDORDERSTATUS.code);
+//                    res.put("message", "订单已经支付过");
+//                    return res;
+//                }
             }else{
             	//个人端
             	if(isTaxiOrder(ordertype)){
@@ -3723,8 +3900,8 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
             			if(OrderState.CANCEL.state.equals(orderstatus)){
             				//取消查看有没有取消费
             				//取消就去查看这个订单有没有取消费
-        					Map<String,Object> cancelinfo = orderdao.getCancelInfo4Opnetcar((String)orderinfo.get("orderno"));
-        					if(cancelinfo!=null){
+        					Map<String,Object> cancelinfo = orderdao.getCancelInfo4Optaxi((String)orderinfo.get("orderno"));
+        					if(PayState.NOTPAY.state.equalsIgnoreCase(paymentstatus)&&cancelinfo!=null&&parseDouble(cancelinfo.get("cancelamount"))>0){
         						orderinfo.put("cancelfee",parseDouble(cancelinfo.get("cancelamount")));
         					}else{
         						res.put("status", Retcode.INVALIDORDERSTATUS.code);
@@ -3760,7 +3937,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
             				//取消查看有没有取消费
             				//取消就去查看这个订单有没有取消费
         					Map<String,Object> cancelinfo = orderdao.getCancelInfo4Opnetcar((String)orderinfo.get("orderno"));
-        					if(cancelinfo!=null){
+        					if(PayState.NOTPAY.state.equalsIgnoreCase(paymentstatus)&&cancelinfo!=null&&parseDouble(cancelinfo.get("cancelamount"))>0){
         						orderinfo.put("cancelfee",parseDouble(cancelinfo.get("cancelamount")));
         					}else{
         						res.put("status", Retcode.INVALIDORDERSTATUS.code);
@@ -3830,5 +4007,177 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
 			}
 		}
 		return res;
+	}
+
+	public Map<String, Object> getUnpayOders(String usertoken, String companyid) {
+		long start = System.currentTimeMillis();
+		Map<String,Object> res = new HashMap<String,Object>();
+		addPubInfos(res);
+		Map<String,String> userinfo = Const.getUserInfo(usertoken);
+		String account = userinfo.get("account");
+		Map<String,Object> params = new HashMap<String,Object>();
+		params.put("account", account);
+		params.put("orderstatus",OrderState.SERVICEDONE.state);
+		params.put("paymentstatus",PayState.NOTPAY.state);
+		res.put("status", Retcode.OK.code);
+		res.put("message", Retcode.OK.msg);
+		res.put("order", null);
+		try{
+			// 机构用户机构订单时直接机构支付了，只有个人订单存在未支付
+			// 个人用户
+			// 获取未支付的网约车订单
+			Map<String, Object> netcarorderinfo = orderdao.getUnpayOrders4OpNetCar(params);
+			if (netcarorderinfo != null) {
+				res.put("order", netcarorderinfo);
+				return res;
+			}
+			// 获取未支付的出租车订单
+			Map<String, Object> taxiorderinfo = orderdao.getUnpayOrders4OpTaxi(params);
+			if(taxiorderinfo!=null){
+				res.put("order", taxiorderinfo);
+				return res;
+			}
+//			//机构取消未支付订单
+//			Map<String,Object> nectcarorderinfo4orgcancel = orderdao.getUnpayOrder4OrgNetCar_cancel(params);
+//			if(nectcarorderinfo4orgcancel!=null){
+//				res.put("order", nectcarorderinfo4orgcancel);
+//				return res;
+//			}
+			//个人网约车未支付
+			Map<String,Object> nectcarorderinfo4opcancel = orderdao.getUnpayOrder4OpNetCar_cancel(params);
+			if(nectcarorderinfo4opcancel!=null){
+				res.put("order", nectcarorderinfo4opcancel);
+				return res;
+			}
+			//出租车取消未支付
+			Map<String,Object> taxiorderinfo4opcancel = orderdao.getUnpayOrder4OpTaxi_cancel(params);
+			if(taxiorderinfo4opcancel!=null){
+				res.put("order", taxiorderinfo4opcancel);
+				return res;
+			}
+		}catch(Exception e){
+			logger.error(e.getMessage());
+			res.put("status", Retcode.EXCEPTION.code);
+			res.put("message", Retcode.EXCEPTION.msg);
+			res.put("order", null);
+			return res;
+		}
+		long end = System.currentTimeMillis();
+		System.out.println("*******************************************************"+(end-start));
+		return res;
+	}
+
+	public Map<String, Object> getPayAccounts(Map<String, Object> params) {
+		 Map<String, Object> res = new HashMap<String,Object>();
+	        addPubInfos(res);
+	        res.put("status", Retcode.OK.code);
+	        res.put("message", Retcode.OK.msg);
+	        try{
+	            String usertoken = (String) params.get("usertoken");
+	            String account = Const.getUserInfo(usertoken).get("account");
+	            String orderno = (String) params.get("orderno");
+	            String ordertype = (String) params.get("ordertype");
+	            String usetype = (String) params.get("usetype");
+	            if(StringUtils.isBlank(usertoken)||StringUtils.isBlank(orderno)||StringUtils.isBlank(ordertype)||StringUtils.isBlank(usetype)){
+	                res.put("status", Retcode.FAILED.code);
+	                res.put("message", "参数不全！");
+	                return res;
+	            }
+                Map<String,Object> validinfo = checkOrderValid(orderno, ordertype,usetype);
+                if(validinfo!=null&&(int)validinfo.get("status")!=Retcode.OK.code){
+                    return validinfo;
+                }
+                //订单信息
+                Map<String,Object> orderinfo = (Map<String, Object>) validinfo.get("order");
+	            List<Map<String, Object>> payinfo = new ArrayList<Map<String, Object>>();
+	            List<Map<String,Object>> infos = null;
+	            if(!"2".equals(usetype)){
+	                //机构现在不用支付
+	            	//机构用户
+					String companyid = (String) orderinfo.get("companyid");
+					LeasesCompany company = orgdao.getLeasesCompanyById(companyid);
+					if(company!=null){
+						infos = new ArrayList<Map<String,Object>>();
+						if("1".equals(company.getWechatstatus())&&StringUtils.isNotBlank(company.getWechatappid())&&StringUtils.isNotBlank(company.getWechatmerchantno())&&StringUtils.isNotBlank(company.getWechatsecretkey())){
+							//微信可用
+							Map<String,Object> wxinfo = new HashMap<String,Object>();
+	                        wxinfo.put("type","微信支付");
+	                        wxinfo.put("id","2");
+	                        infos.add(wxinfo);
+						}
+						if("1".equals(company.getAlipaystatus())&&StringUtils.isNotBlank(company.getAlipayappid())&&StringUtils.isNotBlank(company.getAlipaypublickey())&&StringUtils.isNotBlank(company.getAlipayprivatekey())){
+							 //支付宝可用
+							 Map<String,Object> alinfo = new HashMap<String,Object>();
+	                         alinfo.put("type","支付宝支付");
+	                         alinfo.put("id","1");
+	                         infos.add(alinfo);
+						}
+					}
+	            }else{
+	                //个人用户
+	                PeUser peuser = userdao.getUser4Op(account);
+	                double balance = userdao.getUserBalance4Op(peuser.getId());
+	                Map<String,Object> balanceinfo = new HashMap<String,Object>();
+	                balanceinfo.put("type", "使用账户余额支付");
+	                balanceinfo.put("id", "3");
+	                balanceinfo.put("balanceamount", balance);
+	                if(orderinfo!=null){
+	                    double amount = 0;
+	                    if(isTaxiOrder(ordertype)){
+	                        //出租车
+	                        amount = parseDouble(orderinfo.get("schedulefee"));
+	                        String paymentmethod = (String) orderinfo.get("paymentmethod");
+	                        if("0".equalsIgnoreCase(paymentmethod)){
+	                            //线上支付
+	                            amount += parseDouble(orderinfo.get("orderamount"));
+	                        }
+	                    }else{
+	                        //网约车
+	                        amount = parseDouble(orderinfo.get("orderamount"));
+	                    }
+	                    if(amount<=balance){
+	                        balanceinfo.put("validmoney", true);
+	                    }else{
+	                        balanceinfo.put("validmoney", false);
+	                    }
+	                    payinfo.add(balanceinfo);
+	                }
+	                Map<String,Object> opinfo = orderdao.getOpInfo();
+	                if(opinfo!=null){
+	                	infos = new ArrayList<Map<String,Object>>();
+	                    String wechatstatus = (String) opinfo.get("wechatstatus");
+	                    if("1".equals(wechatstatus)
+	                            &&StringUtils.isNotBlank((String)opinfo.get("wechatappid"))
+	                            &&StringUtils.isNotBlank((String)opinfo.get("wechatmerchantno"))
+	                            &&StringUtils.isNotBlank((String)opinfo.get("wechatsecretkey"))){
+	                        //微信可用
+	                    	Map<String,Object> wxinfo = new HashMap<String,Object>();
+	                        wxinfo.put("type","微信支付");
+	                        wxinfo.put("id","2");
+	                        infos.add(wxinfo);
+	                    }
+	                    String alipaystatus = (String) opinfo.get("alipaystatus");
+	                    if("1".equals(alipaystatus)
+	                            &&StringUtils.isNotBlank((String)opinfo.get("alipayappid"))
+	                            &&StringUtils.isNotBlank((String)opinfo.get("alipayprivatekey"))
+	                            &&StringUtils.isNotBlank((String)opinfo.get("alipaypublickey"))){
+	                        //支付宝可用
+	                    	 Map<String,Object> alinfo = new HashMap<String,Object>();
+	                         alinfo.put("type","支付宝支付");
+	                         alinfo.put("id","1");
+	                         infos.add(alinfo);
+	                    }
+	                }
+	            }
+	            if(infos!=null){
+	                for(int i=0;i<infos.size();i++){
+	                    payinfo.add(infos.get(i));
+	                }
+	            }
+	            res.put("payinfo", payinfo);
+	        }catch(Exception e){
+	            logger.error("获取支付方式出错", e);
+	        }
+	        return res;
 	}
 }

@@ -97,6 +97,11 @@ public class PassengerOrder extends AbstractOrder {
 	 * 取消费
 	 */
 	private double cancelfee;
+	
+	/**
+	 * 是否有取消规则
+	 */
+	private boolean hascancelrule;
 
     /**
      * "0"表示机构订单，"1"表示个人订单
@@ -301,5 +306,13 @@ public class PassengerOrder extends AbstractOrder {
 
 	public void setCancelfee(double cancelfee) {
 		this.cancelfee = cancelfee;
+	}
+
+	public boolean isHascancelrule() {
+		return hascancelrule;
+	}
+
+	public void setHascancelrule(boolean hascancelrule) {
+		this.hascancelrule = hascancelrule;
 	}
 }

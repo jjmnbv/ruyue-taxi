@@ -23,6 +23,9 @@ public class BindDto {
     //解绑原因
     private String unbindreason;
 
+    //租赁公司ID
+    private String leaseCompanyId;
+
 
     private String creater;
 
@@ -113,12 +116,12 @@ public class BindDto {
         this.unBindNum = unBindNum;
     }
 
-    //    public List<String> getDriverIds() {
-//        return driverIds;
-//    }
-//
-//    public void setDriverIds(List<String> driverIds) {
-//        this.driverIds = driverIds;
-//    }
+    public String getLeaseCompanyId() {
+        return leaseCompanyId;
+    }
+
+    public void setLeaseCompanyId(String leaseCompanyId) {
+        this.leaseCompanyId = leaseCompanyId;
+    }
 }
  

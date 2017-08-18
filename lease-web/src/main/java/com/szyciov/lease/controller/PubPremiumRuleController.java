@@ -67,12 +67,13 @@ public class PubPremiumRuleController extends BaseController {
 	 */
 	@RequestMapping(value = "/PubPremiumRule/ruleConflict")
 	@ResponseBody
-	public int ruleConflict( @RequestBody PubPremiumParam pubPremiumParam, HttpServletRequest request) {
+	public Map<String,Object> ruleConflict( @RequestBody PubPremiumParam pubPremiumParam, HttpServletRequest request) {
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-		OpUser user = getLoginOpUser(request);
+		User user = getLoginLeUser(request);
 		pubPremiumParam.setCreater(user.getId());
+		pubPremiumParam.setLeasescompanyid(user.getLeasescompanyid());
 		return templateHelper.dealRequestWithToken("/PubPremiumRule/ruleConflict", HttpMethod.POST, userToken,
-				pubPremiumParam, int.class);
+				pubPremiumParam, Map.class);
 	}
 	/**
 	 * 禁用规则
@@ -81,7 +82,7 @@ public class PubPremiumRuleController extends BaseController {
 	@ResponseBody
 	public int ruleConflictOk( @RequestBody PubPremiumParam pubPremiumParam, HttpServletRequest request) {
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-		OpUser user = getLoginOpUser(request);
+		User user = getLoginLeUser(request);
 		pubPremiumParam.setCreater(user.getId());
 		return templateHelper.dealRequestWithToken("/PubPremiumRule/ruleConflictOk", HttpMethod.POST, userToken,
 				pubPremiumParam, int.class);
@@ -96,6 +97,7 @@ public class PubPremiumRuleController extends BaseController {
 			PubPremiumParam pubPremiumParam = new PubPremiumParam();
 			pubPremiumParam.setId(request.getParameter("id"));
 			pubPremiumParam.setRuletype(request.getParameter("ruletype"));
+			pubPremiumParam.setRulestatus(request.getParameter("rulestatus"));
 			mav.addObject("pubPremiumParam", pubPremiumParam);
 			mav.addObject("addOrModify", "修改溢价规则");
 			mav.setViewName("resource/pubPremiumRule/add");
@@ -122,7 +124,8 @@ public class PubPremiumRuleController extends BaseController {
 				HttpServletRequest request,HttpServletResponse response) throws IOException {
 			response.setContentType("text/html;charset=utf-8");
 			String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
-			OpUser user = getLoginOpUser(request);
+			User user = getLoginLeUser(request);
+			pubPremiumAdd.setLeasescompanyid(user.getLeasescompanyid());
 			pubPremiumAdd.setCreater(user.getId());
 			return templateHelper.dealRequestWithToken("/PubPremiumRule/PubPremiumAdd", HttpMethod.POST, userToken,
 					pubPremiumAdd,Map.class);
@@ -132,7 +135,16 @@ public class PubPremiumRuleController extends BaseController {
 		@ResponseBody
 		public ModelAndView detailIndex(HttpServletRequest request,HttpServletResponse response) throws IOException {
 			ModelAndView mav = new ModelAndView();
+			String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 			    mav.addObject("aaid",request.getParameter("id"));
+			    List<PubDictionary> list = templateHelper.dealRequestWithToken(
+						"/PubPremiumRule/getWeeks/{aaid}", HttpMethod.GET, userToken, null,
+						List.class,request.getParameter("id"));
+			    PubPremiumParam rulename = templateHelper.dealRequestWithToken(
+						"/PubPremiumRule/getRulename/{aaid}", HttpMethod.GET, userToken, null,
+						PubPremiumParam.class,request.getParameter("id"));
+			    mav.addObject("list", list);
+			    mav.addObject("rulename", rulename);
 				mav.setViewName("resource/pubPremiumRule/detail");
 			return mav;
 		}
@@ -155,6 +167,11 @@ public class PubPremiumRuleController extends BaseController {
 		public ModelAndView detailIndexDate(HttpServletRequest request,HttpServletResponse response) throws IOException {
 					ModelAndView mav = new ModelAndView();
 					    mav.addObject("aaid",request.getParameter("id"));
+					    String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+					    PubPremiumParam rulename = templateHelper.dealRequestWithToken(
+								"/PubPremiumRule/getRulename/{aaid}", HttpMethod.GET, userToken, null,
+								PubPremiumParam.class,request.getParameter("id"));
+					    mav.addObject("rulename", rulename);
 						mav.setViewName("resource/pubPremiumRule/detailDate");
 					return mav;
 				}
@@ -177,6 +194,11 @@ public class PubPremiumRuleController extends BaseController {
 		@ResponseBody
 		public ModelAndView historyIndex(HttpServletRequest request,HttpServletResponse response) throws IOException {
 			    ModelAndView mav = new ModelAndView();
+				  String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+				  PubPremiumParam rulename = templateHelper.dealRequestWithToken(
+								"/PubPremiumRule/getRulename/{aaid}", HttpMethod.GET, userToken, null,
+								PubPremiumParam.class,request.getParameter("id"));
+					    mav.addObject("rulename", rulename);
 			    mav.addObject("aaid",request.getParameter("id"));
 				mav.setViewName("resource/pubPremiumRule/history");
 			return mav;
@@ -198,6 +220,12 @@ public class PubPremiumRuleController extends BaseController {
 				@ResponseBody
 				public ModelAndView historydetailIndex(HttpServletRequest request,HttpServletResponse response) throws IOException {
 					ModelAndView mav = new ModelAndView();
+					 String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+					 PubPremiumParam rulename = templateHelper.dealRequestWithToken(
+								"/PubPremiumRule/getRulename/{ruleId}", HttpMethod.GET, userToken, null,
+								PubPremiumParam.class,request.getParameter("ruleId"));
+					    mav.addObject("rulename", rulename);
+					    mav.addObject("aaoperationtype",request.getParameter("operationtype"));
 					    mav.addObject("aaid",request.getParameter("id"));
 					    mav.addObject("aaruletype",request.getParameter("ruletype"));
 						mav.setViewName("resource/pubPremiumRule/historydetail");
@@ -208,12 +236,14 @@ public class PubPremiumRuleController extends BaseController {
 				public PageBean getHistorydetail(
 								@RequestParam (value = "aaid", required = false) String aaid,
 								@RequestParam (value = "aaruletype", required = false) String aaruletype,
+								@RequestParam (value = "aaoperationtype", required = false) String aaoperationtype,
 								@RequestBody PubPremiumHistory pubPremiumHistory,
 								HttpServletRequest request,HttpServletResponse response) throws IOException {
 							response.setContentType("application/json;charset=utf-8");
 							String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 							pubPremiumHistory.setId(aaid);
 							pubPremiumHistory.setRuletype(aaruletype);
+							pubPremiumHistory.setOperationtype(aaoperationtype);
 							return templateHelper.dealRequestWithToken("/pubPremiumRule/GetHistorydetail", HttpMethod.POST, userToken,
 									pubPremiumHistory,PageBean.class);
 						}

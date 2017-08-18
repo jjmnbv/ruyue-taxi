@@ -51,3 +51,88 @@ h2 {
 .timeaxis>li:hover .quantext {
 	display: block;
 }
+.tip_box_e{
+	margin: 80px auto auto auto;
+	background: #fff;
+	border-radius: 5px;
+	padding-bottom: 40px;
+	max-height: 70%;
+    width: 550px;
+}
+.tip_box_e h3 {
+	text-indent: 20px;
+	font-weight: bold;
+	color: #000;
+	background: #f5f5f5;
+	border-bottom: 1px solid #d0d0d0;
+	line-height: 240%;
+	margin-bottom: 5px;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+.tip_box_e .close {
+	margin-top: -35px;
+	margin-right: 10px;
+	opacity: 1;
+}
+.e_con{
+	font-size: 14px;
+	min-height: 260px;
+	margin: 10px 40px;
+	overflow-y: auto;
+	padding-right: 10px;
+
+}
+.e_box{
+    display: none;
+}
+.e_title{
+	color: #000;
+	line-height: 250%;
+}
+.e_child{
+    width: 100%;
+	color: #666;
+	line-height: 150%;
+    overflow: auto;
+}
+.e_child>em{
+	display: inline-block;
+	width: 160px;
+	text-align: left;
+    margin-left: 20px;
+}
+.e_red{
+	color: #ff0000;
+	font-size: 16px;
+	line-height: 200%;
+	font-weight: bold;
+}
+.e_margin{
+	font-weight: bold;
+	margin-top: 36px;
+}
+.e_margin .fr{
+	height: 40px;
+	width: 40px;
+	background: url("../../img/orgordermanage/btn_down.png") no-repeat right center;
+}
+.e_child_child{
+	margin-left: 40px;
+	font-size: 12px;
+	color: #888;
+}
+.e_con::-webkit-scrollbar,.e_con scrollbar{
+	width:4px;
+	height:4px;
+}
+.e_con::-webkit-scrollbar-track,.e_con scrollbar-track{
+	background: #E6E6E6;
+}
+.e_con::-webkit-scrollbar-thumb,.e_con scrollbar-thumb{
+	background: #bbb;
+	border-radius:2px;
+}
+.e_con::-webkit-scrollbar-corner,.e_con scrollbar-corner{
+	background: #E6E6E6;
+}

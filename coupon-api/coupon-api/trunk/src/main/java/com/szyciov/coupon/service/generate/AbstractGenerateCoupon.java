@@ -1,12 +1,12 @@
 package com.szyciov.coupon.service.generate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 
@@ -16,6 +16,8 @@ import com.szyciov.coupon.dto.GenerateCouponDTO;
 import com.szyciov.coupon.factory.generate.GenerateCoupon;
 import com.szyciov.coupon.service.RedisService;
 import com.szyciov.coupon.util.GenerateLogUtil;
+import com.szyciov.coupon.util.MessageUtil;
+import com.szyciov.dto.coupon.CouponInfoDTO;
 import com.szyciov.dto.coupon.PubCouponActivityDto;
 import com.szyciov.entity.coupon.PubCoupon;
 import com.szyciov.entity.coupon.PubCouponRule;
@@ -24,6 +26,7 @@ import com.szyciov.enums.DataStateEnum;
 import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.enums.coupon.CouponActivityEnum;
 import com.szyciov.enums.coupon.CouponEnum;
+import com.szyciov.message.CouponMessage;
 import com.szyciov.param.coupon.GenerateCouponParam;
 import com.szyciov.util.DateUtil;
 import com.szyciov.util.GUIDGenerator;
@@ -31,6 +34,8 @@ import com.szyciov.util.GsonUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Service;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -90,8 +95,10 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
                 this.savePubCouponActivityUseCity(activity.getCitys(),coupon.getId());
                 this.saveHaved(activity.getId(),userId,activity.getSendendtime());
                 GenerateCouponDTO dto = this.createDto(coupon);
-                dtoList.add(dto);
                 GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,抵用券生成完毕，抵用券信息：【{}】",userId,GsonUtil.toJson(dto));
+                this.phshMessage(dto,param.getUserPhone(),userId);
+                dtoList.add(dto);
+                afterGenerated(dto);
             }
         }
         return dtoList;
@@ -106,6 +113,8 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
         dto.setId(coupon.getId());
         dto.setMoney(coupon.getMoney());
         dto.setName(coupon.getName());
+        dto.setUserId(coupon.getUserid());
+        dto.setCompanyid(coupon.getLecompanyid());
         return dto;
     }
 
@@ -153,7 +162,7 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
         //优惠券状态 默认未使用
         pubCoupon.setCouponstatus(CouponEnum.COUPON_STATUS_UN_USE.code);
         //有效期开始时间 默认当天
-        pubCoupon.setOutimestart(LocalDate.now());
+        pubCoupon.setOutimestart(this.getCouponStartDate(activity));
         //有效期结束时间
         pubCoupon.setOuttimeend(this.getCouponEndDate(activity));
         pubCoupon.setLecompanyid(activity.getLecompanyid());
@@ -173,20 +182,13 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
      */
     protected void saveHaved(String activityId,String userId,String sendendtime){
         String key = RedisKeyEnum.COUPON_HAVE.code+activityId;
-        String countStr = redisService.hmGet(key,userId);
-
-        //如果为空，则设置key，并设置超时时间
-        if(countStr==null) {
-            redisService.hmSet(key,userId,"1");
-            long expireTime = LocalDateTime.now().until(LocalDate.parse(sendendtime).atTime(23,59,59), SECONDS);
-            redisService.expire(key, expireTime, TimeUnit.SECONDS);
-        }else{
-            //获取该活动领取人数记录
-            Integer count = Integer.parseInt(countStr);
-            redisService.hmSet(key,userId,count+1+"");
-        }
-
+        long expireTime = LocalDateTime.now().until(LocalDate.parse(sendendtime).atTime(23,59,59), SECONDS);
+        List<String> keys = new ArrayList<>();
+        keys.add(key);
+        keys.add(userId);
+        redisService.eval(new ResourceScriptSource(new ClassPathResource("/saveHaved.lua")),keys,expireTime+"");
     }
+
 
     /**
      * 保存抵用券有效城市
@@ -225,7 +227,7 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
              */
             double randomMoney = Math.random()*((activity.getSendhighmoney()+1)-activity.getSendlowmoney()) + activity.getSendlowmoney();
             //进行四舍五入取整
-            money = BigDecimal.valueOf(randomMoney).divide(new BigDecimal(1),0).doubleValue();
+            money = BigDecimal.valueOf(randomMoney).divide(new BigDecimal(1),0, RoundingMode.HALF_DOWN).doubleValue();
         }
         return money;
     }
@@ -235,13 +237,28 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
      * @param activity
      * @return
      */
-    private LocalDate getCouponEndDate(PubCouponActivityDto activity){
+    protected LocalDate getCouponEndDate(PubCouponActivityDto activity){
 
         //如果是固定时间,则直接返回设定终止时间
         if(CouponActivityEnum.OUT_TIME_TYPE_FIXED.code.equals(activity.getOutimetype())){
             return LocalDate.parse(activity.getFixedendtime());
         }else{
             return LocalDate.now().plusDays(activity.getSendtimeinday());
+        }
+    }
+
+    /**
+     * 获取抵用券有效期开始时间
+     * @param activity
+     * @return
+     */
+    private LocalDate getCouponStartDate(PubCouponActivityDto activity){
+
+        //如果是固定时间,则直接返回设定的开始时间
+        if(CouponActivityEnum.OUT_TIME_TYPE_FIXED.code.equals(activity.getOutimetype())){
+            return LocalDate.parse(activity.getFixedstarttime());
+        }else{
+            return LocalDate.now();
         }
     }
 
@@ -266,7 +283,7 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
 
         //验证发放城市
         if(!validCity(activity,param.getCityCode())){
-            GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,活动ID:【{}】,当前城市不在活动发放城市之内，当前城市:【{}】，活动发放城市:【{}】",userId,param.getCityCode(),activity.getId(),activity.getCitys());
+            GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,活动ID:【{}】,当前城市不在活动发放城市之内，当前城市:【{}】，活动发放城市:【{}】",userId,activity.getId(),param.getCityCode(),activity.getCitys());
             return false;
         }
         //验证是否符合发放规则
@@ -292,9 +309,11 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
      * @param activity
      * @return
      */
-    private boolean validCity(PubCouponActivityDto activity,String cityCode){
-        if(cityCode.indexOf(activity.getCitys())!=-1){
-            return true;
+    protected boolean validCity(PubCouponActivityDto activity,String cityCode){
+        if(activity.getCitys()!=null && cityCode!=null) {
+            if (activity.getCitys().indexOf(cityCode) != -1) {
+                return true;
+            }
         }
         return false;
     }
@@ -305,6 +324,12 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
      */
     protected abstract boolean validRule(PubCouponRule rule,GenerateCouponParam param,PubCouponActivityDto activity);
 
+    /**
+     * 生成券完成后操作
+     * @param dto
+     * @return
+     */
+    protected abstract boolean afterGenerated(GenerateCouponDTO dto);
 
 
 
@@ -328,6 +353,23 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
         String ruleKey = RedisKeyEnum.COUPON_ACTIVY.code+param.getCompanyId()+"_"+param.getUserType()+"_"+param.getType();
         //抵用券规则信息
         return redisService.hGetAll(ruleKey);
+    }
+
+    /**
+     * 发送推送
+     * @param phone
+     */
+    protected void  phshMessage(GenerateCouponDTO coupon,String phone,String userId){
+        GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,发送推送内容：【{}】",userId,GsonUtil.toJson(coupon));
+        List<String> userPhone = new ArrayList<>();
+        userPhone.add(phone);
+        CouponInfoDTO infoDTO = new CouponInfoDTO();
+        infoDTO.setName(coupon.getName());
+        infoDTO.setMoney(coupon.getMoney());
+        CouponMessage couponMessage = new CouponMessage(infoDTO,"",userPhone);
+        MessageUtil.sendMessage(couponMessage);
+
+        GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,发送推送完毕！",userId);
     }
 
 }

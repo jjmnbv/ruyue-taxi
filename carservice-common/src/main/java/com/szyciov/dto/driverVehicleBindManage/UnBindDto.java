@@ -23,6 +23,9 @@ public class UnBindDto {
     //操作人
     private String creater;
 
+    //租赁公司ID
+    private String leaseCompanyId;
+
     //出租车司机Id
     private List<String> taxiDrivers;
 
@@ -73,6 +76,14 @@ public class UnBindDto {
 
     public void setTaxiDrivers(List<String> taxiDrivers) {
         this.taxiDrivers = taxiDrivers;
+    }
+
+    public String getLeaseCompanyId() {
+        return leaseCompanyId;
+    }
+
+    public void setLeaseCompanyId(String leaseCompanyId) {
+        this.leaseCompanyId = leaseCompanyId;
     }
 }
  

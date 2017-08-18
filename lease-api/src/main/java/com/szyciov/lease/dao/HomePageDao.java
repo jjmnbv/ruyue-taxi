@@ -29,6 +29,12 @@ public class HomePageDao {
 	public Object getTotalMoney(String companyid) {
 		return mapper.getTotalMoney(companyid);
 	}
+	public Object addCancelmoney(String companyid) {
+		return mapper.addCancelmoney(companyid);
+	}
+	public Object addCouponmoney(String companyid) {
+		return mapper.addCouponmoney(companyid);
+	}
 
 	public Object getCYTotalMoney(String companyid) {
 		return mapper.getCYTotalMoney(companyid);

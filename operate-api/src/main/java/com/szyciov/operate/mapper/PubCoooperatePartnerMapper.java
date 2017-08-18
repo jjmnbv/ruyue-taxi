@@ -11,7 +11,6 @@ import com.szyciov.op.vo.pubCoooperatePartner.QueryLeaseCompanyAdminVo;
 import com.szyciov.op.vo.pubCoooperatePartner.QueryPubCoooperateVo;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by ZF on 2017/7/24.
@@ -30,4 +29,8 @@ public interface PubCoooperatePartnerMapper {
     List<QueryLeaseCompanyAdminVo> queryLeaseCompanyAdminByCoooId(String coooid);
 
     int insertLeUserNews(LeUserNews news);
+
+    int deleteLeaseOrganRef(String coooId);
+
+    int deleteVehicleModelRef(String coooId);
 }

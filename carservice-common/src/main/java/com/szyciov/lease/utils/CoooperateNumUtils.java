@@ -36,7 +36,7 @@ public final class CoooperateNumUtils {
         }
 
 
-        return cooono + date + left0(num);
+        return cooono + date + left0(num++);
     }
 
 

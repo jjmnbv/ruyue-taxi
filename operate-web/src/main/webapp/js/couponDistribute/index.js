@@ -10,85 +10,64 @@ $(function () {
 	initSelectCoupon();
 	initSelectRule();
 	initDataPicker();
-	//getSelectCitys();
-	//initSelectGetCity();
+	 
+	//关闭新增抵扣券弹框
 	$(".close").click(function(){
 		$("#editFormDiv").hide();
-		refreshForm("editForm")
+		refreshForm("editForm");
+		 $("body").off('click');
+		 initSelectCoupon();
+		 initSelectRule();
 	})
 	
 	//滚动条滚动式，由于用户选择和城市选择控件是绝对定位，需要隐藏
 	$("#editForm").on('scroll',function(){
-		$("#editForm .select2-container-multi").css("display","none");
-		$("#users").css("display","none");
+		//$("#editForm .select2-container-multi").css("display","none");
+		   $(".content ~ .select2-drop").remove();
+ 	       $(".content ~ #select2-drop-mask").remove();
+	       $("#selectuser #s2id_users").remove(); 
 		$("#pubCityaddr .kongjian_list").css("display","none");
 	})
 	
 	//添加城市，添加用户，右上角的删除
 	$(".addcbox").on('click','.ico_x_a', function () {
 		$(this).parent(".added").remove();
-		//refreshForm("editForm");
 	});
 	
 	//点击添加用户
 	$(".adduserbtn").on('click',function(event){
-		//event.stopPropagation();//阻止事件向上冒泡
 		var top = $('.adduserbtn').offset().top;
 		var left = $('.adduserbtn').offset().left;
-		$(".adduserbtn").css("top",top+27+"px");
-		$(".adduserbtn").css("left",left+10+"px");
+		//$(".adduserbtn").css("top",top+27+"px");
+		//$(".adduserbtn").css("left",left+10+"px");
 		$("#users").css("display","block");
 		$("#users").css("position","absolute");
-		$("#users").css("top",top+30+"px !important");
-		$("#users").css("left",top+"px !important");
+		$("#users").css("top",top+25+"px");
+		$("#users").css("left",left-5+"px");
 		if($("#editForm .select2-container-multi").size()==0){
 		    getSelectUsers();
 		}else{
-			$("#editForm .select2-container-multi").css("display","block");
-			$("#users").css("display","block");
+			//$("#editForm #s2id_users").css("display","block");
+			//$("#users").css("display","block");
+			//$("#users").select2('destroy');
+			if($("#selectuser #s2id_users").size()>0){
+				   $(".content ~ .select2-drop").remove();
+		    	   $(".content ~ #select2-drop-mask").remove();
+		  	       $("#selectuser #s2id_users").remove(); 
+			}
+			getSelectUsers();
 		}
 	})
-	
-	/*var flag = true ;	 
-	$("#select2-drop,#s2id_users").on('blur',function(){
-	    if(flag){
-			//$("#select2-drop,#s2id_users").css("display","none");
-			$("#editForm .select2-container-multi").css("display","none");
-			$("#users").css("display","none");
-		}
-		return false;
-    })
-	$("#select2-drop,#s2id_users").on('mouseenter',function(){
-	    flag = false ;
-		//	鼠标移出隐藏
-		return false ;
-	})
-	$("#select2-drop,#s2id_users").on('mouseleave',function(){
-	    if( !flag ){
-			//$("#select2-drop,#s2id_users").css("display","none");
-			$("#editForm .select2-container-multi").css("display","none");
-			$("#users").css("display","none");
-		}
-		return false ;
-	})*/
-	$("#editForm input,#editForm select").on("focus",function(){
-		if($(this).attr("id")!="users"){
-			$("#editForm .select2-container-multi").css("display","none");
-			$("#users").css("display","none");
-		}
-	});
 	
 	//点击添加城市
 	$(".addcitybtn").on('click',function(){
 		var top = $('.addcitybtn').offset().top;
 		var left = $('.addcitybtn').offset().left;
-		$("#kongjian_list").css("position","absolute");
-		$("#kongjian_list").css("top",top+30+"px !important");
-		$("#kongjian_list").css("left",left+"px !important");
 		getSelectCitys(); 
 	})
 	//发放业务改变时，需要重新加载选择城市控件
 	$("#sendservicetype").on('change',function(){
+		$("#pubCityaddr .con").off('click');
 		$("#pubCityaddr .kongjian_list").remove();
 	})
 	
@@ -172,10 +151,10 @@ function getSelectCitys() {
 //点击添加用户后，联想搜索用户
 function getSelectUsers(){
     $("#users").select2({
-    	placeholder : "请输入手机号码",
+    	placeholder : "",
 		minimumInputLength : 1,
 		maximumInputLength : 11,
-		multiple : true, //控制是否多选
+		multiple : false, //控制是否多选
 		closeOnSelect: false,
 		allowClear : true,
 	ajax : {
@@ -193,40 +172,50 @@ function getSelectUsers(){
 		}
 	},
 	formatResult:formatState,
-	formatNoMatches:noResult
-});
-    //下拉框选择后的事件
-    $("#users").on("selected", function (e) {
-    	    e.stopPropagation();
-    	    $("#users").select2("val","");
-	        var uid=e.choice.id;
-	        var phone=e.choice.text;
-	        if(!$("#select2-drop").find("#"+phone).prop("checked")){
-	        var divs = document.getElementById("addcboxId2").childNodes;
-			for(var i=0;i<divs.length;i++){
-				if(divs[i].id == uid){
-					toastr.error("用户已经存在，请重新选择", "提示");
-					return;
-				}
+	formatNoMatches:noResult,
+	formatInputTooShort:noInput,
+}).select2('open');
+    
+    
+    
+    $("#users").on("select2-selected", function (e) {
+    	//e.stopPropagation();
+    	$("#users").select2("val","");
+    	var uid=e.choice.id;
+        var phone=e.choice.text;
+        if(!$(".content ~ #select2-drop").find("#"+phone).prop("checked")){
+        var divs = document.getElementById("addcboxId2").childNodes;
+		for(var i=0;i<divs.length;i++){
+			if(divs[i].id == uid){
+				//toastr.error("用户已经存在，请重新选择", "提示");
+				return;
 			}
-			
-			var cityhtml='<div class="added" id="'+uid+'">'+phone+'<em class="ico_x_a"></em></div>';
-			var tempStr = $("#addcboxId2").text();
-			var bool = tempStr.indexOf(phone);
-			if(bool<1){
-				$("#addcboxId2").append(cityhtml);
-				$("#select2-drop").find("#"+phone).prop("checked",true);
-			}
-	        }
-	    });
+		}
+		
+		var userhtml='<div class="added" id="'+uid+'">'+phone+'<em class="ico_x_a"></em></div>';
+		var tempStr = $("#addcboxId2").text();
+		var bool = tempStr.indexOf(phone);
+		if(bool<1){
+			$("#addcboxId2").append(userhtml);
+			$("#select2-drop").find("#"+phone).prop("checked",true);
+		}
+        }
+    	$(".adduserbtn").trigger('click'); 
+    });
 }
 
 function formatState (state) {
-
+	var $state="";
     if (!state.id) { return state.text; }//未找到结果时直接跳出函数
-    var $state = $(
-            '<span>' + state.text + '<input type="checkbox" style="margin-left:80px;" id="'+state.text+'" value="'+state.id+'"/></span>'
-    );//将API返回的结果转换为模板
+    var divs = document.getElementById("addcboxId2").childNodes;
+	for(var i=0;i<divs.length;i++){
+		if(divs[i].id == state.id){
+		    $state = $('<span style="cursor:not-allowed">' + state.text + '<input type="checkbox" style="margin-left:80px;" checked="checked" id="'+state.text+'" value="'+state.id+'"/></span>'); 
+		}
+	}
+	if($state==""){
+			$state = $('<span>' + state.text + '<input type="checkbox" style="margin-left:80px;" id="'+state.text+'" value="'+state.id+'"/></span>');//将API返回的结果转换为模板
+	}
     return $state;
 }
 
@@ -242,10 +231,17 @@ function noResult(e){
 	}
 }
 
+function noInput(term, minLength){
+	$(".content ~ #select2-drop .select2-input").attr('placeholder','请输入电话号码');
+	return "";
+}
 /**
  * 初始化抵扣券活动名称选择框
  */
 function initSelectCoupon(){
+	 $(".content ~ .select2-drop").remove();
+     $(".content ~ #select2-drop-mask").remove();
+     $("#s2id_queryname").remove(); 
 	$("#queryname").select2({
 		placeholder : "",
 		minimumInputLength : 0,
@@ -266,6 +262,7 @@ function initSelectCoupon(){
 			}
 		}
 	});
+	$(".select2-results").css('height','auto');
 	$(".form .select2-search-choice-close").css("display","block");
 }
 
@@ -273,7 +270,10 @@ function initSelectCoupon(){
  * 初始化发放规则选择框
  */
 function initSelectRule(){
-	$("#querysendruleidref").select2({
+	 $(".content ~ .select2-drop").remove();
+     $(".content ~ #select2-drop-mask").remove();
+     $("#s2id_querysendruleidref").remove(); 
+	 $("#querysendruleidref").select2({
 		placeholder : "",
 		minimumInputLength : 0,
 		multiple : false, //控制是否多选
@@ -293,6 +293,7 @@ function initSelectRule(){
 			}
 		}
 	});
+	$(".select2-results").css('height','auto');
 	$(".form .select2-search-choice-close").css("display","block");
 }
 /**
@@ -469,7 +470,16 @@ function add() {
 	$("#scopeDiv").show();
 	$("#editFormDiv").show();
 	initSelectCouponRules();//显示发放规则下拉框
-	//initDataPicker();       //初始化日期选择空间
+	
+	 $("body").on('click',function(e){ 
+		 if($("#editFormDiv").is(':visible')){
+	       if(e.target!=null && e.target.className!="adduserbtn"){
+	    	   $("#s2id_users").remove(); 
+	    	   $(".content ~ .select2-drop").remove();
+	    	   $(".content ~ #select2-drop-mask").remove();
+	       }
+		 }   
+	}); 
 }
 
 /**
@@ -563,11 +573,12 @@ function handleData(data){
 	})
 	//处理用户，拼接用户账户
 	$("#userDiv .added").each(function(j){
-		var uid=$(this).text();
+		var uid=$(this).attr("id");
+		var phone=$(this).text();
 		if(j==0)
-			users=uid;
+			users=uid+","+phone;
 		else
-		    users=users+","+uid;
+		    users=users+";"+uid+","+phone;
 	})
 	//处理有效期,若有效期选择为发放日至N天内
 	if(data.outimetype=='1'){
@@ -612,8 +623,9 @@ function refreshForm(formId) {
 	$("#sendlowmoney,#sendhighmoney,#fixedstarttime,#fixedendtime").attr("disabled","disabled");
 	$(".addcbox").empty();    //清空选择的城市、用户
 	$("#userDiv").hide();       //隐藏添加用户
-	$("#editForm .select2-container").css("display","none");//将添加用户select2控件恢复原状
-	$("#users").css("display","none");
+	 $(".content ~ .select2-drop").remove();
+	 $(".content ~ #select2-drop-mask").remove();
+     $("#selectuser #s2id_users").remove(); //将添加用户select2控件恢复原状
 	//$("#users").removeAttr("class");
 	// 清除表单校验
 	$("#editForm label[class='error']").remove();
@@ -916,6 +928,9 @@ function save() {
 function canel() {
 	$("#editFormDiv").hide();
 	refreshForm("editForm");
+	$("body").off('click');
+	initSelectCoupon();
+	initSelectRule();
 }
 
 /**
@@ -949,7 +964,7 @@ function checkInputs(){
 		}*/
 		//检测随机派发金额
 		if($("input[name='sendmoneytype']:checked").val()=='2'){
-			if($("#sendlowmoney").val()>=$("#sendhighmoney").val()){
+			if(parseInt($("#sendlowmoney").val())>=parseInt($("#sendhighmoney").val())){
 				toastr.error("随机派发金额参数错误，随机上限须大于下限", "提示");
 				return false;
 			}

@@ -38,7 +38,7 @@ function initGrid() {
 	        {mDataProp: "orderno", sTitle: "订单号", sClass: "center", sortable: true, 
 	        	"mRender": function (data, type, full) {
 	        		var htmlArr = [];
-	                htmlArr.push("<a href=\"" + $("#baseUrl").val() + "OrderManage/NetAboutCarOrderDetailIndex?orderno=");
+	                htmlArr.push("<a class='orderhref' href=\"" + $("#baseUrl").val() + "OrderManage/NetAboutCarOrderDetailIndex?orderno=");
 	                htmlArr.push(full.orderno);
 	                htmlArr.push("\">");
 	                htmlArr.push(full.orderno);
@@ -168,7 +168,7 @@ function initGrid() {
                 	return showToolTips(onaddress, 12, undefined, offaddress);
                 }
 	        },
-	        {mDataProp: "cancelparty", sTitle: "取消方", sClass: "center", sortable: true, 
+	       /* {mDataProp: "cancelparty", sTitle: "取消方", sClass: "center", sortable: true, 
 	        	"mRender": function (data, type, full) {
 	        		switch(full.cancelparty) {
 	               	case "1": return "客服"; break;
@@ -177,7 +177,7 @@ function initGrid() {
 	               	default: return "/";
 	               }
 	        	}
-	        },
+	        },*/
 	        {mDataProp: "tradeno", sTitle: "交易流水号", sClass: "center", sortable: true, 
 	        	"mRender": function (data, type, full) {
 	        		if (full.orderstatus == '7' && full.paymentstatus == '1') {
@@ -190,8 +190,8 @@ function initGrid() {
 	        			return "/";
 	        		}
 	        	}
-	        },
-            {mDataProp: "shortname", sTitle: "服务车企", sClass: "center", sortable: true}
+	        }/*,
+            {mDataProp: "shortname", sTitle: "服务车企", sClass: "center", sortable: true}*/
         ]
     };
     

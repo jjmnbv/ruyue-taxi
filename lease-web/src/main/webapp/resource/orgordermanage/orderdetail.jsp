@@ -356,23 +356,64 @@
 		</div>
 
         <div class="pop_box" id="costDetailDiv" style="display: none;">
-            <div class="tip_box_b" style="width: 500px;">
+            <div class="tip_box_e">
                 <h3>订单金额明细</h3>
                 <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
-                <div class="w400" style="width: 371px;">
+                <div class="e_con">
                     <form id="costDetailForm" method="get">
-                        <span id="sfjeDetailTitle">实付金额</span>：<span id="sfjeDetail"></span><br>
-                        <span id="xcfyDetailTitle">行程费用</span>：<span id="xcfyDetail"></span><br>
-                        起步价：<span id="qbjDetail"></span><br>
-                        时长费(<span id="scDetail"></span>)：<span id="scfDetail"></span><br>
-                        里程费(<span id="lcDetail"></span>)：<span id="lcfDetail"></span><br>
-                        券已抵扣：<span id="qydkDetail"></span><br>
-                        计费规则<br>
-                        起步价：<span id="qbjRule"></span><br>
-                        里程费：<span id="lcfRule"></span><br>
-                        时间补贴：<span id="sjbtRule"></span><br>
-                        夜间费：<br>
-                        <span id="yjsdRule"></span><span id="yjfRule"></span>
+                        <div class="e_red">
+                            <span id="sfjeDetailTitle">实付金额</span><span id="sfjeDetail"></span>
+                        </div>
+                        <div class="e_title">
+                            <span id="xcfyDetailTitle">行程费用</span>
+                            <div class="fr" id="xcfyDetail"></div>
+                        </div>
+                        <div class="e_child">
+                            <em>起步价</em>
+                            <div class="fr" id="qbjDetail"></div>
+                        </div>
+                        <div class="e_child">
+                            <em>时长费(<span id="scDetail"></span>)</em>
+                            <div class="fr" id="scfDetail"></div>
+                        </div>
+                        <div class="e_child">
+                            <em>里程费(<span id="lcDetail"></span>)</em>
+                            <div class="fr" id="lcfDetail"></div>
+                        </div>
+                        <div class="e_title">
+                            券已抵扣
+                            <div class="fr" id="qydkDetail"></div>
+                        </div>
+
+                        <div class="e_title e_margin">
+                            计费规则
+                            <div class="fr"></div>
+                        </div>
+                        <div class="e_box">
+                            <div class="e_child">
+                                <em>起步价</em>
+                                <div class="fr" id="qbjRule"></div>
+                            </div>
+                            <div class="e_child">
+                                <em>里程费</em>
+                                <div class="fr" id="lcfRule"></div>
+                            </div>
+                            <div class="e_child">
+                                <em>时间补贴</em>
+                                <div class="fr" id="sjbtRule"></div>
+                            </div>
+                            <div class="e_child">
+                                <em>夜间费</em>
+                                <div class="e_child_child">
+                                    <em id="yjsdRule"></em>
+                                    <div class="fr" id="yjfRule"></div>
+                                </div>
+                            </div>
+                            <div class="e_child" id="yrfRuleDiv">
+                                <em>预约费</em>
+                                <div class="fr" id="yrfRule"></div>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>

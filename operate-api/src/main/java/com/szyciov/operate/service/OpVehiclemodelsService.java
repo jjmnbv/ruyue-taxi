@@ -9,8 +9,10 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
+import com.szyciov.dto.pubVehicleModelsRef.UpdateVehicleModelsRefByVehclineDto;
 import com.szyciov.op.entity.OpVehclineModelsRef;
 import com.szyciov.op.entity.OpVehiclemodels;
 import com.szyciov.op.entity.OpVehiclemodelsVehicleRef;
@@ -20,13 +22,14 @@ import com.szyciov.operate.dao.OpVehiclemodelsDao;
 import com.szyciov.param.QueryParam;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.PageBean;
+import com.szyciov.util.TemplateHelper;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service("OpVehiclemodelsService")
 public class OpVehiclemodelsService {
-	
+	private TemplateHelper templateHelper = new TemplateHelper();
 	private OpVehiclemodelsDao dao;
 	@Resource(name = "OpVehiclemodelsDao")
 	public void setDao(OpVehiclemodelsDao dao) {
@@ -216,10 +219,11 @@ public class OpVehiclemodelsService {
 			String operid = (String)params.get("updater");
 			String modelid = (String) params.get("id");
 			List<String> oldvehclinesid = dao.getVehclinesIdByModelId(modelid);
+			String leaseCompanyId = (String) params.get("leaseCompanyId");
 			List<String> newvehclinesid = (List<String>) ((Map)params.get("jsonData")).get("vechileId");
 			if(oldvehclinesid==null||oldvehclinesid.size()<=0){
 				//之前没有车系
-				changeVehclines(modelid,newvehclinesid,operid);
+				changeVehclines(modelid,newvehclinesid,operid,leaseCompanyId);
 			}else{
 				//之前有车系,需要判断是否有绑定司机的车系被取消了
 				List<String> tempvehclinesid = new ArrayList<String>(); 
@@ -232,11 +236,11 @@ public class OpVehiclemodelsService {
 				}
 				if(tempvehclinesid.size()<=0){
 					//之前的没有取消
-					changeVehclines(modelid,newvehclinesid,operid);
+					changeVehclines(modelid,newvehclinesid,operid,leaseCompanyId);
 				}else{
 					List<PubVehcline> bindvehclines = dao.getBindVehclines(tempvehclinesid);
 					if(bindvehclines==null||bindvehclines.size()<=0){
-						changeVehclines(modelid,newvehclinesid,operid);
+						changeVehclines(modelid,newvehclinesid,operid,leaseCompanyId);
 					}else{
 						ret.put("ResultSign", "Error");
 						StringBuffer message = new StringBuffer("【");
@@ -265,9 +269,11 @@ public class OpVehiclemodelsService {
 	 * @param newvehclinesid
 	 * @param operuserid
 	 */
-	public void changeVehclines(String modelid,List<String> newvehclinesid,String operuserid){
+	public void changeVehclines(String modelid,List<String> newvehclinesid,String operuserid,String leaseCompanyId){
 		deleteLeVehclineModelsRef(modelid);
+		UpdateVehicleModelsRefByVehclineDto uvmrbvd = new UpdateVehicleModelsRefByVehclineDto();
 		if(newvehclinesid!=null&&newvehclinesid.size()>0){
+			List<String> vehclineId = new ArrayList<String>();
 			for(int i=0;i<newvehclinesid.size();i++){
 				OpVehclineModelsRef opVehclineModelsRef = new OpVehclineModelsRef();
 				opVehclineModelsRef.setId(GUIDGenerator.newGUID());
@@ -276,7 +282,18 @@ public class OpVehiclemodelsService {
 				opVehclineModelsRef.setCreater(operuserid);
 				opVehclineModelsRef.setUpdater(operuserid);
 				dao.createLeVehclineModelsRef(opVehclineModelsRef);
+				vehclineId.add(newvehclinesid.get(i));
 			}
+			int platform = 0;
+			String vehiclemodels = modelid;
+			String updater = operuserid;
+			uvmrbvd.setLeaseCompanyId(leaseCompanyId);
+			uvmrbvd.setPlatform(platform);
+			uvmrbvd.setUpdater(updater);
+			uvmrbvd.setVehclineId(vehclineId);
+			uvmrbvd.setVehiclemodels(vehiclemodels);
+			templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehcline", HttpMethod.POST, null, uvmrbvd,
+					JSONObject.class);
 		}
 	}
 	

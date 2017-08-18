@@ -7,6 +7,7 @@
         select
         t1.id,
         le.name leasecompanyText,
+        le.shortname leasecompanyshorttext,
         coono,
         cootype,
         ifnull((select count(1) from pub_cooresource t2 where t1.id=t2.coooperateid and t2.status=1), 0) openresource,
@@ -40,7 +41,7 @@
         <if test='null != applicationtimeEnd and "" != applicationtimeEnd'>
             and t1.applicationtime &#60; #{applicationtimeEnd}
         </if>
-        order by applicationtime desc
+        order by t1.applicationtime desc
     </select>
     <select id="queryLeasecompany" parameterType="com.szyciov.lease.param.pubCoooperatePartner.QueryPubCoooperatePartnerLeaseCompanyParam" resultType="com.szyciov.entity.Select2Entity">
         select distinct
@@ -100,4 +101,16 @@
         ( #{id}, #{userId}, #{type},#{content}, #{newsState}, #{createTime},#{updateTime}, #{status} )
 
     </insert>
+
+    <delete id="deleteLeaseOrganRef" parameterType="java.lang.String">
+        DELETE p FROM pub_lease_organ_relation p,pub_coooperate c
+        WHERE p.companyid=c.companyid and p.leasecompanyid=c.leasecompanyid
+        and c.Id=#{coooId}
+
+    </delete>
+    <delete id="deleteVehicleModelRef" parameterType="java.lang.String">
+        DELETE p FROM pub_vehicle_models_ref p,pub_coooperate c
+            WHERE p.companyid=c.companyid and p.leasecompanyid=c.leasecompanyid
+            and c.Id=#{coooId} and p.associationtype != 1
+    </delete>
 </mapper>

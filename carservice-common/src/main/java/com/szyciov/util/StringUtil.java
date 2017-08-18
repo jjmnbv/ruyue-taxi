@@ -556,6 +556,7 @@ public class StringUtil {
 	 *	<p>①实际里程指乘客上车地到下车地实际行驶的距离；
 	 *	<p>②夜间征收时段，按【订单开始时间计收】，也即 订单开始时间 在夜间征收时段内，则收取夜间费；
 	 *	<p>③费用预估时，夜间费不计入行程费用的预估。
+	 *	<p>④溢价金额直接计算后返回,优惠券金额由页面自行计算,下单时保存的是优惠券使用前的金额
 	 *	@param oc               计费副本
 	 *	@param startTime   订单开始时间(没有传null或空)
 	 *	@param estimated  是否预估(true-预估 false-非预估)
@@ -602,6 +603,7 @@ public class StringUtil {
 			oc.setTimecost(StringUtil.formatNum(oc.getTimecost(), 1));
 			oc.setCost(StringUtil.formatNum(oc.getCost(), 1));
 		}
+		oc.setCost(StringUtil.formatNum(oc.getCost() * oc.getPremiumrate(), 1));   //计算溢价倍率
 		return oc;
 	}
 
@@ -664,7 +666,12 @@ public class StringUtil {
 	 * @return
 	 */
 	public static String parseBeanToJSON(Object obj){
-		if(obj == null) return null;
+		if(obj == null) {
+            return null;
+        }
+        if(obj instanceof String) {
+            return obj.toString();
+        }
 		return JSONObject.fromObject(obj).toString();
 	}
 	
@@ -698,11 +705,6 @@ public class StringUtil {
 	}
 	
 	public static void main(String[] args) throws ParseException {
-		String startTime = "22:00";
-		String endTime = "05:50";
-		Date usetime = parseDate("2017-05-22 05:50:17", TIME_WITH_MINUTE);
-		String content = "开始时间@isNight夜间服务时段";
-		System.out.println(usetime);
-		System.out.println(content.replace("@isNight", isTimeInBound(startTime, endTime, usetime) ? "在" : "不在"));
-	}
+        System.out.println(parseBeanToJSON("123456"));
+    }
 }

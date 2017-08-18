@@ -1,17 +1,12 @@
 package com.szyciov.lease.dao;
 
-import com.szyciov.entity.PubCooagreement;
-import com.szyciov.entity.PubCoooperate;
-import com.szyciov.entity.PubCooresource;
-import com.szyciov.entity.Select2Entity;
+import com.szyciov.entity.*;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.mapper.PubCoooperateUnionMapper;
 import com.szyciov.lease.param.pubCoooperateUnion.*;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryApplyResourceVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryCooagreementViewVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryPubCoooperateVo;
-import com.szyciov.lease.vo.pubCoooperateUnion.QueryResourceVo;
+import com.szyciov.lease.vo.pubCoooperateUnion.*;
 import com.szyciov.op.entity.OpPlatformInfo;
+import com.szyciov.param.Select2Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -31,8 +26,13 @@ public class PubCoooperateUnionDao {
         return list;
     }
 
-    public List<Select2Entity> queryLeasecompany(String companyid) {
-        List list = this.pubCoooperateUnionMapper.queryLeasecompany(companyid);
+    public List<Select2Entity> queryCoonoSelect2(Select2Param param) {
+        List list = this.pubCoooperateUnionMapper.queryCoonoSelect2(param);
+        return list;
+    }
+
+    public List<Select2Entity> queryLeasecompany(Select2Param param) {
+        List list = this.pubCoooperateUnionMapper.queryLeasecompany(param);
         return list;
     }
 
@@ -121,5 +121,14 @@ public class PubCoooperateUnionDao {
 
     public void insertPubCoooperateSelective(PubCoooperate pubCoooperate) {
         this.pubCoooperateUnionMapper.insertPubCoooperateSelective(pubCoooperate);
+    }
+
+    public void insertOpUserNews(OpUsernews news) {
+        this.pubCoooperateUnionMapper.insertOpUserNews(news);
+    }
+
+    public List<QueryApplayCooCompanyAdminVo> queryApplayCooCompanyAdmin(String company) {
+        List<QueryApplayCooCompanyAdminVo> list = this.pubCoooperateUnionMapper.queryApplayCooCompanyAdmin(company);
+        return list;
     }
 }

@@ -241,6 +241,16 @@ public class OrderInfoDetail extends OrderInfo {
 	private Integer ordersortcolumn;
 	
 	/**
+	 * 费用类型(1-行程服务,2-取消处罚)
+	 */
+	private Integer expensetype;
+	
+	/**
+	 * 打表来接里程(仅出租车有此值)
+	 */
+	private Integer meterrange;
+	
+	/**
 	 * 获取起步价
 	 * @return
 	 */
@@ -1052,5 +1062,37 @@ public class OrderInfoDetail extends OrderInfo {
 
 	public void setOrdersortcolumn(Integer ordersortcolumn) {
 		this.ordersortcolumn = ordersortcolumn;
+	}
+
+	/**  
+	 * 获取费用类型(1-行程服务2-取消处罚)  
+	 * @return expensetype 费用类型(1-行程服务2-取消处罚)  
+	 */
+	public Integer getExpensetype() {
+		return expensetype;
+	}
+	
+	/**  
+	 * 设置费用类型(1-行程服务2-取消处罚)  
+	 * @param expensetype 费用类型(1-行程服务2-取消处罚)  
+	 */
+	public void setExpensetype(Integer expensetype) {
+		this.expensetype = expensetype;
+	}
+
+	/**  
+	 * 获取打表来接里程(仅出租车有此值)  
+	 * @return meterrange 打表来接里程(仅出租车有此值)  
+	 */
+	public Integer getMeterrange() {
+		return meterrange;
+	}
+	
+	/**  
+	 * 设置打表来接里程(仅出租车有此值)  
+	 * @param meterrange 打表来接里程(仅出租车有此值)  
+	 */
+	public void setMeterrange(Integer meterrange) {
+		this.meterrange = meterrange;
 	}
 }

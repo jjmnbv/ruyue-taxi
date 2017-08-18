@@ -24,10 +24,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.szyciov.entity.City;
 import com.szyciov.entity.Excel;
+import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.entity.OrgOrgan;
 import com.szyciov.lease.entity.PubCityAddr;
+import com.szyciov.lease.entity.PubLeaseOrganRelation;
 import com.szyciov.lease.entity.User;
 import com.szyciov.lease.param.OrgOrganQueryParam;
+import com.szyciov.op.param.PubCoooperateQueryParam;
 import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.Constants;
@@ -53,6 +56,9 @@ public class OrgOrganController extends BaseController {
 	public ModelAndView getPubVehicleIndex(HttpServletRequest request) {
 		ModelAndView mav = new ModelAndView();  
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		List<PubLeaseOrganRelation> list = templateHelper.dealRequestWithToken("/OrgOrgan/GetIndexList/{id}", HttpMethod.GET, userToken, null,
+					List.class,this.getLoginLeUser(request).getLeasescompanyid());
+		mav.addObject("list",list);
         mav.setViewName("resource/orgOrgan/index");  
         return mav; 
 	}
@@ -100,9 +106,9 @@ public class OrgOrganController extends BaseController {
 	public ModelAndView addIndex(HttpServletRequest request) {
 		ModelAndView mav = new ModelAndView();
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		String companyId = this.getLoginLeUser(request).getLeasescompanyid();
 		if(request.getParameter("id")!=null){
 			OrgOrgan o = new OrgOrgan();
-			String companyId = this.getLoginLeUser(request).getLeasescompanyid();
 			o.setId((String)request.getParameter("id"));
 			o.setCompanyId(companyId);
 			OrgOrgan orgOrgan = templateHelper.dealRequestWithToken("/OrgOrgan/GetByOrgOrganId", HttpMethod.POST, userToken, o,
@@ -111,10 +117,10 @@ public class OrgOrganController extends BaseController {
 		}
 		List<City> pubCityaddr = templateHelper.dealRequestWithToken("/PubVehicle/GetPubCityaddr", HttpMethod.GET,
 				userToken, null, List.class);
-//		List<Dictionary> billType = templateHelper.dealRequestWithToken("/Dictionary/GetDictionaryByType?type=结算方式", HttpMethod.GET,
-//				userToken, null, List.class,"结算方式");
+		LeLeasescompany leLeasescompany = templateHelper.dealRequestWithToken("/LeLeasescompany/GetLeLeasescompanyById/{id}", HttpMethod.GET, userToken,
+				null,LeLeasescompany.class,companyId);
 		mav.addObject("pubCityaddr", pubCityaddr);
-//		mav.addObject("billType", billType);
+		mav.addObject("leLeasescompany", leLeasescompany);
         mav.setViewName("resource/orgOrgan/editOrgOrgan");  
         return mav; 
 	}
@@ -234,6 +240,7 @@ public class OrgOrganController extends BaseController {
 		List<Object> colData6 = new ArrayList<Object>();
 		List<Object> colData7 = new ArrayList<Object>();
 		List<Object> colData8 = new ArrayList<Object>();
+		List<Object> colData9 = new ArrayList<Object>();
 		String leasesCompanyId = this.getLoginLeUser(request).getLeasescompanyid();
 		String queryShortName = request.getParameter("queryShortName");
 		String queryCity = request.getParameter("queryCity");
@@ -286,6 +293,11 @@ public class OrgOrganController extends BaseController {
 			}else{
 				colData8.add("");
 			}
+			if(orgOrgan.get(i).get("forTheCarBodyId") != null){
+				colData9.add(orgOrgan.get(i).get("forTheCarBodyId"));
+			}else{
+				colData9.add("");
+			}
 		}
 		Excel excel = new Excel();
 		// excel文件
@@ -300,6 +312,7 @@ public class OrgOrganController extends BaseController {
 		colName.add("联系人");
 		colName.add("联系方式");
 		colName.add("信用额度");
+		colName.add("供车主体");
 		excel.setColName(colName);
 		colData.put("机构全称", colData1);
 		colData.put("机构简称", colData2);
@@ -309,6 +322,7 @@ public class OrgOrganController extends BaseController {
 		colData.put("联系方式", colData6);
 		colData.put("联系人", colData7);
 		colData.put("信用额度", colData8);
+		colData.put("供车主体", colData9);
 		excel.setColData(colData);
 		
 		ExcelExport ee = new ExcelExport(request,response,excel);
@@ -470,5 +484,38 @@ public class OrgOrganController extends BaseController {
 		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
 		return templateHelper.dealRequestWithToken("/OrgOrgan/CheckOrgOrganAccout", HttpMethod.POST, userToken, o,
 				int.class);
+	}
+	
+	@RequestMapping("/OrgOrgan/GetPubCoooperateByQuery")
+    @ResponseBody
+    public PageBean getPubCoooperateByQuery(@RequestBody PubCoooperateQueryParam queryParam, HttpServletRequest request,
+                                            HttpServletResponse response) throws IOException {
+        response.setContentType("text/html;charset=utf-8");
+        String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+        queryParam.setLeasescompanyid(this.getLoginLeUser(request).getLeasescompanyid());
+        queryParam.setKey(request.getParameter("id"));
+        return templateHelper.dealRequestWithToken("/OrgOrgan/GetPubCoooperateByQuery", HttpMethod.POST, userToken,
+                queryParam,PageBean.class);
+    }
+	
+	@RequestMapping(value = "/OrgOrgan/GetPubLeaseOrganRelationById")
+	@ResponseBody
+	public List<PubLeaseOrganRelation> getPubLeaseOrganRelationById(@RequestParam String id,HttpServletRequest request) {
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		return templateHelper.dealRequestWithToken("/OrgOrgan/GetPubLeaseOrganRelationById/{id}", HttpMethod.GET, userToken, null,
+				List.class,id);
+	}
+	
+	@RequestMapping(value = "/OrgOrgan/GetPubCoooperateSelect")
+	@ResponseBody
+	public List<Map<String, Object>> getPubCoooperateSelect(@RequestParam String queryForTheCarBody,HttpServletRequest request, HttpServletResponse response) {
+		response.setContentType("application/json; charset=utf-8");
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		PubCoooperateQueryParam queryParam = new PubCoooperateQueryParam();
+        queryParam.setLeasescompanyid(this.getLoginLeUser(request).getLeasescompanyid());
+        queryParam.setKey(request.getParameter("id"));
+        queryParam.setQueryForTheCarBody(queryForTheCarBody);
+		return templateHelper.dealRequestWithToken("/OrgOrgan/GetPubCoooperateSelect", HttpMethod.POST, userToken, queryParam,
+				List.class);
 	}
 }

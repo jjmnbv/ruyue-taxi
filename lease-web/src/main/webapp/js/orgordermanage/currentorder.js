@@ -6,7 +6,32 @@ var dataGrid;
 $(function () {
 	manualOrderdataGrid();
 	initForm();
+    validateForm();
 });
+
+/**
+ * 表单校验
+ */
+function validateForm() {
+    $("#cancelpartyForm").validate({
+        rules : {
+            dutyparty : {
+                required : true
+            },
+            cancelreason : {
+                required : true
+            }
+        },
+        messages : {
+            dutyparty : {
+                required : "请选择责任方"
+            },
+            cancelreason : {
+                required : "请选择取消原因"
+            }
+        }
+    })
+}
 
 function initForm() {
 	$("#organName").select2({
@@ -250,8 +275,8 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "上下车地址",
                 "mRender": function (data, type, full) {
-                    var onaddress = "(" + full.oncity + ")" + full.onaddress;
-                    var offaddress = "(" + full.offcity + ")" + full.offaddress;
+                    var onaddress = "(" + full.oncityname + ")" + full.onaddress;
+                    var offaddress = "(" + full.offcityname + ")" + full.offaddress;
                     return showToolTips(onaddress, 12, undefined, offaddress);
                 }
             },
@@ -308,18 +333,6 @@ function search() {
 }
 
 /**
- * 更换司机
- * @param {} id
- */
-function manualSendOrder(orderno) {
-	window.location.href = $("#baseUrl").val() + "Order/ManualSendOrderIndex?orderno=" + orderno;
-}
-
-/**
- * 取消订单
- * @param {} orderno
- */
-/**
  * 取消订单
  */
 function cancelOrder(orderno, ordertype, usetype) {
@@ -328,6 +341,10 @@ function cancelOrder(orderno, ordertype, usetype) {
     $("#usetypeHide").val(usetype);
 
     showObjectOnForm("cancelpartyForm", null);
+    showCancelreason();
+    var editForm = $("#cancelpartyForm").validate();
+    editForm.resetForm();
+    editForm.reset();
 
     //查询取消费用
     var data = {
@@ -346,15 +363,60 @@ function cancelOrder(orderno, ordertype, usetype) {
             if (result.status == 0) {
                 $("#identifyingHide").val(result.identifying);
                 var pricereason = result.pricereason;
-                if(pricereason == 5 || pricereason == 6 || pricereason == 7) {
+                if(pricereason == 2) { //orderstatusHide的值为1表示没有司机接单，值为2表示司机已接单
+                    $("#orderstatusHide").val(1);
+                } else {
+                    $("#orderstatusHide").val(2);
+                }
+                initCancelWindow();
+                if(pricereason == 2 || pricereason == 3) {
+                    $("#cancelDetail").html("");
+                } else {
                     $("#cancelDetail").html(getCancelShowTable(result));
                 }
                 $("#cancelpartyFormDiv").show();
             } else {
                 toastr.error(result.message, "提示");
+                dataGrid._fnReDraw();
             }
         }
     });
+}
+
+/**
+ * 责任方和取消原因显示
+ */
+function initCancelWindow() {
+    var orderstatus = $("#orderstatusHide").val();
+    //责任方下拉框显示
+    var dutypartyHtml = '<option value="">请选择</option>';
+    if(orderstatus == 1) { //没有司机接单
+        dutypartyHtml += '<option value="1">乘客</option>';
+        dutypartyHtml += '<option value="3">客服</option>';
+        dutypartyHtml += '<option value="4">平台</option>';
+    } else {
+        dutypartyHtml += '<option value="1">乘客</option>';
+        dutypartyHtml += '<option value="2">司机</option>';
+        dutypartyHtml += '<option value="3">客服</option>';
+        dutypartyHtml += '<option value="4">平台</option>';
+    }
+    $("#dutyparty").html(dutypartyHtml);
+
+    //取消原因显示
+    var cancelreasonHtml = '<option value="">请选择</option>';
+    if(orderstatus == 1) { //没有司机接单
+        cancelreasonHtml += '<option value="1">不再需要用车</option>';
+        cancelreasonHtml += '<option value="5">业务操作错误</option>';
+        cancelreasonHtml += '<option value="6">暂停供车服务</option>';
+    } else {
+        cancelreasonHtml += '<option value="1">不再需要用车</option>';
+        cancelreasonHtml += '<option value="2">乘客迟到违约</option>';
+        cancelreasonHtml += '<option value="3">司机迟到违约</option>';
+        cancelreasonHtml += '<option value="4">司机不愿接乘客</option>';
+        cancelreasonHtml += '<option value="5">业务操作错误</option>';
+        cancelreasonHtml += '<option value="6">暂停供车服务</option>';
+    }
+    $("#cancelreason").html(cancelreasonHtml);
 }
 
 /**
@@ -365,14 +427,15 @@ function cancelOrder(orderno, ordertype, usetype) {
 function getCancelShowTable(result) {
     var ordercancelrule = result.ordercancelrule;
     var html = '<table>';
-    if(result.pricereason == 5) {
+    if(result.pricereason == 4) { //司机迟到
         html += '<tr><td colspan="4" style="text-align: left;">说明</td></tr>';
-        html += '<tr><td colspan="4" style="text-align: left;">乘客需支付取消费用<span class="font_red">' + result.price + '元</span></td></tr>';
         html += '<tr><td>取消时差(分钟)</td><td>免责取消时限(分钟)</td><td>司机迟到时长(分钟)</td><td>迟到免责时限(分钟)</td></tr>';
         html += '<tr><td>' + result.canceltimelag + '</td><td>' + ordercancelrule.cancelcount + '</td><td>' + result.driverlate + '</td><td>' + ordercancelrule.latecount + '</td></tr>';
-    } else if(result.pricereason == 6 || result.pricereason == 7) {
+    } else {
         html += '<tr><td colspan="3" style="text-align: left;">说明</td></tr>';
-        html += '<tr><td colspan="3" style="text-align: left;">乘客需支付取消费用<span class="font_red">' + result.price + '</span></td></tr>';
+        if(result.pricereason != 1) {
+            html += '<tr><td colspan="3" style="text-align: left;">乘客需支付取消费用<span class="font_red">' + result.price + '</span></td></tr>';
+        }
         html += '<tr><td>取消时差(分钟)</td><td>免责取消时限(分钟)</td><td>司机是否抵达</td></tr>';
         html += '<tr><td>' + result.canceltimelag + '</td><td>' + ordercancelrule.cancelcount + '</td>';
         if(result.driverarraival == true) {
@@ -414,11 +477,12 @@ function save(){
         async: false,
         success: function (result) {
             if (result.status == "success") {
-                toastr.success(message, "提示");
-                dataGrid._fnReDraw();
+                toastr.success(result.message, "提示");
             } else {
-                toastr.error(message, "提示");
+                toastr.error(result.message, "提示");
             }
+            $("#cancelpartyFormDiv").hide();
+            dataGrid._fnReDraw();
         }
     });
 }
@@ -453,7 +517,7 @@ function endOrder(orderno) {
                 toastr.success("操作成功", "提示");
                 dataGrid._fnReDraw();
             } else {
-                toastr.error(message, "提示");
+                toastr.error(result.message, "提示");
             }
         }
     });
@@ -482,25 +546,44 @@ function initSearch() {
  */
 function showCancelreason() {
     var dutyparty = $("#dutyparty").val();
-
     var html = '';
-    if(dutyparty == 1) {
-        html += '<option value="">请选择</option>';
-        html += '<option value="1">不再需要用车</option>';
-        html += '<option value="2">乘客迟到违约</option>';
-    } else if(dutyparty == 2) {
-        html += '<option value="">请选择</option>';
-        html += '<option value="3">司机迟到违约</option>';
-        html += '<option value="4">司机不愿接乘客</option>';
-    } else if(dutyparty == 3) {
-        html += '<option value="5">业务操作错误</option>';
-    } else if(dutyparty == 4) {
-        html += '<option value="6">暂停供车服务</option>';
+
+    var orderstatus = $("#orderstatusHide").val();
+    if(orderstatus == 1) { //没有司机接单
+        if(dutyparty == 1) {
+            html += '<option value="1">不再需要用车</option>';
+        } else if(dutyparty == 3) {
+            html += '<option value="5">业务操作错误</option>';
+        } else if(dutyparty == 4) {
+            html += '<option value="6">暂停供车服务</option>';
+        } else {
+            html += '<option value="">请选择</option>';
+            html += '<option value="1">不再需要用车</option>';
+            html += '<option value="5">业务操作错误</option>';
+            html += '<option value="6">暂停供车服务</option>';
+        }
     } else {
-        html += '<option value="">请选择</option>';
-        html += '<option value="1">不再需要用车</option>';
-        html += '<option value="5">业务操作错误</option>';
-        html += '<option value="6">暂停供车服务</option>';
+        if(dutyparty == 1) {
+            html += '<option value="">请选择</option>';
+            html += '<option value="1">不再需要用车</option>';
+            html += '<option value="2">乘客迟到违约</option>';
+        } else if(dutyparty == 2) {
+            html += '<option value="">请选择</option>';
+            html += '<option value="3">司机迟到违约</option>';
+            html += '<option value="4">司机不愿接乘客</option>';
+        } else if(dutyparty == 3) {
+            html += '<option value="5">业务操作错误</option>';
+        } else if(dutyparty == 4) {
+            html += '<option value="6">暂停供车服务</option>';
+        } else {
+            html += '<option value="">请选择</option>';
+            html += '<option value="1">不再需要用车</option>';
+            html += '<option value="2">乘客迟到违约</option>';
+            html += '<option value="3">司机迟到违约</option>';
+            html += '<option value="4">司机不愿接乘客</option>';
+            html += '<option value="5">业务操作错误</option>';
+            html += '<option value="6">暂停供车服务</option>';
+        }
     }
     $("#cancelreason").html(html);
 }

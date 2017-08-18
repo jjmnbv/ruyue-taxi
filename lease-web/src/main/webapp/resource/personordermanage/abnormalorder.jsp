@@ -55,7 +55,6 @@
             .ordermanage_css_body #s2id_orderperson {
                 float: none;
             }
-			.col-3{width: 23%;}
 		</style>
 	</head>
 	<body class="ordermanage_css_body">

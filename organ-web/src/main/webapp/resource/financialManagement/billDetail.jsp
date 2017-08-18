@@ -41,6 +41,7 @@
         <input id="money" name="money" value="${orgOrganBill.money}" type="hidden">
         <input id="leasesCompanyId" name="leasesCompanyId" value="${orgOrganBill.leasesCompanyId}" type="hidden">
         <input id="organId" name="organId" value="${orgOrganBill.organId}" type="hidden">
+        <input id="name" name="name" value="${orgOrganBill.name}" type="hidden">
         <table>
             <tr>
                 <td class="t">账单名称</td>

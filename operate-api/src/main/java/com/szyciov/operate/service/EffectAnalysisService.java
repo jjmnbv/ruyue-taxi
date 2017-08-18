@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import com.szyciov.dto.coupon.CouponUsageDto;
@@ -18,6 +19,7 @@ import com.szyciov.param.CouponUsageQueryParam;
 import com.szyciov.param.UserRechargeQueryParam;
 import com.szyciov.util.DateUtil;
 import com.szyciov.util.PageBean;
+import com.szyciov.util.StringUtil;
 
 @Service("effectAnalysisService")
 public class EffectAnalysisService {
@@ -46,16 +48,21 @@ public class EffectAnalysisService {
 	}
 
 	private int queryCouponUsageListCount(CouponUsageQueryParam queryParam) {
-		if((queryParam.getUsedstarttime()==null || queryParam.getUsedstarttime()=="") && (queryParam.getUsedendtime()==null || queryParam.getUsedendtime()=="")){
-			if("0".equals(queryParam.getCdatetype())){
+		if(!StringUtils.isBlank(queryParam.getCdatetype()) && !StringUtils.isBlank(queryParam.getUsedstarttime()) && !StringUtils.isBlank(queryParam.getUsedendtime())){
+			/*if("0".equals(queryParam.getCdatetype())){//按日
 				String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
 				queryParam.setUsedstarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
 				 queryParam.setUsedendtime(endtime);
-			}else if("1".equals(queryParam.getCdatetype())){
-				String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
-				 queryParam.setUsedstarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
-				 queryParam.setUsedendtime(endtime.substring(0, endtime.length()-2)+"31");   //本月最后一天
+			}else */
+			if("1".equals(queryParam.getCdatetype())){
+				//String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
+				 queryParam.setUsedstarttime(queryParam.getUsedstarttime()+"-01");// 
+				 queryParam.setUsedendtime(queryParam.getUsedendtime()+"-31");   // 
 			}
+		}else{
+			String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
+			queryParam.setUsedstarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
+			queryParam.setUsedendtime(endtime);
 		}
 		return dao.queryCouponUsageListCount(queryParam);
 	}
@@ -72,16 +79,21 @@ public class EffectAnalysisService {
 			    map.put(m.get("city").toString(), Integer.valueOf(m.get("total").toString()));
 		}
 		
-		if((queryParam.getUsedstarttime()==null || queryParam.getUsedstarttime()=="") && (queryParam.getUsedendtime()==null || queryParam.getUsedendtime()=="")){
-			if("0".equals(queryParam.getCdatetype())){
+		if(!StringUtils.isBlank(queryParam.getCdatetype()) && !StringUtils.isBlank(queryParam.getUsedstarttime()) && !StringUtils.isBlank(queryParam.getUsedendtime())){
+				/*if("0".equals(queryParam.getCdatetype())){
 				String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
 				queryParam.setUsedstarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
 				 queryParam.setUsedendtime(endtime);
-			}else if("1".equals(queryParam.getCdatetype())){
-				String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
-				 queryParam.setUsedstarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
-				 queryParam.setUsedendtime(endtime.substring(0, endtime.length()-2)+"31");   //本月最后一天
+			}else*/ 
+			if("1".equals(queryParam.getCdatetype())){
+				//String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
+				queryParam.setUsedstarttime(queryParam.getUsedstarttime()+"-01");//本月一号
+				queryParam.setUsedendtime(queryParam.getUsedendtime()+"-31");   //本月最后一天
 			}
+		}else{
+			String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
+			queryParam.setUsedstarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
+			queryParam.setUsedendtime(endtime);
 		}
 		
 		List<CouponUsageDto> result=dao.queryCouponUsageList(queryParam);
@@ -112,16 +124,21 @@ public class EffectAnalysisService {
 		PageBean pageBean = new PageBean();
 		Map<String,Object> result=new HashMap<>();
 		
-		if((queryParam.getStarttime()==null || queryParam.getStarttime()=="") && (queryParam.getEndtime()==null || queryParam.getEndtime()=="")){
-			if(queryParam.getRdatetype()==null || "0".equals(queryParam.getRdatetype())){
+		if(!StringUtils.isBlank(queryParam.getStarttime()) && !StringUtils.isBlank(queryParam.getEndtime()) && !StringUtils.isBlank(queryParam.getRdatetype())){
+			/*if(queryParam.getRdatetype()==null || "0".equals(queryParam.getRdatetype())){
 				String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
 				queryParam.setStarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
 				queryParam.setEndtime(endtime);
-			}else if("1".equals(queryParam.getRdatetype())){
-				String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
-				 queryParam.setStarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
-				 queryParam.setEndtime(endtime.substring(0, endtime.length()-2)+"31");   //本月最后一天
+			}else*/ 
+			if("1".equals(queryParam.getRdatetype())){
+				 //String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
+				 queryParam.setStarttime(queryParam.getStarttime()+"-01");//本月一号
+				 queryParam.setEndtime(queryParam.getEndtime()+"-31");   //本月最后一天
 			}
+		}else{
+			String endtime=DateUtil.format(new Date(), "yyyy-MM-dd");
+			queryParam.setStarttime(endtime.substring(0, endtime.length()-2)+"01");//本月一号
+			queryParam.setEndtime(endtime);
 		}
 		
 		Integer registerCount=dao.queryRegisterCount(queryParam);

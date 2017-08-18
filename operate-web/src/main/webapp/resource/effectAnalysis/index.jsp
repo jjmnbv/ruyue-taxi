@@ -117,7 +117,7 @@
 		
 		<div class="row" style="margin-bottom: 30px;margin-top: 30px;">
 	            		<div class="col-8" style="padding-left:4.4%;">
-	            		       <h4> 抵扣券使用率</h4>
+	            		       <h4> 抵用券使用率</h4>
 	            		</div>
 	    </div>
 	     <div class="row">

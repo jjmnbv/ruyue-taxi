@@ -8,30 +8,45 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSON;
+import com.szyciov.entity.PubCoooperate;
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.lease.dao.OrgOrganCompanyRefDao;
 import com.szyciov.lease.dao.OrgOrganDao;
 import com.szyciov.lease.dao.OrgUserDao;
+import com.szyciov.lease.dao.OrganAccountDao;
 import com.szyciov.lease.dao.PubDriverDao;
 import com.szyciov.lease.entity.OrgOrgan;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
 import com.szyciov.lease.entity.OrgOrganCreditRecord;
 import com.szyciov.lease.entity.PubCityAddr;
+import com.szyciov.lease.entity.PubLeaseOrganRelation;
 import com.szyciov.lease.param.OrgOrganQueryParam;
 import com.szyciov.message.UserMessage;
+import com.szyciov.op.param.PubCoooperateQueryParam;
 import com.szyciov.org.entity.OrgUser;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.GsonUtil;
 import com.szyciov.util.MD5;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.PasswordEncoder;
 import com.szyciov.util.SMSTempPropertyConfigurer;
+import com.szyciov.util.SystemConfig;
+import com.szyciov.util.TemplateHelper;
 import com.szyciov.util.UNID;
 import com.szyciov.util.sequence.CompanyRegSequence;
 
 @Service("OrgOrganService")
 public class OrgOrganService {
+	
+	private TemplateHelper templateHelper = new TemplateHelper();
+	private static final Logger logger = Logger.getLogger(OrgOrganService.class);
+	
 	private OrgOrganDao dao;
 	@Resource(name = "OrgOrganDao")
 	public void setDao(OrgOrganDao dao) {
@@ -55,6 +70,13 @@ public class OrgOrganService {
 	public void setPubDriverDaoDao(PubDriverDao pubDriverDao) {
 		this.pubDriverDao = pubDriverDao;
 	}
+	
+	private OrganAccountDao organAccountDao;
+	@Resource(name = "OrganAccountDao")
+	public void setDao(OrganAccountDao organAccountDao) {
+		this.organAccountDao = organAccountDao;
+	}
+	
 	
 	public int checkOrgOrgan(OrgOrgan orgOrgan) {
 		return dao.checkOrgOrgan(orgOrgan);
@@ -86,6 +108,20 @@ public class OrgOrganService {
 
 			orgOrgan.setRegorder(regorder);
 			dao.createOrgOrgan(orgOrgan);
+			//添加供车主体
+			String s = orgOrgan.getForTheCarBodyId();
+			String[] s1 = s.split(",");
+			for(int i=0;i<s1.length;i++){
+				PubLeaseOrganRelation po = new PubLeaseOrganRelation();
+				po.setId(GUIDGenerator.newGUID());
+				po.setCompanyid(orgOrgan.getCompanyId());
+				po.setLeasecompanyid(s1[i]);
+				po.setOrganid(o.getId());
+				po.setCreater(orgOrgan.getCreater());
+				po.setUpdater(orgOrgan.getUpdater());
+				dao.insertPubLeaseOrganRelation(po);
+			}
+			
 			//随机生成密码，并发送随机密码到联系人手机
 			List<String> list = new ArrayList<String>();
 			list.add(orgOrgan.getPhone());
@@ -128,6 +164,52 @@ public class OrgOrganService {
 			map.put("channelkey", channelkey);
 			map.put("signprivatekey", signprivatekey);
 			dao.CrerateChInfo(map);
+			
+			//1.注册发券接口调用   机构客户发券
+			Map<String,Object> registcouponparam = new HashMap<String,Object>();
+			registcouponparam.put("type", CouponRuleTypeEnum.REGISTER.value);
+			registcouponparam.put("userType", CouponRuleTypeEnum.ORGAN_CONSUMER.value);
+			registcouponparam.put("companyId", orgOrgan.getCompanyId());
+			registcouponparam.put("cityCode", orgOrgan.getCity());
+			registcouponparam.put("userId", orgOrgan.getId());
+			registcouponparam.put("version", "V4.0.0");
+			try{
+				String paramstr = GsonUtil.toJson(registcouponparam);
+				String result=templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/sysn/generate", HttpMethod.POST, null, paramstr, String.class);
+			    if(JSON.parseObject(result).get("status")!=null && JSON.parseObject(result).get("status").toString().equals("0") && JSON.parseObject(result).get("data")!=null){
+			    	
+			    	List<Map> data=JSON.parseArray(JSON.parseObject(result).get("data").toString(), Map.class);
+			    	for(Map d:data){
+			    		Map<String, Object> paramMap = new HashMap<String, Object>();
+			    		// 机构id
+			    		paramMap.put("organid", d.get("userId"));
+			    		// 租赁公司id
+			    		paramMap.put("companyid", d.get("companyid"));
+			    		// 优惠券金额
+			    		paramMap.put("money", d.get("money"));
+			    		organAccountDao.addOrganCouponValue(paramMap);
+			    	}
+			    }
+			}catch(Exception e){
+				logger.error("优惠券触发出错",e);
+				logger.error("机构客户发券userid:"+orgOrgan.getId());
+			}
+			//机构用户发券,查询该机构下所有用户(id,account)，因为是刚签约，所有用户均视为新用户注册发券    add by xuxxtr
+			List<Map<String,Object>> organUsers=dao.queryOrgUserByOrganid(orgOrgan.getId());
+			for(Map m:organUsers){
+				m.put("type", CouponRuleTypeEnum.REGISTER.value);
+				m.put("userType", CouponRuleTypeEnum.ORGAN_USER.value);
+				m.put("companyId", orgOrgan.getCompanyId());
+				m.put("cityCode", orgOrgan.getCity());
+				m.put("version", "V4.0.0");
+				try{
+					String paramstr = GsonUtil.toJson(m);
+					templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/generate", HttpMethod.POST, null, paramstr, String.class);
+				}catch(Exception e){
+					logger.error("优惠券触发出错",e);
+					logger.error("机构用户发券userid:"+m.get("userId"));
+				}
+			}
 		}
 		return ret;
 	}
@@ -143,6 +225,21 @@ public class OrgOrganService {
 			ret.put("MessageKey", "修改成功");
 			OrgOrgan o = getByOrgOrganId(orgOrgan);
 			dao.updateOrgOrgan(orgOrgan);
+			//添加供车主体
+			dao.deletePubLeaseOrganRelation(orgOrgan.getId());
+			String s = orgOrgan.getForTheCarBodyId();
+			String[] s1 = s.split(",");
+			for(int i=0;i<s1.length;i++){
+				PubLeaseOrganRelation po = new PubLeaseOrganRelation();
+				po.setId(GUIDGenerator.newGUID());
+				po.setCompanyid(orgOrgan.getCompanyId());
+				po.setLeasecompanyid(s1[i]);
+				po.setOrganid(o.getId());
+				po.setCreater(orgOrgan.getUpdater());
+				po.setUpdater(orgOrgan.getUpdater());
+				dao.insertPubLeaseOrganRelation(po);
+			}
+			
 			OrgOrgan orgOrganInfo = dao.getByOrgOrganId(orgOrgan.getId());
 			//修改  信用额度
 			// 当下期信用额度为空并且此次修改的额度与使用的信用额度不相等，或者下期额度不为空并且此次修改的额度与下期额度不相等时才更新
@@ -284,6 +381,16 @@ public class OrgOrganService {
 					o.setBillDateShow("每月"+o.getBillDate()+"号");
 				}
 			}
+			List<PubLeaseOrganRelation> li =  getPubLeaseOrganRelationById(o.getId());
+			if(li.size()>0){
+				StringBuffer sb = new StringBuffer();
+				for(PubLeaseOrganRelation l : li){
+					sb.append(l.getShortName()+",");
+				}
+				o.setForTheCarBodyId(sb.substring(0,sb.length() - 1).toString());
+			}else{
+				o.setForTheCarBodyId("");
+			}
 		}
 		int iTotalRecords = getOrgOrganListCountByQuery(orgOrganQueryParam);
 		int iTotalDisplayRecords = iTotalRecords;
@@ -314,6 +421,16 @@ public class OrgOrganService {
 		for(OrgOrgan o : list){
 			if(o.getNextLineOfCredit() != null){
 				o.setLineOfCredit(o.getNextLineOfCredit());
+			}
+			List<PubLeaseOrganRelation> li =  getPubLeaseOrganRelationById(o.getId());
+			if(li.size()>0){
+				StringBuffer sb = new StringBuffer();
+				for(PubLeaseOrganRelation l : li){
+					sb.append(l.getShortName()+",");
+				}
+				o.setForTheCarBodyId(sb.substring(0,sb.length() - 1).toString());
+			}else{
+				o.setForTheCarBodyId("");
 			}
 		}
 		return list;
@@ -374,4 +491,27 @@ public class OrgOrganService {
 	public int checkOrgOrganAccout(OrgOrganQueryParam orgOrganQueryParam){
 		return dao.checkOrgOrganAccout(orgOrganQueryParam);
 	};
+	
+	public PageBean getPubCoooperateByQuery(PubCoooperateQueryParam queryParam) {
+        PageBean pageBean = new PageBean();
+        pageBean.setsEcho(queryParam.getsEcho());
+        List<PubCoooperate> list = dao.getPubCoooperateList(queryParam);
+        int iTotalRecords = dao.getPubCoooperateListCount(queryParam);
+        int iTotalDisplayRecords = iTotalRecords;
+        pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
+        pageBean.setiTotalRecords(iTotalRecords);
+        pageBean.setAaData(list);
+        return pageBean;
+    }
+	
+	public List<PubLeaseOrganRelation> getPubLeaseOrganRelationById(String id){
+    	return dao.getPubLeaseOrganRelationById(id);
+    };
+    public List<PubLeaseOrganRelation> getIndexList(String id){
+    	return dao.getIndexList(id);
+    };
+    
+    public List<Map<String, Object>> getPubCoooperateSelect(PubCoooperateQueryParam queryParam){
+    	return dao.getPubCoooperateSelect(queryParam);
+    };
 }

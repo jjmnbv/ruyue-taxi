@@ -1,10 +1,13 @@
 package com.szyciov.carservice.service;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import com.szyciov.carservice.dao.PubInfoDao;
@@ -124,5 +127,59 @@ public class PubInfoService {
 			}
 		}
 		return cityJson;
+	}
+
+	public JSONObject getCitySelect2() {
+		JSONObject ret = new JSONObject();
+
+		List<PubCityAddr> cityAddrList = dao.getCitySelect2();
+		if(null != cityAddrList && !cityAddrList.isEmpty()) {
+			Iterator<PubCityAddr> iterator = cityAddrList.iterator();
+			while(iterator.hasNext()) {
+				PubCityAddr cityAddr = iterator.next();
+				String id = cityAddr.getId();
+				String city = cityAddr.getCity();
+				String initials = cityAddr.getCityInitials();
+				if(StringUtils.isBlank(id) || StringUtils.isBlank(city) || StringUtils.isBlank(initials)) {
+					continue;
+				}
+				//根据字母对城市进行分类
+				JSONObject json = new JSONObject();
+				json.put("id", id);
+				json.put("text", city);
+				if(ret.containsKey(initials)) {
+					ret.getJSONArray(initials).add(json);
+				} else {
+					JSONArray arr = new JSONArray();
+					arr.add(json);
+					ret.put(initials, arr);
+				}
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * 获取城市id
+	 * @param name
+	 * @return
+	 */
+	public Map<String,String> getCityIdByName(String name){
+		List<Map<String,String>> list=dao.getCityIdByName(name);
+//		System.out.println(list);
+		Map<String,String> map=new HashMap<>();
+		if(list==null||list.size()<=0){
+			map.put("status","fail");
+			map.put("message","id不存在 ");
+		}else{
+			map.put("status","success");
+			map.put("message","id存在");
+			map.put("id",list.get(0).get("id"));
+		}
+		return map;
+	}
+
+	public List<Map<String,String>> getSearchCitySelect(PubCityAddr pubCityAddr){
+		return  dao.getSearchCitySelect(pubCityAddr);
 	}
 }

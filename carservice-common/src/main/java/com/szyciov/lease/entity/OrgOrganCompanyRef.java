@@ -95,6 +95,10 @@ public class OrgOrganCompanyRef {
 	 * @return id 主键id  
 	 */
 	public String rulesType;
+	/**
+	 * 抵用券金额
+	 */
+	public Double couponamount;
 	
 	public String getRulesType() {
 		return rulesType;
@@ -424,5 +428,13 @@ public class OrgOrganCompanyRef {
 	}
 	public void setNextLineOfCredit(Double nextLineOfCredit) {
 		this.nextLineOfCredit = nextLineOfCredit;
+	}
+
+	public Double getCouponamount() {
+		return couponamount;
+	}
+
+	public void setCouponamount(Double couponamount) {
+		this.couponamount = couponamount;
 	}
 }

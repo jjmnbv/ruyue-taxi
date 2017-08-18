@@ -85,8 +85,26 @@ public class PubInfoDao {
 	public List<Map<String, String>> getCitySelect1() {
 		return mapper.getCitySelect1();
 	}
+
+	public List<PubCityAddr> getCitySelect2() {
+		return mapper.getCitySelect2();
+	}
 	
 	public PubCityAddr getCityById(String id) {
 		return mapper.getCityById(id);
+	}
+
+
+	/**
+	 * 获取城市id
+	 * @param name
+	 * @return
+	 */
+	public List<Map<String, String>> getCityIdByName(String name){
+		return  mapper.getCityIdByName(name);
+	}
+
+	public List<Map<String,String>> getSearchCitySelect(PubCityAddr pubCityAddr){
+		return  mapper.getSearchCitySelect(pubCityAddr);
 	}
 }

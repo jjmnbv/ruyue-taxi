@@ -85,6 +85,10 @@ public class FinancialManagementDao {
     	return mapper.getActualBalanceById(map);
     }
 	
+	public Map<String, Object> getActualBalanceAndCouponamountById(Map<String, Object> map) {
+		return mapper.getActualBalanceAndCouponamountById(map);
+	}
+	
 	public void reduceOrganAccount(Map<String, Object> map) {
 		mapper.reduceOrganAccount(map);
 	}
@@ -176,4 +180,16 @@ public class FinancialManagementDao {
 	public int getPubCouponDetailListCount(OrganAccountQueryParam organAccountQueryParam){
 		return mapper.getPubCouponDetailListCount(organAccountQueryParam);
 	};
+	
+	public void addCouponDetail(Map<String, Object> map) {
+		mapper.addCouponDetail(map);
+	}
+	
+	public void addOrganCouponValue(Map<String, Object> map) {
+		mapper.addOrganCouponValue(map);
+	}
+	
+	public String getCityByOrganid(String id) {
+		return mapper.getCityByOrganid(id);
+	}
 }

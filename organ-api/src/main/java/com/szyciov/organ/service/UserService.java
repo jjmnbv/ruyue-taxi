@@ -11,12 +11,15 @@ import javax.annotation.Resource;
 
 import com.szyciov.op.entity.PeUser;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.message.UserMessage;
 import com.szyciov.org.entity.OrgUser;
 import com.szyciov.org.entity.TreeNode;
@@ -24,15 +27,21 @@ import com.szyciov.org.param.UserQueryParam;
 import com.szyciov.organ.dao.UserDao;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.GsonUtil;
 import com.szyciov.util.PYTools;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.PasswordEncoder;
 import com.szyciov.util.SMSTempPropertyConfigurer;
 import com.szyciov.util.SystemConfig;
+import com.szyciov.util.TemplateHelper;
 import com.szyciov.util.UNID;
 
 @Service("userService")
 public class UserService {
+	
+	private TemplateHelper templateHelper = new TemplateHelper();
+	private static final Logger logger = Logger.getLogger(UserService.class);
+	
 	private UserDao dao;
 	
 	//资源id的分割符
@@ -288,6 +297,11 @@ public class UserService {
 		String password = UNID.getPwdDefStr();
 		userinfo.put("srcpassword", password);
 		userinfo.put("password", PasswordEncoder.encode(password));
+		String organid = (String) userinfo.get("organid");
+		Map<String,Object> orgorganinfo = dao.getOrgOrgan(organid);
+		if(orgorganinfo!=null){
+			userinfo.put("registercity", orgorganinfo.get("city"));
+		}
 		//添加员工
 		dao.addUser(userinfo);
 		//添加员工角色信息
@@ -345,6 +359,25 @@ public class UserService {
 		}
 		res.put("status", "success");
 		res.put("message", "员工添加成功");
+		
+		//当前机构签约了几家租赁公司，就要给这个新增的用户发几个优惠券,相当于都是注册
+		List<Map<String,Object>> companys=dao.querySignCompanyByOrganid(organid);
+		for(Map m:companys){
+			m.put("type", CouponRuleTypeEnum.REGISTER.value);
+			m.put("userType", CouponRuleTypeEnum.ORGAN_USER.value);
+			m.put("cityCode", orgorganinfo.get("city"));
+			m.put("userId", userinfo.get("userid"));
+			m.put("userPhone", userinfo.get("phone"));
+			m.put("version", "V4.0.0");
+		try{
+			String paramstr = GsonUtil.toJson(m);
+			templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/generate", HttpMethod.POST, null, paramstr, String.class);
+		}catch(Exception e){
+			logger.error("优惠券触发出错",e);
+			logger.error("机构客户发券userid:"+userinfo.get("userid"));
+		}
+		}
+		
 		sendPwd2User(userinfo);
 		return res;
 	}
@@ -368,6 +401,56 @@ public class UserService {
 			users.add(account);
 			UserMessage um = new UserMessage(users,content,UserMessage.ADDUSER);
 			MessageUtil.sendMessage(um);
+		    
+			//添加机构用户时，同步个人用户，个人用户不存在时，需要发券,相当于注册      add by xuxxtr
+			Map<String,Object> registcouponparam=new HashMap<>();
+			String operateid=dao.queryOperateid();//获取运管端的租赁公司id
+			registcouponparam.put("type", CouponRuleTypeEnum.REGISTER.value);
+			registcouponparam.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+			registcouponparam.put("companyId", operateid);
+			registcouponparam.put("userPhone", userinfo.get("phone"));
+			registcouponparam.put("userId", userinfo.get("userid"));
+			registcouponparam.put("version", "V4.0.0");
+		try{
+			String paramstr = GsonUtil.toJson(registcouponparam);
+			templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/generate", HttpMethod.POST, null, paramstr, String.class);
+		}catch(Exception e){
+			logger.error("优惠券触发出错",e);
+			logger.error("运管用户发券userid:"+userinfo.get("userid"));
+		}
+		
+		//还需要给邀请人发券
+		//2.邀请注册接口调用
+		dao.updateExpireInviteInfos();
+		Map<String,Object> invitinfo = dao.getInviteInfoByInvitee(account);
+		if(invitinfo!=null){
+			Map<String,Object> inviteparam = new HashMap<String,Object>();
+			inviteparam.put("inviteephone", account);
+			//inviteparam.put("invitecode", "");
+			inviteparam.put("invitestate", 1);
+			dao.updateInviteState(inviteparam);
+			//判断邀请用户是否可以发券
+			String inviterphone = (String) invitinfo.get("inviterphone");
+			PeUser user = dao.getUser4Op(inviterphone);
+			if(user!=null){
+				Map<String,Object> inviteregistcouponparam = new HashMap<String,Object>();
+				inviteregistcouponparam.put("type", CouponRuleTypeEnum.INVITE.value);
+				inviteregistcouponparam.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+				inviteregistcouponparam.put("companyId", operateid);
+				inviteregistcouponparam.put("cityCode", user.getRegistercity());
+				inviteregistcouponparam.put("userId", user.getId());
+				inviteregistcouponparam.put("userPhone", user.getAccount());
+				inviteregistcouponparam.put("version", "V4.0.0");
+				try{
+					String paramstr = GsonUtil.toJson(inviteregistcouponparam);
+					templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi")+"/coupon/generate", HttpMethod.POST, null, paramstr, String.class);
+				}catch(Exception e){
+					logger.error("优惠券触发出错",e);
+					logger.error("运管用户邀请发券userid:"+user.getId());
+				}
+			}
+		}
+			
 		}else{
 			//当存在个人用户且密码为空的情况下同步随机密码，并发送短信
 			if(peuser.getUserpassword() == null){

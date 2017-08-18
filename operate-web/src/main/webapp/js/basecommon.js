@@ -323,6 +323,31 @@ function formatTimeForDetail(time){
 	return month + "/" + date+" "+hour+":"+minute;
 }
 
+/**
+ * 时间格式化
+ * @param fmt
+ * @param date
+ * @returns {*}
+ */
+function dateFtt(datetime, fmt) {
+    var date = new Date(datetime);
+    var o = {
+        "M+" : date.getMonth()+1,                 //月份
+        "d+" : date.getDate(),                    //日
+        "h+" : date.getHours(),                   //小时
+        "m+" : date.getMinutes(),                 //分
+        "s+" : date.getSeconds(),                 //秒
+        "q+" : Math.floor((date.getMonth()+3)/3), //季度
+        "S"  : date.getMilliseconds()             //毫秒
+    };
+    if(/(y+)/.test(fmt))
+        fmt=fmt.replace(RegExp.$1, (date.getFullYear()+"").substr(4 - RegExp.$1.length));
+    for(var k in o)
+        if(new RegExp("("+ k +")").test(fmt))
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+    return fmt;
+}
+
 //手机号码验证
 function regPhone(phone){
 	var myreg = /^(((13[0-9]{1})|(15[0-3,5-9])|(18[0-9]{1})|(14[5,7,9])|(17[0,1,3,5-8]))+\d{8})$/; 

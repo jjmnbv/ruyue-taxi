@@ -8,6 +8,7 @@ import com.szyciov.entity.Select2Entity;
 import com.szyciov.lease.param.pubCoooperateUnion.*;
 import com.szyciov.lease.service.PubCoooperateUnionService;
 import com.szyciov.lease.vo.pubCoooperateUnion.QueryCooagreementViewVo;
+import com.szyciov.param.Select2Param;
 import com.szyciov.util.ApiExceptionHandle;
 import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,14 +38,26 @@ public class PubCoooperateUnionController extends ApiExceptionHandle {
     }
 
     /**
+     * 查询合作运营合作编号下拉
+     *
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "queryCoonoSelect2", method = RequestMethod.POST)
+    public List<Select2Entity> queryCoonoSelect2(@RequestBody Select2Param param) {
+        List list = this.pubCoooperateUnionService.queryCoonoSelect2(param);
+        return list;
+    }
+
+    /**
      * 查询合作运营合作方下拉
      *
-     * @param companyid 租赁ID
+     * @param param 租赁ID
      * @return 合作方下拉集合
      */
-    @RequestMapping(value = "queryLeasecompany", method = RequestMethod.GET)
-    public List<Select2Entity> queryLeasecompany(String companyid) {
-        List list = this.pubCoooperateUnionService.queryLeasecompany(companyid);
+    @RequestMapping(value = "queryLeasecompany", method = RequestMethod.POST)
+    public List<Select2Entity> queryLeasecompany(@RequestBody Select2Param param) {
+        List list = this.pubCoooperateUnionService.queryLeasecompany(param);
         return list;
     }
 
@@ -242,6 +255,11 @@ public class PubCoooperateUnionController extends ApiExceptionHandle {
         JSONObject result = new JSONObject();
         try {
             result = this.pubCoooperateUnionService.addApplyCoooperate(param);
+
+            try {
+                this.pubCoooperateUnionService.sendMsg(param.getLeasescompanyid(), param.getCootype(), param.getVehicletype());
+            } catch (Exception e) {
+            }
         } catch (Exception e) {
             result.put("status", Retcode.EXCEPTION.code);
             result.put("message", Retcode.EXCEPTION.msg);

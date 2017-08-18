@@ -23,7 +23,16 @@ public class PubCoooperateQueryParam extends QueryParam{
 	private String queryModels;
 	//
 	private String leasescompanyid;
+	private String queryForTheCarBody;
 	
+	public String getQueryForTheCarBody() {
+		return queryForTheCarBody;
+	}
+
+	public void setQueryForTheCarBody(String queryForTheCarBody) {
+		this.queryForTheCarBody = queryForTheCarBody;
+	}
+
 	public String getLeasescompanyid() {
 		return leasescompanyid;
 	}

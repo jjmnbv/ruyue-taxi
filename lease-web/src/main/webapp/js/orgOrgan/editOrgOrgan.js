@@ -1,7 +1,10 @@
+var forTheCarBodyTable;
+var srctag1= "" ;
+var forTheCarBodyMap ={};
 $(function() {
 	validateForm();
 	getSelectCity();
-
+	initSelectQueryForTheCarBody();
 	if ($("#id").val() != null && $("#id").val() != '') {
 		var data = {
 			id : $("#id").val()
@@ -93,9 +96,93 @@ $(function() {
 	$("#cityName").change(function() {
 		changeCity($(this).val());
 	});
+	
+	if($("#id").val() != null && $("#id").val() != ''){
+		$.ajax({
+			type : "GET",
+			url : "OrgOrgan/GetPubLeaseOrganRelationById",
+			cache : false,
+			data : {
+				id : $("#id").val()
+			},
+			success : function(json) {
+				var html = "";
+				for(var i=0;i<json.length;i++){
+					html+='<li data-value="'+json[i].leasecompanyid+'">'+json[i].shortName+'</li>';
+				}
+				$("#forTheCarBody").html(html);
+			}
+		});
+	}
+	
+	$("#forTheCarBody").click(function(e){
+		var srctag =  e.target;
+		if("LI"==srctag.tagName || "li"==srctag.tagName){
+			var value = $(srctag).attr("data-value");
+			$("#forTheCarBody li").css({"background-color":"white"});
+			$(srctag).attr("style","background-color: #6495ED;");
+			srctag1 = srctag;
+			//alert(value);
+		}
+	});
 
 });
-
+/**
+ * 表格初始化
+ */
+function forTheCarBodyTableInitGrid() {
+	var id = "";
+	if($("#id").val() != null && $("#id").val() != ''){
+		 id = $("#id").val();
+	}
+	var gridObj = {
+			id: "forTheCarBodyTable",
+	        sAjaxSource: "OrgOrgan/GetPubCoooperateByQuery?id="+id,
+	        iLeftColumn: 1,//（固定表头，1代表固定几列）
+	        columns: [
+//		        {mDataProp: "id", sTitle: "Id", sClass: "center", visible: false},
+		        {
+	                //自定义操作列
+	                "mDataProp": "ZDY",
+	                "sClass": "center",
+	                "sTitle": "操作",
+	                "sWidth": 120,
+	                "bSearchable": false,
+	                "sortable": false,
+	                "mRender": function (data, type, full) {
+	                	var html = "";
+	                	if (haspro(forTheCarBodyMap)) {
+		                	for ( var i in forTheCarBodyMap) {
+		                		if(i==full.leasecompanyid){
+		    	                    html += '<button type="button" class="SSbtn grey_w"><i class="fa fa-paste"></i>已添加</button>';
+	
+		                		}else{
+		    	                    html += '<button type="button" class="SSbtn green_q" onclick="addFTCB(' +"'"+ full.leasecompanyid +"'"+",'"+full.companyName+"'"+')"><i class="fa fa-paste"></i>添加</button>';
+		                		}
+		            		}
+	                	}else{
+    	                    html += '<button type="button" class="SSbtn green_q" onclick="addFTCB(' +"'"+ full.leasecompanyid +"'"+",'"+full.companyName+"'"+')"><i class="fa fa-paste"></i>添加</button>';
+	                	}
+	                    return html;
+	                }
+	            },
+		        {mDataProp: "companyName", sTitle: "战略伙伴", sClass: "center", sortable: true},
+		        {mDataProp: "", sTitle: "合作业务", sClass: "center", sortable: true,
+		        	mRender: function(data, type, full) {
+						var html = '';
+						if(full.servicetype == 0){
+							html += '<span>网约车</span>';
+						}else{
+							html += '<span>出租车</span>';
+						}
+						return html;
+					}
+		        }
+	        ]
+	    };
+	    
+		forTheCarBodyTable = renderGrid(gridObj);
+}
 //返回   跟取消
 function callBack(){
 	window.location.href=base+"OrgOrgan/Index";
@@ -268,12 +355,6 @@ function validateForm() {
 				digits : true,
 				minlength : 18
 			},
-			businessLicense : {
-				required : true,
-				maxlength : 15,
-				digits : true,
-				minlength : 15
-			},
 			idCardNo : {
 				required : true,
 				minlength : 18,
@@ -326,11 +407,6 @@ function validateForm() {
 				maxlength : "最大长度18个字符",
 				minlength:"最小长度18个字符" 	
 			},
-			businessLicense : {
-				required : "请填写正确格式的工商执照编码",
-				maxlength : "最大长度15个字符",
-				minlength:"最小长度15个字符" 
-			},
 			idCardNo : {
 				required : "请填写正确格式的身份证号",
 				minlength:"最小长度18个字符" 
@@ -344,6 +420,11 @@ function save(){
 	var form = $("#editOrgOrganForm");
 	if (!form.valid())
 		return;
+	var values = [];
+	$("#forTheCarBody li").each(function(){
+		values.push($(this).attr("data-value"));
+	});
+	$("#forTheCarBodyId").val(values.join(","));
 	
     var id = $("#id").val();
 	//验证机构全称
@@ -578,4 +659,90 @@ function getSelectCity() {
 			changeCity($obj.text());
 		}
 	);
+}
+function addForTheCarBody() {
+	if (!forTheCarBodyTable) {
+		forTheCarBodyTableInitGrid();
+	}
+	forTheCarBodyTable._fnReDraw();
+	$("#addForTheCarBody").show();
+}
+function updateForTheCarBody(){
+	//alert(srctag1);
+	if(srctag1 == ''){
+		toastr.error("请选择供车主体", "提示");
+	}else{
+//		srctag1.parentNode.removeChild(srctag1);
+		var value = $(srctag1).attr("data-value");
+		var nowleLeasescompanyid = $("#nowleLeasescompanyid").val();
+		if(value == nowleLeasescompanyid){
+			toastr.error("签约服务车企不可选择", "提示");
+		}else{
+			$(srctag1).remove();
+		}
+	}
+}
+function cancle(){
+	$("#addForTheCarBody").hide();
+}
+function addFTCB(id,companyName){
+	var html = "";
+	html+="<li data-value='"+id+"'>"+companyName+"</li>"
+	forTheCarBodyMap[id] = companyName;
+	$("#forTheCarBody").append(html);
+	toastr.options.onHidden = function() {
+		$("#addForTheCarBody").hide();
+	}
+	toastr.success("添加成功", "提示");
+	forTheCarBodyTable._fnReDraw();
+}
+
+function haspro(forTheCarBodyMap) {
+	if (!forTheCarBodyMap) {
+		return false
+	}
+	for ( var pro in forTheCarBodyMap) {
+		if (!pro) {
+			return false
+		}
+		return true
+	}
+}
+
+/***
+ * 
+ * 初始化  搜索下拉 
+ */
+function initSelectQueryForTheCarBody() {
+	var id = "";
+	if($("#id").val() != null && $("#id").val() != ''){
+		id = $("#id").val();
+	}
+	$("#queryForTheCarBody").select2({
+		placeholder : "",
+		minimumInputLength : 0,
+		multiple : false, //控制是否多选
+		allowClear : true,
+		ajax : {
+			url : "OrgOrgan/GetPubCoooperateSelect?id="+id,
+			dataType : 'json',
+			data : function(term, page) {
+				return {
+					queryForTheCarBody : term
+				};
+			},
+			results : function(data, page) {
+				return {
+					results : data
+				};
+			}
+		}
+	});
+}
+function loadForTheCarBody(){
+	var queryForTheCarBody = $("#queryForTheCarBody").select2("val");
+	var conditionArr = [
+		{ "name": "queryForTheCarBody", "value": queryForTheCarBody }
+	];
+	forTheCarBodyTable.fnSearch(conditionArr);
 }

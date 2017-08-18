@@ -91,4 +91,8 @@
 		where pub_dictionary.id = #{id}
 	</update>
 	
+	<!-- 根据  value type 查 pub_dictionary 对象-->
+	<select id="getDictionaryText"  resultType="Dictionary" parameterType="map">
+		SELECT * FROM pub_dictionary where type = #{type} and `value` = #{value} and `status`=1
+	</select>
 </mapper>

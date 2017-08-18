@@ -1,11 +1,15 @@
 package com.szyciov.operate.mapper;
 
-import com.szyciov.entity.*;
+import com.szyciov.entity.PubCooresource;
+import com.szyciov.entity.PubVehicleModelsRef;
+import com.szyciov.entity.PubVehicleModelsRefHistory;
+import com.szyciov.entity.Select2Entity;
 import com.szyciov.op.param.*;
 import com.szyciov.op.vo.pubCooresource.QueryCooresourceVo;
 import com.szyciov.op.vo.pubCooresource.QueryHavingCooLeasecompanyVo;
 import com.szyciov.op.vo.pubCooresource.QueryPubCooresourceInfoVo;
 import com.szyciov.op.vo.pubCooresource.QueryPubCooresourceManageVo;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -15,7 +19,7 @@ import java.util.List;
 public interface PubCooresourceMapper {
     List<QueryCooresourceVo> queryPubCooresourceData(QueryPubCooresourceParam param);
 
-    List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(String companyid);
+    List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(@Param("companyid") String companyid, @Param("keyword") String keyword);
 
     List<QueryPubCooresourceInfoVo> queryPubCooresourceInfoData(QueryPubCooresourceInfoParam param);
 

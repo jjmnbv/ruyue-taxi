@@ -32,6 +32,9 @@ function initGrid() {
         id: "dataGrid",
         sAjaxSource: "PubCooresource/info/queryPubCooresourceInfoData/" + $("body").attr("coooid"),
         userQueryParam: [],
+        language: {
+            sEmptyTable: "没有查询到相关信息"
+        },
         bAutoWidth: false,
         columns: [
             {mDataProp: "fullplateno", sTitle: "车辆信息", sClass: "center", sortable: false},

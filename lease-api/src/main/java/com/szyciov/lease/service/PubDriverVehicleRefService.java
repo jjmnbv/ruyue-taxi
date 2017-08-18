@@ -4,6 +4,7 @@ import com.szyciov.driver.entity.PubDriverNews;
 import com.szyciov.dto.driverVehicleBindManage.BindDto;
 import com.szyciov.dto.driverVehicleBindManage.UnBindDto;
 import com.szyciov.dto.driverVehicleBindManage.VehicleBindInfoDto;
+import com.szyciov.dto.pubCooresource.UpdatePubCooresourceStatusDto;
 import com.szyciov.entity.City;
 import com.szyciov.entity.PubDriverVehicleRef;
 import com.szyciov.enums.*;
@@ -96,13 +97,15 @@ public class PubDriverVehicleRefService {
         return id;
     }
 
-    @Transactional
-    public void saveCarBind(BindDto bindDto){
+    @Transactional(rollbackFor = {Exception.class})
+    public void saveCarBind(BindDto bindDto) throws Exception {
         this.saveBind(bindDto);
         //修改司机相关状态
         this.updateDriverBind(bindDto.getDriverID(), bindDto.getCreater(), null);
         //更新车辆相关状态
         this.updateCarVehicleBind(bindDto.getVehicleid(), bindDto.getCreater(), bindDto.getDriverID());
+
+        this.updateCooresourceStatus(bindDto.getLeaseCompanyId(),bindDto.getVehicleid(),Integer.parseInt(VehicleEnum.VEHICLE_TYPE_CAR.code),0);
 
         //发送绑定消息
         this.sendBindMessage(bindDto);
@@ -113,8 +116,8 @@ public class PubDriverVehicleRefService {
      *
      * @param bindDto
      */
-    @Transactional
-    public void saveTaxiBind(BindDto bindDto) {
+    @Transactional(rollbackFor = {Exception.class})
+    public void saveTaxiBind(BindDto bindDto) throws Exception {
 
         //绑定
         this.saveBind(bindDto);
@@ -129,6 +132,8 @@ public class PubDriverVehicleRefService {
                 this.updateTaxiVehicleBind(pubVehicle, bindDto.getCreater(), bindDto.getDriverID(), list);
                 //更改司机相关状态
                 this.updateTaxiDriverOfBind(list,pubVehicle,bindDto);
+
+                this.updateCooresourceStatus(bindDto.getLeaseCompanyId(),bindDto.getVehicleid(),Integer.parseInt(VehicleEnum.VEHICLE_TYPE_TAXI.code),0);
             }else{
                 logger.error("绑定车辆不存在，车辆ID：{}",bindDto.getVehicleid());
             }
@@ -241,8 +246,8 @@ public class PubDriverVehicleRefService {
             return false;
         }
     }
-    @Transactional
-    public void unCarBind(UnBindDto unBindDto){
+    @Transactional(rollbackFor = {Exception.class})
+    public void unCarBind(UnBindDto unBindDto)throws Exception{
 
         boolean isSuccess = this.unBind(unBindDto);
 
@@ -252,13 +257,16 @@ public class PubDriverVehicleRefService {
             bindDto.setUnBindNum(1);
             //保存绑定记录表
             this.bindService.saveBind(bindDto);
-            //发送解除绑定消息
-            this.sendUnbindMessage(unBindDto);
+
             //修改车辆状态
             this.updateCarVehicleUnbind(unBindDto.getVehicleId(), unBindDto.getCreater());
             //修改司机状态为解绑
             this.updateDriverUnBind(unBindDto.getDriverId(), unBindDto.getCreater(),null);
 
+            this.updateCooresourceStatus(unBindDto.getLeaseCompanyId(),unBindDto.getVehicleId(),Integer.parseInt(VehicleEnum.VEHICLE_TYPE_CAR.code),1);
+
+            //发送解除绑定消息
+            this.sendUnbindMessage(unBindDto);
         }
 
     }
@@ -284,7 +292,7 @@ public class PubDriverVehicleRefService {
      * 解除绑定
      * @param unBindDto
      */
-    @Transactional
+    @Transactional(rollbackFor = {Exception.class})
     public void unTaxiBind(UnBindDto unBindDto)throws Exception{
 
         StringBuffer unBind = new StringBuffer();
@@ -313,6 +321,10 @@ public class PubDriverVehicleRefService {
                 this.updateTaxiVehicleUnBind(unBindDto.getVehicleId(), unBindDto.getCreater(),unBindDto.getDriverId());
                 //修改司机状态为解绑
                 this.updateDriverUnBind(unBindDto.getDriverId(), unBindDto.getCreater(),DriverEnum.PASS_WORK_STATUS_NO);
+
+                //更改绑定关系
+                this.updateCooresourceStatus(driver.getLeasesCompanyId(),unBindDto.getVehicleId(),Integer.parseInt(VehicleEnum.VEHICLE_TYPE_TAXI.code),1);
+
                 //发送解除绑定消息
                 this.sendUnbindMessage(unBindDto);
 
@@ -333,6 +345,29 @@ public class PubDriverVehicleRefService {
         this.bindService.saveBind(bindDto);
     }
 
+    /**
+     * 更改状态 车辆绑定关系
+     * @param leaseCompanyId    租赁公司ID
+     * @param vehicleId         车辆ID
+     * @param type              车辆类型
+     * @param status            绑定状态
+     */
+    private void updateCooresourceStatus(String leaseCompanyId,String vehicleId,int type,int status)throws Exception{
+        UpdatePubCooresourceStatusDto updatePubCooresourceStatusDto = new UpdatePubCooresourceStatusDto();
+        updatePubCooresourceStatusDto.setLeaseCompanyId(leaseCompanyId);
+        updatePubCooresourceStatusDto.setType(type);
+        updatePubCooresourceStatusDto.setVehicleId(vehicleId);
+        updatePubCooresourceStatusDto.setStatus(status);
+
+        JSONObject jsonObject =  templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubCooresource/updateVehicleModelsRefByVehcline",
+            HttpMethod.POST, null, updatePubCooresourceStatusDto,JSONObject.class);
+
+        if(jsonObject!=null){
+            if(!jsonObject.getString("status").equals("0")){
+                throw new Exception("更改车辆绑定关系失败");
+            }
+        }
+    }
 
     /**
      * 发送推送给交班司机

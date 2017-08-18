@@ -55,7 +55,7 @@
 				and op_order.orderstatus = '7'
 				and op_order.paymentstatus = '1'
 			</when>
-			<otherwise>and op_order.orderstatus in ('2','3','4','6','7','8')</otherwise>
+			<otherwise>and op_order.orderstatus in ('2','3','4','6','7')</otherwise>
 		</choose>
 	    <if test="orderPerson != null and orderPerson != ''">
 	        and op_order.userid like concat('%',#{orderPerson},'%')
@@ -132,7 +132,7 @@
 				and op_order.orderstatus = '7'
 				and op_order.paymentstatus = '1'
 			</when>
-			<otherwise>and op_order.orderstatus in ('2','3','4','6','7','8')</otherwise>
+			<otherwise>and op_order.orderstatus in ('2','3','4','6','7')</otherwise>
 		</choose>
 	    <if test="orderPerson != null and orderPerson != ''">
 	        and op_order.userid like concat('%',#{orderPerson},'%')
@@ -220,7 +220,7 @@
 				and op_taxiorder.orderstatus = '7'
 				and op_taxiorder.paymentstatus = '3'
 			</when>
-			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','8','9')</otherwise>
+			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','9')</otherwise>
 		</choose>
 	    <if test="orderPerson != null and orderPerson != ''">
 	        and op_taxiorder.userid like concat('%',#{orderPerson},'%')
@@ -302,7 +302,7 @@
 				and op_taxiorder.orderstatus = '7'
 				and op_taxiorder.paymentstatus = '3'
 			</when>
-			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','8','9')</otherwise>
+			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','9')</otherwise>
 		</choose>
 	    <if test="orderPerson != null and orderPerson != ''">
 	        and op_taxiorder.userid like concat('%',#{orderPerson},'%')
@@ -428,7 +428,7 @@
 				and op_order.orderstatus = '7'
 				and op_order.paymentstatus = '1'
 			</when>
-			<otherwise>and op_order.orderstatus in ('2','3','4','6','7','8')</otherwise>
+			<otherwise>and op_order.orderstatus in ('2','3','4','6','7')</otherwise>
 		</choose>
 	    <if test="orderPerson != null and orderPerson != ''">
 	        and op_order.userid like concat('%',#{orderPerson},'%')
@@ -524,7 +524,7 @@
 				and op_taxiorder.orderstatus = '7'
 				and op_taxiorder.paymentstatus = '3'
 			</when>
-			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','8','9')</otherwise>
+			<otherwise>and op_taxiorder.orderstatus in ('2','3','4','6','7','9')</otherwise>
 		</choose>
 	    <if test="orderPerson != null and orderPerson != ''">
 	        and op_taxiorder.userid like concat('%',#{orderPerson},'%')

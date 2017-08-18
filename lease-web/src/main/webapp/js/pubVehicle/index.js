@@ -119,7 +119,7 @@ function initGrid() {
 	        {mDataProp: "vin", sTitle: "车架号", sClass: "center", sortable: true },
 	        {mDataProp: "color", sTitle: "颜色", sClass: "center", sortable: true },
 	        {mDataProp: "loads", sTitle: "荷载人数", sClass: "center", sortable: true },
-	        {mDataProp: "belongleasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true },
+	        /*{mDataProp: "belongleasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true },*/
 	        {mDataProp: "city", sTitle: "登记城市", sClass: "center", sortable: true },
 	        //新增的
 	        {mDataProp: "businessScope", sTitle: "经营区域", sClass: "center", sortable: true,

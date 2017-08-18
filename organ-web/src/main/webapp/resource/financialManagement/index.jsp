@@ -86,7 +86,9 @@
                                 <img src="content/img/icon_yue.png"/>
                                 <span  class="font-red">${organCompanyRef.actualBalance}</span><e>元</e>
                                 <img src="content/img/icon_xinyong.png"  style="margin-left:50px;"/>
-                                <span  class="font-red">${organCompanyRef.lineOfCredit}</span><e>元</e><br>
+                                <span  class="font-red" style="color:#888;">${organCompanyRef.lineOfCredit}</span><e>元</e>
+                                <img src="content/img/icon_dyq1.png"  style="margin-left:50px;"/>
+                                <span  class="font-red" style="color:#888;">${organCompanyRef.couponamount}</span><e>元</e><br>
                                 <div style="color:#888;font-size:15px;margin-top:20px;">
                                 	<span class="black">未结算金额</span>
                                 	<span style="color:#f33333;">${organCompanyRef.unBalanced}</span>

@@ -1,5 +1,6 @@
 package com.szyciov.operate.service;
 
+import com.szyciov.dto.pubVehicleModelsRef.UpdateVehicleModelsRefByVehicleDto;
 import com.szyciov.entity.City;
 import com.szyciov.entity.Dictionary;
 import com.szyciov.enums.BindingStateEnum;
@@ -13,22 +14,29 @@ import com.szyciov.op.param.PubVehicleQueryParam;
 import com.szyciov.op.param.vehicleManager.VehicleIndexQueryParam;
 import com.szyciov.op.vo.vehiclemanager.VehicleExportVo;
 import com.szyciov.op.vo.vehiclemanager.VehicleIndexVo;
+import com.szyciov.operate.dao.DictionaryDao;
 import com.szyciov.operate.dao.PubVehicleDao;
 import com.szyciov.operate.dto.VehicleQueryDto;
 import com.szyciov.util.GUIDGenerator;
 import com.szyciov.util.PageBean;
+import com.szyciov.util.TemplateHelper;
+
+import net.sf.json.JSONObject;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service("PubVehicleService")
 public class PubVehicleService {
-
+	private TemplateHelper templateHelper = new TemplateHelper();
 	@Autowired
 	private PubVehicleDao dao;
 
@@ -36,6 +44,9 @@ public class PubVehicleService {
 
 	@Autowired
 	private PubDriverVehicleRefService refService;
+	
+	@Autowired
+	private DictionaryService dictionaryService;
 
 	@Resource(name = "PubVehicleScopeService")
 	public void setPubVehicleScopeServiceService(PubVehicleScopeService pubVehicleScopeService) {
@@ -45,9 +56,35 @@ public class PubVehicleService {
 	public String createPubVehicle(PubVehicle pubVehicle)throws Exception {
 		//创建车辆时默认营运中
 		pubVehicle.setVehicleStatus(VehicleEnum.VEHICLE_STATUS_ONLINE.code);
+		//加个完整车牌
+		Map<String,String> map = new HashMap<>();
+		StringBuffer fullplateno = new StringBuffer();
+		map.put("type","车牌省");
+		map.put("value",pubVehicle.getPlateNoProvince());
+		fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+		map.put("type","车牌市");
+		map.put("value",pubVehicle.getPlateNoCity());
+		fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+		fullplateno.append(pubVehicle.getPlateNo());
+		pubVehicle.setFullplateno(fullplateno.toString());
 		//保存车辆
 		dao.createPubVehicle(pubVehicle);
-
+		String leaseCompanyId = pubVehicle.getLeasesCompanyId();
+		int platform = 0;
+		List<String> vehclineId = new ArrayList<>();
+		vehclineId.add(pubVehicle.getVehclineId());
+		String updater = pubVehicle.getUpdater();
+		String vehicleId = pubVehicle.getId();
+		UpdateVehicleModelsRefByVehicleDto uvmrvd = new UpdateVehicleModelsRefByVehicleDto();
+		uvmrvd.setLeaseCompanyId(leaseCompanyId);
+		uvmrvd.setPlatform(platform);
+		uvmrvd.setUpdater(updater);
+		uvmrvd.setVehclineId(vehclineId);
+		uvmrvd.setVehicleId(vehicleId);
+		if(pubVehicle.getVehicleType().equals("0")){
+			templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehicle", HttpMethod.POST, null, uvmrvd,
+					JSONObject.class);
+		}
 		this.saveVehicleScope(pubVehicle);
 
 		return pubVehicle.getId();
@@ -55,9 +92,32 @@ public class PubVehicleService {
 
 
 	public int updatePubVehicle(PubVehicle pubVehicle) {
-
+		//加个完整车牌
+		Map<String,String> map = new HashMap<>();
+		StringBuffer fullplateno = new StringBuffer();
+		map.put("type","车牌省");
+		map.put("value",pubVehicle.getPlateNoProvince());
+		fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+		map.put("type","车牌市");
+		map.put("value",pubVehicle.getPlateNoCity());
+		fullplateno.append(dictionaryService.getDictionaryText(map).getText());
+		fullplateno.append(pubVehicle.getPlateNo());
+		pubVehicle.setFullplateno(fullplateno.toString());
 		int count = dao.updatePubVehicle(pubVehicle);
-
+		String leaseCompanyId = pubVehicle.getLeasesCompanyId();
+		int platform = 0;
+		List<String> vehclineId = new ArrayList<>();
+		vehclineId.add(pubVehicle.getVehclineId());
+		String updater = pubVehicle.getUpdater();
+		String vehicleId = pubVehicle.getId();
+		UpdateVehicleModelsRefByVehicleDto uvmrvd = new UpdateVehicleModelsRefByVehicleDto();
+		uvmrvd.setLeaseCompanyId(leaseCompanyId);
+		uvmrvd.setPlatform(platform);
+		uvmrvd.setUpdater(updater);
+		uvmrvd.setVehclineId(vehclineId);
+		uvmrvd.setVehicleId(vehicleId);
+		templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehicle", HttpMethod.POST, null, uvmrvd,
+				JSONObject.class);
 		this.saveVehicleScope(pubVehicle);
 		return count;
 	}

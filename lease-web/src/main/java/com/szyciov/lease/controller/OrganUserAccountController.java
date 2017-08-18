@@ -19,9 +19,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.alibaba.fastjson.JSON;
 import com.szyciov.entity.Excel;
+import com.szyciov.lease.entity.OrganUserCouponInfo;
 import com.szyciov.lease.entity.User;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
+import com.szyciov.lease.param.OrganUserCouponQueryParam;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.Constants;
 import com.szyciov.util.ExcelExport;
@@ -111,6 +114,42 @@ public class OrganUserAccountController extends BaseController {
 		return mav;
 	}
 	
+	/**
+	 * 抵用券明细界面
+	 * @param userId
+	 * @param account
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/OrganUserAccount/CouponDetail")
+	public ModelAndView getOrganUserCouponDetail(@RequestParam String userid,
+			@RequestParam String account, HttpServletRequest request) {
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("userid", userid);
+		mav.addObject("account", account);
+		mav.setViewName("resource/organUserAccount/couponDetail");
+		return mav;
+	}
+	
+	/**
+	 * 查询个人抵用券明细
+	 * @param userId
+	 * @param account
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping("/OrganUserAccount/GetOrganUserCouponInfoByQuery")
+	@ResponseBody
+	public PageBean getOrganUserCouponInfoByQuery(@RequestBody OrganUserCouponQueryParam queryParam, HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		response.setContentType("text/html;charset=utf-8");
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		User user = getLoginLeUser(request);
+		queryParam.setLecompanyid(user.getLeasescompanyid());
+		return templateHelper.dealRequestWithToken("/OrganUserAccount/GetOrganUserCouponInfoByQuery", HttpMethod.POST, userToken,
+				queryParam,PageBean.class);
+	}
+	
 	@RequestMapping(value = "/OrganUserAccount/BalanceDetail")
 	public ModelAndView getOrganUserBalanceDetail(@RequestParam(value = "userId", required = true) String userId,
 			@RequestParam(value = "account", required = true) String account, HttpServletRequest request) {
@@ -190,6 +229,66 @@ public class OrganUserAccountController extends BaseController {
 		} else {
 			ee.setSheetName("交易明细");
 		}
+		ee.createExcel(tempFile);
+	}
+	
+	@RequestMapping("/OrganUserAccount/ExportCouponData")
+	@SuppressWarnings("unchecked")
+	public void exportCouponData(@RequestParam(value = "userid", required = true) String userid,
+			@RequestParam(value = "couponstatus", required = false) Integer couponstatus,
+			@RequestParam(value = "starttime", required = false) String startTime,
+			@RequestParam(value = "account", required = false) String account,
+			@RequestParam(value = "endtime", required = false) String endTime, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		Map<String, List<Object>> colData = new HashMap<String, List<Object>>();
+		List<Object> colData1 = new ArrayList<Object>();
+		List<Object> colData2 = new ArrayList<Object>();
+		List<Object> colData3 = new ArrayList<Object>();
+		List<Object> colData4 = new ArrayList<Object>();
+		List<Object> colData5 = new ArrayList<Object>();
+		List<Object> colData6 = new ArrayList<Object>();
+		OrganUserCouponQueryParam queryParam = new OrganUserCouponQueryParam();
+		queryParam.setLecompanyid(getLoginLeUser(request).getLeasescompanyid());
+		queryParam.setUserid(userid);
+		queryParam.setCouponstatus(couponstatus);
+		queryParam.setStarttime(startTime);
+		queryParam.setEndtime(endTime);
+		 
+		List<Map> orgUserExpenses = templateHelper.dealRequestWithToken("/OrganAccount/ExportCouponData",
+				HttpMethod.POST, userToken, queryParam, List.class);
+		for (Map m:orgUserExpenses) {
+			OrganUserCouponInfo info=JSON.parseObject(JSON.toJSONString(m), OrganUserCouponInfo.class);
+			colData1.add(info.getSendtime());
+			colData2.add(info.getName());
+			colData3.add(info.getCouponstatus()==0?"未使用":(info.getCouponstatus()==1?"已使用":"已过期"));
+			colData4.add(info.getAmount());
+			colData5.add(info.getUseendtime().equals(info.getUsestarttime())?info.getUsestarttime():info.getUsestarttime()+"-"+info.getUseendtime());
+			colData6.add(info.getUsecity());
+		}
+		Excel excel = new Excel();
+		// excel文件
+		String fineName = "个人账户-【" + account + "】抵用券明细.xls";
+		File tempFile = new File(fineName);
+		
+		List<String> colName = new ArrayList<String>();
+		colName.add("时间");
+		colName.add("抵用券名称");
+		colName.add("状态");
+		colName.add("金额(元)");
+		colName.add("有效期");
+		colName.add("限用地点");
+		excel.setColName(colName);
+		colData.put("时间", colData1);
+		colData.put("抵用券名称", colData2);
+		colData.put("状态", colData3);
+		colData.put("金额(元)", colData4);
+		colData.put("有效期", colData5);
+		colData.put("限用地点", colData6);
+		excel.setColData(colData);
+		
+		ExcelExport ee = new ExcelExport(request,response,excel);
+		//ee.setSheetName("抵用券明细");
 		ee.createExcel(tempFile);
 	}
 }

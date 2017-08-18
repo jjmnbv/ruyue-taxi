@@ -133,39 +133,49 @@ public class OrgIndexService {
 			}
 			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-						o.setOrderStatusShow(PayState.STATEMENTING.msg);
-					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-						o.setOrderStatusShow(PayState.STATEMENTED.msg);
-					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-						o.setOrderStatusShow(PayState.MENTED.msg);
-					}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-						o.setOrderStatusShow(PayState.CLOSE.msg);
-					}
 					if(o.getCancelnature()==null){
 						o.setOrderStatusShow(OrderState.CANCEL.msg);
+					}else{
+						if(o.getCancelnature() == 1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								o.setOrderStatusShow(PayState.STATEMENTING.msg);
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								o.setOrderStatusShow(PayState.STATEMENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								o.setOrderStatusShow(PayState.MENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setOrderStatusShow(PayState.CLOSE.msg);
+							}
+						}else{
+							o.setOrderStatusShow(OrderState.CANCEL.msg);
+						}
 					}
 				}
 			}
 			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-						if (o.getPaymethod().equals("2")) {
-							o.setPayTypeShow("机构支付");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-						if (o.getPaymethod().equals("2")) {
-							o.setPayTypeShow("机构支付");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-						if (o.getPaymethod().equals("2")) {
-							o.setPayTypeShow("机构支付");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-						o.setPayTypeShow("/");
-					}
 					if(o.getCancelnature()==null){
 						o.setPayTypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setPayTypeShow("/");
+							}
+						}else{
+							o.setPayTypeShow("/");
+						}
 					}
 				}else{
 //					if (o.getPaymethod().equals("0")) {
@@ -180,29 +190,33 @@ public class OrgIndexService {
 			}
 			if(o.getExpensetype() != null && o.getExpensetype() != 0 && !o.getExpensetype().toString().equals("")){
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-						if(o.getExpensetype() == 2){
-							o.setExpensetypeShow("取消处罚");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-						if(o.getExpensetype() == 2){
-							o.setExpensetypeShow("取消处罚");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-						if(o.getExpensetype() == 2){
-							o.setExpensetypeShow("取消处罚");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-						o.setExpensetypeShow("/");
-					}
 					if(o.getCancelnature()==null){
 						o.setExpensetypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setExpensetypeShow("/");
+							}
+						}else{
+							o.setExpensetypeShow("/");
+						}
 					}
 				}else{
 					if(o.getExpensetype() == 1){
 						o.setExpensetypeShow("行程服务");
-					}else if(o.getExpensetype() == 2){
-						o.setExpensetypeShow("取消处罚");
+						o.setCancelamount(0);
 					}
 				}
 			}
@@ -304,39 +318,49 @@ public class OrgIndexService {
 		}
 		if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 			if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-				if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-					o.setOrderStatusShow(PayState.STATEMENTING.msg);
-				}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-					o.setOrderStatusShow(PayState.STATEMENTED.msg);
-				}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-					o.setOrderStatusShow(PayState.MENTED.msg);
-				}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-					o.setOrderStatusShow(PayState.CLOSE.msg);
-				}
 				if(o.getCancelnature()==null){
 					o.setOrderStatusShow(OrderState.CANCEL.msg);
+				}else{
+					if(o.getCancelnature() == 1){
+						if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+							o.setOrderStatusShow(PayState.STATEMENTING.msg);
+						}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+							o.setOrderStatusShow(PayState.STATEMENTED.msg);
+						}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+							o.setOrderStatusShow(PayState.MENTED.msg);
+						}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+							o.setOrderStatusShow(PayState.CLOSE.msg);
+						}
+					}else{
+						o.setOrderStatusShow(OrderState.CANCEL.msg);
+					}
 				}
 			}
 		}
 		if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
 			if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-				if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-					if (o.getPaymethod().equals("2")) {
-						o.setPaymethod("机构支付");
-					}
-				}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-					if (o.getPaymethod().equals("2")) {
-						o.setPaymethod("机构支付");
-					}
-				}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-					if (o.getPaymethod().equals("2")) {
-						o.setPaymethod("机构支付");
-					}
-				}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-					o.setPaymethod("/");
-				}
 				if(o.getCancelnature()==null){
 					o.setPaymethod("/");
+				}else{
+					if(o.getCancelnature()==1){
+						if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+							if (o.getPaymethod().equals("2")) {
+								o.setPaymethod("机构支付");
+							}
+						}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+							if (o.getPaymethod().equals("2")) {
+								o.setPaymethod("机构支付");
+							}
+						}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+							if (o.getPaymethod().equals("2")) {
+								o.setPaymethod("机构支付");
+							}
+						}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+							o.setPaymethod("/");
+						}
+					}else{
+						o.setPaymethod("/");
+					}
 				}
 			}else{
 //				if (o.getPaymethod().equals("0")) {
@@ -349,7 +373,6 @@ public class OrgIndexService {
 				}
 			}
 		}
-		
 //		if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 //			if (o.getOrderstatus().equals(OrderState.SERVICEDONE.state)) {
 //				if(o.getPaymentstatus().equals("0")){
@@ -527,39 +550,49 @@ public class OrgIndexService {
 			}
 			if (o.getOrderstatus() != null && !o.getOrderstatus().equals("")) {
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-						o.setOrderStatusShow(PayState.STATEMENTING.msg);
-					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-						o.setOrderStatusShow(PayState.STATEMENTED.msg);
-					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-						o.setOrderStatusShow(PayState.MENTED.msg);
-					}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-						o.setOrderStatusShow(PayState.CLOSE.msg);
-					}
 					if(o.getCancelnature()==null){
 						o.setOrderStatusShow(OrderState.CANCEL.msg);
+					}else{
+						if(o.getCancelnature() == 1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								o.setOrderStatusShow(PayState.STATEMENTING.msg);
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								o.setOrderStatusShow(PayState.STATEMENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								o.setOrderStatusShow(PayState.MENTED.msg);
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setOrderStatusShow(PayState.CLOSE.msg);
+							}
+						}else{
+							o.setOrderStatusShow(OrderState.CANCEL.msg);
+						}
 					}
 				}
 			}
 			if (o.getPaymethod() != null && !o.getPaymethod().equals("")) {
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-						if (o.getPaymethod().equals("2")) {
-							o.setPaymethod("机构支付");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-						if (o.getPaymethod().equals("2")) {
-							o.setPaymethod("机构支付");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-						if (o.getPaymethod().equals("2")) {
-							o.setPaymethod("机构支付");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-						o.setPaymethod("/");
-					}
 					if(o.getCancelnature()==null){
-						o.setPaymethod("/");
+						o.setPayTypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if (o.getPaymethod().equals("2")) {
+									o.setPayTypeShow("机构支付");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setPayTypeShow("/");
+							}
+						}else{
+							o.setPayTypeShow("/");
+						}
 					}
 				}else{
 //					if (o.getPaymethod().equals("0")) {
@@ -568,35 +601,39 @@ public class OrgIndexService {
 //						o.setPayTypeShow("个人垫付");
 //					}else 
 					if (o.getPaymethod().equals("2")) {
-						o.setPaymethod("机构支付");
+						o.setPayTypeShow("机构支付");
 					}
 				}
 			}
 			if(o.getExpensetype() != null && o.getExpensetype() != 0 && !o.getExpensetype().toString().equals("")){
 				if (o.getOrderstatus().equals(OrderState.CANCEL.state)) {
-					if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
-						if(o.getExpensetype() == 2){
-							o.setExpensetypeShow("取消处罚");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
-						if(o.getExpensetype() == 2){
-							o.setExpensetypeShow("取消处罚");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
-						if(o.getExpensetype() == 2){
-							o.setExpensetypeShow("取消处罚");
-						}
-					}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
-						o.setExpensetypeShow("/");
-					}
 					if(o.getCancelnature()==null){
 						o.setExpensetypeShow("/");
+					}else{
+						if(o.getCancelnature()==1){
+							if(o.getPaymentstatus().equals(PayState.STATEMENTING.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.STATEMENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.MENTED.state)){
+								if(o.getExpensetype() == 2){
+									o.setExpensetypeShow("取消处罚");
+								}
+							}else if(o.getPaymentstatus().equals(PayState.CLOSE.state)){
+								o.setExpensetypeShow("/");
+							}
+						}else{
+							o.setExpensetypeShow("/");
+						}
 					}
 				}else{
 					if(o.getExpensetype() == 1){
 						o.setExpensetypeShow("行程服务");
-					}else if(o.getExpensetype() == 2){
-						o.setExpensetypeShow("取消处罚");
+						o.setCancelamount(0);
 					}
 				}
 			}

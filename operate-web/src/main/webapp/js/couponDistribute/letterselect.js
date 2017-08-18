@@ -174,12 +174,12 @@ function getData1 (parent,showVal, backVal,url,top,left) {
 	}
 	var flag = true ;
 //	失去焦点
-	showVal.onblur = function () {
+	/*showVal.onblur = function () {
 		if(flag){
 			parent.getElementsByClassName("kongjian_list")[0].style.display = "none";
 		}
 		return false;
-	}
+	}*/
 //	鼠标悬停时不隐藏
 	parent.getElementsByClassName("kongjian_list")[0].onmouseenter = function () {
 		flag = false ;

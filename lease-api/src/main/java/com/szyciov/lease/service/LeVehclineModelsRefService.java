@@ -7,18 +7,25 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
+import com.szyciov.dto.pubVehicleModelsRef.UpdateVehicleModelsRefByVehclineDto;
 import com.szyciov.lease.dao.LeVehclineModelsRefDao;
 import com.szyciov.lease.dao.LeVehiclemodelsDao;
 import com.szyciov.lease.entity.LeVehclineModelsRef;
 import com.szyciov.lease.entity.PubVehcline;
 import com.szyciov.lease.entity.PubVehicle;
 import com.szyciov.op.entity.OpVehclineModelsRef;
+import com.szyciov.util.Constants;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.TemplateHelper;
+
+import net.sf.json.JSONObject;
 
 @Service("LeVehclineModelsRefService")
 public class LeVehclineModelsRefService {
+	private TemplateHelper templateHelper = new TemplateHelper();
 	private LeVehclineModelsRefDao dao;
 	@Resource(name = "LeVehclineModelsRefDao")
 	public void setDao(LeVehclineModelsRefDao dao) {
@@ -31,6 +38,7 @@ public class LeVehclineModelsRefService {
 	}
 	public Map<String, String> createLeVehclineModelsRef(Map map) {
 		Map<String, String> ret = new HashMap<String, String>();
+		UpdateVehicleModelsRefByVehclineDto uvmrbvd = new UpdateVehicleModelsRefByVehclineDto();
 		ret.put("ResultSign", "Successful");
 		ret.put("MessageKey", "保存成功");
 		if(map.size()>0){
@@ -41,6 +49,7 @@ public class LeVehclineModelsRefService {
 				if(oldvehclinesid==null||oldvehclinesid.size()<=0){
 					//之前没有车系
 					deleteLeVehclineModelsRefAll(modelid);
+					List<String> vehclineId = new ArrayList<String>();
 					for(int i=0;i<newvehclinesid.size();i++){
 						LeVehclineModelsRef leVehclineModelsRef = new LeVehclineModelsRef();
 						leVehclineModelsRef.setId(GUIDGenerator.newGUID());
@@ -49,7 +58,19 @@ public class LeVehclineModelsRefService {
 						leVehclineModelsRef.setCreater((String)map.get("creater"));
 						leVehclineModelsRef.setUpdater((String)map.get("updater"));
 						dao.createLeVehclineModelsRef(leVehclineModelsRef);
+						vehclineId.add(newvehclinesid.get(i));
 					}
+					String leaseCompanyId = (String)map.get("leasesCompanyId");
+					int platform = 1;
+					String vehiclemodels = (String)map.get("id");
+					String updater = (String)map.get("updater");
+					uvmrbvd.setLeaseCompanyId(leaseCompanyId);
+					uvmrbvd.setPlatform(platform);
+					uvmrbvd.setUpdater(updater);
+					uvmrbvd.setVehclineId(vehclineId);
+					uvmrbvd.setVehiclemodels(vehiclemodels);
+					templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehcline", HttpMethod.POST, null, uvmrbvd,
+							JSONObject.class);
 				}else{
 					//之前有车系,需要判断是否有绑定司机的车系被取消了
 					List<String> tempvehclinesid = new ArrayList<String>(); 
@@ -64,6 +85,7 @@ public class LeVehclineModelsRefService {
 						//之前的没有取消
 						deleteLeVehclineModelsRefAll(modelid);
 						if(newvehclinesid != null && newvehclinesid.size() > 0){
+							List<String> vehclineId = new ArrayList<String>();
 							for(int i=0;i<newvehclinesid.size();i++){
 								LeVehclineModelsRef leVehclineModelsRef = new LeVehclineModelsRef();
 								leVehclineModelsRef.setId(GUIDGenerator.newGUID());
@@ -72,7 +94,19 @@ public class LeVehclineModelsRefService {
 								leVehclineModelsRef.setCreater((String)map.get("creater"));
 								leVehclineModelsRef.setUpdater((String)map.get("updater"));
 								dao.createLeVehclineModelsRef(leVehclineModelsRef);
+								vehclineId.add(newvehclinesid.get(i));
 							}
+							String leaseCompanyId = (String)map.get("leasesCompanyId");
+							int platform = 1;
+							String vehiclemodels = (String)map.get("id");
+							String updater = (String)map.get("updater");
+							uvmrbvd.setLeaseCompanyId(leaseCompanyId);
+							uvmrbvd.setPlatform(platform);
+							uvmrbvd.setUpdater(updater);
+							uvmrbvd.setVehclineId(vehclineId);
+							uvmrbvd.setVehiclemodels(vehiclemodels);
+							templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehcline", HttpMethod.POST, null, uvmrbvd,
+									JSONObject.class);
 						}
 	 				}else{
 						//之前取消
@@ -80,6 +114,7 @@ public class LeVehclineModelsRefService {
 						if(bindvehclines==null||bindvehclines.size()<=0){
 							deleteLeVehclineModelsRefAll(modelid);
 							if(newvehclinesid != null && newvehclinesid.size() > 0){
+								List<String> vehclineId = new ArrayList<String>();
 								for(int i=0;i<newvehclinesid.size();i++){
 									LeVehclineModelsRef leVehclineModelsRef = new LeVehclineModelsRef();
 									leVehclineModelsRef.setId(GUIDGenerator.newGUID());
@@ -88,7 +123,19 @@ public class LeVehclineModelsRefService {
 									leVehclineModelsRef.setCreater((String)map.get("creater"));
 									leVehclineModelsRef.setUpdater((String)map.get("updater"));
 									dao.createLeVehclineModelsRef(leVehclineModelsRef);
+									vehclineId.add(newvehclinesid.get(i));
 								}
+								String leaseCompanyId = (String)map.get("leasesCompanyId");
+								int platform = 1;
+								String vehiclemodels = (String)map.get("id");
+								String updater = (String)map.get("updater");
+								uvmrbvd.setLeaseCompanyId(leaseCompanyId);
+								uvmrbvd.setPlatform(platform);
+								uvmrbvd.setUpdater(updater);
+								uvmrbvd.setVehclineId(vehclineId);
+								uvmrbvd.setVehiclemodels(vehiclemodels);
+								templateHelper.dealRequestWithTokenCarserviceApiUrl("/PubVehicleModelsRef/updateVehicleModelsRefByVehcline", HttpMethod.POST, null, uvmrbvd,
+										JSONObject.class);
 							}
 						}else{
 							ret.put("ResultSign", "Error");

@@ -54,6 +54,7 @@ import com.szyciov.entity.PayMethod;
 import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubAdImage;
 import com.szyciov.entity.Retcode;
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.lease.entity.OrgOrgan;
@@ -98,6 +99,8 @@ public class PassengerService {
 	private TemplateHelper4leaseApi leaseapi = new TemplateHelper4leaseApi();
 	
 	private TemplateHelper4CarServiceApi carserviceapi = new TemplateHelper4CarServiceApi();
+	
+	public final TemplateHelper templateHelper = new TemplateHelper();
 	
 	/**
 	 * 字典相关的dao
@@ -533,6 +536,47 @@ public class PassengerService {
 					res.put("message", Retcode.EXCEPTION.msg);
 					logger.error("乘客端异常",e);
 				}
+				//触发登录优惠券发放
+				try{
+					//机构端一定有个人用户，所以先给运管登录触发然后在触发机构租赁公司的活动
+					String city = loginparam.getCity();
+					String citycode = dicdao.getCityNo(city);
+					//触发优惠券
+					//1）运管端登录触发优惠券发放活动
+					Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+					String companyid = (String) opinfo.get("id");
+					PeUser user = userdao.getUser4Op(account);
+					if(user!=null){
+						Map<String,Object> couponparams = new HashMap<String,Object>();
+						couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+						couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+						couponparams.put("companyId", companyid);
+						couponparams.put("cityCode", citycode);
+						couponparams.put("userId", user.getId());
+						couponparams.put("version", "v3.0.1");
+						couponparams.put("userPhone",user.getAccount());
+						Const.grenerateCoupon(templateHelper, couponparams);
+					}
+					//2）租赁优惠券发放活动
+					Map<String,Object> pp = new HashMap<String,Object>();
+	    			pp.put("organid", orguser.getOrganId());
+	    			List<String> tempcompanyids = userdao.getValiableCompanys(pp);
+					if(tempcompanyids!=null){
+						for(int i=0;i<tempcompanyids.size();i++){
+							String lecompanyid = tempcompanyids.get(i);
+							Map<String,Object> couponparams = new HashMap<String,Object>();
+							couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+							couponparams.put("userType", CouponRuleTypeEnum.ORGAN_USER.value);
+							couponparams.put("companyId", lecompanyid);
+							couponparams.put("cityCode", citycode);
+							couponparams.put("userId", orguser.getId());
+							couponparams.put("version", "v3.0.1");
+							Const.grenerateCoupon(templateHelper, couponparams);
+						}
+					}
+				}catch(Exception e){
+					logger.error("触发优惠券出错",e);
+				}
 			}
 		}else{
 			try{
@@ -606,6 +650,47 @@ public class PassengerService {
 						res.put("status", Retcode.EXCEPTION.code);
 						res.put("message", Retcode.EXCEPTION.msg);
 						logger.error("乘客端异常",e);
+					}
+					
+					//触发登录优惠券发放
+					try{
+						//机构端一定有个人用户，所以先给运管登录触发然后在触发机构租赁公司的活动
+						String city = loginparam.getCity();
+						String citycode = dicdao.getCityNo(city);
+						//触发优惠券
+						//1）运管端登录触发优惠券发放活动
+						Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+						String companyid = (String) opinfo.get("id");
+						PeUser user = userdao.getUser4Op(account);
+						if(user!=null){
+							Map<String,Object> couponparams = new HashMap<String,Object>();
+							couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+							couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+							couponparams.put("companyId", companyid);
+							couponparams.put("cityCode", citycode);
+							couponparams.put("userId", user.getId());
+							couponparams.put("version", "v3.0.1");
+							Const.grenerateCoupon(templateHelper, couponparams);
+						}
+						//2）租赁优惠券发放活动
+						Map<String,Object> pp = new HashMap<String,Object>();
+		    			pp.put("organid", orguser.getOrganId());
+		    			List<String> tempcompanyids = userdao.getValiableCompanys(pp);
+						if(tempcompanyids!=null){
+							for(int i=0;i<tempcompanyids.size();i++){
+								String lecompanyid = tempcompanyids.get(i);
+								Map<String,Object> couponparams = new HashMap<String,Object>();
+								couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+								couponparams.put("userType", CouponRuleTypeEnum.ORGAN_USER.value);
+								couponparams.put("companyId", lecompanyid);
+								couponparams.put("cityCode", citycode);
+								couponparams.put("userId", orguser.getId());
+								couponparams.put("version", "v3.0.1");
+								Const.grenerateCoupon(templateHelper, couponparams);
+							}
+						}
+					}catch(Exception e){
+						logger.error("触发优惠券出错",e);
 					}
 				}
 			}
@@ -733,7 +818,24 @@ public class PassengerService {
 					res.put("message", Retcode.EXCEPTION.msg);
 					logger.error("乘客端异常",e);
 				}
-				
+				try{
+					Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+					String companyid = (String) opinfo.get("id");
+					String city = loginparam.getCity();
+					String citycode = dicdao.getCityNo(city);
+					//触发优惠券
+					Map<String,Object> couponparams = new HashMap<String,Object>();
+					couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+					couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+					couponparams.put("companyId", companyid);
+					couponparams.put("cityCode", citycode);
+					couponparams.put("userId", peuser.getId());
+					couponparams.put("version", "v3.0.1");
+					couponparams.put("userPhone",account);
+					Const.grenerateCoupon(templateHelper, couponparams);
+				}catch(Exception e){
+					logger.error("触发优惠券出错",e);
+				}
 			}
 		}else{
 			try{
@@ -806,6 +908,24 @@ public class PassengerService {
 						res.put("status", Retcode.EXCEPTION.code);
 						res.put("message", Retcode.EXCEPTION.msg);
 						logger.error("乘客端异常",e);
+					}
+					//触发登录优惠券发放
+					try{
+						Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+						String companyid = (String) opinfo.get("id");
+						String city = loginparam.getCity();
+						String citycode = dicdao.getCityNo(city);
+						//触发优惠券
+						Map<String,Object> couponparams = new HashMap<String,Object>();
+						couponparams.put("type", CouponRuleTypeEnum.ACTIVITY.value);
+						couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+						couponparams.put("companyId", companyid);
+						couponparams.put("cityCode", citycode);
+						couponparams.put("userId", peuser.getId());
+						couponparams.put("version", "v3.0.1");
+						Const.grenerateCoupon(templateHelper, couponparams);
+					}catch(Exception e){
+						logger.error("触发优惠券出错",e);
 					}
 				}
 			}
@@ -999,6 +1119,9 @@ public class PassengerService {
 		String userid = GUIDGenerator.newGUID();
 		loginlog.put("userid", userid);
 		peuser.setId(userid);
+		String city = registerparam.getCity();
+		String citycode = dicdao.getCityNo(city);
+		peuser.setRegistercity(citycode);
 		peuser.setUserpassword(registerparam.getPassword());
 		encodePwd(peuser);
 		try{
@@ -3671,6 +3794,19 @@ public class PassengerService {
 						}
 	    				//优惠券处理
 	    				dillCouponUseInfo4Op(optaxiorder);
+	    				
+//	    				//消费返券触发
+//	    				Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+//						String companyid = (String) opinfo.get("id");
+//						Map<String,Object> couponparams = new HashMap<String,Object>();
+//						couponparams.put("type", CouponRuleTypeEnum.EXPENSE.value);
+//						couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+//						couponparams.put("companyId", companyid);
+//						couponparams.put("cityCode", optaxiorder.get("oncity"));
+//						couponparams.put("userId", userid);
+//						couponparams.put("money", amount);
+//						couponparams.put("version", "v3.0.1");
+//						Const.grenerateCoupon(templateHelper, couponparams);
 					}else{
 						//网约车订单
 						tradeinfo = orderdao.getPayTradeRecord4OpNetCar(out_trade_no);
@@ -3718,6 +3854,18 @@ public class PassengerService {
 //						}catch (Exception e){
 //							logger.error("返现出错了",e);
 //						}
+//	    				//消费返券触发
+//	    				Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+//						String companyid = (String) opinfo.get("id");
+//						Map<String,Object> couponparams = new HashMap<String,Object>();
+//						couponparams.put("type", CouponRuleTypeEnum.EXPENSE.value);
+//						couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+//						couponparams.put("companyId", companyid);
+//						couponparams.put("cityCode", order.getOncity());
+//						couponparams.put("userId", userid);
+//						couponparams.put("money", amount);
+//						couponparams.put("version", "v3.0.1");
+//						Const.grenerateCoupon(templateHelper, couponparams);
 					}
 				}else{
 					//签名失败
@@ -4022,6 +4170,19 @@ public class PassengerService {
 									}
 		    	    				//优惠券使用
 		    	    				dillCouponUseInfo4Op(optaxiorder);
+		    	    				
+//		    	    				//消费返券触发
+//		    	    				Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+//		    						String companyid = (String) opinfo.get("id");
+//	    							Map<String,Object> couponparams = new HashMap<String,Object>();
+//	    							couponparams.put("type", CouponRuleTypeEnum.EXPENSE.value);
+//	    							couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+//	    							couponparams.put("companyId", companyid);
+//	    							couponparams.put("cityCode", optaxiorder.get("oncity"));
+//	    							couponparams.put("userId", userid);
+//	    							couponparams.put("money", amount);
+//	    							couponparams.put("version", "v3.0.1");
+//	    							Const.grenerateCoupon(templateHelper, couponparams);
 		    					}else{
 		    						//网约车订单
 		    						tradeinfo = orderdao.getPayTradeRecord4OpNetCar(outtradeno);
@@ -4071,6 +4232,18 @@ public class PassengerService {
 //									}catch (Exception e){
 //										logger.error("返现出错了",e);
 //									}
+//				    				//消费返券触发
+//		    	    				Map<String,Object> opinfo = dicdao.getPayInfo4Op();
+//		    						String companyid = (String) opinfo.get("id");
+//	    							Map<String,Object> couponparams = new HashMap<String,Object>();
+//	    							couponparams.put("type", CouponRuleTypeEnum.EXPENSE.value);
+//	    							couponparams.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
+//	    							couponparams.put("companyId", companyid);
+//	    							couponparams.put("cityCode", order.getOncity());
+//	    							couponparams.put("userId", userid);
+//	    							couponparams.put("money", amount);
+//	    							couponparams.put("version", "v3.0.1");
+//	    							Const.grenerateCoupon(templateHelper, couponparams);
 		    					}
 	    		            }else{
 	    		            	//签名失败记录日志并且返回失败
@@ -5699,6 +5872,8 @@ public class PassengerService {
 			params.put("usetype", 2);
 			params.put("amount", couponmoney);
 			params.put("remark", couponinfo!=null?couponinfo.get("name"):"");
+			params.put("lecompanyid", couponinfo.get("couponinfo"));
+			params.put("platformtype", couponinfo.get("platformtype"));
 			userdao.addCouponDetail(params);
 		}
 	}
@@ -5739,6 +5914,8 @@ public class PassengerService {
 			params.put("usetype", 2);
 			params.put("amount", couponmoney);
 			params.put("remark", couponinfo!=null?couponinfo.get("name"):"");
+			params.put("lecompanyid", couponinfo.get("couponinfo"));
+			params.put("platformtype", couponinfo.get("platformtype"));
 			userdao.addCouponDetail(params);
 		}
 	}

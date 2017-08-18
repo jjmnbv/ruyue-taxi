@@ -25,3 +25,12 @@ function initGrid() {
     
 	dataGrid = renderGrid(gridObj);
 }
+/**
+ * 查询
+ */
+function search() {
+	var conditionArr = [
+		{ "name": "weekday", "value": $("#weeks").val() },
+	];
+	dataGrid.fnSearch(conditionArr);
+}

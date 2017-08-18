@@ -1,5 +1,14 @@
 package com.szyciov.operate.controller;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.szyciov.entity.CancelParty;
 import com.szyciov.enums.OrderEnum;
 import com.szyciov.lease.param.OrderManageQueryParam;
@@ -20,15 +29,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Controller
 public class TaxiOrderManageController extends BaseController {
@@ -50,29 +50,8 @@ public class TaxiOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/TaxiOrderManage/Index")
-	public ModelAndView missOrderIndex(HttpServletRequest request) {
-		ModelAndView view = new ModelAndView();
-		view.addObject("taxiSendruleCount", getOpSendmodelCountByUser(request));
-		view.setViewName("resource/taxiOrdermanage/index");
-		return view;
-	}
-	
-	/**
-	 * 跳转到待人工派单首页
-	 * @param request
-	 * @return
-	 */
-	@RequestMapping(value = "/TaxiOrderManage/LabourOrderIndex")
-	public ModelAndView labourOrderIndex(HttpServletRequest request) {
-		ModelAndView view = new ModelAndView();
-		int taxiSendruleCount = getOpSendmodelCountByUser(request);
-		if(taxiSendruleCount > 0) {
-			view.setViewName("resource/taxiOrdermanage/labourorder");
-		} else {
-			view.addObject("taxiSendruleCount", taxiSendruleCount);
-			view.setViewName("resource/taxiOrdermanage/index");
-		}
-		return view;
+	public String orderIndex() {
+		return "resource/taxiOrdermanage/index";
 	}
 	
 	/**
@@ -81,11 +60,8 @@ public class TaxiOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/TaxiOrderManage/CurrentOrderIndex")
-	public ModelAndView currentOrderIndex(HttpServletRequest request) {
-		ModelAndView view = new ModelAndView();
-		view.addObject("taxiSendruleCount", getOpSendmodelCountByUser(request));
-		view.setViewName("resource/taxiOrdermanage/currentorder");
-		return view;
+	public String currentOrderIndex() {
+		return "resource/taxiOrdermanage/currentorder";
 	}
 	
 	/**
@@ -94,11 +70,8 @@ public class TaxiOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/TaxiOrderManage/AbnormalOrderIndex")
-	public ModelAndView abnormalOrderIndex(HttpServletRequest request) {
-		ModelAndView view = new ModelAndView();
-		view.addObject("taxiSendruleCount", getOpSendmodelCountByUser(request));
-		view.setViewName("resource/taxiOrdermanage/abnormalorder");
-		return view;
+	public String abnormalOrderIndex() {
+		return "resource/taxiOrdermanage/abnormalorder";
 	}
 	
 	/**
@@ -107,11 +80,8 @@ public class TaxiOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/TaxiOrderManage/WasabnormalOrderIndex")
-	public ModelAndView wasabnormalOrderIndex(HttpServletRequest request) {
-		ModelAndView view = new ModelAndView();
-		view.addObject("taxiSendruleCount", getOpSendmodelCountByUser(request));
-		view.setViewName("resource/taxiOrdermanage/wasabnormalorder");
-		return view;
+	public String wasabnormalOrderIndex() {
+		return "resource/taxiOrdermanage/wasabnormalorder";
 	}
 	
 	/**
@@ -120,11 +90,8 @@ public class TaxiOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/TaxiOrderManage/HistoryOrderIndex")
-	public ModelAndView historyOrderIndex(HttpServletRequest request) {
-		ModelAndView view = new ModelAndView();
-		view.addObject("taxiSendruleCount", getOpSendmodelCountByUser(request));
-		view.setViewName("resource/taxiOrdermanage/historyorder");
-		return view;
+	public String historyOrderIndex() {
+		return "resource/taxiOrdermanage/historyorder";
 	}
 	
 	/**
@@ -133,11 +100,18 @@ public class TaxiOrderManageController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/TaxiOrderManage/WaitgatheringOrderIndex")
-	public ModelAndView waitgatheringOrderIndex(HttpServletRequest request) {
-		ModelAndView view = new ModelAndView();
-		view.addObject("taxiSendruleCount", getOpSendmodelCountByUser(request));
-		view.setViewName("resource/taxiOrdermanage/waitgatheringorder");
-		return view;
+	public String waitgatheringOrderIndex() {
+		return "resource/taxiOrdermanage/waitgatheringorder";
+	}
+
+	/**
+	 * 跳转到已取消订单首页
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/TaxiOrderManage/CancelOrderIndex")
+	public String cancelOrderIndex() {
+		return "resource/taxiOrdermanage/cancelorder";
 	}
 	
 	/**
@@ -514,5 +488,27 @@ public class TaxiOrderManageController extends BaseController {
 		}
 		return 0;
 	}
-	
+
+	/**
+     * 获取订单列表中的服务车企(select2)
+     *  @param belongleasecompany
+     * @param type
+	 * @param request
+	 * @param taxiOrderManageService
+	 * */
+    @RequestMapping(value = "TaxiOrderManage/GetBelongCompanySelect")
+    @ResponseBody
+    public List<Map<String, Object>> getBelongCompanySelect(
+		@RequestParam(value = "belongleasecompany", required = false) String belongleasecompany,
+		@RequestParam(value = "type") String type,
+		HttpServletRequest request, TaxiOrderManageService taxiOrderManageService) {
+        String userToken = getUserToken(request);
+        OpUser user = getLoginOpUser(request);
+        OrderManageQueryParam queryParam = new OrderManageQueryParam();
+        queryParam.setBelongleasecompany(belongleasecompany);
+        queryParam.setType(type);
+        queryParam.setOpUserId(user.getId());
+        queryParam.setUsertype(user.getUsertype());
+        return taxiOrderManageService.getBelongCompanySelect(queryParam, userToken);
+    }
 }

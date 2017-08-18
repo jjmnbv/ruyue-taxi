@@ -110,6 +110,12 @@
 		<typeAlias type="com.szyciov.op.entity.OpTaxiOrderReview" alias="OpTaxiOrderReview"/>
 		
 		<typeAlias type="com.szyciov.op.entity.OpPlatformInfo" alias="OpPlatformInfo"/>
+		<typeAlias type="com.szyciov.op.entity.OpPlatformServiceorgan" alias="OpPlatformServiceorgan"/>
+		<typeAlias type="com.szyciov.op.entity.OpPlatformStagnation" alias="OpPlatformStagnation"/>
+		<typeAlias type="com.szyciov.op.entity.OpPlatformBusinesslicenseScope" alias="OpPlatformBusinesslicenseScope"/>
+		<typeAlias type="com.szyciov.op.entity.OpPlatformBusinesslicense" alias="OpPlatformBusinesslicense"/>
+		<typeAlias type="com.szyciov.op.vo.OpPlatformBusinesslicenseVo" alias="OpPlatformBusinesslicenseVo"/>
+		<typeAlias type="com.szyciov.op.dto.OpPlatformBusinesslicenseDto" alias="OpPlatformBusinesslicenseDto"/>
 		<typeAlias type="com.szyciov.entity.UserNews" alias="UserNews"/>
 		
 		<typeAlias type="com.szyciov.op.param.OpShiftRulesQueryParam" alias="OpShiftRulesQueryParam"/>
@@ -183,5 +189,10 @@
 		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumModify" alias="PubPremiumModify"/>
 		<typeAlias type="com.szyciov.dto.pubPremiumRule.PubPremiumHistory" alias="PubPremiumHistory"/>
 		<typeAlias type="com.szyciov.param.UserRechargeQueryParam" alias="UserRechargeQueryParam"/>
+		
+		<typeAlias type="com.szyciov.dto.pubOrderCancelRule.PubOrderCancelRule" alias="PubOrderCancelRule"/>
+		<typeAlias type="com.szyciov.dto.pubOrderCancelRule.PubOrderCancelRuleHistory" alias="PubOrderCancelRuleHistory"/>
+        <typeAlias type="com.szyciov.driver.entity.OrderInfoDetail" alias="OrderInfoDetail"/>
+        <typeAlias type="com.szyciov.entity.PubOrderCancel" alias="PubOrderCancel"/>
 	</typeAliases>
 </configuration>

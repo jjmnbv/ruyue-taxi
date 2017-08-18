@@ -317,6 +317,8 @@ public class MyOrderController extends BaseController {
 		List<Object> colData37 = new ArrayList<Object>();
 		List<Object> colData38 = new ArrayList<Object>();
 		List<Object> colData39 = new ArrayList<Object>();
+		List<Object> colData40 = new ArrayList<Object>();
+		List<Object> colData41 = new ArrayList<Object>();
 		String userId = getLoginOrgUser(request).getId();
 		OrgOrderQueryParam oo = new OrgOrderQueryParam();
 		String startTime = request.getParameter("startTime");
@@ -325,6 +327,7 @@ public class MyOrderController extends BaseController {
 		String queryOrderTemp = request.getParameter("queryOrderTemp");
 		String queryVehicleMode = request.getParameter("queryVehicleMode");
 		String queryPaymentMethod = request.getParameter("queryPaymentMethod");
+		String queryExpensetype = request.getParameter("queryExpensetype");
 		oo.setKey(userId);
 		oo.setStartTime(startTime);
 		oo.setEndTime(endTime);
@@ -332,6 +335,7 @@ public class MyOrderController extends BaseController {
 		oo.setQueryOrderTemp(queryOrderTemp);
 		oo.setQueryVehicleMode(queryVehicleMode);
 		oo.setQueryPaymentMethod(queryPaymentMethod);
+		oo.setQueryExpensetype(queryExpensetype);
 		List<Map> orgOrder = templateHelper.dealRequestWithToken("/MyOrder/ExportExcel", HttpMethod.POST,
 				userToken, oo, List.class);
 		for(int i=0;i<orgOrder.size();i++){
@@ -531,6 +535,16 @@ public class MyOrderController extends BaseController {
 			}else{
 				colData37.add("");
 			}
+			if(orgOrder.get(i).get("expensetypeShow") != null){
+				colData40.add(orgOrder.get(i).get("expensetypeShow"));
+			}else{
+				colData40.add(orgOrder.get(i).get("expensetypeShow"));
+			}
+			if(orgOrder.get(i).get("cancelamount") != null){
+				colData41.add(orgOrder.get(i).get("cancelamount"));
+			}else{
+				colData41.add(orgOrder.get(i).get("cancelamount"));
+			}
 		}
 		Excel excel = new Excel();
 		// excel文件
@@ -618,15 +632,17 @@ public class MyOrderController extends BaseController {
 		colName.add("用车事由");
 		colName.add("事由说明");
 		colName.add("行程备注");
-		colName.add("总金额（元）");
+		colName.add("费用类型");
+		colName.add("订单金额（元）");
 		colName.add("起步价（元）");
 		colName.add("行驶里程（公里）");
 		colName.add("行驶里程费（元）");
 		colName.add("用车时长（分钟）");
 		colName.add("用车时长费（元）");
-		colName.add("空驶费（元）");
-		colName.add("夜间费（元）");
+//		colName.add("空驶费（元）");
+//		colName.add("夜间费（元）");
 		colName.add("实付金额（元）");
+		colName.add("处罚金额(元)");
 		colName.add("司机信息");
 		colName.add("资格证号");
 		colName.add("服务车企");
@@ -658,15 +674,17 @@ public class MyOrderController extends BaseController {
 		colData.put("用车事由", colData14);
 		colData.put("事由说明", colData15);
 		colData.put("行程备注", colData16);
-		colData.put("总金额（元）", colData20);
+		colData.put("费用类型", colData40);
+		colData.put("订单金额（元）", colData20);
 		colData.put("起步价（元）", colData21);
 		colData.put("行驶里程（公里）", colData22);
 		colData.put("行驶里程费（元）", colData23);
 		colData.put("用车时长（分钟）", colData24);
 		colData.put("用车时长费（元）", colData25);
-		colData.put("空驶费（元）", colData38);
-		colData.put("夜间费（元）", colData39);
+//		colData.put("空驶费（元）", colData38);
+//		colData.put("夜间费（元）", colData39);
 		colData.put("实付金额（元）", colData26);
+		colData.put("处罚金额(元)", colData41);
 		colData.put("司机信息",colData36);
 		colData.put("资格证号",colData37);
 		colData.put("服务车企", colData17);

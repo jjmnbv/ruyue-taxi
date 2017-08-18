@@ -13,7 +13,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.szyciov.lease.interceptor.LoginInterceptor;
 import com.szyciov.util.CommonUtils;
 import com.szyciov.util.Constants;
 import com.szyciov.util.UserTokenManager;

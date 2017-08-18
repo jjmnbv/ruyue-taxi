@@ -37,7 +37,6 @@
               left join pub_coupon_activity_use_city pcauc on pca.id=pcauc.couponactivityidref
               left join pub_cityaddr pc on pcauc.city=pc.id 
               where pca.platformtype=0
-                and pcr.platformtype=0
               <if test="querysendservicetype != null and querysendservicetype != ''">
 	            and pca.sendservicetype = #{querysendservicetype}
 	          </if> 
@@ -81,7 +80,6 @@
            select count(*) from pub_coupon_activity pca 
               left join pub_coupon_rule pcr on pca.sendruleidref=pcr.id 
               where pca.platformtype=0
-                and pcr.platformtype=0
             <if test="querysendservicetype != null and querysendservicetype != ''">
 	            and pca.sendservicetype = #{querysendservicetype}
 	          </if> 
@@ -124,10 +122,10 @@
       </insert>
       
       <insert id="addCouponActivityUsers" parameterType="java.util.List">
-          INSERT INTO pub_coupon_senduser (id, couponactivityidref, phone, createtime, status) 
+          INSERT INTO pub_coupon_senduser (id, couponactivityidref, userid,phone,lecompanyid,platformtype,createtime, status) 
           VALUES
           <foreach collection="list" item="user" separator=",">
-           (#{user.id}, #{user.couponactivityidref},#{user.phone},now(),'1')
+           (#{user.id}, #{user.couponactivityidref},#{user.userid},#{user.phone},#{user.lecompanyid},#{user.platformtype},now(),'1')
           </foreach>
       </insert>
       
@@ -319,6 +317,7 @@
 	           <if test="sendendtime != null and sendendtime != ''">
 	            and date_format(pc.createtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{sendendtime}
 	           </if>
+	           order by pc.createtime desc
 	           ) t1, (select @rownum := 0) r )t
                 <![CDATA[
 	            where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
@@ -339,10 +338,10 @@
 	            and pc.couponstatus=#{couponstatus}
 	          </if>
 	           <if test="sendstarttime != null and sendstarttime != ''">
-	            and pc.createtime <![CDATA[   >=  ]]> #{sendstarttime}
+	            and date_format(pc.createtime,'%Y-%m-%d') <![CDATA[   >=  ]]> #{sendstarttime}
 	           </if>
 	           <if test="sendendtime != null and sendendtime != ''">
-	            and pc.createtime <![CDATA[   <=  ]]> #{sendendtime}
+	            and date_format(pc.createtime,'%Y-%m-%d') <![CDATA[   <=  ]]> #{sendendtime}
 	           </if>
       </select>
       

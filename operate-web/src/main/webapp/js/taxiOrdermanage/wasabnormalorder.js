@@ -47,7 +47,7 @@ function manualOrderdataGrid() {
         	sEmptyTable: "暂无服务订单信息"
         },
         columns: [
-        	/*{
+        	{
                 //自定义操作列
                 "mDataProp": "ZDY",
                 "sClass": "center",
@@ -56,12 +56,13 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                	orderObj.orderInfo = full;
-                	var html = [];
-                    html.push("<button type=\"button\" class=\"SSbtn red\" onclick=\"applyReview('" + full.orderno + "')\"><i class=\"fa fa-paste\"></i>申请复核</button>");
-                    return html.join("");
+					if(full.shouldpayamount > 0 && full.actualpayamount > 0 && full.paymentstatus != "9") {
+						return "<button type='button' class='SSbtn red' onclick='applyReview(\"" + full.orderno + "\")'><i class='fa fa-paste'></i>申请复核</button>";
+					} else {
+						return "";
+					}
                 }
-            },*/
+            },
             {
                 "mDataProp": "DDLY",
                 "sClass": "center",
@@ -83,7 +84,8 @@ function manualOrderdataGrid() {
                 "sTitle": "订单号",
                 "sWidth": 200,
                 "mRender": function (data, type, full) {
-                	return '<a href="' + $("#baseUrl").val() + 'TaxiOrderManage/OrderDetailIndex?orderno=' + full.orderno + '">' + full.orderno + '</a>';
+					return "<a href='" + $("#baseUrl").val() + "TaxiOrderManage/OrderDetailIndex?orderno="
+						+ full.orderno + "'>" + full.orderno + "</a>";
                 }
             },
             {
@@ -108,7 +110,7 @@ function manualOrderdataGrid() {
             	"mRender": function(data, type, full) {
             		switch(full.reviewperson) {
             			case "1": return "司机"; break;
-            			case "2": return "下单人"; break;
+            			case "2": return "乘客"; break;
             			default: return "/";
             		}
             	}
@@ -136,7 +138,34 @@ function manualOrderdataGrid() {
             		return (shouldpayamount - actualpayamount).toFixed(1);
             	}
             },
-	        {mDataProp: "YXCFY", sTitle: "原行程费用(元)", sClass: "center", sortable: true,
+			{mDataProp: "shouldpayamount", sTitle: "行程费用(元)", sClass: "center", sortable: true },
+			{mDataProp: "actualpayamount", "sClass": "center", "sTitle": "实付金额(元)", sortable: true,
+				"mRender": function(data, type, full) {
+					if(full.paymentstatus == "1" && full.paymentmethod == "0") {
+						var actualamount = full.actualamount;
+						if(null == actualamount) {
+							actualamount = 0;
+						}
+						return full.shouldpayamount - actualamount;
+					} else {
+						return "/";
+					}
+				}
+			},
+			{mDataProp: "actualamount", "sClass": "center", "sTitle": "优惠金额(元)", sortable: true,
+				"mRender": function(data, type, full) {
+					if(full.paymentstatus == "1" && full.paymentmethod == "0") {
+						if(null == full.actualamount) {
+							return "0";
+						} else {
+							return full.actualamount;
+						}
+					} else {
+						return "/";
+					}
+				}
+			},
+	        /*{mDataProp: "YXCFY", sTitle: "原行程费用(元)", sClass: "center", sortable: true,
 	        	"mRender": function(data, type, full) {
 	        		return full.originalorderamount.toFixed(1);
 	        	}
@@ -145,8 +174,8 @@ function manualOrderdataGrid() {
 	        	"mRender": function(data, type, full) {
 	        		return full.reviewedprice.toFixed(1);
 	        	}
-	        },
-	        {mDataProp: "shortname", sTitle: "服务车企", sClass: "center", sortable: true}
+	        },*/
+	        {mDataProp: "belongcompanyname", sTitle: "服务车企", sClass: "center", sortable: true}
         ],
         userHandle: function(oSettings, result) {
         	if(null == result.aaData || result.aaData.length == 0) {
@@ -167,13 +196,11 @@ function manualOrderdataGrid() {
  */
 function search() {
 	var conditionArr = [
-		{"name":"orderNo", "value":$("#orderno").val()},
-		{"name":"paymentstatus", "value":$("#paymentstatus").val()},
+		{"name":"ordersource", "value":$("#ordersource").val()},
 		{"name":"reviewperson", "value":$("#reviewperson").val()},
 		{"name":"paymentmethod", "value":$("#paymentmethod").val()},
-		{"name":"ordersource", "value":$("#ordersource").val()},
-		// {"name":"leasescompanyid", "value":$("#leasescompanyid").val()}
-        {"name":"belongleasecompany", "value":$("#leasescompanyid").val()}
+		{"name":"paymentstatus", "value":$("#paymentstatus").val()},
+		{"name":"orderNo", "value":$("#orderno").val()}
 	];
 	dataGrid.fnSearch(conditionArr);
 }
@@ -268,12 +295,11 @@ function canel() {
  * 初始化查询
  */
 function initSearch() {
-	$("#orderno").val("");
-	$("#paymentstatus").val("");
+	$("#ordersource").val("");
 	$("#reviewperson").val("");
 	$("#paymentmethod").val("");
-	$("#ordersource").val("");
-	$("#leasescompanyid").select2("val", "");
+	$("#paymentstatus").val("");
+	$("#orderno").val("");
 	search();
 }
 

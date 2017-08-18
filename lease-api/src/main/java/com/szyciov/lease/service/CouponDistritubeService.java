@@ -13,6 +13,7 @@ import javax.annotation.Resource;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSON;
 import com.szyciov.dto.coupon.PubCouponActivityDto;
@@ -51,6 +52,7 @@ public class CouponDistritubeService {
 	}
 
 	// 新增抵扣券
+	@Transactional(rollbackFor=Exception.class)
 	public Map<String, Object> addCouponActivity(PubCouponActivityDto activityDto) {
 		Map<String, Object> result = new HashMap<>();
 
@@ -186,8 +188,9 @@ public class CouponDistritubeService {
 			accountRule="le_accountrules";
 			sendRule="pub_sendrules";
 		}else if(sendservicetype.equals("1")){//出租车
-			accountRule="op_taxiaccountrules";
-			sendRule="op_taxisendrules";
+			//accountRule="op_taxiaccountrules";
+			//sendRule="op_taxisendrules";
+			return ret;
 		}else{
 			return ret;
 		}

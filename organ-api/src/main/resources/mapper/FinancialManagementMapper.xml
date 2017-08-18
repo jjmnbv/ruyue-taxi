@@ -8,11 +8,12 @@
 	<select id="getAccountListByOrganId" resultType="OrgOrganCompanyRef" parameterType="string">
 	    select org_organ_company_ref.actualbalance as actualBalance,
 	           org_organ_company_ref.lineofcredit as lineOfCredit,
-	           (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit - org_organ_company_ref.balance) as unBalanced, 
+	           (org_organ_company_ref.actualbalance + org_organ_company_ref.lineofcredit + IFNULL(org_organ_company_ref.couponamount,0) - org_organ_company_ref.balance) as unBalanced, 
 	           (select le_leasescompany.name from le_leasescompany where le_leasescompany.id = org_organ_company_ref.companyid) as name,
 	           org_organ_company_ref.companyid as companyId,
 	           org_organ_company_ref.organid as organId,
-	           org_organ_company_ref.balance as balance
+	           org_organ_company_ref.balance as balance,
+	           IFNULL(org_organ_company_ref.couponamount,0) as couponamount
 	    from org_organ_company_ref
 	    where org_organ_company_ref.organid IN (
 	            select
@@ -322,9 +323,17 @@
 	      and status = 1
 	</select>
 	
+	<select id="getActualBalanceAndCouponamountById" resultType="hashmap" parameterType="hashmap">	    
+	    select actualbalance,IFNULL(couponamount,0) as couponamount
+	    from org_organ_company_ref
+	    where organid = #{organId}
+	      and companyid = #{leasesCompanyId}
+	      and status = 1
+	</select>
+	
 	<update id="reduceOrganAccount" parameterType="hashmap">
 		update org_organ_company_ref
-		set actualbalance=IFNULL(actualbalance,0) - #{money},updatetime=now()
+		set actualbalance=IFNULL(actualbalance,0) - #{money},updatetime=now(),couponamount=IFNULL(couponamount,0) - #{couponvalue}
 		where organid = #{organId}
 	      and companyid = #{leasesCompanyId}
 	      and status = 1
@@ -591,5 +600,29 @@
 		<if test="type != null and type != ''">
 			and usetype = #{type}
 		</if>
+	</select>
+	<!-- 机构账单结算后插入抵用券明细 -->
+	<insert id="addCouponDetail" parameterType="hashmap">
+	    insert into pub_coupon_detail(id,userid,couponidref,usetype,amount,balance,remark,platformtype,lecompanyid,updatetime,createtime,status)
+	    select #{id},#{organId},#{couponidref},#{usetype},#{couponvalue},couponamount,#{remark},1,#{leasesCompanyId},now(),now(),1
+	    from org_organ_company_ref 
+        where organid = #{organId} 
+          and companyid = #{leasesCompanyId} 
+          and status = 1
+	</insert>
+	<!-- 机构返券时机构可用余额加上相应的额度 -->
+	<update id="addOrganCouponValue" parameterType="hashmap">
+		update org_organ_company_ref
+		set balance=IFNULL(balance,0) + #{couponvalue},couponamount=IFNULL(couponamount,0) + #{couponvalue},updatetime=now()
+		where organid = #{organId}
+		  and companyid = #{leasesCompanyId}
+		  and status = 1
+	</update>
+	<!-- 获取机构信息 -->
+	<select id="getCityByOrganid" parameterType="String" resultType="String">
+		select city
+		from org_organ
+		where id = #{id}
+		  and status = 1
 	</select>
 </mapper>

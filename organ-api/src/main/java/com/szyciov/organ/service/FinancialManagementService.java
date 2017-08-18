@@ -23,20 +23,25 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.alibaba.fastjson.JSON;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.config.AlipayConfig;
 import com.szyciov.entity.OrderSource4WithdrawNO;
 import com.szyciov.entity.PubCouponDetail;
 import com.szyciov.entity.UserNews;
+import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.enums.MessageTypeEnum;
+import com.szyciov.enums.coupon.CouponUsetypeEnum;
 import com.szyciov.lease.entity.LeLeasescompany;
 import com.szyciov.lease.entity.OrgOrganBill;
 import com.szyciov.lease.entity.OrgOrganCompanyRef;
@@ -50,6 +55,7 @@ import com.szyciov.org.param.FinancialManagementQueryParam;
 import com.szyciov.organ.dao.FinancialManagementDao;
 import com.szyciov.param.UserNewsParam;
 import com.szyciov.util.GUIDGenerator;
+import com.szyciov.util.GsonUtil;
 import com.szyciov.util.PageBean;
 import com.szyciov.util.SystemConfig;
 import com.szyciov.util.TemplateHelper;
@@ -63,6 +69,7 @@ import net.sf.json.JSONObject;
 public class FinancialManagementService {
 	private FinancialManagementDao dao;
 	private TemplateHelper templateHelper = new TemplateHelper();
+	private static final Logger logger = Logger.getLogger(FinancialManagementService.class);
 
 	@Resource(name = "FinancialManagementDao")
 	public void setDao(FinancialManagementDao dao) {
@@ -227,12 +234,14 @@ public class FinancialManagementService {
 	}
 	
 	public Map<String, Object> getActualBalance(String organId, String leasesCompanyId) {
-		Map<String, String> map = new HashMap<String, String>();
+		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("organId", organId);
 		map.put("leasesCompanyId", leasesCompanyId);
-		BigDecimal actualBalance = dao.getActualBalanceById(map);
+		//BigDecimal actualBalance = dao.getActualBalanceById(map);
+		Map<String, Object> valueMap = dao.getActualBalanceAndCouponamountById(map);
 		Map<String, Object> jsonObject = new HashMap<String, Object>();
-		jsonObject.put("actualBalance", actualBalance);
+		jsonObject.put("actualBalance", valueMap.get("actualbalance"));
+		jsonObject.put("couponamount", valueMap.get("couponamount"));
 		return jsonObject;
 	}
 	
@@ -242,50 +251,79 @@ public class FinancialManagementService {
 		ret.put("MessageKey", "提交成功");
 		
 		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("money", orgOrganBill.getMoney());
 		map.put("organId", orgOrganBill.getOrganId());
 		map.put("leasesCompanyId", orgOrganBill.getLeasesCompanyId());
-		dao.reduceOrganAccount(map);
+		Map<String, Object> valueMap = dao.getActualBalanceAndCouponamountById(map);
+		Double actualBalance = Double.valueOf(String.valueOf(valueMap.get("actualbalance")));
+		Double couponamount = Double.valueOf(String.valueOf(valueMap.get("couponamount")));
+		if (actualBalance + couponamount >= orgOrganBill.getMoney().doubleValue()) {
+			double billmoney = 0;
+			boolean couponuse = false;
+			double couponvalue = 0;
+			if (actualBalance >= orgOrganBill.getMoney().doubleValue()) {
+				billmoney = orgOrganBill.getMoney().doubleValue();
+			} else {
+				billmoney = actualBalance;
+				couponuse = true;
+				couponvalue = orgOrganBill.getMoney().doubleValue() - actualBalance;
+			}
+			
+			map.put("money", billmoney);
+			map.put("couponvalue", couponvalue);
+			dao.reduceOrganAccount(map);
 
-		Map<String, String> billMap = new HashMap<String, String>();
-		String uuid = GUIDGenerator.newGUID();
-		billMap.put("id", uuid);
-		billMap.put("billsId", orgOrganBill.getId());
-		billMap.put("comment", "");
-		// 6-机构已付款
-		billMap.put("billState", "6");
-		// 获取当前时间
-		Date date=new Date();
-		DateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String time=format.format(date);
-		billMap.put("operationTime", time);
-		billMap.put("createTime", time);
-		billMap.put("updateTime", time);
-		dao.createBalanceOrganBillState(billMap);
-		//createOrganBillState(billMap);
-		
-		
-		OrgOrganExpenses orgOrganExpenses = new OrgOrganExpenses();
-		uuid = GUIDGenerator.newGUID();
-		orgOrganExpenses.setId(uuid);
-		orgOrganExpenses.setOrganId(orgOrganBill.getOrganId());
-		orgOrganExpenses.setLeasesCompanyId(orgOrganBill.getLeasesCompanyId());
-		// 2-账单结算扣款
-		orgOrganExpenses.setType("2");
-		orgOrganExpenses.setAmount(orgOrganBill.getMoney());
-		orgOrganExpenses.setRemark("");
-		orgOrganExpenses.setCreater(orgOrganBill.getUpdater());
-		orgOrganExpenses.setUpdater(orgOrganBill.getUpdater());
-		
-		// 增加机构消费记录
-		createOrganExpenses(orgOrganExpenses);
-		
-		// 给租赁端财务管理员发送消息
-		confirmNews(orgOrganBill.getId());
-		
-		// 确认收款的操作
-		confirmAccountBalance(orgOrganBill);
-		
+			Map<String, String> billMap = new HashMap<String, String>();
+			String uuid = GUIDGenerator.newGUID();
+			billMap.put("id", uuid);
+			billMap.put("billsId", orgOrganBill.getId());
+			billMap.put("comment", "");
+			// 6-机构已付款
+			billMap.put("billState", "6");
+			// 获取当前时间
+			Date date=new Date();
+			DateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String time=format.format(date);
+			billMap.put("operationTime", time);
+			billMap.put("createTime", time);
+			billMap.put("updateTime", time);
+			dao.createBalanceOrganBillState(billMap);
+			//createOrganBillState(billMap);
+			
+			
+			OrgOrganExpenses orgOrganExpenses = new OrgOrganExpenses();
+			uuid = GUIDGenerator.newGUID();
+			orgOrganExpenses.setId(uuid);
+			orgOrganExpenses.setOrganId(orgOrganBill.getOrganId());
+			orgOrganExpenses.setLeasesCompanyId(orgOrganBill.getLeasesCompanyId());
+			// 2-账单结算扣款
+			orgOrganExpenses.setType("2");
+			orgOrganExpenses.setAmount(BigDecimal.valueOf(billmoney));
+			orgOrganExpenses.setRemark("");
+			orgOrganExpenses.setCreater(orgOrganBill.getUpdater());
+			orgOrganExpenses.setUpdater(orgOrganBill.getUpdater());
+			
+			// 增加机构消费记录
+			createOrganExpenses(orgOrganExpenses);
+			
+			// 给租赁端财务管理员发送消息
+			confirmNews(orgOrganBill.getId());
+			
+			// 确认收款的操作
+			confirmAccountBalance(orgOrganBill);
+			
+			// 添加抵用券扣款记录
+			if (couponuse) {
+				map.put("id", GUIDGenerator.newGUID());
+				// 2-扣款
+				map.put("usetype", 2);
+				map.put("remark", orgOrganBill.getName());
+				dao.addCouponDetail(map);
+			}
+		} else {
+			ret.put("ResultSign", "Error");
+			ret.put("MessageKey", "提交失败");
+		}
+
 		return ret;
 	}
 	
@@ -559,6 +597,9 @@ public class FinancialManagementService {
 	    		                    	String totalfee = total_fee.getFirstChild().getNodeValue();
 	    		                    	// 更改账户余额
 	    		                    	updateOrganCompanyRef(outtradeno,"1",orgOrganPaymentRecord.getAmount());// 支付金额
+	    		                    	
+	    		                    	// 机构客户充值返券
+	    		                    	rechargeBackCoupon(orgOrganPaymentRecord);
 	    	    		            }else{
 	    	    		                //签名失败记录日志并且返回失败
 	    	    		            	res = "FAIL";
@@ -659,6 +700,58 @@ public class FinancialManagementService {
 		sendRechargeNews(total_fee,orgOrganPaymentRecord.getLeasescompanyid(),orgOrganPaymentRecord.getOrganid(),type);
 	}
 	
+	public void rechargeBackCoupon(OrgOrganPaymentRecord orgOrganPaymentRecord) {
+		// 获取机构城市信息
+		String organcity = dao.getCityByOrganid(orgOrganPaymentRecord.getOrganid());
+		// 充值发券接口调用 机构客户发券
+		Map<String, Object> rechargecouponparam = new HashMap<String, Object>();
+		rechargecouponparam.put("type", CouponRuleTypeEnum.RECHARGE.value);
+		rechargecouponparam.put("userType", CouponRuleTypeEnum.ORGAN_CONSUMER.value);
+		rechargecouponparam.put("companyId", orgOrganPaymentRecord.getLeasescompanyid());
+		rechargecouponparam.put("cityCode", organcity);
+		rechargecouponparam.put("userId", orgOrganPaymentRecord.getOrganid());
+		rechargecouponparam.put("money", orgOrganPaymentRecord.getAmount());
+		rechargecouponparam.put("version", "V4.0.0");
+		try {
+			String paramstr = GsonUtil.toJson(rechargecouponparam);
+			String result = templateHelper.dealRequestWithFullUrlToken(
+					SystemConfig.getSystemProperty("couponapi") + "/coupon/sysn/generate", HttpMethod.POST, null,
+					paramstr, String.class);
+			if (JSON.parseObject(result).get("status") != null
+					&& "0".equals(JSON.parseObject(result).get("status").toString())
+					&& JSON.parseObject(result).get("data") != null) {
+				List<Map> data = JSON.parseArray(JSON.parseObject(result).get("data").toString(), Map.class);
+				for (Map d : data) {
+					this.addOrganCouponValue(String.valueOf(d.get("userId")), String.valueOf(d.get("companyid")),
+							((BigDecimal) d.get("money")).doubleValue(), String.valueOf(d.get("name")),
+							CouponUsetypeEnum.RECHARGE.code.toString());
+				}
+			}
+		} catch (Exception e) {
+			logger.error("优惠券触发出错", e);
+			logger.error("机构客户发券userid:" + orgOrganPaymentRecord.getOrganid());
+		}
+	}
+	
+	@Transactional
+	public void addOrganCouponValue(String organid, String companyid, double money, String remark, String usetype) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		// 机构id
+		map.put("organId", organid);
+		// 租赁公司id
+		map.put("leasesCompanyId", companyid);
+		// 优惠券金额
+		map.put("couponvalue", money);
+		// 加入优惠券金额和可用额度
+		dao.addOrganCouponValue(map);
+		
+		map.put("id", GUIDGenerator.newGUID());
+		map.put("usetype", usetype);
+		map.put("remark", remark);
+		// 插入数据到抵用券明细表
+		dao.addCouponDetail(map);
+	}
+	
 	public void sendRechargeNews(double amount,String leasesCompanyId,String organId,String type) {
 		
 		Map<String, Object> withdrawInfo = getWithdrawInfo(organId, leasesCompanyId);
@@ -729,6 +822,9 @@ public class FinancialManagementService {
                 	String total_fee = request.getParameter("total_fee");
                 	// 更改账户余额
                 	updateOrganCompanyRef(out_trade_no,"0",orgOrganPaymentRecord.getAmount());//支付金额
+                	
+                	// 机构客户充值返券
+                	rechargeBackCoupon(orgOrganPaymentRecord);
 				}else{
 					//签名失败
 					res = "failure";

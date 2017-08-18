@@ -306,8 +306,8 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "上下车地址",
                 "mRender": function (data, type, full) {
-                	var onaddress = "(" + full.oncity + ")" + full.onaddress;
-                	var offaddress = "(" + full.offcity + ")" + full.offaddress;
+                	var onaddress = "(" + full.oncityname + ")" + full.onaddress;
+                	var offaddress = "(" + full.offcityname + ")" + full.offaddress;
                 	return showToolTips(onaddress, 12, undefined, offaddress);
                 }
             },

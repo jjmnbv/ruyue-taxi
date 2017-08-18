@@ -146,7 +146,14 @@ public class PubVehicle {
 	
 	private String citymarkid;
 	
+	private String fullplateno;
 
+	public String getFullplateno() {
+		return fullplateno;
+	}
+	public void setFullplateno(String fullplateno) {
+		this.fullplateno = fullplateno;
+	}
 	public String getCitymarkid() {
 		return citymarkid;
 	}

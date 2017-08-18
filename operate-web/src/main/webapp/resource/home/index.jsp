@@ -163,13 +163,21 @@ String basePath = request.getScheme()+"://" +request.getServerName()+":" +reques
 		                	<span style="vertical-align:text-bottom;margin-left:5px;">总收益金额</span>
 		                </div>
 		                <div class="order_num font_red col-6" id="totalsy">￥${incomemoney}</div><br>
-		                <div class="col-6" style="border-right:1px solid #ddd;">
+		                <div class="col-3" style="border-right:1px solid #ddd;">
 		                	<strong>￥${ordersmoneyComP}</strong>
 		                	总订单金额
 		                </div>
-		                 <div class="col-6">
+		                 <div class="col-3" style="border-right:1px solid #ddd;">
 		                	<strong>￥${diffmoney}</strong>
 		                	差异金额
+		                </div>
+		                 <div class="col-3" style="border-right:1px solid #ddd;">
+		                	<strong>￥${cancelmoney}</strong>
+		                	优惠金额
+		                </div>
+		                 <div class="col-3">
+		                	<strong>￥${couponmoney}</strong>
+		                	取消费用
 		                </div>
 	                </div>
             	</div>

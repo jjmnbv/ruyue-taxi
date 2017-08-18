@@ -55,7 +55,8 @@ public interface PubVehicleMapper {
 	List<VehicleQueryDto> listVehicleAndBindInfo(PubVehicleQueryParam pubVehicleQueryParam);
 
 	Integer getlistVehicleAndBindInfoCount(PubVehicleQueryParam pubVehicleQueryParam);
-	List<PubVehicleScope> getVehicleidByVehicleScope(String id);
+	
+	List<PubVehicleScope> getVehicleidByVehicleScope(List<PubVehicle> list);
 
 	int updateVehicleById(PubVehicle pubVehicle);
 

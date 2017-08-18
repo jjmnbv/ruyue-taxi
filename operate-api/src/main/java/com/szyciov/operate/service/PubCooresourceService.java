@@ -3,7 +3,10 @@ package com.szyciov.operate.service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.szyciov.dto.PagingResponse;
-import com.szyciov.entity.*;
+import com.szyciov.entity.PubCooresource;
+import com.szyciov.entity.PubVehicleModelsRef;
+import com.szyciov.entity.PubVehicleModelsRefHistory;
+import com.szyciov.entity.Select2Entity;
 import com.szyciov.op.param.*;
 import com.szyciov.op.vo.pubCooresource.QueryCooresourceVo;
 import com.szyciov.op.vo.pubCooresource.QueryHavingCooLeasecompanyVo;
@@ -11,7 +14,6 @@ import com.szyciov.op.vo.pubCooresource.QueryPubCooresourceInfoVo;
 import com.szyciov.op.vo.pubCooresource.QueryPubCooresourceManageVo;
 import com.szyciov.operate.dao.PubCooresourceDao;
 import com.szyciov.util.GUIDGenerator;
-import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,8 +57,8 @@ public class PubCooresourceService {
      * @param companyid 当前运管id
      * @return 战略伙伴集合
      */
-    public List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(String companyid) {
-        List<QueryHavingCooLeasecompanyVo> list = this.pubCooresourceDao.queryHavingCooLeasecompany(companyid);
+    public List<QueryHavingCooLeasecompanyVo> queryHavingCooLeasecompany(String companyid, String keyword) {
+        List<QueryHavingCooLeasecompanyVo> list = this.pubCooresourceDao.queryHavingCooLeasecompany(companyid, keyword);
         return list;
     }
 
@@ -146,13 +148,14 @@ public class PubCooresourceService {
 
     /**
      * 资源管理下更改车型
+     *
      * @param param
      * @return
      */
     public void updateVehicleModel(UpdatePubVehicleModelsParam param) {
         PubVehicleModelsRef ref = this.pubCooresourceDao.queryPubVehicleModelsRefByCoooId(param.getCoorId());
 
-        if(ref== null){
+        if (ref == null) {
             ref = new PubVehicleModelsRef();
 
             PubCooresource coo = this.pubCooresourceDao.selectPubCooresourceByPrimaryKey(param.getCoorId());
@@ -169,7 +172,7 @@ public class PubCooresourceService {
             ref.setUpdatetime(new Date());
 
             this.pubCooresourceDao.insertPubVehicleModelsRefSelective(ref);
-        }else{
+        } else {
             ref.setVehiclemodelsid(param.getVehiclemodelsid());
             ref.setUpdater(param.getUpdater());
             ref.setUpdatetime(new Date());

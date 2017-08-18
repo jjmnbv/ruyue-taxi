@@ -10,6 +10,15 @@ public class QueryPubCooresourceManageParam extends PagingRequest {
     private String fullplateno; // 车牌号
     private String driverinfo; // 司机
     private String vehicleModelId; // 服务车型
+    private String jobnum; // 资格证号
+
+    public String getJobnum() {
+        return jobnum;
+    }
+
+    public void setJobnum(String jobnum) {
+        this.jobnum = jobnum;
+    }
 
     public String getCoooId() {
         return coooId;

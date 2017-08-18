@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.szyciov.lease.entity.OrgUserExpenses;
+import com.szyciov.lease.entity.OrganUserCouponInfo;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
+import com.szyciov.lease.param.OrganUserCouponQueryParam;
 import com.szyciov.lease.service.OrganUserAccountService;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.PageBean;
@@ -32,6 +34,18 @@ public class OrganUserAccountController extends BaseController {
 	@Resource(name = "organUserAccountService")
 	public void setOrganUserAccountService(OrganUserAccountService organUserAccountService) {
 		this.organUserAccountService = organUserAccountService;
+	}
+	
+	/** 
+	 * <p>分页查询个人客户抵用券信息</p>
+	 *
+	 * @param queryParam 查询请求对象，封装需要查询的key和页码等信息
+	 * @return 返回一页查询结果
+	 */
+	@RequestMapping(value = "api/OrganUserAccount/GetOrganUserCouponInfoByQuery", method = RequestMethod.POST)
+	@ResponseBody
+	public PageBean getOrganUserCouponInfoByQuery(@RequestBody OrganUserCouponQueryParam queryParam) {
+		return organUserAccountService.getOrganUserCouponInfoByQuery(queryParam);
 	}
 	
 	/** 
@@ -110,6 +124,18 @@ public class OrganUserAccountController extends BaseController {
 	@ResponseBody
 	public List<OrgUserExpenses> getUserExpensesListExport(@RequestBody OrganUserAccountQueryParam queryParam) {
 		return organUserAccountService.getUserExpensesListExport(queryParam);
+	}
+	
+	/** 
+	 * <p>查询抵扣券导出数据</p>
+	 *
+	 * @param OrganUserAccountQueryParam
+	 * @return
+	 */
+	@RequestMapping(value = "api/OrganAccount/ExportCouponData", method = RequestMethod.POST)
+	@ResponseBody
+	public List<OrganUserCouponInfo> ExportCouponData(@RequestBody OrganUserCouponQueryParam queryParam) {
+		return organUserAccountService.exportCouponData(queryParam);
 	}
 	
 }

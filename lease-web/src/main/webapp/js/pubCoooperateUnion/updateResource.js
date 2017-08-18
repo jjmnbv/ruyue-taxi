@@ -1,5 +1,7 @@
 var dataGrid;
 var dataGrid2;
+var resourceTemp = new Object();
+var resource = new Object();
 
 /**
  * 页面初始化
@@ -8,6 +10,7 @@ $(function () {
     initGrid();
 
     initPop();
+    resetResourceTemp();
 });
 
 function initPop(){
@@ -17,6 +20,26 @@ function initPop(){
 
     $(".confirmPop").on("click", confirmPop);
     $(".closePop").on("click", closePop);
+}
+
+function resetResourceTemp(){
+    var data = {
+        "resource": "1",
+        "coooid": $("body").attr("coooid")
+    }
+    $.ajax({
+        type: 'POST',
+        data: JSON.stringify(data),
+        url: "PubCoooperateUnion/queryResource" ,
+        dataType: "json",
+        success: function (result) {
+            resourceTemp = new Object();
+            $.each(result.aaData, function(i, data){
+                resourceTemp[data.vehicleid] = data;
+            })
+        },
+        contentType: "application/json"
+    });
 }
 
 function initSelect2(){
@@ -126,6 +149,7 @@ function refreshResource() {
         {"name": "coooid", "value": $("body").attr("coooid")}
     ];
     dataGrid.fnSearch(conditionArr);
+    resetResourceTemp();
 }
 
 /**
@@ -136,7 +160,8 @@ function initSelectGrid() {
         id: "resourceSelect",
         sAjaxSource: "PubCoooperateUnion/queryResource",
         userQueryParam: [
-            {"name": "coooid", "value": $("body").attr("coooid")}
+            {"name": "coooid", "value": $("body").attr("coooid")},
+            {"name": "resource", "value": "0"}
         ],
         language: {
             sEmptyTable: "暂无任何客户信息"
@@ -155,10 +180,13 @@ function initSelectGrid() {
                 sClass: "center",
                 sTitle: "<input type='checkbox' class='checkAll' onclick='checkAll(this)'>",
                 "mRender": function (data, type, full) {
+                    resource[full.vehicleid] = full;
+
                     var html = "<input ";
                     var driverinfo = full.driverinfo==null?"":full.driverinfo;
-                    if(full.resource == "1"){
+                    if(full.resource == "1" || resourceTemp[full.vehicleid]){
                         html += " checked='checked' ";
+                        resourceTemp[full.vehicleid] = full;
                     }else if(driverinfo == ""){
                         html += " disabled='disabled' "
                     }
@@ -202,23 +230,20 @@ function initSelectGrid() {
     }
 
 
-
     $(".checkAll").on("click", function(){
-        var selected = $("#vehiclelPop").attr("selectedId");
-
         if($(this).is(':checked')){
             $.each($(".checkBtn:enabled"), function(i){
                 $(this).prop("checked", true);
-                selected = selected.replace($(this).attr("vid"), "");
-                selected = selected + "," + $(this).attr("vid");
+                resourceTemp[$(this).attr("vid")] = resource[$(this).attr("vid")];
             })
         }else{
             $.each($(".checkBtn:enabled"), function(i){
                 $(this).prop("checked", false);
-                selected = selected.replace($(this).attr("vid"), "");
+                resourceTemp[$(this).attr("vid")] = null;
             })
         }
-        $("#vehiclelPop").attr("selectedId", selected);
+
+        updateSelectVeCount();
     })
 
     $("body").on("click", ".checkBtn", function(){
@@ -232,24 +257,21 @@ function initSelectGrid() {
             $(".checkAll").prop("checked", false);
         }
 
-        var selected = $("#vehiclelPop").attr("selectedId");
         if($(this).is(':checked')){
-            selected = selected.replace($(this).attr("vid"), "");
-            selected = selected + "," + $(this).attr("vid");
+            resourceTemp[$(this).attr("vid")] = resource[$(this).attr("vid")];
         }else{
             $(".checkAll").prop("checked", false);
-            selected = selected.replace($(this).attr("vid"), "");
+            resourceTemp[$(this).attr("vid")] = null;
         }
-        $("#vehiclelPop").attr("selectedId", selected);
+        updateSelectVeCount();
     })
-
 }
 
 /**
  * 刷新资源编辑GRID
  */
 function searchGridResource() {
-    refreshSelectedVehicleId();
+    // refreshSelectedVehicleId();
     var conditionArr = [
         {"name": "coooid", "value": $("body").attr("coooid")},
         {"name": "vehclineid", "value": $("#vehclineid").val()},
@@ -257,33 +279,66 @@ function searchGridResource() {
         {"name": "workstatus", "value": $("#workstatus").val()},
         {"name": "cityaddrid", "value": $("#cityaddrid").val()},
         {"name": "fullplateno", "value": $("#fullplateno").val()},
-        {"name": "jobnum", "value": $("#jobnum").val()}
+        {"name": "jobnum", "value": $("#jobnum").val()},
+        {"name": "resource", "value": "0"}
     ];
     dataGrid2.fnSearch(conditionArr);
 }
 
 function pop(){
+    resource = new Object();
+
     $("#vehiclelPop").show();
     searchGridResource();
+
+    updateSelectVeCount();
 }
 
-function refreshSelectedVehicleId(){
-    $.ajax({
-        type: 'GET',
-        url: "PubCoooperateUnion/queryCooVehicleId?coooId=" + $("body").attr("coooId") ,
-        dataType: "json",
-        success: function (result) {
-            $("#vehiclelPop").attr("selectedId", eval(result));
-        },
-        contentType: "application/json"
+// function refreshSelectedVehicleId(){
+//     $.ajax({
+//         type: 'GET',
+//         url: "PubCoooperateUnion/queryCooVehicleId?coooId=" + $("body").attr("coooId") ,
+//         dataType: "json",
+//         success: function (result) {
+//             $("#vehiclelPop").attr("selectedId", eval(result));
+//         },
+//         contentType: "application/json"
+//     });
+// }
+
+
+function updateSelectVeCount(){
+    var count = 0;
+    $.each(resourceTemp, function(key, value){
+        if(value){
+            count++;
+        }
     });
-}
 
+    $("#selectVeCount").text(count);
+}
 
 function confirmPop(){
+    var selectedId = "";
+    var isNoDriver = false;
+
+    $.each(resourceTemp, function(key, value){
+        if(value){
+            selectedId += key + ",";
+            if(!value.driverinfo || value.driverinfo == ""){
+                isNoDriver = true;
+            }
+        }
+    });
+
+    if(selectedId == ""){
+        toastr.error("请选择开放的车辆", "提示");
+        return;
+    }
+
     var data = {
         "coooId": $("body").attr("coooId") ,
-        "vehicleids": $("#vehiclelPop").attr("selectedId")
+        "vehicleids": selectedId
     }
 
     $.ajax({
@@ -293,7 +348,12 @@ function confirmPop(){
         dataType: "json",
         success: function (data) {
             if (data.status == 0) {
-                toastr.success("保存成功", "提示");
+                if(isNoDriver){
+                    toastr.success("保存成功，所选车辆中存在未绑定司机车辆", "提示");
+                }else{
+                    toastr.success("保存成功", "提示");
+                }
+
                 closePop();
                 refreshResource();
             } else if (data.status != 0) {
@@ -323,4 +383,5 @@ function clearParameter() {
     $("#fullplateno").val("");
     $("#jobnum").val("");
     searchGridResource();
+    resetResourceTemp();
 }

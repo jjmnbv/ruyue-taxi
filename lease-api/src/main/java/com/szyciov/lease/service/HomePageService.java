@@ -47,7 +47,29 @@ public class HomePageService {
 		addYCInfo(companyid, info);
 		addJJInfo(companyid, info);
 		addSJInfo(companyid, info);
+		//优惠金额
+		addCouponmoney(companyid,info);
+		//取消费用
+		addCancelmoney(companyid,info);
 		return info;
+	}
+	/**
+	 * 添加总订单信息
+	 * @param companyid
+	 * @param info
+	 */
+	private void addCouponmoney(String companyid, Map<String, Object> info) {
+		Object couponmoney = dao.addCouponmoney(companyid);
+		info.put("couponmoney", couponmoney);
+	}
+	/**
+	 * 添加总订单信息
+	 * @param companyid
+	 * @param info
+	 */
+	private void addCancelmoney(String companyid, Map<String, Object> info) {
+		Object cancelmoney = dao.addCancelmoney(companyid);
+		info.put("cancelmoney", cancelmoney);
 	}
 
 	/**

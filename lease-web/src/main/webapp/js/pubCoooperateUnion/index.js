@@ -13,8 +13,8 @@ function initDate(){
         autoclose:true,
         clearBtn: true,
         todayBtn:  1
-    }).on("click",function(){
-        $("#startTime").datetimepicker("setEndDate",$("#endTime").val())
+    }).on("change",function(){
+        $("#endTime").datetimepicker("setStartDate",$("#startTime").val())
     });
     $("#endTime").datetimepicker({
         format: 'yyyy-mm-dd',
@@ -23,26 +23,51 @@ function initDate(){
         autoclose:true,
         clearBtn: true,
         todayBtn:  1
-    }).on("click",function(){
-        $("#endTime").datetimepicker("setStartDate",$("#startTime").val())
+    }).on("change",function(){
+        $("#startTime").datetimepicker("setEndDate",$("#endTime").val())
     });
 
 }
 
 function initLeasecompany() {
-    $.ajax({
-        type: 'GET',
-        url: "PubCoooperateUnion/queryLeasecompany",
-        dataType: "json",
-        success: function (result) {
-            $.each(result, function (i, data) {
-                $("#leasecompany").append('<option value="' + data.id + '">' + data.text + '</option>')
-            });
-        },
-        contentType: "application/json"
+    $("#leasecompany").select2({
+        placeholder: "",
+        minimumInputLength: 0,
+        multiple : false, //控制是否多选
+        allowClear : true,
+        ajax: {
+            url: "PubCoooperateUnion/queryLeasecompany",
+            dataType: 'json',
+            data: function (term, page) {
+                var param = {
+                    sSearch: term
+                }
+                return param;
+            },
+            results: function (data, page) {
+                return { results: data };
+            }
+        }
     });
-
-
+    $("#coono").select2({
+        placeholder: "",
+        minimumInputLength: 0,
+        multiple : false, //控制是否多选
+        allowClear : true,
+        ajax: {
+            url: "PubCoooperateUnion/queryCoonoSelect2",
+            dataType: 'json',
+            data: function (term, page) {
+                var param = {
+                    sSearch: term
+                }
+                return param;
+            },
+            results: function (data, page) {
+                return { results: data };
+            }
+        }
+    });
 }
 
 function initGrid() {
@@ -163,8 +188,8 @@ function search(grid) {
 
 /** 清空 **/
 function clearSearchBox() {
-    $("#coono").val("");
-    $("#leasecompany").val("");
+    $("#coono").select2("val", "");
+    $("#leasecompany").select2("val", "");
     $("#servicetype").val("");
     $("#coostate").val("");
     $("#startTime").val("");

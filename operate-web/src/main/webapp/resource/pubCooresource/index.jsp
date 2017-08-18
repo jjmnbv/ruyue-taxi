@@ -75,9 +75,7 @@
             </div>
             <div class="col-3">
                 <label>战略伙伴</label>
-                <select id="leasecompany">
-                    <option value="">全部</option>
-                </select>
+                <input id="leasecompany" type="text" placeholder="全部" style="width: 68%;text-align: left;height: 33px">
             </div>
             <div class="col-3">
                 <label>业务类型</label>

@@ -207,7 +207,7 @@ function deleteWeek(obj){
 }
 function deleteOne(obj){
 //    var $td= $(obj).parents('tr').children('td');
-	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" value="one">星期一';
+	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" checked value="one">星期一';
 	    $(obj).parent().parent().next()[0].lastChild.children[0].onclick= function(){addOne(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[1].onclick =function(){deleteOne(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[0].id="addOne";
@@ -222,7 +222,7 @@ function deleteOne(obj){
 }
 function deleteTow(obj){
 //    var $td= $(obj).parents('tr').children('td');
-	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" value="tow">星期二';
+	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox"  checked value="tow">星期二';
 	    $(obj).parent().parent().next()[0].lastChild.children[0].onclick= function(){addTow(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[1].onclick =function(){deleteTow(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[0].id="addTow";
@@ -237,7 +237,7 @@ function deleteTow(obj){
 }
 function deleteThree(obj){
 //    var $td= $(obj).parents('tr').children('td');
-	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox"value="three">星期三';
+	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" checked value="three">星期三';
 	    $(obj).parent().parent().next()[0].lastChild.children[0].onclick= function(){addThree(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[1].onclick =function(){deleteThree(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[0].id="addThree";
@@ -252,7 +252,7 @@ function deleteThree(obj){
 }
 function deleteFour(obj){
 //    var $td= $(obj).parents('tr').children('td');
-	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox"value="four">星期四';
+	 $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" checked value="four">星期四';
 	    $(obj).parent().parent().next()[0].lastChild.children[0].onclick= function(){addFour(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[1].onclick =function(){deleteFour(this)};
 	    $(obj).parent().parent().next()[0].lastChild.children[0].id="addFour";
@@ -267,7 +267,7 @@ function deleteFour(obj){
 }
 function deleteFive(obj){
     var $td= $(obj).parents('tr').children('td');
-    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" value="five">星期五';
+    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" checked value="five">星期五';
     $(obj).parent().parent().next()[0].lastChild.children[0].onclick= function(){addFive(this)};
     $(obj).parent().parent().next()[0].lastChild.children[1].onclick =function(){deleteFive(this)};
     $(obj).parent().parent().next()[0].lastChild.children[0].id="addFive";
@@ -282,7 +282,7 @@ function deleteFive(obj){
 }
 function deleteSix(obj){
     var $td= $(obj).parents('tr').children('td');
-    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox"value="six">星期六';
+    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" checked value="six">星期六';
     $(obj).parent().parent().next()[0].lastChild.children[0].onclick= function(){addSix(this)};
     $(obj).parent().parent().next()[0].lastChild.children[1].onclick =function(){deleteSix(this)};
     $(obj).parent().parent().next()[0].lastChild.children[0].id="addSix";
@@ -297,7 +297,7 @@ function deleteSix(obj){
 }
 function deleteSeven(obj){
     var $td= $(obj).parents('tr').children('td');
-    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox"value="seven">星期日';
+    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input name="theWeek" id="theWeek" type="checkbox" checked value="seven">星期日';
     $(obj).parent().parent().next()[0].lastChild.children[0].onclick= function(){addSeven(this)};
     $(obj).parent().parent().next()[0].lastChild.children[1].onclick =function(){deleteSeven(this)};
     $(obj).parent().parent().next()[0].lastChild.children[0].id="addSeven";
@@ -415,7 +415,7 @@ function addDateOne(obj){
 //主删除
 function deleteDateOne(obj){
 	 var $td= $(obj).parents('tr').children('td');
-	    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<label style="display:none">日期</label>'
+	    $(obj).parent().parent().next()[0].cells[0].innerHTML ='<input style = "display:none" id="date"value="date"/><label style="display:none">日期</label>'
             +'<input style="width:31.5%;" id="startdt" name="startdt" type="text" placeholder="开始日期" value="" class="searchDate" readonly="readonly">-'
      +'<input style="width:31.5%;" id="enddt" name="enddt" type="text" placeholder="结束日期" value="" class="searchDate" readonly="readonly">';
 	    $(obj).parent().parent().next()[0].cells[0].style.textAlign = "center";
@@ -430,7 +430,8 @@ function deleteDateOne(obj){
 	    	$(obj).parent().parent().next()[0].lastChild.children[1].style.display = "none";
 	    }
 	    //在js端删除一整行数据  
-	    $(obj).parent().parent().remove();  
+	    $(obj).parent().parent().remove();
+	    dateFormat();
 }
 //子删除
 function deleteDate(obj){
@@ -504,8 +505,8 @@ function save(){
 	var ruletype = $('input:radio[name="ruletype"]:checked').val();
 	//判断勾选框
 	if(ruletype == "week"){
-	var aaa = $.inArray(undefined, arrayObj);
-		if(aaa != -1){
+	  var aaa = $(':checkbox:checked').size()
+		if(aaa == 0){
 			toastr.error("请选择星期", "提示");
 			return;
 		}
@@ -513,6 +514,15 @@ function save(){
 		if($("#startdt").val() == "" || $("#enddt").val() == ""){
 			toastr.error("请选择时间", "提示");
 			return;
+		}else{
+			var startime = $("#startdt").val();
+			var endtime =  $("#enddt").val();
+			var d1 = new Date(startime.replace(/\-/g, "\/"));  
+			 var d2 = new Date(endtime.replace(/\-/g, "\/")); 
+			if(d1>d2){
+				toastr.error("输入日期范围错误", "提示");
+				return;
+			}
 		}
 	}
 	//遍历table内容
@@ -524,9 +534,11 @@ function save(){
 	var rulename = $("#rulename").val();
 	var cartype = $("#cartype").val();
 	var id = $("#aaid").val();
+	var rulestatus = $("#aarulestatus").val();
 	var number;
 	var data = {
 			 id : id,
+			 rulestatus : rulestatus,
 			 ruletype : ruletype,
 			 cityname : cityname,
 			 rulename : rulename,
@@ -544,25 +556,56 @@ function save(){
 		success: function (response) {
 			if(response.ifHaveNull == "noOk"){
 			  toastr.error("请输入完整信息", "提示");
-			}else{
-			  if(response.ifHavePremiumRule == "noOk" || response.ifDateOk == "noOk"){
-					 toastr.error("同类溢价规则已存在", "提示"); 
-				  }else{
-					  if(response.ifHaveOverlying == "noOk"){
-						  toastr.error("时间范围存在冲突", "提示");   
-					  }else{
-						  toastr.options.onHidden = function() {
-							  window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") +"PubPremiumRule/Index";
-			            	}
-						  if(id != null || id != ""){
-							  toastr.success("规则修改成功", "提示");  
-						  }else{
-							  toastr.success("规则新增成功", "提示");
-						  }
-						  
-					  }
-				  }
+			  return;
 			}
+		    if(response.ifHavePremiumRule == "noOk" || response.ifDateOk == "noOk"){
+				 toastr.error("同类溢价规则已存在", "提示"); 
+			  return;
+			}
+		    if(response.ifTimeOk == "noOk"){
+			  toastr.error("时间范围输入错误", "提示");
+			  return;
+		    }
+		    if(response.ifHaveOverlying == "noOk"){
+			  toastr.error("时间范围存在冲突", "提示");
+			  return;
+		    }
+		   if(response.ifHaveOverlyingWeek == "noOk1"){
+			  toastr.error("【星期一】的时间范围存在冲突", "提示");
+			  return;
+		    }
+		   if(response.ifHaveOverlyingWeek == "noOk2"){
+			  toastr.error("【星期二】的时间范围存在冲突", "提示");
+			  return;
+		    }
+		   if(response.ifHaveOverlyingWeek == "noOk3"){
+			  toastr.error("【星期三】的时间范围存在冲突", "提示");
+			  return;
+		    }
+		   if(response.ifHaveOverlyingWeek == "noOk4"){
+			  toastr.error("【星期四】的时间范围存在冲突", "提示");
+			  return;
+		    }
+		   if(response.ifHaveOverlyingWeek == "noOk5"){
+			  toastr.error("【星期五】的时间范围存在冲突", "提示"); 
+			  return;
+		    }
+		   if(response.ifHaveOverlyingWeek == "noOk6"){
+			  toastr.error("【星期六】的时间范围存在冲突", "提示");
+			  return;
+		    }
+		   if(response.ifHaveOverlyingWeek == "noOk7"){
+			  toastr.error("【星期天】的时间范围存在冲突", "提示");
+			  return;
+		    }
+			  toastr.options.onHidden = function() {
+				  window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") +"PubPremiumRule/Index";
+            	}
+			  if(id == null || id == ""){
+				  toastr.success("规则新增成功", "提示");
+			  }else{
+				  toastr.success("规则修改成功", "提示");  
+			  }
 		},
 		error: function (xhr, status, error) {
 			return;

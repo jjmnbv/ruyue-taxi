@@ -8,17 +8,20 @@
 	<insert id="leIndexOrderStatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
 		INSERT INTO `le_indexorderstatistics` 
 		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`,`ordermoney`,`diffmoney`, `paidmoney`, `bepaidmoney`,
-		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`,cancelmoney,couponmoney)
 		select uuid(), companyid leasescompanyid, ordertype,
 		sum(case when t.paymentstatus = '3' then 1 else 0 end) paidorders,
 		sum(case when t.paymentstatus in ('2','4') then 1 else 0 end) bepaidorders,
-	  sum(ifnull(shouldpayamount,0))ordermoney, 
-    (sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
-		sum(case when t.paymentstatus in ('3') then ifnull(actualpayamount,0) else 0 end) paidmoney,
-		sum(case when t.paymentstatus in ('2','4') then ifnull(actualpayamount,0) else 0 end) bepaidmoney,
-		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+	    sum(ifnull(shouldpayamount,0))ordermoney, 
+        (sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
+		sum(case when t.paymentstatus in ('3') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0)-ifnull(c.actualamount,0) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('2','4') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0) else 0 end) bepaidmoney,
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status,
+		sum(IFNULL(o.cancelamount,0)) cancelmoney,sum(IFNULL(c.actualamount,0)) couponmoney
 		from org_order t
-		where t.orderstatus = '7' and  t.usetype = '0' and t.paymethod = '2' and t.status = 1
+		LEFT JOIN  org_ordercancel o on  t.orderno = o.orderno and o.cancelnature = 1 and t.expensetype = 2 and o.status = 1 and t.orderstatus = '8'
+		LEFT JOIN  pub_coupon_use c on  t.orderno = c.billingorderid and c.usestate = 1 and c.`status` = 1
+		where t.orderstatus in('7','8') and  t.usetype = '0' and t.paymethod = '2' and t.status = 1
 		and t.paymentstatus in ('2','3','4')
 		<![CDATA[
 		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
@@ -31,17 +34,20 @@
 	<insert id="leIndexOrderStatisticsok" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
 		INSERT INTO `le_indexorderstatistics` 
 		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`,`ordermoney`,`diffmoney`, `paidmoney`, `bepaidmoney`, 
-		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`,cancelmoney,couponmoney)
 		select uuid(), companyid leasescompanyid, ordertype,
 		sum(case when t.paymentstatus in ('1') then 1 else 0 end) paidorders,
 		sum(case when t.paymentstatus in ('0') then 1 else 0 end) bepaidorders,
 		sum(ifnull(shouldpayamount,0))ordermoney, 
 		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney, 
-		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,0) else 0 end) paidmoney,
-		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,0) else 0 end) bepaidmoney,
-		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0)-ifnull(c.actualamount,0) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0) else 0 end) bepaidmoney,
+		#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status,
+		sum(IFNULL(o.cancelamount,0)) cancelmoney,sum(IFNULL(c.actualamount,0)) couponmoney
 		from org_order t
-		where t.orderstatus = '7' and ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
+		LEFT JOIN  org_ordercancel o on  t.orderno = o.orderno and o.cancelnature = 1 and t.expensetype = 2 and o.status = 1 and t.orderstatus = '8'
+		LEFT JOIN  pub_coupon_use c on  t.orderno = c.billingorderid and c.usestate = 1 and c.`status` = 1
+		where t.orderstatus in('7','8') and ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
 		and t.paymentstatus in ('0','1') and t.status = 1
 		<![CDATA[
 		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
@@ -144,16 +150,19 @@
 	<insert id="opIndexorderstatistics" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
 		INSERT INTO `op_indexorderstatistics` 
 		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
-		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`,cancelmoney,couponmoney)
 		select uuid(), companyid leasescompanyid, ordertype, 
 		sum(case when t.paymentstatus = '3' then 1 else 0 end) paidorders,
 		sum(case when t.paymentstatus in ('2','4') then 1 else 0 end) bepaidorders,
 		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
-		sum(case when t.paymentstatus in ('3') then ifnull(actualpayamount,orderamount) else 0 end) paidmoney,
-		sum(case when t.paymentstatus in ('2','4') then ifnull(actualpayamount,orderamount) else 0 end) bepaidmoney,
-		'0' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		sum(case when t.paymentstatus in ('3') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0)-ifnull(c.actualamount,0) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('2','4') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0) else 0 end) bepaidmoney,
+		'0' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status,
+		sum(IFNULL(o.cancelamount,0)) cancelmoney,sum(IFNULL(c.actualamount,0)) couponmoney
 		from org_order t
-		where t.orderstatus = '7' and  t.usetype = '0' and t.paymethod = '2'
+		LEFT JOIN  org_ordercancel o on  t.orderno = o.orderno and o.cancelnature = 1 and t.expensetype = 2 and o.status = 1 and t.orderstatus = '8'
+		LEFT JOIN  pub_coupon_use c on  t.orderno = c.billingorderid and c.usestate = 1 and c.`status` = 1
+		where t.orderstatus in('7','8') and  t.usetype = '0' and t.paymethod = '2'
 		and t.paymentstatus in ('2','3','4') and t.status = 1
 		<![CDATA[
 		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
@@ -166,16 +175,19 @@
 	<insert id="opIndexorderstatisticsPB" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
 		INSERT INTO `op_indexorderstatistics` 
 		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
-		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`,cancelmoney,couponmoney)
 		select uuid(), companyid leasescompanyid, ordertype, 
 		sum(case when t.paymentstatus in('1')then 1 else 0 end) paidorders,
 		sum(case when t.paymentstatus in ('0') then 1 else 0 end) bepaidorders,
 		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
-		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,orderamount) else 0 end) paidmoney,
-		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,orderamount) else 0 end) bepaidmoney,
-		'0' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0)-ifnull(c.actualamount,0) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0) else 0 end) bepaidmoney,
+		'0' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status,
+		sum(IFNULL(o.cancelamount,0)) cancelmoney,sum(IFNULL(c.actualamount,0)) couponmoney
 		from org_order t
-		where t.orderstatus = '7' and  ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
+		LEFT JOIN  org_ordercancel o on  t.orderno = o.orderno and o.cancelnature = 1 and t.expensetype = 2 and o.status = 1 and t.orderstatus = '8'
+		LEFT JOIN  pub_coupon_use c on  t.orderno = c.billingorderid and c.usestate = 1 and c.`status` = 1
+		where t.orderstatus in('7','8') and  ((t.usetype = '0' and t.paymethod = '1') or (t.usetype = '1' and t.paymethod = '0'))
 		and t.paymentstatus in ('0','1') and t.status = 1
 		
 		<![CDATA[
@@ -189,16 +201,19 @@
 	<insert id="opIndexorderstatisticsP" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
 		INSERT INTO `op_indexorderstatistics` 
 		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
-		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`,cancelmoney,couponmoney)
 		select uuid(), companyid leasescompanyid, ordertype, 
 		sum(case when t.paymentstatus in ('1') then 1 else 0 end) paidorders,
 		sum(case when t.paymentstatus in ('0') then 1 else 0 end) bepaidorders,
 		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
-		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,orderamount) else 0 end) paidmoney,
-		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,orderamount) else 0 end) bepaidmoney,
-		'1' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+		sum(case when t.paymentstatus in ('1') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0)-ifnull(c.actualamount,0) else 0 end) paidmoney,
+		sum(case when t.paymentstatus in ('0') then ifnull(actualpayamount,0)+ifnull(o.cancelamount,0) else 0 end) bepaidmoney,
+		'1' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status,
+		sum(IFNULL(o.cancelamount,0)) cancelmoney,sum(IFNULL(c.actualamount,0)) couponmoney
 		from op_order t
-		where t.orderstatus = '7' and t.status = 1
+		LEFT JOIN  op_ordercancel o on  t.orderno = o.orderno and o.cancelnature = 1 and t.expensetype = 2 and o.status = 1 and t.orderstatus = '8'
+        LEFT JOIN  pub_coupon_use c on  t.orderno = c.billingorderid and c.usestate = 1 and c.`status` = 1
+		where t.orderstatus in('7','8') and t.status = 1
 		
 		<![CDATA[
 		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}
@@ -211,20 +226,23 @@
 	<insert id="opIndexorderstatisticsTaxi" parameterType="OrderStatisticsQueryParam" useGeneratedKeys="false">
 		INSERT INTO `op_indexorderstatistics` 
 		(`id`, `leasescompanyid`, `ordertype`, `paidorders`, `bepaidorders`, `diffmoney`, `paidmoney`, `bepaidmoney`,`type`, 
-		`starttime`, `endtime`, `createtime`, `updatetime`, `status`)
+		`starttime`, `endtime`, `createtime`, `updatetime`, `status`,cancelmoney,couponmoney)
 		select uuid(), companyid leasescompanyid, '4', 
 			sum(case when t.paymentstatus in ('1', '3','8') then 1 else 0 end) paidorders,
 		sum(case when t.paymentstatus in ('0', '2','4','5','6','7') then 1 else 0 end) bepaidorders,
 		(sum(ifnull(shouldpayamount,0))- sum(ifnull(actualpayamount,0))) diffmoney,
-		(sum(case when t.paymentstatus in ('1','3','8') then ifnull(actualpayamount,0)+ifnull(t.schedulefee,0) else 0 end)
+		(sum(case when t.paymentstatus in ('1','3','8') then ifnull(actualpayamount,0)+ifnull(t.schedulefee,0)+ifnull(o.cancelamount,0)-ifnull(c.actualamount,0) else 0 end)
 	    +sum(case when t.paymentstatus in ('6') then ifnull(t.actualpayamount,0) else 0 end)
 	    +sum(case when t.paymentstatus in ('7') then  ifnull(t.schedulefee,0) else 0 end)) paidmoney,
-		(sum(case when t.paymentstatus in ('0','4','5') then ifnull(actualpayamount,0)+ifnull(t.schedulefee,0) else 0 end) 
+		(sum(case when t.paymentstatus in ('0','4','5') then ifnull(actualpayamount,0)+ifnull(t.schedulefee,0)+ifnull(o.cancelamount,0) else 0 end) 
 	    +sum(case when t.paymentstatus in ('6') then ifnull(t.schedulefee,0) else 0 end)
 	    +sum(case when t.paymentstatus in ('7') then  ifnull(actualpayamount,0)else 0 end)) bepaidmoney,
-	    '1' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status
+	    '1' type,#{startDate} starttime, #{endDate} endtime, now() createtime, now() updatetime, '1' status,
+	    sum(IFNULL(o.cancelamount,0)) cancelmoney,sum(IFNULL(c.actualamount,0)) couponmoney
 		from op_taxiorder t
-		where t.orderstatus = '7' and t.status = 1
+		LEFT JOIN  op_taxiordercancel o on  t.orderno = o.orderno and o.cancelnature = 1 and t.expensetype = 2 and o.status = 1 and t.orderstatus = '8'
+        LEFT JOIN  pub_coupon_use c on  t.orderno = c.billingorderid and c.usestate = 1 and c.`status` = 1
+		where t.orderstatus in('7','8') and t.status = 1
 		and t.paymentstatus in ('0','1','3','4','5','6','7','8') 
 		<![CDATA[
 		and DATE_FORMAT(usetime, '%Y-%m-%d') >= #{startDate}

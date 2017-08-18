@@ -72,13 +72,11 @@
         <div class="row">
             <div class="col-3">
                 <label>合作编号</label>
-                <input id="coono" type="text" placeholder="请输入合作编号" style="width: 68%">
+                <input id="coono" type="text" placeholder="请输入合作编号" style="width: 68%" maxlength="7"/>
             </div>
             <div class="col-3">
                 <label>合作方</label>
-                <select id="leasecompany">
-                    <option value="">全部</option>
-                </select>
+                <input id="leasecompany" type="text" placeholder="全部" style="width: 68%" maxlength="7"/>
             </div>
             <div class="col-3">
                 <label>合作类型</label>

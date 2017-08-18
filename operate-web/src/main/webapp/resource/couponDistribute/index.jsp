@@ -99,6 +99,8 @@
         #userDiv .select2-container {
             width: 240px;
             padding: 0px;
+            margin-left: 6px;
+            margin-top: 6px;
         }
         #fixedstarttime + .error{
             padding-left: 37%;
@@ -131,9 +133,12 @@
         } 
         #editForm{
             overflow-x:hidden;
-            overflow-y:scroll;
+            overflow-y:auto;
             height:450px;  
         }  
+        .content ~ #select2-drop .select2-results{
+            height:120px;
+        }
 		</style>
 		<script type="text/javascript" src="content/js/jquery.js"></script>
 		<script type="text/javascript" src="content/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
@@ -225,7 +230,7 @@
 			<table id="dataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 		</div>
 		<div class="pop_box" id="editFormDiv" style="display: none;">
-		<div class="tip_box_d form" style="max-height: 780px;overflow-y:hidden;overflow-x:hidden;width:800px;">
+		<div class="tip_box_d form" style="max-height: 600px;overflow-y:hidden;overflow-x:hidden;width:800px;">
 	            <h3 id="titleForm" style="text-align: center;">新建抵用券</h3>
 	            <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
 	            	<form id="editForm" method="get" class="form-horizontal  m-t" id="frmmodal">
@@ -267,7 +272,6 @@
 		            				<input type="text" id="users" name="users"/>
 								</div>         
 	            			</div>
-
 	            		</div>
 	            				<input id="businessScope" name="businessScope" type="hidden" value=""/>
 	            				<div id ="addcboxId2" class="addcbox" name="addcboxId2">   
@@ -313,7 +317,7 @@
 	            			<div class="col-6">
 	            			    <div>
 	            				<label>使用区域<em class="asterisk"></em></label>
-	            				<input type="radio" name="usetype" value="1" checked="checked" />限开放区域内可用 
+	            				<input type="radio" name="usetype" value="1" checked="checked" />限发放区域内可用 
 	            				</div>
 	            				<div>
 	            				<label style="opacity:0;">使用区域<em class="asterisk"></em></label>
@@ -335,7 +339,7 @@
 	            			</div>
 	            		</div>
 	            	</form>
-	            	<div class="row" style="margin-left: 40%;">
+	            	<div class="row" style="margin-left: 40%;margin-bottom:-25px;">
 	            		<div class="col-6" style="line-height: 100%;">
 			                <button class="Lbtn red" onclick="save()">提交</button>
 			                <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
@@ -353,19 +357,14 @@
 					<span>UVWXYZ</span>
 				</div>
 				<div class="con">
-
 				</div>
 				<div class="con">
-
 				</div>
 				<div class="con">
-
 				</div>
 				<div class="con">
-
 				</div>
 				<div class="con">
-					
 				</div>
 			</div> 
 		</div>
@@ -373,27 +372,6 @@
 		<script type="text/javascript" src="js/couponDistribute/letterselect.js"></script>
 		<script type="text/javascript">
 		var base = document.getElementsByTagName("base")[0].getAttribute("href");
-		 
-			/* 
-			 * 初始化城市下拉框
-			 
-			function getSelectCity() {
-				/* var parent = document.getElementById("inp_box1");
-				var city = document.getElementById("city");
-				var cityName = document.getElementById("cityName");
-				getData(parent, cityName, city, "StandardAccountRules/GetPubCityAddrList", 30, 0);
-				var parent = document.getElementById("pubCityaddr");  
-				changeCity1(
-					"#inp_box1", 
-					$("#citymarkid").val(),
-					function(backVal, $obj) {
-						$('#cityName').val($obj.text());
-						$("#city").val($obj.data('id'));
-					}
-				);
-			} */
-			
-			
 		</script>
 	</body>
 </html>

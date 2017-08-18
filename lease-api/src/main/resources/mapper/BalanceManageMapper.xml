@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.lease.mapper.BalanceManageMapper">
+
+<!-- 分页查询行程费用结算信息 -->
+    <select id="queryBalanceList" resultType="balancedto" parameterType="balancemanagequeryparam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select op_taxiorder.orderno,pub_driver.name as drivername,pub_driver.phone as driverphone,le_leasescompany.shortname,op_taxiorder.orderamount,
+		       pub_driver.jobnum,pub_vehicle.fullplateno,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '未结算' when op_taxiorder.paymentstatus in ('3','6','8') then '已结算' end) as paymentstatus,
+		       date_format(op_taxiorder.paymenttime, '%Y/%m/%d %H:%i') as paymenttime,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '/' when op_taxiorder.paymentstatus in ('3','6','8') then date_format(op_taxiorder.settlementtime, '%Y/%m/%d %H:%i') end) as settlementtime,
+		       pub_driver_tradingrecord.tradeno,pub_driver_tradingrecord.paymenttype	           
+	     from op_taxiorder 
+	     inner join le_leasescompany on (op_taxiorder.companyid = le_leasescompany.id)
+		 inner join pub_driver on (op_taxiorder.driverid = pub_driver.id)
+	     inner join pub_vehicle on (op_taxiorder.vehicleid = pub_vehicle.id)  
+	      left join pub_driver_tradingrecord on (op_taxiorder.orderno = pub_driver_tradingrecord.orderno and pub_driver_tradingrecord.status = 1 
+				and  pub_driver_tradingrecord.driverid = op_taxiorder.driverid and pub_driver_tradingrecord.tradingstatus = 1)	                      
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7     
+		  and (op_taxiorder.companyid=#{lecompanyid}
+               or pub_vehicle.id in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1))
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno = #{orderno}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum =  #{jobnum} 
+	    </if>
+        <if test="fullplateno != null and fullplateno != ''">
+	        and pub_vehicle.fullplateno = #{fullplateno}
+	    </if>		
+	    <if test="driverid != null and driverid != ''">
+	        and op_taxiorder.driverid = #{driverid}
+	    </if>
+	    <choose>
+	        <when test='paymentstatus =="0"'>
+	              and op_taxiorder.paymentstatus in ('4','5','7') 
+	        </when>
+	        <when test='paymentstatus =="1"'>
+	              and op_taxiorder.paymentstatus in ('3','6','8') 
+	        </when>
+	        <otherwise>
+	              and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	        </otherwise>
+	    </choose> 
+	    <if test="companyid != null and companyid != ''">
+	        and op_taxiorder.companyid = #{companyid}
+	    </if>
+	    <if test="tradeno != null and tradeno != ''">
+	        and pub_driver_tradingrecord.tradeno like concat('%',#{tradeno},'%')
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by op_taxiorder.paymenttime desc
+	    ) t1,(select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+    </select>
+    
+    <select id="queryBalanceListCount" resultType="int" parameterType="balancemanagequeryparam">
+	    select count(*)	           
+	     from op_taxiorder 
+	     inner join le_leasescompany on (op_taxiorder.companyid = le_leasescompany.id)
+		 inner join pub_driver on (op_taxiorder.driverid = pub_driver.id)
+	     inner join pub_vehicle on (op_taxiorder.vehicleid = pub_vehicle.id)  
+	      left join pub_driver_tradingrecord on (op_taxiorder.orderno = pub_driver_tradingrecord.orderno and pub_driver_tradingrecord.status = 1 
+				and  pub_driver_tradingrecord.driverid = op_taxiorder.driverid and pub_driver_tradingrecord.tradingstatus = 1)	                      
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7     
+		  and (op_taxiorder.companyid=#{lecompanyid}
+               or pub_vehicle.id in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1))
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno = #{orderno}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum =  #{jobnum} 
+	    </if>
+        <if test="fullplateno != null and fullplateno != ''">
+	        and t1.fullplateno = #{fullplateno}
+	    </if>		
+	    <if test="driverid != null and driverid != ''">
+	        and op_taxiorder.driverid = #{driverid}
+	    </if>
+	    <choose>
+	        <when test='paymentstatus =="0"'>
+	              and op_taxiorder.paymentstatus in ('4','5','7') 
+	        </when>
+	        <when test='paymentstatus =="1"'>
+	              and op_taxiorder.paymentstatus in ('3','6','8') 
+	        </when>
+	        <otherwise>
+	              and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	        </otherwise>
+	    </choose> 
+	    <if test="companyid != null and companyid != ''">
+	        and op_taxiorder.companyid = #{companyid}
+	    </if>
+	    <if test="tradeno != null and tradeno != ''">
+	        and pub_driver_tradingrecord.tradeno like concat('%',#{tradeno},'%')
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+    </select>
+    
+    <!-- 查找订单号 -->
+    <select id="getOrderNo" resultType="hashmap">	    
+	    select op_taxiorder.orderno as id,op_taxiorder.orderno as text        
+	    from op_taxiorder
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno like concat("%",#{orderno},"%")
+	    </if>   
+	      and (op_taxiorder.companyid=#{lecompanyid}
+               or op_taxiorder.vehicleid in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1)) 
+    </select>
+    
+    <!-- 查找司机 -->
+    <select id="getDriverByNameOrPhone" resultType="hashmap">	    
+	    select distinct op_taxiorder.driverid as id,concat(pub_driver.name,' ',pub_driver.phone) as text
+	    from op_taxiorder,pub_driver
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.driverid = pub_driver.id
+	      and pub_driver.status = 1
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	    <if test="driver != null and driver != ''">
+	        and (pub_driver.name like concat("%",#{driver},"%")
+	          or pub_driver.phone like concat("%",#{driver},"%"))
+	    </if> 
+	     and (op_taxiorder.companyid=#{lecompanyid}
+               or op_taxiorder.vehicleid in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1)) 
+    </select>
+    
+    <!-- 所属企业 -->
+    <select id="getCompanyNameById" parameterType="string" resultType="hashmap">	    
+	    select distinct op_taxiorder.companyid as id,le_leasescompany.shortname as text
+	    from op_taxiorder,le_leasescompany
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	      and op_taxiorder.companyid = le_leasescompany.id
+	      and (op_taxiorder.companyid=#{lecompanyid}
+               or op_taxiorder.vehicleid in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1))
+    </select>
+    
+    <!-- 查找资格证号 -->
+    <select id="getJobNum" resultType="hashmap">
+	    select distinct pub_driver.jobnum as id,pub_driver.jobnum as text
+	    from op_taxiorder,pub_driver
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.driverid = pub_driver.id
+	      and pub_driver.status = 1
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum like concat("%",#{jobnum},"%")
+	    </if> 
+	      and (op_taxiorder.companyid=#{lecompanyid}
+               or op_taxiorder.vehicleid in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1)) 
+    </select>
+    
+     <!-- 查找资格证号 -->
+    <select id="getFullPlateno" resultType="hashmap">
+	    select distinct pub_vehicle.fullplateno as id,pub_vehicle.fullplateno as text
+	    from op_taxiorder,pub_vehicle
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7
+	      and op_taxiorder.vehicleid = pub_vehicle.id
+	      and pub_vehicle.status = 1
+	      and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	    <if test="fullplateno != null and fullplateno != ''">
+	        and pub_vehicle.fullplateno like concat("%",#{fullplateno},"%")
+	    </if> 
+	      and (op_taxiorder.companyid=#{lecompanyid}
+               or op_taxiorder.vehicleid in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1)) 
+    </select>
+    
+    <!--导出行程费用结算信息 -->
+    <select id="getBalanceListExport" resultType="balancedto" parameterType="balancemanagequeryparam">
+        select op_taxiorder.orderno,pub_driver.name as drivername,pub_driver.phone as driverphone,le_leasescompany.shortname,op_taxiorder.orderamount,
+		       pub_driver.jobnum,pub_vehicle.fullplateno,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '未结算' when op_taxiorder.paymentstatus in ('3','6','8') then '已结算' end) as paymentstatus,
+		       date_format(op_taxiorder.paymenttime, '%Y/%m/%d %H:%i') as paymenttime,
+		       (case when op_taxiorder.paymentstatus in ('4','5','7') then '/' when op_taxiorder.paymentstatus in ('3','6','8') then date_format(op_taxiorder.settlementtime, '%Y/%m/%d %H:%i') end) as settlementtime,
+		       pub_driver_tradingrecord.tradeno,pub_driver_tradingrecord.paymenttype	           
+	     from op_taxiorder 
+	     inner join le_leasescompany on (op_taxiorder.companyid = le_leasescompany.id)
+		 inner join pub_driver on (op_taxiorder.driverid = pub_driver.id)
+	     inner join pub_vehicle on (op_taxiorder.vehicleid = pub_vehicle.id)  
+	      left join pub_driver_tradingrecord on (op_taxiorder.orderno = pub_driver_tradingrecord.orderno and pub_driver_tradingrecord.status = 1 
+				and  pub_driver_tradingrecord.driverid = op_taxiorder.driverid and pub_driver_tradingrecord.tradingstatus = 1)	                      
+	    where op_taxiorder.status = 1
+	      and op_taxiorder.paymentmethod = 1
+	      and op_taxiorder.orderstatus = 7     
+		  and (op_taxiorder.companyid=#{lecompanyid}
+               or pub_vehicle.id in(
+               select vehicleid from pub_cooresource where companyid in (
+               select leasecompanyid from pub_coooperate 
+               where companyid=#{lecompanyid} and coostate in (1,4) and servicetype=1 and platformtype=1 and status=1
+              ) and enabled=0 and status=1))
+	    <if test="orderno != null and orderno != ''">
+	        and op_taxiorder.orderno = #{orderno}
+	    </if>
+	    <if test="jobnum != null and jobnum != ''">
+	        and pub_driver.jobnum =  #{jobnum} 
+	    </if>
+        <if test="fullplateno != null and fullplateno != ''">
+	        and pub_vehicle.fullplateno = #{fullplateno}
+	    </if>		
+	    <if test="driverid != null and driverid != ''">
+	        and op_taxiorder.driverid = #{driverid}
+	    </if>
+	    <choose>
+	        <when test='paymentstatus =="0"'>
+	              and op_taxiorder.paymentstatus in ('4','5','7') 
+	        </when>
+	        <when test='paymentstatus =="1"'>
+	              and op_taxiorder.paymentstatus in ('3','6','8') 
+	        </when>
+	        <otherwise>
+	              and op_taxiorder.paymentstatus in ('3','4','5','6','7','8')
+	        </otherwise>
+	    </choose> 
+	    <if test="companyid != null and companyid != ''">
+	        and op_taxiorder.companyid = #{companyid}
+	    </if>
+	    <if test="tradeno != null and tradeno != ''">
+	        and pub_driver_tradingrecord.tradeno like concat('%',#{tradeno},'%')
+	    </if>
+	    <if test="starttime != null and starttime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endtime != null and endtime != ''">
+	        and op_taxiorder.paymenttime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by op_taxiorder.paymenttime desc
+    </select>
+ 
+     
+      
+</mapper>

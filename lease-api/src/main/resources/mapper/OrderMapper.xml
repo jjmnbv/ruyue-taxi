@@ -619,7 +619,21 @@
 			org_user.id,
 			case
 				when (select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id
-					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))) > 0
+					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))
+					+
+					(			
+						SELECT COUNT(oo2.orderno)
+						FROM
+							org_order oo2,
+							org_ordercancel ooc
+						WHERE oo2.`status` = '1'
+						AND oo2.orderno = ooc.orderno
+						AND oo2.userid = org_user.id
+						AND oo2.orderstatus = '8'
+						AND oo2.paymentstatus = '0'
+						AND ooc.cancelnature = '1'
+					)
+				) > 0
 				then concat(org_user.account, " ", ifnull(org_user.nickname, ""), "(未支付)")
 				else concat(org_user.account, " ", ifnull(org_user.nickname, ""))
 			end text
@@ -664,7 +678,21 @@
 			org_user.id,
 			case
 				when (select count(*) from org_order where org_order.status = 1 and org_order.userid = org_user.id
-					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))) > 0
+					and org_order.orderstatus = #{orderstatus} and (org_order.paymentstatus = #{paymentstatus} or isnull(org_order.paymentstatus))
+					+
+					(			
+						SELECT COUNT(oo2.orderno)
+						FROM
+							org_order oo2,
+							org_ordercancel ooc
+						WHERE oo2.`status` = '1'
+						AND oo2.orderno = ooc.orderno
+						AND oo2.userid = org_user.id
+						AND oo2.orderstatus = '8'
+						AND oo2.paymentstatus = '0'
+						AND ooc.cancelnature = '1'
+					)
+				) > 0
 				then concat(org_user.account, " ", ifnull(org_user.nickname, ""), "(未支付)")
 				else concat(org_user.account, " ", ifnull(org_user.nickname, ""))
 			end text

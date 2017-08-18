@@ -214,8 +214,10 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口获取未支付的订单
-			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)){
 				return passengerService4Third.getUnpayOders(usertoken,companyid);
+			}else if(Const.INTERFACE_V4_0_1.equals(version)){
+				return passengerService4Fourth.getUnpayOders(usertoken,companyid);
 			}
 			return passengerService.getUnpayOders(usertoken,companyid);
 		}catch (Exception e){
@@ -605,8 +607,10 @@ public class PassengerController extends BaseController {
 		try{
 			String version = (String) params.get("version");
 			//v3.0.1接口更新密码
-			if(Const.INTERFACE_V3_0_1.equals(version)||Const.INTERFACE_V4_0_1.equals(version)){
+			if(Const.INTERFACE_V3_0_1.equals(version)){
 				return passengerService4Third.getPayAccounts(params);
+			}else if(Const.INTERFACE_V4_0_1.equals(version)){
+				return passengerService4Fourth.getPayAccounts(params);
 			}
 			return passengerService.getPayAccounts(params);
 		}catch (Exception e){

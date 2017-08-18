@@ -106,7 +106,23 @@ function Zconfirm(comfirmData,callback){
 		$("#button_r").attr({"onclick":comfirmData.click});
 	}
 }
-
+//confirm封装
+function Zconfirm1(comfirmData){
+	var tittle=comfirmData.tittle ||"标题",
+		context=comfirmData.context ||"内容",
+		button_l=comfirmData.button_l||"否",
+		button_r=comfirmData.button_r||"是",
+		htmltex=comfirmData.htmltex ||"",
+		click=comfirmData.click ||"";
+	var scrTop = $(window.parent.document).scrollTop() - 60;
+	if(scrTop >= 0 ){
+		scrTop = scrTop + 80 + 'px';
+	}else{
+		scrTop = 80 + 'px';
+	}
+	var html='<div class="pop_box" style="display: block;"><div class="tip_box_a" style="margin-top:'+scrTop+'"><h2>'+tittle+'</h2><div class="tip_text"> '+context+'</div>'+htmltex+'<button class="Lbtn red"  id="close">'+button_l+'</button></div></div> ';
+	$("body").append(html);
+}
 
 /**
  * 设置cookie

@@ -73,7 +73,7 @@
 					<input id="servicetype" value="${p.servicetype}" type="hidden"/>
 					<div class="col-3">
 						<label>车牌号</label>
-						<input id="queryPlateno" name="queryPlateno" type="text" value="" placeholder="车牌号"/>
+						<input id="queryPlateno" name="queryPlateno" type="text" value="" placeholder="车牌号" maxlength="7"/>
 					</div>
 					<div class="col-3">
 						<label>资格证号</label>

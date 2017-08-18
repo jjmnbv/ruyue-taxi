@@ -238,4 +238,6 @@ public interface UserMapper {
 	void addCouponDetail(Map<String, Object> params);
 
 	void useCoupon(Map<String, Object> useinfo);
+
+	void deleteUseCouponOrder(Map<String, Object> usecouponp);
 }
