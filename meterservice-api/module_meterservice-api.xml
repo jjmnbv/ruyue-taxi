@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_meterservice-api" default="compile.module.meterservice-api">
+  <dirname property="module.meterservice-api.basedir" file="${ant.file.module_meterservice-api}"/>
+  
+  <property name="module.jdk.home.meterservice-api" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.meterservice-api" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.meterservice-api" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.meterservice-api" value="-encoding UTF-8 -source 1.7 -target 1.7 ${compiler.args}"/>
+  
+  <property name="meterservice-api.output.dir" value="${module.meterservice-api.basedir}/bin"/>
+  <property name="meterservice-api.testoutput.dir" value="${module.meterservice-api.basedir}/bin"/>
+  
+  <path id="meterservice-api.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="meterservice-api.module.production.classpath">
+    <path refid="${module.jdk.classpath.meterservice-api}"/>
+  </path>
+  
+  <path id="meterservice-api.runtime.production.module.classpath">
+    <pathelement location="${meterservice-api.output.dir}"/>
+  </path>
+  
+  <path id="meterservice-api.module.classpath">
+    <path refid="${module.jdk.classpath.meterservice-api}"/>
+    <pathelement location="${meterservice-api.output.dir}"/>
+  </path>
+  
+  <path id="meterservice-api.runtime.module.classpath">
+    <pathelement location="${meterservice-api.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.meterservice-api">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.meterservice-api">
+    <patternset refid="excluded.from.module.meterservice-api"/>
+  </patternset>
+  
+  <path id="meterservice-api.module.sourcepath">
+    <dirset dir="${module.meterservice-api.basedir}">
+      <include name="src/main/java"/>
+      <include name="src/test/java"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.meterservice-api" depends="compile.module.meterservice-api.production,compile.module.meterservice-api.tests" description="Compile module meterservice-api"/>
+  
+  <target name="compile.module.meterservice-api.production" depends="register.custom.compilers" description="Compile module meterservice-api; production classes">
+    <mkdir dir="${meterservice-api.output.dir}"/>
+    <javac2 destdir="${meterservice-api.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.meterservice-api}/javac">
+      <compilerarg line="${compiler.args.meterservice-api}"/>
+      <bootclasspath refid="meterservice-api.module.bootclasspath"/>
+      <classpath refid="meterservice-api.module.production.classpath"/>
+      <src refid="meterservice-api.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.meterservice-api"/>
+    </javac2>
+    
+    <copy todir="${meterservice-api.output.dir}">
+      <fileset dir="${module.meterservice-api.basedir}/src/main/java">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.meterservice-api.basedir}/src/test/java">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.meterservice-api.tests" depends="register.custom.compilers,compile.module.meterservice-api.production" description="compile module meterservice-api; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.meterservice-api" description="cleanup module">
+    <delete dir="${meterservice-api.output.dir}"/>
+    <delete dir="${meterservice-api.testoutput.dir}"/>
+  </target>
+</project>
