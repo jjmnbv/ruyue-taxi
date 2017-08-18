@@ -2,6 +2,7 @@ package com.xxkj.passenger.wechat.config;
 
 import javax.sql.DataSource;
 
+import org.apache.ibatis.logging.stdout.StdOutImpl;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.type.JdbcType;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -46,11 +47,32 @@ public class MyBatisConfig implements TransactionManagementConfigurer {
         org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
         configuration.setJdbcTypeForNull(JdbcType.OTHER);
         configuration.setCallSettersOnNulls(true);
-		bean.setConfiguration(configuration );
+        configuration.setLogImpl(StdOutImpl.class);
+		bean.setConfiguration(configuration);
         //添加XML目录
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         try {
-            bean.setMapperLocations(resolver.getResources("classpath:mapper/*/*.xml"));
+            bean.setMapperLocations(resolver.getResources("classpath:mapper/**/*.xml"));
+            //bean.setTypeAliasesPackage("com.szyciov.entity,com.szyciov.passenger.entity");
+            bean.setTypeAliases(new Class[]{com.szyciov.param.QueryParam.class,
+            		com.szyciov.entity.Dictionary.class,
+            		com.szyciov.org.entity.OrgUser.class,
+            		com.szyciov.op.entity.PeUser.class,
+            		com.szyciov.passenger.entity.PassengerOrder.class,
+            		com.szyciov.passenger.entity.AccountRules.class,
+            		com.szyciov.passenger.entity.LeasesCompany.class,
+            		com.szyciov.passenger.entity.Order4List.class,
+            		com.szyciov.passenger.entity.DriverInfo.class,
+            		com.szyciov.passenger.entity.MostAddress.class,
+            		com.szyciov.passenger.entity.SysVersion.class,
+            		com.szyciov.passenger.entity.VehicleModels.class,
+            		com.szyciov.passenger.entity.AirportAddr.class,
+            		com.szyciov.passenger.entity.MostContact.class,
+            		com.szyciov.lease.entity.OrgOrgan.class,
+            		com.szyciov.entity.PubMostcontact.class,
+            		com.szyciov.entity.PubMostaddress.class,
+            		com.szyciov.entity.PubDriver.class,
+            		com.szyciov.lease.param.PubDriverInBoundParam.class});
             return bean.getObject();
         } catch (Exception e) {
             e.printStackTrace();

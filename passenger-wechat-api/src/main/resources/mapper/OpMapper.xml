@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.OpMapper">
+
+	<!-- 获取运管端在某城市提供的业务 -->
+	<select id="getBusiness" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			DISTINCT(rulestype) as type,
+			(
+				CASE rulestype
+				WHEN '1' THEN
+					'约车'
+				WHEN '2' THEN
+					'接机'
+				WHEN '3' THEN
+					'送机'
+				END
+			) AS name
+		FROM
+			op_accountrules,
+			pub_cityaddr
+		WHERE
+			op_accountrules.status=1
+		and pub_cityaddr.status=1
+		and op_accountrules.rulesstate='0'
+		and pub_cityaddr.id=op_accountrules.city
+		and pub_cityaddr.city=#{city}
+		order by op_accountrules.rulestype
+	</select>
+	
+	<!-- 根据服务类型获取服务车型有哪些 -->
+	<select id="getCarMoudels" parameterType="HashMap" resultType="VehicleModels">
+		SELECT
+			op_vehiclemodels.level,
+			op_vehiclemodels.name,
+			op_vehiclemodels.logo,
+			op_vehiclemodels.Id
+		FROM
+			op_accountrules,
+			pub_cityaddr,
+			op_vehiclemodels
+		WHERE
+			op_accountrules.status=1
+		AND pub_cityaddr.status=1
+		AND op_vehiclemodels.status=1
+		AND op_vehiclemodels.Id=op_accountrules.vehiclemodelsid
+		AND pub_cityaddr.id=op_accountrules.city
+		AND op_accountrules.rulesstate='0'
+		AND pub_cityaddr.city=#{city}
+		AND op_accountrules.rulestype=#{ordertype}
+		ORDER BY op_vehiclemodels.level
+	</select>
+	
+	<!-- 获取某中服务在某个城市的计费规则 -->
+	<select id="getAccountRules" parameterType="HashMap" resultType="AccountRules">
+		SELECT * from ( 
+			SELECT
+				op_accountrules.*,
+				(SELECT op_vehiclemodels.logo from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.Id = op_accountrules.vehiclemodelsid) as logo,
+				(SELECT op_vehiclemodels.name from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.Id = op_accountrules.vehiclemodelsid) as name,
+				(SELECT op_vehiclemodels.level from op_vehiclemodels where op_vehiclemodels.status=1 and op_vehiclemodels.Id = op_accountrules.vehiclemodelsid) as level
+			FROM
+				op_accountrules,
+				pub_cityaddr
+			WHERE
+				op_accountrules.status = 1
+				
+			and pub_cityaddr.status=1
+			and pub_cityaddr.id=op_accountrules.city
+			and pub_cityaddr.city=#{city}
+			and op_accountrules.rulestype=#{rulestype}
+		) rule ORDER BY rule.level
+	</select>
+	
+	<!-- 获取运管端有服务的城市列表 -->
+	<select id="getValidCity" resultType="String">
+		SELECT
+			DISTINCT(pub_cityaddr.city)
+		FROM
+			op_accountrules,
+			pub_cityaddr
+		WHERE
+			op_accountrules.status = 1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=op_accountrules.city
+		and op_accountrules.rulesstate='0'
+	</select>
+	
+	<!-- 获取提供服务的城市列表 -->
+	<select id="getCity" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			DISTINCT(pub_cityaddr.city),pub_cityaddr.cityInitials as cityinitials
+		FROM
+			op_accountrules,
+			pub_cityaddr
+		WHERE
+			op_accountrules.status = 1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=op_accountrules.city
+		and op_accountrules.rulesstate='0'
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+ 				pub_cityaddr.city LIKE '%${cityword}%' or
+ 				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+ 				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+ 			)
+		</if>
+		order by pub_cityaddr.cityInitials
+	</select>
+	
+	<!-- 获取运管端的订单的消费信息，行程中的订单 -->
+	<select id="getCostInfo4Op" parameterType="String" resultType="HashMap">
+		SELECT
+			orderamount,
+			sum(estimatedmileage)-SUM(mileage) as remainmileage
+		FROM
+			op_order
+		where 
+			status=1
+		and orderstatus='6'
+		and orderno=#{orderid}
+	</select>
+	
+	<!-- ################################二期的接口################################### -->
+	
+	<!-- 获取出租车的计费规则 -->
+	<select id="getAccountRules4OpTaxi" parameterType="Map" resultType="Map">
+		SELECT
+			op_taxiaccountrules.*
+		FROM
+			op_taxiaccountrules,
+			pub_cityaddr
+		WHERE
+			pub_cityaddr.STATUS = 1
+		AND op_taxiaccountrules.STATUS = 1
+		AND op_taxiaccountrules.city = pub_cityaddr.id
+		AND op_taxiaccountrules.rulesstate='0'
+		
+		AND pub_cityaddr.city=#{city}
+		LIMIT 0,1
+	</select>
+	
+	<!-- 获取出租车的派单规则 -->
+	<select id="getSendRules4OpTaxi" parameterType="Map" resultType="Map">
+		SELECT
+			op_taxisendrules.*
+		FROM
+			op_taxisendrules,
+			pub_cityaddr
+		WHERE
+			pub_cityaddr.STATUS = 1
+		AND op_taxisendrules.STATUS = 1
+		AND op_taxisendrules.city = pub_cityaddr.id
+		AND op_taxisendrules.rulesstate='0'
+		
+		AND pub_cityaddr.city=#{city}
+		LIMIT 0,1
+	</select>
+	
+	<!-- 个人用户获取上车城市列表 -->
+	<select id="getGetOnCitys4Op" parameterType="Map" resultType="Map">
+		SELECT
+			DISTINCT(pub_cityaddr.city),pub_cityaddr.cityInitials as cityinitials
+		FROM
+			op_taxiaccountrules,
+			pub_cityaddr
+		WHERE
+			op_taxiaccountrules.status = 1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=op_taxiaccountrules.city
+		and op_taxiaccountrules.rulesstate='0'
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+ 				pub_cityaddr.city LIKE '%${cityword}%' or
+ 				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+ 				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+ 			)
+		</if>
+		order by pub_cityaddr.cityInitials
+	</select>
+	
+	<!-- 个人用户获取网约车车型列表 -->
+	<select id="getCarMoudels4OpNetCar" parameterType="Map" resultType="Map">
+		SELECT
+			op_vehiclemodels.level,
+			op_vehiclemodels.name,
+			op_vehiclemodels.logo,
+			op_vehiclemodels.id
+		FROM
+			op_accountrules,
+			pub_cityaddr,
+			op_vehiclemodels
+		WHERE
+			op_accountrules.status=1
+		AND pub_cityaddr.status=1
+		AND op_vehiclemodels.status=1
+		AND op_vehiclemodels.Id=op_accountrules.vehiclemodelsid
+		AND pub_cityaddr.id=op_accountrules.city
+		AND op_accountrules.rulesstate='0'
+		AND pub_cityaddr.city=#{city}
+		AND op_accountrules.rulestype=#{ordertype}
+		ORDER BY op_vehiclemodels.level
+	</select>
+	
+	<!-- 个人用户获取网约车计费规则 -->
+	<select id="getOpOrderAccountRules4NetCar" parameterType="Map" resultType="Map">
+		SELECT
+			op_accountrules.startprice,
+			op_accountrules.rangeprice,
+			op_accountrules.timeprice,
+			op_accountrules.timetype,
+			op_accountrules.perhour,
+			op_accountrules.deadheadmileage,
+			op_accountrules.deadheadprice
+		FROM
+			op_accountrules
+		WHERE
+		op_accountrules.status = 1
+		AND op_accountrules.rulesstate = '0'
+		AND op_accountrules.vehiclemodelsid = #{cartype}
+		AND op_accountrules.rulestype = #{ordertype}
+		AND op_accountrules.city = #{city}
+	</select>
+	
+	<!-- 个人用户获取出租车计费规则 -->
+	<select id="getOpOrderAccountRules4Taxi" parameterType="Map" resultType="Map">
+		SELECT
+			op_taxiaccountrules.startprice,
+		  op_taxiaccountrules.startrange,
+		  op_taxiaccountrules.surcharge,
+		  op_taxiaccountrules.emptytravelrate,
+		  op_taxiaccountrules.standardrange,
+		  op_taxiaccountrules.renewalprice
+		FROM
+			op_taxiaccountrules
+		WHERE
+			op_taxiaccountrules.STATUS = 1
+		AND op_taxiaccountrules.rulesstate = '0'
+		AND op_taxiaccountrules.city=#{city}
+	</select>
+	
+	<!-- 获取运管端超管和财务人员信息 -->
+	<select id="getSuperAndCaiWu" resultType="Map">
+	   SELECT DISTINCT
+			*
+	   FROM
+			(
+				SELECT
+					op_user.*
+				FROM
+					op_rolemanagement,
+					op_roleuser,
+					op_user,
+					pub_dictionary
+				WHERE
+					op_rolemanagement.status = 1
+				AND op_roleuser.status = 1
+				AND op_user.status = 1
+				AND op_rolemanagement.id = op_roleuser.roleid
+				AND op_roleuser.userid = op_user.id
+				AND op_rolemanagement.roletype = pub_dictionary.value
+		
+				AND pub_dictionary.type = '运管角色类型'
+				AND pub_dictionary.text = '财务'
+				UNION
+					SELECT
+						op_user.*
+					FROM
+						op_user
+					WHERE
+						op_user.status = 1
+					AND op_user.usertype = '1'
+			) userinfo
+	</select>
+	
+	<!-- 添加运管端的消息 -->
+	<insert id="addNews4Op" parameterType="Map">
+		INSERT INTO op_usernews (
+			id,
+			userid,
+			type,
+			content,
+			newsstate,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{type},
+				#{content},
+				#{newsstate},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 获取运管端网约车可以用的派单规则的城市集合 -->
+	<select id="getSendRuleCitys" resultType="String">
+		SELECT DISTINCT
+			pub_cityaddr.city
+		FROM
+			pub_sendrules,
+			pub_cityaddr
+		WHERE
+			pub_sendrules.status=1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=pub_sendrules.city
+		and pub_sendrules.platformtype='0'
+		and pub_sendrules.rulesstate='0'
+		and pub_sendrules.vehicletype=0
+	</select>
+	
+	<!-- 运管端获取可用的派单规则的城市集合为出租车的 -->
+	<select id="getSendRuleCitys4Taxi" resultType="String">
+		SELECT DISTINCT
+			pub_cityaddr.city
+		FROM
+			op_taxisendrules,
+			pub_cityaddr
+		WHERE
+			op_taxisendrules.status=1
+		and pub_cityaddr.status=1
+		and op_taxisendrules.rulesstate='0'
+		and pub_cityaddr.id=op_taxisendrules.city
+	</select>
+
+
+	<!-- 获取计费规则的城市名称 -->
+	<select id="getAccountRuleCitys" parameterType="Map" resultType="String">
+		SELECT
+			DISTINCT(pub_cityaddr.city)
+		FROM
+			op_accountrules,
+			pub_cityaddr
+		WHERE
+			op_accountrules.status = 1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=op_accountrules.city
+		and op_accountrules.rulestype=#{ordertype}
+		and op_accountrules.rulesstate='0'
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+				pub_cityaddr.city LIKE '%${cityword}%' or
+				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+			)
+		</if>
+		order by pub_cityaddr.cityInitials
+	</select>
+
+	<!-- 获取出租车的计费规则的城市 -->
+	<select id="getAccountRuleCitys4Taxi" parameterType="Map" resultType="String">
+		SELECT
+			DISTINCT(pub_cityaddr.city)
+		FROM
+			op_taxiaccountrules,
+			pub_cityaddr
+		WHERE
+			op_taxiaccountrules.status = 1
+		and pub_cityaddr.status=1
+		and pub_cityaddr.id=op_taxiaccountrules.city
+		and op_taxiaccountrules.rulesstate='0'
+		<if test=" cityword!=null and cityword!='' ">
+			and (
+				pub_cityaddr.city LIKE '%${cityword}%' or
+				pub_cityaddr.cityInitials LIKE '%${cityword}%' or
+				pub_cityaddr.fullpinyin LIKE '%${cityword}%'
+			)
+		</if>
+		order by pub_cityaddr.cityInitials
+	</select>
+
+	<!--获取最低的可用的服务车型-->
+	<select id="getLowestCarType" parameterType="Map" resultType="String">
+		SELECT
+			op_vehiclemodels.id
+		FROM
+			op_accountrules,
+			pub_cityaddr,
+			op_vehiclemodels
+		WHERE
+			op_accountrules.status=1
+		AND pub_cityaddr.status=1
+		AND op_vehiclemodels.status=1
+		AND op_vehiclemodels.Id=op_accountrules.vehiclemodelsid
+		AND pub_cityaddr.id=op_accountrules.city
+		AND op_accountrules.rulesstate='0'
+		AND pub_cityaddr.city=#{city}
+		AND op_accountrules.rulestype=#{ordertype}
+		ORDER BY op_vehiclemodels.level
+   		LIMIT 0,1
+	</select>
+
+	<!--
+	获取约车时限
+	getSendRuleByCity4ReverceNetCar
+	getSendRule4ReverceTaxi
+	-->
+	<select id="getSendRuleByCity4ReverceNetCar" resultType="Map" parameterType="Map">
+		SELECT
+			*
+		FROM
+			pub_sendrules
+		WHERE
+			pub_sendrules.status = 1
+		AND pub_sendrules.vehicletype = 0
+		AND pub_sendrules.usetype = 0
+		AND pub_sendrules.platformtype = '0'
+		AND pub_sendrules.rulesstate='0'
+		AND pub_sendrules.city = #{city}
+	</select>
+
+	<select id="getSendRule4ReverceTaxi" resultType="Map" parameterType="Map">
+		select * from op_taxisendrules where op_taxisendrules.status=1 and op_taxisendrules.city=#{city} and op_taxisendrules.usetype='0'
+	</select>
+</mapper>
