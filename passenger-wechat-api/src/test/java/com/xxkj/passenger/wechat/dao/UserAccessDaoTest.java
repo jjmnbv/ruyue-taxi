@@ -1,7 +1,7 @@
 package com.xxkj.passenger.wechat.dao;
 
 import com.xxkj.passenger.wechat.entity.User;
-import com.xxkj.passenger.wechat.service.UserAccessService;
+import com.xxkj.passenger.wechat.service.IUserAccessService;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.Test;
@@ -23,20 +23,20 @@ public class UserAccessDaoTest{
     SqlSessionFactory sqlSessionFactory;
 
     @Autowired
-    UserAccessService userAccessService;
+    IUserAccessService userAccessService;
 
     @Test
     public void fun01() {
         System.out.println("sqlSessionFactory:" + sqlSessionFactory);
         SqlSession sqlSession = sqlSessionFactory.openSession();
-        User user = sqlSession.selectOne("getUserByOpenId", "dd3khg23#3j2kj3h5");
+        User user = sqlSession.selectOne("getUserByOpenId", "1234");
         System.out.println(user);
     }
 
-    @Test
-    public void fun02() {
-        boolean isBindOpenId = userAccessService.verifyOpenId("dd3khg23#3j2kj3h5");
-        System.out.println("是否绑定openid：" + isBindOpenId);
-    }
+//    @Test
+//    public void fun02() {
+//        boolean isBindOpenId = userAccessService.getUserByOpenId("dd3khg23#3j2kj3h5");
+//        System.out.println("是否绑定openid：" + isBindOpenId);
+//    }
 
 }

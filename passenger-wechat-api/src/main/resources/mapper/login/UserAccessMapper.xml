@@ -3,13 +3,147 @@
         "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.xxkj.passenger.wechat.mapper.UserAccessMapper">
     <select id="getUserById" parameterType="String" resultType="com.xxkj.passenger.wechat.entity.User">
-        SELECT  * FROM  pe_user WHERE id = #{userId}
+        SELECT  * FROM pe_user WHERE id = #{userId}
     </select>
+
     <select id="getUserByOpenId" parameterType="String" resultType="com.xxkj.passenger.wechat.entity.User">
       SELECT * FROM pe_user WHERE wechatopenid = #{openid}
     </select>
 
+    <!-- 获取机构端用户信息，获取的是最新的并且除开超管的用户 -->
+    <select id="getUser4Org" parameterType="String" resultType="com.szyciov.org.entity.OrgUser">
+        SELECT
+        *,
+        (SELECT org_organ.fullname from org_organ where org_organ.id=org_user.organid)as orgcaption,
+        (select org_dept.deptname from org_dept where org_dept.status=1 and org_dept.id = org_user.dpetid LIMIT 0,1)  as deptcation
+        FROM
+        org_user
+        WHERE
+        org_user.account = #{account} AND org_user.customertype!=1 and org_user.usertype !='1' order by createtime desc limit 1
+    </select>
+
+    <!-- 获取个人用户信息 -->
+    <select id="getUser4Op" parameterType="String" resultType="com.xxkj.passenger.wechat.entity.User">
+        select * from  pe_user where account = #{account} and status = 1
+    </select>
+
+    <!-- 获取用户的token -->
+    <select id="getUserTokenByUserId" parameterType="HashMap" resultType="HashMap">
+        SELECT
+        *
+        FROM
+        pub_usertoken
+        WHERE
+        status = 1
+        AND userid = #{userid}
+        AND usertype = #{usertype}
+    </select>
+
+
+    <!-- 添加或者更新用户的token -->
+    <insert id="createOrUpdateUsertoken" parameterType="HashMap">
+        <if test="id !=null and id != '' ">
+            <!-- 添加 -->
+            INSERT INTO pub_usertoken (
+            id,
+            userid,
+            usertype,
+            usertoken,
+            uuid,
+            createtime,
+            updatetime,
+            status
+            )
+            VALUES
+            (
+            #{id},
+            #{userid},
+            #{usertype},
+            #{usertoken},
+            #{uuid},
+            now(),
+            now(),
+            1
+            )
+        </if>
+        <if test="id=='' or id==null">
+            <!-- 更新 -->
+            UPDATE pub_usertoken
+            SET usertoken = #{usertoken},
+            uuid = #{uuid},
+            updatetime = now()
+            WHERE
+            status = 1
+            AND userid = #{userid}
+            AND usertype = #{usertype}
+        </if>
+    </insert>
+
     <update id="bindUserWithOpenId" parameterType="com.xxkj.passenger.wechat.entity.User">
         UPDATE pe_user SET wechatopenid = #{wechatopenid} WHERE id = #{id}
     </update>
+
+    <insert id="addLog4Pe" parameterType="HashMap">
+        INSERT INTO pe_userloginlog (
+        id,
+        userid,
+        ipaddr,
+        device,
+        version,
+        appversion,
+        phonebrand,
+        phonemodel,
+        browserversion,
+        browsertype,
+        loginstatus,
+        logintime,
+        createtime,
+        updatetime,
+        STATUS
+        )
+        VALUES
+        (
+        #{id},
+        #{userid},
+        null,
+        #{device},
+        #{version},
+        #{appversion},
+        #{phonebrand},
+        #{phonemodel},
+        #{browserversion},
+        #{browsertype},
+        #{loginstatus},
+        now(),
+        now(),
+        now(),
+        1
+        )
+    </insert>
+
+    <!-- 删除验证码 -->
+    <update id="deleteSMSCode" parameterType="Map">
+        UPDATE pub_smstoken
+        SET
+        smscode = null,
+        updatetime = now()
+        WHERE
+        pub_smstoken.smstype=#{smstype}
+        and pub_smstoken.usertype=#{usertype}
+        and pub_smstoken.username=#{phone}
+        and pub_smstoken.status=1
+    </update>
+
+    <!-- 获取验证码 -->
+    <!--<select id="getSMSInfo" parameterType="HashMap" resultMap="smsobj" >-->
+        <!--SELECT-->
+        <!--*-->
+        <!--FROM-->
+        <!--pub_smstoken-->
+        <!--WHERE-->
+        <!--pub_smstoken.usertype = #{usertype}-->
+        <!--AND pub_smstoken.smstype = #{smstype}-->
+        <!--AND pub_smstoken.username = #{phone}-->
+        <!--AND pub_smstoken.status = 1-->
+    <!--</select>-->
 </mapper>

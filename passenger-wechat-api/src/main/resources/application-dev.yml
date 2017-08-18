@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://szycwh.f3322.net:3306/carservicedev_test_v4.0.0?useUnicode=true&characterEncoding=utf-8
+    url: jdbc:mysql://szycwh.f3322.net:3306/carservicedev_v4.0.0?useUnicode=true&characterEncoding=utf-8
     username: xxdeveloper
     password: xxkj@2017
   rabbitmq:
@@ -19,3 +19,10 @@ service:
     key: SLj16Qq7FK9nbyi4
 server:
   port: 8098
+wxpub:
+  pay: 
+    businessno: 9999
+    payurl: http://epay.xunxintech.com:8001/WebTest/WXPayJsAPI.aspx
+    #TODO to be confirmed 1.respurl 2.callbackurl host
+    respurl: html?orderno=
+    callbackurl: http://szycwh.f3322.net:8004/passenger-wechat-api/PassengerWechat/DillWXPubPayed4Op

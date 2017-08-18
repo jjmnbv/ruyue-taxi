@@ -1,0 +1,2681 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.passenger.mapper.UserMapper">
+
+	<resultMap type="HashMap" id="smsobj">
+		<id column="id" property="id" javaType="String"></id>
+		<result column="smstype" property="smstype" javaType="String"></result>
+		<result column="usertype" property="usertype" javaType="String"></result>
+		<result column="username" property="username" javaType="String"></result>
+		<result column="smscode" property="smscode" javaType="String"></result>
+		<result column="createtime" property="createtime" javaType="Date"></result>
+		<result column="updatetime" property="updatetime" javaType="Date"></result>
+		<result column="status" property="status" javaType="int"></result>
+	</resultMap>
+	
+	<insert id="saveSMSCode" parameterType="HashMap">
+		INSERT INTO pub_smstoken (
+			id,
+			smstype,
+			usertype,
+			username,
+			smscode,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES (
+			#{id},
+			#{smstype},
+			#{usertype},
+			#{username},
+			#{smscode},
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+	<select id="hasSMSCode" parameterType="HashMap" resultType="Boolean">
+		SELECT
+			count(*) > 0
+		FROM
+			pub_smstoken
+		WHERE
+			pub_smstoken.usertype = #{usertype}
+		AND pub_smstoken.smstype = #{smstype}
+		AND pub_smstoken.username = #{username}
+		AND pub_smstoken.status = 1
+	</select>
+	
+	<update id="updateSMSCode" parameterType="HashMap">
+		UPDATE pub_smstoken
+		SET pub_smstoken.smscode = #{smscode},
+		 pub_smstoken.updatetime = now()
+		WHERE
+			pub_smstoken.usertype = #{usertype}
+		AND pub_smstoken.smstype = #{smstype}
+		AND pub_smstoken.username = #{username}
+	</update>
+	
+	<select id="getSMSInfo" parameterType="HashMap" resultMap="smsobj" >
+		SELECT
+			*
+		FROM
+			pub_smstoken
+		WHERE
+			pub_smstoken.usertype = #{usertype}
+		AND pub_smstoken.smstype = #{smstype}
+		AND pub_smstoken.username = #{phone}
+		AND pub_smstoken.status = 1
+	</select>
+	
+	<!-- 获取机构端用户信息，获取的是最新的并且除开超管的用户 -->
+	<select id="getUser4Org" parameterType="String" resultType="OrgUser">
+		SELECT
+			*,
+			(SELECT org_organ.fullname from org_organ where org_organ.id=org_user.organid)as orgcaption,
+			(select org_dept.deptname from org_dept where org_dept.status=1 and org_dept.id = org_user.dpetid LIMIT 0,1)  as deptcation
+		FROM
+			org_user
+		WHERE
+			org_user.account = #{account} AND org_user.customertype!=1 and org_user.usertype !='1' order by createtime desc limit 1
+	</select>
+	
+	<!-- 获取运营端的用户信息 -->
+	<select id="getUser4Op" parameterType="String" resultType="PeUser">
+		select * from  pe_user where account = #{account} and status = 1
+	</select>
+	
+	<!-- 添加机构端app登录用户日志 -->
+	<insert id="addLog4Org" parameterType="HashMap">
+		INSERT INTO org_userloginlog (
+			id,
+			userid,
+			ipaddr,
+			device,
+			version,
+			appversion,
+			phonebrand,
+			phonemodel,
+			browserversion,
+			browsertype,
+			loginstatus,
+			logintime,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				null,
+				#{device},
+				#{version},
+				#{appversion},
+				#{phonebrand},
+				#{phonemodel},
+				#{browserversion},
+				#{browsertype},
+				#{loginstatus},
+				now(),
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<insert id="addLog4Pe" parameterType="HashMap">
+		INSERT INTO pe_userloginlog (
+			id,
+			userid,
+			ipaddr,
+			device,
+			version,
+			appversion,
+			phonebrand,
+			phonemodel,
+			browserversion,
+			browsertype,
+			loginstatus,
+			logintime,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				null,
+				#{device},
+				#{version},
+				#{appversion},
+				#{phonebrand},
+				#{phonemodel},
+				#{browserversion},
+				#{browsertype},
+				#{loginstatus},
+				now(),
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 个人用户注册 -->
+	<insert id="registerPeUser" parameterType="PeUser">
+		INSERT INTO pe_user(
+			id,
+			account,
+			email,
+			nickname,
+			userpassword,
+			sex,
+			specialstate,
+			registertime,
+			disablestate,
+			disablehis,
+			usetimes,
+			gpsspeed,
+			gpsdirection,
+			lng,
+			lat,
+			createtime,
+			updatetime,
+			STATUS,
+			wdpwdchangestate
+		)
+		VALUES
+			(
+				#{id},
+				#{account},
+				#{email},
+				#{nickname},
+				#{userpassword},
+				#{sex},
+				'0',
+				now(),
+				'0',
+				'0',
+				0,
+				#{gpsspeed},
+				#{gpsdirection},
+				#{lng},
+				#{lat},
+				now(),
+				now(),
+				1,
+				0
+			)
+	</insert>
+	
+	
+	<!-- 获取可用的租赁公司列表 -->
+ 	<select id="getValiableLeasesCompanys" parameterType="HashMap" resultType="LeasesCompany">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.id IN (
+				SELECT DISTINCT (le_accountrules.leasescompanyid)
+				FROM
+					le_accountrules
+				WHERE
+					le_accountrules. STATUS = 1
+				AND le_accountrules.rulesstate = '0'
+				and 
+				(
+					(
+						le_accountrules.type='1'
+						AND le_accountrules.leasescompanyid IN (
+							SELECT
+								le_company_rules_ref.leasescompanyid
+							FROM
+								le_company_rules_ref
+								<if test=" city!=null and city!='' ">
+									,le_accountrules,
+									pub_cityaddr
+								</if>
+							WHERE
+								le_company_rules_ref.STATUS = 1
+								<if test=" city!=null and city!='' ">
+									AND pub_cityaddr.status=1
+									AND le_accountrules.status=1
+									and le_company_rules_ref.id = le_accountrules.rulesrefid
+									and pub_cityaddr.id = le_accountrules.city
+									AND le_accountrules.rulesstate = '0'
+									and pub_cityaddr.city=#{city}
+								</if>
+							AND le_company_rules_ref.rulestate='1'
+				 <![CDATA[  AND le_company_rules_ref.starttime <= now()
+							AND le_company_rules_ref.endtime >= now()
+				 ]]>
+							AND le_company_rules_ref.organid IN (
+								SELECT
+									organ.id
+								FROM
+									org_organ organ
+								WHERE
+									organ. STATUS = 1
+								AND organ.creditcode = (
+									SELECT
+										org_organ.creditcode
+									FROM
+										org_organ
+									WHERE
+										org_organ. STATUS = 1
+									AND org_organ.id = (
+										SELECT
+											org_user.organid
+										FROM
+											org_user
+										WHERE
+											org_user. STATUS = 1
+										AND org_user.account = #{account}
+										AND org_user.customertype!=1
+									)
+								)
+								and organ.customertype!=1
+								AND organ.id IN (
+									SELECT
+										org_organ_company_ref.organid
+									FROM
+										org_organ_company_ref
+									WHERE
+										org_organ_company_ref. STATUS = 1
+									AND (
+										org_organ_company_ref.mainaccount = '0'
+										OR org_organ_company_ref.bindstate = '1'
+									)
+								)
+							)
+						)
+					) 
+					or 
+					(
+						le_accountrules.type='0'
+						<if test=" city!=null and city!='' ">
+							AND (select count(*) from pub_cityaddr where pub_cityaddr.status=1 and pub_cityaddr.id=le_accountrules.city and pub_cityaddr.city=#{city})>0
+						</if>
+						AND le_accountrules.leasescompanyid IN (
+							SELECT
+								le_company_rules_ref.leasescompanyid
+							FROM
+								le_company_rules_ref
+							WHERE
+								le_company_rules_ref.STATUS = 1
+				 <![CDATA[  AND le_company_rules_ref.starttime <= now()
+							AND le_company_rules_ref.endtime >= now()
+				 ]]>
+							AND le_company_rules_ref.organid IN (
+								SELECT
+									organ.id
+								FROM
+									org_organ organ
+								WHERE
+									organ. STATUS = 1
+								AND organ.creditcode = (
+									SELECT
+										org_organ.creditcode
+									FROM
+										org_organ
+									WHERE
+										org_organ. STATUS = 1
+									AND org_organ.id = (
+										SELECT
+											org_user.organid
+										FROM
+											org_user
+										WHERE
+											org_user. STATUS = 1
+										AND org_user.account = #{account}
+										AND org_user.customertype!=1
+									)
+								)
+								and organ.customertype!=1
+								AND organ.id IN (
+									SELECT
+										org_organ_company_ref.organid
+									FROM
+										org_organ_company_ref
+									WHERE
+										org_organ_company_ref. STATUS = 1
+									AND (
+										org_organ_company_ref.mainaccount = '0'
+										OR org_organ_company_ref.bindstate = '1'
+									)
+								)
+							)
+						)
+					)
+				)
+				<if test=" city!=null and city!='' ">
+					UNION
+						SELECT DISTINCT (le_accountrules.leasescompanyid)
+						FROM
+							le_accountrules
+							,pub_cityaddr
+						WHERE
+							le_accountrules.STATUS = 1
+							AND pub_cityaddr.status=1
+							and pub_cityaddr.id = le_accountrules.city
+							and pub_cityaddr.city=#{city}
+						AND le_accountrules.type='0'
+						AND le_accountrules.rulesstate = '0'
+						AND le_accountrules.leasescompanyid IN (
+							SELECT
+								org_useraccount.leasescompanyid AS companyid
+							FROM
+								org_useraccount,
+								org_user
+							WHERE
+								org_user.id = org_useraccount.userid
+							AND org_user.account = #{account}
+							AND org_user.customertype!=1
+							AND org_useraccount.balance > 0
+						)
+				</if>
+			)
+	</select>
+	
+	<!-- 获取当前用户钱包有余额的那些租赁公司 -->
+	<select id="getSelfCompanys" parameterType="HashMap" resultType="String">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany.status=1
+		and	le_leasescompany.id IN (
+				SELECT DISTINCT (le_accountrules.leasescompanyid)
+				FROM
+					le_accountrules
+				WHERE
+					le_accountrules.STATUS = 1
+				AND le_accountrules.type='0'
+				AND le_accountrules.rulesstate = '0'
+				AND le_accountrules.leasescompanyid IN (
+					SELECT
+						org_useraccount.leasescompanyid AS companyid
+					FROM
+						org_useraccount,
+						org_user
+					WHERE
+						org_user.id = org_useraccount.userid
+					AND org_user.account = #{account}
+					AND org_user.customertype!=1
+					AND org_useraccount.balance > 0
+				)
+			)
+	</select>
+	
+	<!-- 获取机构端常用联系人不论离职与否都可以查出 -->
+	<select id="getMostContact4Org" parameterType="String" resultType="MostContact">
+		SELECT
+			DISTINCT(org_mostcontact.id) as id,
+			org_mostcontact.name,
+			org_mostcontact.phone
+		FROM
+			org_mostcontact,
+			org_user
+		WHERE
+			org_mostcontact.status = 1
+		and org_user.id=org_mostcontact.userid
+		
+		and org_user.account=#{account}
+		and org_user.customertype!=1
+		order by  CONVERT(org_mostcontact.name USING gbk )
+	</select>
+	
+	<!-- 获取运营端常用联系人 -->
+	<select id="getMostContact4Op" parameterType="String" resultType="MostContact">
+		SELECT
+			DISTINCT(pe_mostcontact.id) as id,
+			pe_mostcontact.name,
+			pe_mostcontact.phone
+		FROM
+			pe_mostcontact,
+			pe_user
+		WHERE
+			pe_mostcontact.status=1
+		and pe_user.status=1
+		and pe_user.id=pe_mostcontact.userid
+		
+		and pe_user.account=#{account}
+		order by  CONVERT(pe_mostcontact.name USING gbk )
+	</select>
+	
+	<!-- 为机构用户添加常用联系人 -->
+	<insert id="addMostContact4Org" parameterType="HashMap">
+		INSERT INTO org_mostcontact (
+			id,
+			userid,
+			name,
+			phone,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{name},
+				#{phone},
+				now(),
+				now(),
+				#{userid},
+				#{userid},
+				1
+			)
+	</insert>
+	
+	<!-- 查看机构用户是否已经拥有此联系人 -->
+	<select id="hasContact4Org" parameterType="HashMap" resultType="boolean">
+		SELECT
+			CASE WHEN count(*)>0 then 1 else 0 end as flag
+		FROM
+			org_mostcontact
+		WHERE
+			userid = #{userid}
+		and phone = #{phone}
+		and name = #{name}
+		and status = 1
+	</select>
+	
+	<!-- 查看机构用户是否已经拥有此地址 -->
+	<select id="hasAddress4Org" parameterType="HashMap" resultType="boolean">
+		SELECT
+			CASE WHEN count(*)>0 then 1 else 0 end as flag
+		FROM
+			org_mostaddress
+		WHERE
+			userid = #{userid}
+		and addresstype = #{addresstype}
+		and city = #{city}
+		and title = #{title}
+		and status = 1
+	</select>
+	
+	<!-- 查看个人用户是否已经拥有此地址 -->
+	<select id="hasAddress4Op" parameterType="HashMap" resultType="boolean">
+		SELECT
+			CASE WHEN count(*)>0 then 1 else 0 end as flag
+		FROM
+			pe_mostaddress
+		WHERE
+			userid = #{userid}
+		and addresstype = #{addresstype}
+		and city = #{city}
+		and title = #{title}
+		and status = 1
+	</select>
+	
+	<!-- 为个人用户添加 常用联系人-->
+	<insert id="addMostContact4Op" parameterType="HashMap">
+		INSERT INTO pe_mostcontact (
+			id,
+			userid,
+			name,
+			phone,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{name},
+				#{phone},
+				now(),
+				now(),
+				#{userid},
+				#{userid},
+				1
+			)
+	</insert>
+	
+	<!-- 查看个人用户的常用联系人是否已经有此联系人 -->
+	<select id="hasContact4Op" parameterType="HashMap" resultType="boolean">
+		SELECT
+			CASE WHEN count(*)>0 then 1 else 0 end as flag
+		FROM
+			pe_mostcontact
+		WHERE
+			userid = #{userid}
+		and phone = #{phone}
+		and name = #{name}
+		and status = 1
+	</select>
+	
+	<!-- 为机构用户删除常用联系人 -->
+	<update id="deleteMostContact4Org" parameterType="String">
+		UPDATE org_mostcontact
+		SET status = 0,
+		updatetime = now()
+		WHERE
+			id = #{contactid}
+	</update>
+	
+	<!-- 为个人用户删除常用联系人 -->
+	<update id="deleteMostContact4Op">
+		UPDATE pe_mostcontact
+		SET status = 0,
+		updatetime = now()
+		WHERE
+			id = #{contactid}
+	</update>
+	
+	<!-- 更新机构用户信息 -->
+	<update id="updateUser4Org" parameterType="HashMap">
+		UPDATE org_user
+		SET 
+			<if test=" nickname!=null and nickname!='' ">
+				org_user.nickname = #{nickname},
+			</if>
+			<if test=" sex!=null and sex!='' ">
+				org_user.sex = #{sex},
+			</if>
+			<if test=" path!=null and path!='' ">
+				org_user.headportraitmin = #{path},
+				org_user.headportraitmax = #{path},
+			</if>
+			updatetime=now()
+		WHERE
+			org_user.id = #{userid}
+	</update>
+	
+	<!-- 更新个人用户信息 -->
+	<update id="updateUser4Op" parameterType="HashMap">
+		UPDATE pe_user
+		SET <if test=" nickname!=null and nickname!='' ">
+				pe_user.nickname = #{nickname},
+			</if>
+			<if test=" sex!=null and sex!='' ">
+				pe_user.sex = #{sex},
+			</if>
+			<if test=" path!=null and path!='' ">
+				pe_user.headportraitmin = #{path},
+				pe_user.headportraitmax = #{path},
+			</if>
+		 	pe_user.updatetime=now()
+		WHERE
+			pe_user.id = #{userid}
+	</update>
+	
+	<!-- 获取机构用户的钱包余额 -->
+	<select id="getUserBalance4Org" parameterType="HashMap" resultType="double">
+		SELECT
+			case when isnull(sum(org_useraccount.balance)) then 0 else sum(org_useraccount.balance) end as balance
+		FROM
+			org_useraccount
+		WHERE
+			org_useraccount.status = 1
+		and org_useraccount.leasescompanyid=#{companyid}
+		and org_useraccount.userid=#{userid}
+	</select>
+	
+	<!-- 获取运管端用户的钱包余额 -->
+	<select id="getUserBalance4Op" parameterType="String" resultType="double">
+		SELECT
+			case when isnull(sum(pe_useraccount.balance)) then 0 else sum(pe_useraccount.balance) end as balance
+		FROM
+			pe_useraccount
+		WHERE
+			pe_useraccount.status = 1
+		and pe_useraccount.userid=#{userid}
+	</select>
+	
+	<!-- 获取机构用户的账户余额 -->
+	<select id="getBalanceMoney4Org" parameterType="HashMap" resultType="double">
+		SELECT
+			case when isnull(sum(org_useraccount.balance)) then 0 else sum(org_useraccount.balance) end  as balance
+		FROM
+			org_useraccount
+		WHERE
+			org_useraccount.status=1
+		AND org_useraccount.userid=(select id from org_user where org_user.account=#{account} and org_user.customertype!=1 ORDER BY org_user.createtime desc LIMIT 0,1)
+		AND org_useraccount.leasescompanyid=#{companyid}
+	</select>
+	
+	<!-- 获取运管账户的账户余额 -->
+	<select id="getBalanceMoney4Op" parameterType="HashMap" resultType="double">
+		SELECT
+			case when isnull(sum(pe_useraccount.balance)) then 0 else sum(pe_useraccount.balance) end  as balance
+		FROM
+			pe_useraccount
+		WHERE
+			pe_useraccount.status=1
+		AND pe_useraccount.userid=(select id from pe_user where pe_user.status=1 and pe_user.account=#{account} LIMIT 0,1)
+	</select>
+	
+	<!-- 获取机构用户的账户明细 -->
+	<select id="getBalanceDetail4Org" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							CASE WHEN org_userexpenses.expensetype='3' THEN '退款' ELSE '下单-支付' END AS dealname,
+							org_userexpenses.expensetype as type,
+							DATE_FORMAT(
+								org_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+							org_userexpenses.amount AS dealmoney
+						FROM
+							org_userexpenses
+						WHERE
+							org_userexpenses.status = 1
+						AND org_userexpenses.expensetype in ('3','4')
+						AND org_userexpenses.leasescompanyid = #{companyid}
+						AND org_userexpenses.userid = (select id from org_user where org_user.account=#{account} and org_user.customertype!=1 ORDER BY org_user.createtime desc LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.dealtime DESC
+			) t 
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 获取运管端用户的账户明细 -->
+	<select id="getBalanceDetail4Op" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							CASE WHEN pe_userexpenses.expensetype='3' THEN '退款' ELSE '下单-支付' END AS dealname,
+							pe_userexpenses.expensetype as type,
+							DATE_FORMAT(
+								pe_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+							pe_userexpenses.amount AS dealmoney
+						FROM
+							pe_userexpenses
+						WHERE
+							pe_userexpenses.status = 1
+						AND pe_userexpenses.expensetype in ('3','4')
+						AND pe_userexpenses.userid = (select id from pe_user where pe_user.status=1 and pe_user.account=#{account} LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.dealtime DESC
+			) t 
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 获取机构用户消息列表 -->
+	<select id="getMessages4Org" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							org_usernews.id as messageid,
+							org_usernews.newsstate as newsstate,
+							DATE_FORMAT( org_usernews.createtime, '%Y-%m-%d %H:%i') AS time,
+							org_usernews.type as messagetype,
+							org_usernews.content as content
+						FROM
+							org_usernews,
+							org_user
+						WHERE
+							org_usernews.status = 1
+						AND org_user.id = org_usernews.userid
+						AND org_user.account = #{account}
+						AND org_user.customertype!=1
+						AND org_usernews.type='0'
+						AND org_usernews.content LIKE '%"type":"26"%'
+						<if test="aboveread==false">
+							AND org_usernews.newsstate='0'
+						</if>
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.time DESC
+			) t 
+ 		<![CDATA[
+ 			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+ 		]]>
+	</select>
+	
+	<!-- 获取运管端的用户消息列表 -->
+	<select id="getMessages4Op" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							pe_usernews.id as messageid,
+							pe_usernews.newsstate as newsstate,
+							DATE_FORMAT( pe_usernews.createtime, '%Y-%m-%d %H:%i') AS time,
+							pe_usernews.type as messagetype,
+							pe_usernews.content as content
+						FROM
+							pe_usernews,
+							pe_user
+						WHERE
+							pe_usernews.status = 1
+						AND pe_user.status=1
+						AND pe_user.id = pe_usernews.userid
+						AND pe_user.account = #{account}
+						AND pe_usernews.type='0'
+						AND pe_usernews.content LIKE '%"type":"26"%'
+						<if test="aboveread==false">
+							AND pe_usernews.newsstate='0'
+						</if>
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.time DESC
+			) t 
+ 		<![CDATA[
+ 			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+ 		]]>
+	</select>
+	
+	<!-- 更改机构用户的消息状态 -->
+	<update id="updateMessageState4Org" parameterType="HashMap">
+		UPDATE org_usernews
+		SET 
+		<if test="param=='read' or param=='read'.toString()">
+			org_usernews.newsstate = 1,
+		</if>
+		<if test="param=='delete' or param=='delete'.toString()">
+			org_usernews.status=0,
+		</if>
+			org_usernews.updatetime=now()
+		WHERE
+			org_usernews.id = #{messageid}
+	</update>
+	
+	<!-- 更改运管端用户的消息状态 -->
+	<update id="updateMessageStateOp" parameterType="HashMap">
+		UPDATE pe_usernews
+		SET
+		<if test="param=='read' or param=='read'.toString()">
+			pe_usernews.newsstate = 1,
+		</if>
+		<if test="param=='delete' or param=='delete'.toString()">
+			pe_usernews.status=0,
+		</if>
+			pe_usernews.updatetime=now()
+		WHERE
+			pe_usernews.id = #{messageid}
+	</update>
+	
+	<!-- 获取机构用户常用地址 -->
+	<select id="getMostAddress4Org" parameterType="HashMap" resultType="MostAddress">
+		select * from (	
+			SELECT
+				org_mostaddress.*,
+				(@rownum := @rownum + 1) AS rownum
+			FROM
+				org_mostaddress,
+				org_user,
+			  (SELECT @rownum := 0) r
+			WHERE
+				org_mostaddress.status = 1
+			AND org_user.id = org_mostaddress.userid
+			AND org_user.account = #{account}
+			AND org_user.customertype!=1
+			ORDER BY org_mostaddress.createtime desc
+		) t
+		<if test=" iDisplayStart!=null and iDisplayStart!='' ">
+			<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+			]]>
+		</if>
+	</select>
+	
+	<!-- 获取运管用户的常用联系人 -->
+	<select id="getMostAddress4Op" parameterType="HashMap" resultType="MostAddress">
+		select * from (	
+			SELECT
+				pe_mostaddress.*,
+				(@rownum := @rownum + 1) AS rownum
+			FROM
+				pe_mostaddress,
+				pe_user,
+			  (SELECT @rownum := 0) r
+			WHERE
+				pe_mostaddress.status = 1
+			AND pe_user.status=1
+			AND pe_user.id = pe_mostaddress.userid
+			AND pe_user.account = #{account}
+			ORDER BY pe_mostaddress.createtime desc
+		) t
+		<if test=" iDisplayStart!=null and iDisplayStart!='' ">
+			<![CDATA[
+				where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+			]]>
+		</if>
+	</select>
+	
+	<!-- 删除机构用户的常用地址 -->
+	<update id="deleteMostAddress4Org" parameterType="String">
+		UPDATE org_mostaddress
+		SET org_mostaddress.status = 0,
+			org_mostaddress.updatetime = now()
+		WHERE
+			org_mostaddress.id = #{addressid}
+	</update>
+	
+	<!-- 删除运管端用户的常用地址 -->
+	<update id="deleteMostAddress4Op" parameterType="String">
+		UPDATE pe_mostaddress
+		SET pe_mostaddress.status = 0,
+				pe_mostaddress.updatetime = now()
+		WHERE
+			pe_mostaddress.id = #{addressid}
+	</update>
+	
+	<!-- 为机构用户添加常用地址 -->
+	<insert id="addMostAddress4Org" parameterType="HashMap">
+		INSERT INTO org_mostaddress (
+			id,
+			userid,
+			addresstype,
+			title,
+			city,
+			address,
+			lng,
+			lat,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{addresstype},
+				#{title},
+				#{city},
+				#{address},
+				#{lng},
+				#{lat},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 为运管端个人用户添加常用联系人 -->
+	<insert id="addMostAddress4Op" parameterType="HashMap">
+		INSERT INTO pe_mostaddress (
+			id,
+			userid,
+			addresstype,
+			title,
+			city,
+			address,
+			lng,
+			lat,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{id},
+				#{userid},
+				#{addresstype},
+				#{title},
+				#{city},
+				#{address},
+				#{lng},
+				#{lat},
+				now(),
+				now(),
+				1
+			)
+	</insert>
+	
+	<!-- 更新机构用户密码 -->
+	<update id="updatePwd4Org" parameterType="HashMap">
+		UPDATE org_user
+		SET org_user.userpassword = #{pwd},
+			org_user.updatetime = now()
+		WHERE
+			org_user.id = #{userid}
+	</update>
+	
+	<!-- 更新运管端个人用户密码 -->
+	<update id="updatePwd4Op" parameterType="HashMap">
+		UPDATE pe_user
+		SET pe_user.userpassword = #{pwd},
+				pe_user.updatetime = now()
+		WHERE
+			pe_user.id = #{userid}
+	</update>
+	
+	<!-- 获取机构用户的可用额度 -->
+	<select id="getOrgBalance" parameterType="HashMap" resultType="Object">
+		SELECT
+			case when ISNULL(sum(balance)) then 0 else balance END as balance
+		FROM
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref.status = 1
+		AND org_organ_company_ref.companyid = #{companyid}
+		<!-- AND org_organ_company_ref.organid = #{orgid} -->
+		AND org_organ_company_ref.organid in (
+ 					SELECT
+ 						organ.id
+ 					FROM
+ 						org_organ organ
+ 					WHERE
+ 						organ. STATUS = 1
+ 					AND organ.creditcode = (
+ 						SELECT
+ 							org_organ.creditcode
+ 						FROM
+ 							org_organ
+ 						WHERE
+ 							org_organ. STATUS = 1
+ 						AND org_organ.id = #{orgid}
+ 					)
+					and organ.customertype!=1
+			)
+		limit 0,1
+	</select>
+	
+	<!-- 获取用户的token -->
+	<select id="getUserTokenByUserId" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			pub_usertoken
+		WHERE
+			status = 1
+		AND userid = #{userid}
+		AND usertype = #{usertype}
+	</select>
+	
+	<!-- 添加或者更新用户的token -->
+	<insert id="createOrUpdateUsertoken" parameterType="HashMap">
+		<if test="id !=null and id != '' ">
+			<!-- 添加 -->
+			INSERT INTO pub_usertoken (
+				id,
+				userid,
+				usertype,
+				usertoken,
+				uuid,
+				createtime,
+				updatetime,
+				status
+			)
+			VALUES
+				(
+				#{id},
+				#{userid},
+				#{usertype},
+				#{usertoken},
+				#{uuid},
+				now(),
+				now(),
+				1
+			)
+		</if>
+		<if test="id=='' or id==null">
+			<!-- 更新 -->
+			UPDATE pub_usertoken
+			SET usertoken = #{usertoken},
+			 uuid = #{uuid},
+			 updatetime = now()
+			WHERE
+				status = 1
+			AND userid = #{userid}
+			AND usertype = #{usertype}
+		</if>
+	</insert>
+	
+	<!-- 查询租赁公司的支付账户信息 -->
+	<select id="getPayAccounts4Org" parameterType="String" resultType="HashMap">
+		SELECT
+			wechataccount,
+			wechatstatus,
+			alipayaccount,
+			alipaystatus
+		FROM
+			le_leasescompany
+		WHERE
+				status=1
+		and	id = #{companyid}
+	</select>
+	
+	<!-- 查询运管端的支付账户信息 -->
+	<select id="getPayAccounts4Op" resultType="HashMap">
+		SELECT
+			wechatpayaccount,
+			wechatstatus,
+			alipayaccount,
+			alipaystatus
+		FROM
+			op_platforminfo
+		WHERE
+				status=1
+	</select>
+	
+	<!-- 用户是否已经注册了 -->
+	<select id="hasRegister" parameterType="String" resultType="boolean">
+		SELECT case when count(*)>0 then 1 else 0 end as flag from pe_user where pe_user.status=1 and pe_user.account=#{phone}
+	</select>
+	
+	<!-- 更新机构用户消息为全部已读 -->
+	<update id="readMessageAll4Org" parameterType="String">
+		UPDATE org_usernews
+		SET org_usernews.newsstate = 1,
+		 org_usernews.updatetime = now()
+		WHERE
+			org_usernews.status=1
+		AND org_usernews.userid IN (
+				SELECT
+					org_user.id
+				FROM
+					org_user
+				WHERE
+					org_user.account = #{account}
+				AND org_user.customertype!=1
+			)
+	</update>
+	
+	<!-- 更新个人用户消息为全部已读 -->
+	<update id="readMessageAll4Op" parameterType="String">
+		UPDATE pe_usernews
+		SET pe_usernews.newsstate = 1,
+		 pe_usernews.updatetime = now()
+		WHERE
+			pe_usernews.status = 1
+		AND pe_usernews.userid IN (
+			SELECT
+				pe_user.id
+			FROM
+				pe_user
+			WHERE
+				pe_user.status = 1
+			AND pe_user.account = #{account}
+		)
+	</update>
+	
+	<!-- 更新用户的token -->
+	<update id="updateUserToken" parameterType="String">
+		UPDATE pub_usertoken
+		SET pub_usertoken.usertoken = NULL,
+		 pub_usertoken.updatetime = now()
+		WHERE
+			pub_usertoken.usertoken = #{usertoken}
+		and pub_usertoken.status=1
+	</update>
+	
+	<!-- 获取个人用户最近的禁用状态 -->
+	<select id="getUserLastDisableInfo4Op" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			pe_userdisablelog
+		WHERE
+			pe_userdisablelog.status = 1
+		AND pe_userdisablelog.action = #{action}
+		AND pe_userdisablelog.userid = #{userid}
+		ORDER BY
+			createtime DESC
+		LIMIT 0,1
+	</select>
+	
+	<!-- 获取加入toc的租赁公司列表 -->
+	<select id="getTocCompanys" resultType="LeasesCompany">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			(
+				tocstate = '2'
+				AND le_leasescompany.STATUS = 1
+			)
+			OR 
+			(
+				le_leasescompany.platformtype = '0'
+			)
+	</select>
+	
+	<!-- getTocCompanysNew -->
+	<select id="getTocCompanysNew" resultType="Map">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			(
+				tocstate = '2'
+				AND le_leasescompany.STATUS = 1
+			)
+			OR 
+			(
+				le_leasescompany.platformtype = '0'
+			)
+	</select>
+	
+	<!-- ##########################################二期的接口############################################## -->
+	<!-- 获取加入toc的租赁公司列表，只有需要的信息不包括其他 -->
+	<select id="getTocCompanys4Op" resultType="Map">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			(
+				tocstate = '2'
+				AND le_leasescompany.STATUS = 1
+			)
+			OR 
+			(
+				le_leasescompany.platformtype = '0'
+			)
+	</select>
+	
+	<!-- 更新提现密码 -->
+	<update id="updateCashPwd4Org" parameterType="Map">
+		UPDATE org_user
+		SET org_user.withdrawpwd = #{pwd},
+			org_user.wdpwdchangestate=1,
+			org_user.updatetime = now()
+		WHERE
+			org_user.id = #{userid}
+	</update>
+	
+	<update id="updateCashPwd4Op" parameterType="Map">
+		UPDATE pe_user
+		SET pe_user.withdrawpwd = #{pwd},
+			pe_user.wdpwdchangestate=1,
+			pe_user.updatetime = now()
+		WHERE
+			pe_user.id = #{userid}
+	</update>
+	
+	<!-- 获取交易明细 -->
+	<resultMap id="detail" type="Map">
+		<result column="dealname" property="dealname"/>
+		<result column="dealtime" property="dealtime"/>
+		<result column="dealmoney" property="dealmoney"/>
+		<result column="dealtype" property="dealtype"/>
+		<result column="isout" property="isout" javaType="boolean"/>
+	</resultMap>
+	<select id="getDealDetail4Org" parameterType="Map" resultMap="detail">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+						    org_userexpenses.expensetime as sorttime,
+							CASE WHEN org_userexpenses.tradetype='0' THEN '充值' 
+								 WHEN org_userexpenses.tradetype='1' THEN '订单支付'
+                   				 WHEN org_userexpenses.tradetype='2' THEN '退款'
+								 WHEN org_userexpenses.tradetype='3' THEN (CASE WHEN org_userexpenses.operateresult='0' THEN '提现' ELSE '提现失败' END)
+								 ELSE ''
+              				END AS dealname,
+				            DATE_FORMAT(
+								org_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+			                org_userexpenses.amount AS dealmoney,
+              				CASE WHEN org_userexpenses.expensetype='1' THEN '微信' 
+								 WHEN org_userexpenses.expensetype='2' THEN '支付宝'
+                  				 WHEN org_userexpenses.expensetype='3' THEN '余额'
+								 WHEN org_userexpenses.expensetype='4' THEN '余额'
+								 WHEN org_userexpenses.expensetype='5' THEN '付现'
+								 WHEN (org_userexpenses.tradetype='3') THEN (CASE WHEN org_userexpenses.operateresult='0' THEN '银行卡' ELSE '余额' END)
+								 ELSE ''
+              				END AS dealtype,
+							CASE WHEN org_userexpenses.tradetype='0' THEN 0 
+								 WHEN org_userexpenses.tradetype='1' THEN 1
+                                 WHEN org_userexpenses.tradetype='2' THEN 0
+								 WHEN org_userexpenses.tradetype='3' THEN (CASE WHEN org_userexpenses.operateresult='0' THEN 1 ELSE 0 END)
+								 ELSE 0
+              				END AS isout
+						FROM
+							org_userexpenses
+						WHERE
+							org_userexpenses.status = 1
+						AND org_userexpenses.leasescompanyid = #{companyid}
+						AND org_userexpenses.userid = (select id from org_user where org_user.account=#{account} and org_user.customertype!=1 ORDER BY org_user.createtime desc LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.sorttime DESC
+			) t 
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<select id="getDealDetail4Op" parameterType="Map" resultMap="detail">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+						    pe_userexpenses.expensetime as sorttime,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN '充值' 
+								 WHEN pe_userexpenses.tradetype='1' THEN '订单支付'
+                   				 WHEN pe_userexpenses.tradetype='2' THEN '退款'
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '提现' ELSE '提现失败' END)
+								 ELSE ''
+              				END AS dealname,
+				            DATE_FORMAT(
+								pe_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+			                pe_userexpenses.amount AS dealmoney,
+              				CASE WHEN pe_userexpenses.expensetype='1' THEN '微信' 
+								 WHEN pe_userexpenses.expensetype='2' THEN '支付宝'
+                  				 WHEN pe_userexpenses.expensetype='3' THEN '余额'
+								 WHEN pe_userexpenses.expensetype='4' THEN '余额'
+								 WHEN pe_userexpenses.expensetype='5' THEN '付现'
+								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '余额' END)
+								 ELSE ''
+              				END AS dealtype,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN 0 
+								 WHEN pe_userexpenses.tradetype='1' THEN 1
+                                 WHEN pe_userexpenses.tradetype='2' THEN 0
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN 1 ELSE 0 END)
+								 ELSE 0
+              				END AS isout
+						FROM
+							pe_userexpenses
+						WHERE
+							pe_userexpenses.status = 1
+						AND pe_userexpenses.userid = (select id from pe_user where pe_user.account=#{account} ORDER BY pe_user.createtime desc LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.sorttime DESC
+			) t 
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+
+	<select id="getDealDetail4OpThird" parameterType="Map" resultMap="detail">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+						    pe_userexpenses.expensetime as sorttime,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN '兑换'
+								 WHEN pe_userexpenses.tradetype='1' THEN '订单支付'
+                   				 WHEN pe_userexpenses.tradetype='2' THEN '退款'
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '提现' ELSE '提现失败' END)
+								 WHEN pe_userexpenses.tradetype='4' THEN '平台奖励'
+								 ELSE ''
+              				END AS dealname,
+				            DATE_FORMAT(
+								pe_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+			                pe_userexpenses.amount AS dealmoney,
+              				CASE WHEN pe_userexpenses.expensetype='1' THEN '微信'
+								 WHEN pe_userexpenses.expensetype='2' THEN '支付宝'
+                  				 WHEN pe_userexpenses.expensetype='3' THEN '积分'
+								 WHEN pe_userexpenses.expensetype='4' THEN '积分'
+								 WHEN pe_userexpenses.expensetype='5' THEN '付现'
+								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '积分' END)
+								 WHEN pe_userexpenses.expensetype='6' THEN '机构支付'
+								 ELSE ''
+              				END AS dealtype,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN 0
+								 WHEN pe_userexpenses.tradetype='1' THEN 1
+                                 WHEN pe_userexpenses.tradetype='2' THEN 0
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN 1 ELSE 0 END)
+								 WHEN pe_userexpenses.tradetype='4' THEN 0
+								 ELSE 0
+              				END AS isout
+						FROM
+							pe_userexpenses
+						WHERE
+							pe_userexpenses.status = 1
+						AND pe_userexpenses.userid = (select id from pe_user where pe_user.account=#{account} ORDER BY pe_user.createtime desc LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.sorttime DESC
+			) t
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+
+	<!-- 获取余额明细 -->
+	<select id="getBalanceDetail4OrgSec" parameterType="Map" resultMap="detail">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+						    org_userexpenses.expensetime as sorttime,
+							CASE WHEN org_userexpenses.tradetype='0' THEN '充值' 
+								 WHEN org_userexpenses.tradetype='1' THEN '订单支付'
+                   				 WHEN org_userexpenses.tradetype='2' THEN '退款'
+								 WHEN org_userexpenses.tradetype='3' THEN (CASE WHEN org_userexpenses.operateresult='0' THEN '提现' ELSE '提现失败' END)
+								 ELSE ''
+              				END AS dealname,
+				            DATE_FORMAT(
+								org_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+			                org_userexpenses.amount AS dealmoney,
+              				CASE WHEN org_userexpenses.expensetype='1' THEN '微信' 
+								 WHEN org_userexpenses.expensetype='2' THEN '支付宝'
+                  				 WHEN org_userexpenses.expensetype='3' THEN '余额'
+								 WHEN org_userexpenses.expensetype='4' THEN '余额'
+								 WHEN org_userexpenses.expensetype='5' THEN '付现'
+								 WHEN (org_userexpenses.tradetype='3') THEN (CASE WHEN org_userexpenses.operateresult='0' THEN '银行卡' ELSE '余额' END)
+								 ELSE ''
+              				END AS dealtype,
+							CASE WHEN org_userexpenses.tradetype='0' THEN 0 
+								 WHEN org_userexpenses.tradetype='1' THEN 1
+                                 WHEN org_userexpenses.tradetype='2' THEN 0
+								 WHEN org_userexpenses.tradetype='3' THEN (CASE WHEN org_userexpenses.operateresult='0' THEN 1 ELSE 0 END)
+								 ELSE 0
+              				END AS isout
+						FROM
+							org_userexpenses
+						WHERE
+							org_userexpenses.status = 1
+						AND org_userexpenses.detailtype='0'
+						AND org_userexpenses.leasescompanyid = #{companyid}
+						AND org_userexpenses.userid = (select id from org_user where org_user.account=#{account} and org_user.customertype!=1 ORDER BY org_user.createtime desc LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.sorttime DESC
+			) t 
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<select id="getBalanceDetail4OpSec" parameterType="Map" resultMap="detail">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+						    pe_userexpenses.expensetime as sorttime,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN '充值'
+								 WHEN pe_userexpenses.tradetype='1' THEN '订单支付'
+                   				 WHEN pe_userexpenses.tradetype='2' THEN '退款'
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '提现' ELSE '提现失败' END)
+								 ELSE ''
+              				END AS dealname,
+				            DATE_FORMAT(
+								pe_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+			                pe_userexpenses.amount AS dealmoney,
+              				CASE WHEN pe_userexpenses.expensetype='1' THEN '微信' 
+								 WHEN pe_userexpenses.expensetype='2' THEN '支付宝'
+                  				 WHEN pe_userexpenses.expensetype='3' THEN '余额'
+								 WHEN pe_userexpenses.expensetype='4' THEN '余额'
+								 WHEN pe_userexpenses.expensetype='5' THEN '付现'
+								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '余额' END)
+								 ELSE ''
+              				END AS dealtype,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN 0 
+								 WHEN pe_userexpenses.tradetype='1' THEN 1
+                                 WHEN pe_userexpenses.tradetype='2' THEN 0
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN 1 ELSE 0 END)
+								 ELSE 0
+              				END AS isout
+						FROM
+							pe_userexpenses
+						WHERE
+							pe_userexpenses.status = 1
+						AND pe_userexpenses.detailtype='0'
+						AND pe_userexpenses.userid = (select id from pe_user where pe_user.account=#{account} ORDER BY pe_user.createtime desc LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.sorttime DESC
+			) t 
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+
+	<select id="getBalanceDetail4OpThird" parameterType="Map" resultMap="detail">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+						    pe_userexpenses.expensetime as sorttime,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN '兑换'
+								 WHEN pe_userexpenses.tradetype='1' THEN '订单支付'
+                   				 WHEN pe_userexpenses.tradetype='2' THEN '退款'
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '提现' ELSE '提现失败' END)
+								 WHEN pe_userexpenses.tradetype='4' THEN '平台奖励'
+								 ELSE ''
+              				END AS dealname,
+				            DATE_FORMAT(
+								pe_userexpenses.expensetime,
+								'%Y-%m-%d %H:%i'
+							) AS dealtime,
+			                pe_userexpenses.amount AS dealmoney,
+              				CASE WHEN pe_userexpenses.expensetype='1' THEN '微信'
+								 WHEN pe_userexpenses.expensetype='2' THEN '支付宝'
+                  				 WHEN pe_userexpenses.expensetype='3' THEN '积分'
+								 WHEN pe_userexpenses.expensetype='4' THEN '积分'
+								 WHEN pe_userexpenses.expensetype='5' THEN '付现'
+								 WHEN (pe_userexpenses.tradetype='3') THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN '银行卡' ELSE '积分' END)
+								 ELSE ''
+              				END AS dealtype,
+							CASE WHEN pe_userexpenses.tradetype='0' THEN 0
+								 WHEN pe_userexpenses.tradetype='1' THEN 1
+                                 WHEN pe_userexpenses.tradetype='2' THEN 0
+								 WHEN pe_userexpenses.tradetype='3' THEN (CASE WHEN pe_userexpenses.operateresult='0' THEN 1 ELSE 0 END)
+								 WHEN pe_userexpenses.tradetype='4' THEN 0
+								 ELSE 0
+              				END AS isout
+						FROM
+							pe_userexpenses
+						WHERE
+							pe_userexpenses.status = 1
+						AND pe_userexpenses.detailtype='0'
+						AND pe_userexpenses.userid = (select id from pe_user where pe_user.account=#{account} ORDER BY pe_user.createtime desc LIMIT 0,1)
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.sorttime DESC
+			) t
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 提现申请 -->
+	<insert id="applyCash4Org" parameterType="Map">
+		INSERT INTO pub_withdraw(
+			id,
+			platformtype,
+			leasescompanyid,
+			usertype,
+			userid,
+			amount,
+			uuid,
+			creditcardnum,
+			creditcardname,
+			bankname,
+			applytime,
+			processstatus,
+			processresult,
+			processreason,
+			processtime,
+			createtime,
+			updatetime,
+			processuser,
+			status,
+			creater,
+			updater
+		)
+		VALUES
+			(
+				#{id},
+				'1',
+				#{companyid},
+				'0',
+				#{userid},
+				#{money},
+				#{uuid},
+				#{bankno},
+				#{bankuser},
+				#{bankname},
+				now(),
+				'0',
+				NULL,
+				NULL,
+				NULL,
+				now(),
+				now(),
+				NULL,
+				'1',
+				#{userid},
+				#{userid}
+			)
+	</insert>
+     
+	<update id="updateUserBalance4OrgSec" parameterType="Map">
+		INSERT INTO org_useraccount (
+			id,
+			userid,
+			leasescompanyid,
+			balance,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+				#{uid},
+				#{userid},
+				#{companyid},
+			  #{money},
+				now(),
+				now(),
+				1
+			) ON DUPLICATE KEY 
+		UPDATE 
+			<if test="isout==1">
+				org_useraccount.balance = org_useraccount.balance-#{money},
+			</if>
+			<if test="isout==0">
+				org_useraccount.balance = org_useraccount.balance+#{money},
+			</if>
+			org_useraccount.updatetime=now()
+	</update>
+	
+	<insert id="applyCash4Op" parameterType="Map">
+		INSERT INTO pub_withdraw(
+			id,
+			platformtype,
+			leasescompanyid,
+			usertype,
+			userid,
+			amount,
+			uuid,
+			creditcardnum,
+			creditcardname,
+			bankname,
+			applytime,
+			processstatus,
+			processresult,
+			processreason,
+			processtime,
+			createtime,
+			updatetime,
+			processuser,
+			status,
+			creater,
+			updater
+		)
+		VALUES
+			(
+				#{id},
+				'0',
+				#{companyid},
+				'1',
+				#{userid},
+				#{money},
+				#{uuid},
+				#{bankno},
+				#{bankuser},
+				#{bankname},
+				now(),
+				'0',
+				NULL,
+				NULL,
+				NULL,
+				now(),
+				now(),
+				NULL,
+				'1',
+				#{userid},
+				#{userid}
+			)
+	</insert>
+     
+	<update id="updateUserBalance4OpSec" parameterType="Map">
+		INSERT INTO pe_useraccount (
+			id,
+			userid,
+			balance,
+			createtime,
+			updatetime,
+			STATUS
+		)
+		VALUES
+			(
+				#{uid},
+				#{userid},
+			    #{money},
+				now(),
+				now(),
+				1
+			) ON DUPLICATE KEY 
+		UPDATE 
+			<if test="isout==1">
+				pe_useraccount.balance = pe_useraccount.balance-#{money},
+			</if>
+			<if test="isout==0">
+				pe_useraccount.balance = pe_useraccount.balance+#{money},
+			</if>
+		    pe_useraccount.updatetime=now()
+	</update>
+	
+	<!-- 提现记录 -->
+	<insert id="addExpenses4OrgSec" parameterType="Map">
+		INSERT INTO org_userexpenses(
+			id,
+			userid,
+			leasescompanyid,
+			expensetype,
+			expensetime,
+			amount,
+			balance,
+			remark,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status,
+			tradetype,
+			detailtype,
+			operateresult
+		)
+		VALUES(
+			#{logid},
+			#{userid},
+			#{companyid},
+			#{expensetype},
+			now(),
+			#{money},
+			IFNULL((select org_useraccount.balance from org_useraccount where org_useraccount.userid=#{userid} and org_useraccount.leasescompanyid=#{companyid} and org_useraccount.status=1 limit 0,1),0),
+			#{remark},
+			now(),
+			now(),
+			#{userid},
+			#{userid},
+			1,
+			#{tradetype},
+			#{detailtype},
+			#{operateresult}
+		)
+	</insert>
+	
+	<insert id="addExpenses4OpSec" parameterType="Map">
+		INSERT INTO pe_userexpenses(
+			id,
+			userid,
+			expensetype,
+			expensetime,
+			amount,
+			balance,
+			remark,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status,
+			tradetype,
+			detailtype,
+			operateresult
+		) 
+		VALUES(
+			#{logid},
+			#{userid},
+			#{expensetype},
+			now(),
+			#{money},
+			IFNULL((select pe_useraccount.balance FROM pe_useraccount WHERE pe_useraccount.userid = #{userid} AND pe_useraccount.status = 1 LIMIT 0, 1),0),
+			#{remark},
+			now(),
+			now(),
+			#{userid},
+			#{userid},
+			1,
+			#{tradetype},
+			#{detailtype},
+			#{operateresult}
+		)
+	</insert>
+	
+	<!-- 从提现申请中获取上次提现的银行卡信息 -->
+	<select id="getLastBankInfo4Org" parameterType="Map" resultType="Map">
+			SELECT
+				'0' AS type,
+				pub_withdraw.bankname AS caption,
+				pub_withdraw.creditcardnum AS cardno,
+				pub_withdraw.creditcardname AS name
+			FROM
+				pub_withdraw
+			where 
+			pub_withdraw.status=1
+			and pub_withdraw.userid=#{userid}
+			ORDER BY createtime desc
+			LIMIT 1
+	</select>
+	
+	<select id="getLastBankInfo4Op" parameterType="Map" resultType="Map">
+			SELECT
+				'0' AS type,
+				pub_withdraw.bankname AS caption,
+				pub_withdraw.creditcardnum AS cardno,
+				pub_withdraw.creditcardname AS name
+			FROM
+				pub_withdraw
+			where 
+			pub_withdraw.status=1
+			and pub_withdraw.userid=#{userid}
+			ORDER BY createtime desc
+			LIMIT 1
+	</select>
+	
+	<!-- 获取每个人每天的提现记录 -->
+ 	<select id="getApplyCash4OrgToday" parameterType="Map" resultType="double">
+ 		SELECT
+		  case when isnull(SUM(pub_withdraw.amount)) then 0 else SUM(pub_withdraw.amount) end as applycash
+		FROM
+			pub_withdraw
+		WHERE
+			pub_withdraw. STATUS = 1
+		 and (pub_withdraw.processresult is NULL or pub_withdraw.processresult='1')
+		 and DATE_FORMAT(pub_withdraw.applytime,'%Y%m%d') = DATE_FORMAT(now(),'%Y%m%d')
+		 and pub_withdraw.leasescompanyid=#{companyid}
+		 and pub_withdraw.userid=#{userid}
+ 	</select>
+ 	
+ 	<select id="getApplyCash4OpToday" parameterType="Map" resultType="double">
+ 		SELECT
+		  case when isnull(SUM(pub_withdraw.amount)) then 0 else SUM(pub_withdraw.amount) end as applycash
+		FROM
+			pub_withdraw
+		WHERE
+			pub_withdraw. STATUS = 1
+		 and (pub_withdraw.processresult is NULL or pub_withdraw.processresult='1')
+		 and DATE_FORMAT(pub_withdraw.applytime,'%Y%m%d') = DATE_FORMAT(now(),'%Y%m%d')
+		 and pub_withdraw.userid=#{userid}
+ 	</select>
+ 	
+	<!-- 修改登录密码和提现密码 -->
+ 	<update id="updatePwdAWd4Op" parameterType="Map">
+	 	UPDATE pe_user
+			SET pe_user.userpassword = #{pwd},
+			 pe_user.withdrawpwd = #{pwd},
+			 pe_user.updatetime=now()
+			WHERE
+		pe_user.id = #{userid}
+ 	</update>
+ 	
+ 	<update id="updatePwdAWd4Org" parameterType="Map">
+ 		UPDATE org_user
+		SET org_user.userpassword = #{pwd},
+			org_user.withdrawpwd = #{pwd},
+			org_user.updatetime = now()
+		WHERE
+			org_user.id = #{userid}
+ 	</update>
+ 	
+ 	
+ 	<!-- 充值流水记录 -->
+ 	<insert id="addTradingrecord4Op" parameterType="Map">
+ 		INSERT INTO pe_user_tradingrecord(
+			outtradeno,
+			userid,
+			type,
+			paymenttype,
+			tradeno,
+			validatekey,
+			tradingstatus,
+			amount,
+			createtime,
+			updatetime,
+			status
+		)
+		VALUES
+			(
+				#{out_trade_no},
+				#{userid},
+				#{type},
+				#{paymenttype},
+				NULL,
+				#{validatekey},
+				#{tradingstatus},
+				#{amount},
+				now(),
+				now(),
+				1
+			)
+ 	</insert>
+
+	<insert id="addTradingrecord4Org" parameterType="Map">
+ 		INSERT INTO org_user_tradingrecord(
+			outtradeno,
+			leasescompanyid,
+			organid,
+			userid,
+			type,
+			paymenttype,
+			tradeno,
+			validatekey,
+			tradingstatus,
+			amount,
+			createtime,
+			updatetime,
+			status
+		)VALUES
+			(
+				#{out_trade_no},
+				#{companyid},
+				#{organid},
+				#{userid},
+				#{type},
+				#{paymenttype},
+				NULL,
+				#{validatekey},
+				#{tradingstatus},
+				#{amount},
+				now(),
+				now(),
+				1
+			)
+ 	</insert>
+
+	<!-- 获取交易流水信息 -->
+	<select id="getTradeRecord4Op" parameterType="String" resultType="Map">
+		SELECT
+			*
+		FROM
+			pe_user_tradingrecord
+		WHERE
+			pe_user_tradingrecord.STATUS = 1
+		and pe_user_tradingrecord.outtradeno=#{out_trade_no}
+	</select>
+	
+	<!-- 更新交易流水记录 -->
+	<update id="updateUserTradeRecord4Op" parameterType="Map">
+		UPDATE pe_user_tradingrecord
+		SET 
+		 pe_user_tradingrecord.tradeno = #{tradeno},
+		 pe_user_tradingrecord.tradingstatus = #{tradingstatus},
+		 pe_user_tradingrecord.updatetime = now()
+		WHERE
+			pe_user_tradingrecord.status=1
+		and pe_user_tradingrecord.outtradeno = #{outtradeno}
+	</update>
+	
+	<!-- 机构用户获取交易流水信息 -->
+	<select id="getTradeRecord4Org" parameterType="String" resultType="Map">
+		SELECT
+			*
+		FROM
+			org_user_tradingrecord
+		WHERE
+			org_user_tradingrecord.STATUS = 1
+		and org_user_tradingrecord.outtradeno=#{out_trade_no}
+	</select>
+	
+	<!-- 更新交易流水信息记录 -->
+	<update id="updateUserTradeRecord4Org" parameterType="Map">
+		UPDATE org_user_tradingrecord
+		SET 
+		 org_user_tradingrecord.tradeno = #{tradeno},
+		 org_user_tradingrecord.tradingstatus = #{tradingstatus},
+		 org_user_tradingrecord.updatetime = now()
+		WHERE
+			org_user_tradingrecord.status=1
+		and org_user_tradingrecord.outtradeno = #{outtradeno}
+	</update>
+	
+	<!-- 获取消息列表 -->
+	<select id="getMessages4OrgSec" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							org_usernews.id as messageid,
+							org_usernews.newsstate as newsstate,
+							DATE_FORMAT( org_usernews.createtime, '%Y-%m-%d %H:%i:%s') AS time,
+							org_usernews.type as messagetype,
+							org_usernews.content as content
+						FROM
+							org_usernews,
+							org_user
+						WHERE
+							org_usernews.status = 1
+						AND org_user.id = org_usernews.userid
+						AND org_user.account = #{account}
+						AND org_user.customertype!=1
+						AND 
+						(
+							(org_usernews.type='0' AND org_usernews.content LIKE '%"type":"26"%')
+							or
+							(org_usernews.type='1' AND org_usernews.content LIKE '%"type":"29"%')
+							or
+							(org_usernews.type='1' AND org_usernews.content LIKE '%"type":"32"%')
+						)
+						<if test="aboveread==false">
+							AND org_usernews.newsstate='0'
+						</if>
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.time DESC
+			) t 
+ 		<![CDATA[
+ 			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+ 		]]>
+	</select>
+
+	<select id="getMessages4OpSec" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							pe_usernews.id as messageid,
+							pe_usernews.newsstate as newsstate,
+							DATE_FORMAT( pe_usernews.createtime, '%Y-%m-%d %H:%i:%s') AS time,
+							pe_usernews.type as messagetype,
+							pe_usernews.content as content
+						FROM
+							pe_usernews,
+							pe_user
+						WHERE
+							pe_usernews.status = 1
+						AND pe_user.status=1
+						AND pe_user.id = pe_usernews.userid
+						AND pe_user.account = #{account}
+						AND 
+						(
+							(pe_usernews.type='0' AND pe_usernews.content LIKE '%"type":"26"%')
+							or
+							(pe_usernews.type='1' AND pe_usernews.content LIKE '%"type":"29"%')
+							or
+							(pe_usernews.type='1' AND pe_usernews.content LIKE '%"type":"32"%')
+						)
+						<if test="aboveread==false">
+							AND pe_usernews.newsstate='0'
+						</if>
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.time DESC
+			) t 
+ 		<![CDATA[
+ 			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+ 		]]>
+	</select>
+	
+	<!-- 删除验证码 -->
+	<update id="deleteSMSCode" parameterType="Map">
+		UPDATE pub_smstoken
+		SET 
+		 smscode = null,
+		 updatetime = now()
+		WHERE
+			pub_smstoken.smstype=#{smstype}
+		and pub_smstoken.usertype=#{usertype}
+		and pub_smstoken.username=#{phone}
+		and pub_smstoken.status=1
+	</update>
+	
+	<!-- 根据用户id获取用户详情 -->
+	<select id="getPeUserById" parameterType="String" resultType="PeUser">
+		select * from pe_user where pe_user.status=1 and pe_user.id=#{userid}
+	</select>
+	
+	<!-- 根据用户id获取用户详情 -->
+	<select id="getOrgUserById" parameterType="String" resultType="OrgUser">
+		select * from org_user where org_user.id=#{userid}
+	</select>
+	
+	<!-- 获取用户的token信息根据token -->
+	<select id="getTokenInfo" parameterType="String" resultType="Map">
+		select * from pub_usertoken where pub_usertoken.usertoken=#{usertoken} and pub_usertoken.status=1 limit 0,1
+	</select>
+
+	<!-- 回执设置极光注册的registerid -->
+	<update id="updateRegisterId4Org" parameterType="Map">
+		update org_user set org_user.registrationid=#{registerid} where org_user.customertype=0 and org_user.account=#{account}
+	</update>
+
+	<update id="updateRegisterId4Op" parameterType="Map">
+		update pe_user set pe_user.registrationid=#{registerid} where pe_user.account=#{account} and pe_user.status=1
+	</update>
+
+	<!-- 获取消息列表 -->
+	<select id="getMessages" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+		(
+			SELECT
+				info.*, (@rownum := @rownum + 1) AS rownum
+			FROM
+			(
+
+			  (
+				SELECT
+					'0' infotype,
+					org_usernews.id as messageid,
+					org_usernews.newsstate as newsstate,
+					DATE_FORMAT( org_usernews.createtime, '%Y-%m-%d %H:%i:%s') AS time,
+					org_usernews.type as messagetype,
+					org_usernews.content as content
+				FROM
+					org_usernews,
+					org_user
+				WHERE
+					org_usernews.status = 1
+				AND org_user.id = org_usernews.userid
+				AND org_user.account = #{account}
+				AND org_user.customertype!=1
+				AND
+				(
+					(org_usernews.type='0' AND org_usernews.content LIKE '%"type":"26"%')
+					or
+					(org_usernews.type='1' AND org_usernews.content LIKE '%"type":"29"%')
+					or
+					(org_usernews.type='1' AND org_usernews.content LIKE '%"type":"32"%')
+				)
+				<if test="aboveread==false">
+					AND org_usernews.newsstate='0'
+				</if>
+			  )
+			UNION
+			  (
+				SELECT
+					'1' infotype,
+					pe_usernews.id as messageid,
+					pe_usernews.newsstate as newsstate,
+					DATE_FORMAT( pe_usernews.createtime, '%Y-%m-%d %H:%i:%s') AS time,
+					pe_usernews.type as messagetype,
+					pe_usernews.content as content
+				FROM
+					pe_usernews,
+					pe_user
+				WHERE
+					pe_usernews.status = 1
+				AND pe_user.status=1
+				AND pe_user.id = pe_usernews.userid
+				AND pe_user.account = #{account}
+				AND
+				(
+					(pe_usernews.type='0' AND pe_usernews.content LIKE '%"type":"26"%')
+					or
+					(pe_usernews.type='1' AND pe_usernews.content LIKE '%"type":"29"%')
+					or
+					(pe_usernews.type='1' AND pe_usernews.content LIKE '%"type":"32"%')
+				)
+				<if test="aboveread==false">
+					AND pe_usernews.newsstate='0'
+				</if>
+			  )
+			) info,
+			(SELECT @rownum := 0) r
+			ORDER BY info.time DESC
+		) t
+		<![CDATA[
+ 			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+ 		]]>
+	</select>
+
+
+	<!--getDriverBalance-->
+	<select id="getDriverBalance" parameterType="Map" resultType="Map">
+		SELECT * from pub_driveraccount where pub_driveraccount.status=1 and pub_driveraccount.driverid=#{driverid} and pub_driveraccount.leasescompanyid=#{companyid} and pub_driveraccount.platformtype=#{platformtype}
+	</select>
+
+	<!--createDriverBalanceInfo-->
+	<insert id="createDriverBalanceInfo" parameterType="Map">
+		INSERT INTO pub_driveraccount(
+			id,
+			driverid,
+			leasescompanyid,
+			balance,
+			createtime,
+			updatetime,
+			status,
+			platformtype
+		)
+		VALUES
+			(
+				#{id},
+				#{driverid},
+				#{companyid},
+				#{orderamount},
+				now(),
+				now(),
+				1,
+				#{platformtype}
+			)
+	</insert>
+
+	<!--updateDriverBalanceInfo-->
+	<update id="updateDriverBalanceInfo" parameterType="Map">
+		UPDATE pub_driveraccount
+		SET pub_driveraccount.balance = pub_driveraccount.balance+NULLIF(#{orderamount},0),pub_driveraccount.updatetime=now()
+		WHERE
+			pub_driveraccount.driverid=#{driverid}
+		and pub_driveraccount.leasescompanyid=#{companyid}
+		and pub_driveraccount.platformtype=#{platformtype}
+		and pub_driveraccount.status=1
+	</update>
+
+	<!--更新司机消费记录-->
+	<insert id="addDriverExpenses" parameterType="Map">
+		INSERT INTO pub_driverexpenses (
+			id,
+			driverid,
+			tradetype,
+			expensetype,
+			expensetime,
+			amount,
+			balance,
+			detailtype,
+			remark,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			STATUS,
+			operateresult,
+			platformtype
+		) SELECT
+			#{id},
+			#{driverid},
+			#{tradetype},
+			#{expensetype},
+			now(),
+			#{amount},
+			pub_driveraccount.balance,
+			#{detailtype},
+			#{remark},
+			now(),
+			now(),
+			#{driverid},
+			#{driverid},
+			1,
+			#{operateresult},
+			#{platformtype}
+		FROM
+			pub_driveraccount
+		WHERE
+			pub_driveraccount.driverid = #{driverid}
+		AND pub_driveraccount.leasescompanyid = #{companyid}
+		AND pub_driveraccount.status = 1
+		LIMIT 0,1
+	</insert>
+	
+	
+	<!-- 四期 -->
+	<!-- 获取可用优惠券数目 -->
+	<select id="getCouponCount" parameterType="Map" resultType="int">
+		select count(*) from pub_coupon where pub_coupon.status=1 and pub_coupon.couponstatus=0 and pub_coupon.platformtype=0 and pub_coupon.userid=#{userid}
+	</select>
+	
+	<!-- 获取可用优惠券的明细 -->
+	<select id="getCouponDetail" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					info.*, (@rownum := @rownum + 1) AS rownum
+				FROM
+					(
+						SELECT
+							*
+						FROM
+							pub_coupon
+						WHERE
+							pub_coupon.status = 1
+						AND pub_coupon.couponstatus = 0
+						AND pub_coupon.platformtype = 0
+						AND pub_coupon.userid = #{userid}
+					) info,
+					(SELECT @rownum := 0) r
+				ORDER BY
+					info.createtime DESC
+			) t
+		<![CDATA[
+			WHERE t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+		]]>
+	</select>
+	
+	<!-- 获取优惠券使用的限制城市 -->
+	<select id="getCouponUseCitys" parameterType="String" resultType="Map">
+		SELECT
+			DISTINCT(pub_cityaddr.id) id,
+			pub_cityaddr.city city
+		FROM
+			pub_coupon_use_city,
+			pub_cityaddr
+		WHERE
+			pub_coupon_use_city.status = 1
+		AND pub_cityaddr.status = 1
+		AND pub_coupon_use_city.city = pub_cityaddr.id
+		AND pub_coupon_use_city.couponidref = #{couponid}
+	</select>
+	
+	<!-- 获取被邀请人的邀请信息 -->
+	<select id="getInviteInfoByInvitee" parameterType="String" resultType="Map">
+		select * from pub_inviteinfo where pub_inviteinfo.status=1 and pub_inviteinfo.invitestate=0 and pub_inviteinfo.inviteephone=#{inviteephone}
+	</select>
+	
+	<!-- 重置已过期的邀请信息 -->
+	<update id="updateExpireInviteInfos">
+		UPDATE pub_inviteinfo
+		SET pub_inviteinfo.invitestate = 2,
+		 	pub_inviteinfo.updatetime = now()
+		WHERE
+			pub_inviteinfo.status=1
+		<![CDATA[
+			and	pub_inviteinfo.invitetime < date_add(now(), INTERVAL - 7 DAY)
+			and pub_inviteinfo.invitestate=0
+		]]>
+	</update>
+	
+	<!-- 添加邀请信息 -->
+	<insert id="addInviteInfo" parameterType="Map">
+		INSERT INTO pub_inviteinfo(
+			id,
+			inviterphone,
+			inviteephone,
+			invitestate,
+			createtime,
+			updatetime,
+			status,
+			invitetime,
+			invitecode
+		)
+		VALUES
+			(
+				#{id},
+				#{inviterphone},
+				#{inviteephone},
+				'0',
+				now(),
+				now(),
+				'1',
+				now(),
+				#{invitecode}
+			)
+	</insert>
+	
+	<!-- 更新邀请状态 -->
+	<update id="updateInviteState" parameterType="Map">
+		UPDATE pub_inviteinfo
+		SET 
+			pub_inviteinfo.invitecode=#{invitecode},
+			pub_inviteinfo.updatetime=now()
+		WHERE
+			pub_inviteinfo.status=1
+		AND pub_inviteinfo.invitestate=0
+		AND	pub_inviteinfo.inviteephone=#{inviteephone}
+	</update>
+	
+	<!-- 机构订单获取服务车企获取签约的服务车企 -->
+	<select id="getValiableCompanys" parameterType="Map" resultType="String">
+		SELECT
+			org_organ_company_ref.companyid
+		FROM
+			org_organ_company_ref
+		WHERE
+			org_organ_company_ref. STATUS = 1
+		AND (
+			org_organ_company_ref.mainaccount = '0'
+			OR org_organ_company_ref.bindstate = '1'
+		)
+		AND org_organ_company_ref.organid IN (
+			SELECT
+				org_organ.id
+			FROM
+				org_organ
+			WHERE
+				org_organ.creditcode IN (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organid}
+				)
+			AND org_organ.customertype!=1
+		)
+	</select>
+	
+	<!-- 获取为某个机构提供某个服务的租赁公司信息(只有因公的) -->
+	<select id="getOrganServiceCompany" parameterType="Map" resultType="Map">
+		SELECT
+			le_leasescompany.id,
+			le_leasescompany.name
+		FROM
+			le_leasescompany
+		WHERE
+			le_leasescompany. STATUS = 1
+		AND le_leasescompany.id IN (
+			SELECT
+				le_accountrules.leasescompanyid
+			FROM
+				le_accountrules,
+				le_company_rules_ref
+			WHERE
+				le_accountrules. STATUS = 1
+			AND le_company_rules_ref. STATUS = 1
+			AND le_company_rules_ref.id = le_accountrules.rulesrefid
+			AND le_accountrules.rulesstate = '0'
+			AND le_accountrules.type = '1'
+			AND le_accountrules.rulestype = #{ordertype}
+			AND le_accountrules.leasescompanyid = le_company_rules_ref.leasescompanyid
+			AND le_company_rules_ref.rulestate = '1'
+			<![CDATA[
+				AND le_company_rules_ref.starttime <= now()
+				AND le_company_rules_ref.endtime >= now()
+			]]>
+			AND le_company_rules_ref.organid IN (
+				SELECT
+					organ.id
+				FROM
+					org_organ organ
+				WHERE
+					organ. STATUS = 1
+				AND organ.creditcode = (
+					SELECT
+						org_organ.creditcode
+					FROM
+						org_organ
+					WHERE
+						org_organ. STATUS = 1
+					AND org_organ.id = #{organid}
+				)
+				AND organ.customertype != 1
+			)
+		)
+	</select>
+	
+	<!-- 获取可用的优惠券列表，选择优惠券使用 -->
+	<select id="getAbleCoupons" parameterType="Map" resultType="Map">
+		SELECT
+			pub_coupon.*,
+		  	case when (select count(*) from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.couponidref=pub_coupon.id and pub_coupon_use.usestate=0 and pub_coupon_use.billingorderid=#{orderno})>0 THEN '1' ELSE '0' end as isselect
+		FROM
+			pub_coupon
+		WHERE
+			pub_coupon.status = 1
+		AND pub_coupon.couponstatus = 0
+		AND pub_coupon.id NOT IN (
+			SELECT
+				pub_coupon_use.couponidref
+			FROM
+				pub_coupon_use
+			WHERE
+				pub_coupon_use.status = 1
+			<![CDATA[
+		 		AND pub_coupon_use.billingorderid <> #{orderno}
+		 	]]>
+		)
+		and pub_coupon.servicetype=#{servicetype}
+		<![CDATA[
+			and (
+	          	pub_coupon.usetype=2
+		       or
+		       (select count(*) from pub_coupon_use_city where pub_coupon_use_city.status=1 and pub_coupon_use_city.couponidref=pub_coupon.id and pub_coupon_use_city.city in(#{city}))>0
+		    )
+	    ]]>
+	    and pub_coupon.userid=#{userid}
+		ORDER BY pub_coupon.money
+	</select>
+	
+	<!-- 获取订单使用优惠券的信息 -->
+	<select id="getOrderCouponUseInfo" parameterType="Map" resultType="Map">
+		select * from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.billingorderid=#{orderno} and pub_coupon_use.usestate=0
+	</select>
+	
+	<!-- 获取优惠券的信息 -->
+	<select id="getCouponInfo" parameterType="String" resultType="Map">
+		select * from pub_coupon where pub_coupon.status=1 and pub_coupon.id=#{couponid}
+	</select>
+	
+	<!-- 添加优惠券锁定信息 -->
+	<insert id="addCouponUseOrder" parameterType="Map">
+		INSERT INTO pub_coupon_use(
+			id,
+			couponidref,
+			billingorderid,
+			couponmoney,
+			discountamount,
+			usetype,
+			createtime,
+			updatetime,
+			creater,
+			updater,
+			status,
+			usestate
+		)
+		VALUES
+			(
+				#{id},
+				#{couponidref},
+				#{billingorderid},
+				#{couponmoney},
+				#{discountamount},
+				#{usetype},
+				now(),
+				now(),
+				#{userid},
+				#{userid},
+				1,
+				#{usestate}
+			)
+	</insert>
+	
+	<!-- 更新优惠券锁定信息 -->
+	<select id="updateCouponUseOrder" parameterType="Map">
+		UPDATE pub_coupon_use
+		SET 
+		 couponidref = #{couponidref},
+		 couponmoney = #{couponidref},
+		 updatetime = now(),
+		 updater = #{userid}
+		WHERE
+			billingorderid = #{billingorderid}
+	</select>
+	
+	<!-- 投诉 -->
+	<insert id="doComplaint" parameterType="Map">
+		INSERT INTO pub_complaint(
+			id,
+			platformtype,
+			leasecompanyid,
+			usertype,
+			ordertype,
+			userid,
+			orderno,
+			complainttype,
+			complaintcontent,
+			processstatus,
+			processresult,
+			processrecord,
+			processtime,
+			processor,
+			createtime,
+			updatetime,
+			status,
+			creater,
+			updater
+		)
+		VALUES
+			(
+				#{id},
+				#{platformtype},
+				#{leasecompanyid},
+				#{usertype},
+				#{ordertype},
+				#{userid},
+				#{orderno},
+				null,
+				#{complaintcontent},
+				#{processstatus},
+				null,
+				null,
+				null,
+				null,
+				now(),
+				now(),
+				1,
+				#{userid},
+				#{userid}
+			)
+	</insert>
+	
+	<!-- 根据订单号获取投诉信息 -->
+	<select id="getComplaintbyOrderno" parameterType="String" resultType="Map">
+		select * from pub_complaint where pub_complaint.status=1 and pub_complaint.orderno=#{orderno}
+	</select>
+	
+	<!-- 获取用户拥有的可用的最大面值的优惠券信息 -->
+	<select id="getHighestAbleCoupon" parameterType="Map" resultType="Map">
+		SELECT
+			*
+		FROM
+			pub_coupon
+		WHERE
+			pub_coupon.status = 1
+		AND pub_coupon.couponstatus=0
+		AND pub_coupon.userid = #{userid}
+		AND pub_coupon.servicetype=#{servicetype}
+		AND pub_coupon.lecompanyid=#{lecompanyid}
+		AND pub_coupon.platformtype=#{platformtype}
+		<![CDATA[
+			AND (
+			  pub_coupon.usetype=2
+			or (
+			   (select count(*) from pub_coupon_use_city where pub_coupon_use_city.status=1 and pub_coupon_use_city.couponidref=pub_coupon.id and pub_coupon_use_city.city in(#{city}))>0
+			 )
+			)
+			AND pub_coupon.id not in(
+				select pub_coupon_use.couponidref from pub_coupon_use where pub_coupon_use.status=1 and pub_coupon_use.usestate=0 and pub_coupon_use.billingorderid=#{userid}
+			)
+		]]>
+		ORDER BY pub_coupon.money desc
+		LIMIT 0,1
+	</select>
+	
+	<!-- 优惠券使用 -->
+	<update id="useCoupon" parameterType="Map">
+		UPDATE pub_coupon
+		SET 
+		  couponstatus = 1,
+		  updatetime = now()
+		WHERE
+			id = #{couponidref}
+	</update>
+	
+	<!-- 更新优惠券实际抵用金额 -->
+	<select id="updateCouponDiscountamount" parameterType="Map">
+		UPDATE pub_coupon_use
+		SET 
+		 discountamount = #{discountamount},
+		 actualamount = #{discountamount},
+		 usestate = 1,
+		 updatetime = now()
+		WHERE
+			billingorderid = #{billingorderid}
+	</select>
+	
+	<!-- 添加优惠券使用明细 -->
+	<insert id="addCouponDetail" parameterType="Map">
+	INSERT INTO pub_coupon_detail(
+		id,
+		userid,
+		couponidref,
+		usetype,
+		amount,
+		balance,
+		remark,
+		updatetime,
+		createtime,
+		status
+	)
+	VALUES
+		(
+			#{id},
+			#{userid},
+			#{couponidref},
+			#{usetype},
+			#{amount},
+			(select sum(pub_coupon.money) from pub_coupon where pub_coupon.status=1 and pub_coupon.couponstatus=0 and pub_coupon.userid='07423FBA-CE1B-4ED0-8A0C-333A920BEB0C'),
+			#{remark},
+			now(),
+			now(),
+			1
+		)
+	</insert>
+	
+</mapper>
