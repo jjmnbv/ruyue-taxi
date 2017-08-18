@@ -47,13 +47,12 @@ public class MyBatisConfig implements TransactionManagementConfigurer {
         org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
         configuration.setJdbcTypeForNull(JdbcType.OTHER);
         configuration.setCallSettersOnNulls(true);
-        configuration.setLogImpl(StdOutImpl.class);
 		bean.setConfiguration(configuration);
         //添加XML目录
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         try {
             bean.setMapperLocations(resolver.getResources("classpath:mapper/**/*.xml"));
-            //bean.setTypeAliasesPackage("com.szyciov.entity,com.szyciov.passenger.entity");
+            bean.setTypeAliasesPackage("com.xxkj.passenger.wechat.entity");
             bean.setTypeAliases(new Class[]{com.szyciov.param.QueryParam.class,
             		com.szyciov.entity.Dictionary.class,
             		com.szyciov.org.entity.OrgUser.class,
