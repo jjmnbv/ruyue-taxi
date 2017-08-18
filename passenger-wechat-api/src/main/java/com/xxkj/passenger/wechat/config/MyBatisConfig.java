@@ -51,6 +51,7 @@ public class MyBatisConfig implements TransactionManagementConfigurer {
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         try {
             bean.setMapperLocations(resolver.getResources("classpath:mapper/*/*.xml"));
+            bean.setTypeAliasesPackage("com.xxkj.passenger.wechat.entity");
             return bean.getObject();
         } catch (Exception e) {
             e.printStackTrace();
