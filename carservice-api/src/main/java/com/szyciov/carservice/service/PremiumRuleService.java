@@ -118,6 +118,9 @@ public class PremiumRuleService {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(usetime);
         int week = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+        if(week == 0) {
+            week = PubPremiumRuleEnum.WEEKDAY_SUN.code;
+        }
 
         //查询匹配的溢价规则
         List<PubPremiumRuleWeekdetail> weekdetails = premiumRule.getWeekdetails();
@@ -157,7 +160,7 @@ public class PremiumRuleService {
             for (PubPremiumRuleDatedetail datedetail : datedetails) {
                 int starttimeNum = formatTime(datedetail.getStarttime());
                 int endtimeNum = formatTime(datedetail.getEndtime());
-                if(usetimeNum >= starttimeNum && starttimeNum <= endtimeNum) {
+                if(usetimeNum >= starttimeNum && usetimeNum <= endtimeNum) {
                     return datedetail;
                 }
             }

@@ -339,7 +339,8 @@ public class CouponDistritubeService {
 			usedPercent = new BigDecimal(totalUsed).divide(new BigDecimal(totalCount), 3, RoundingMode.HALF_UP)
 					.multiply(new BigDecimal(100)).doubleValue();
 		if (totalAbondaned != 0)
-			abandonedPercent = 100 - usedPercent;
+			abandonedPercent = new BigDecimal(totalAbondaned).divide(new BigDecimal(totalCount), 3, RoundingMode.HALF_UP)
+					.multiply(new BigDecimal(100)).doubleValue();
 		if (totalUsed == 0 && totalAbondaned == 0) {
 			usedPercent = 0;
 			abandonedPercent = 0;

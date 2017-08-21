@@ -313,8 +313,8 @@ function search() {
         { "name": "bindCount", "value": $("#bindCount").val() },
         { "name": "driverId", "value": $("#driverId").select2('data')?$("#driverId").select2('data').id:"" },
         { "name": "online", "value": $("#online").val() },
-        { "name": "vehiclestatus", "value": $("#vehiclestatus").val() },
-        { "name": "belongLeasecompany", "value": $("#belongLeasecompany").val() }
+        { "name": "vehiclestatus", "value": $("#vehiclestatus").val() }
+        // { "name": "belongLeasecompany", "value": $("#belongLeasecompany").val() }
     ];
     dataGrid.fnSearch(conditionArr);
 }
@@ -571,8 +571,8 @@ function bindingVel(json){
                             jobstatus:"0",
                             city:vehcilejson.city,
                             boundstate:'0',
-                            vehicletype:'1',
-                            belongleasecompany:vehcilejson.belongleasecompany
+                            vehicletype:'1'
+                            // belongleasecompany:vehcilejson.belongleasecompany
                         }
                         return param;
                     },
@@ -596,8 +596,8 @@ function bindingVel(json){
                             jobstatus:"0",
                             city:vehcilejson.city,
                             boundstate:'0',
-                            vehicletype:'1',
-                            belongleasecompany:vehcilejson.belongleasecompany
+                            vehicletype:'1'
+                            // belongleasecompany:vehcilejson.belongleasecompany
                         }
                         return param;
                     },
@@ -666,8 +666,8 @@ function query() {
         var conditionArr = [
             {"name": "driverId", "value": drivreId},
             {"name": "jobNum", "value": jobNum},
-            {"name": "queryCity", "value": $("#cityId").val()},
-            {"name": "belongleasecompanyQuery", "value": $("#leasecompanyId").val()}
+            {"name": "queryCity", "value": $("#cityId").val()}
+            // {"name": "belongleasecompanyQuery", "value": $("#leasecompanyId").val()}
         ];
         bindingVelDataGrid.fnSearch(conditionArr);
     }
@@ -739,8 +739,8 @@ function reselect2(vehcilejson) {
                     jobstatus:"0",
                     city:vehcilejson.city,
                     boundstate:'0',
-                    vehicletype:'1',
-                    belongleasecompany:vehcilejson.belongleasecompany
+                    vehicletype:'1'
+                    // belongleasecompany:vehcilejson.belongleasecompany
                 }
                 return param;
             },
@@ -764,8 +764,8 @@ function reselect2(vehcilejson) {
                     jobstatus:"0",
                     city:vehcilejson.city,
                     boundstate:'0',
-                    vehicletype:'1',
-                    belongleasecompany:vehcilejson.belongleasecompany
+                    vehicletype:'1'
+                    // belongleasecompany:vehcilejson.belongleasecompany
                 }
                 return param;
             },

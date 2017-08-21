@@ -238,8 +238,8 @@ public class AccountService extends BaseService{
 	 * @return
 	 */
 	public JSONObject changePassword(ChangePasswordParam param) {
-		String[] require = new String[]{"password","type"};
-		if(!checkeParam(param,getExceptElement(param, require))) {
+		String[] require = new String[]{"mobile","password","type"};
+		if(!checkeParam(param,getExceptElement(param, require,false))) {
 			return errorResult.get();
 		}
 		
@@ -247,6 +247,11 @@ public class AccountService extends BaseService{
 		if(!doChagnePassword(param)) return errorResult.get();
 		JSONObject result = new JSONObject();
 		result.put("message", "密码修改成功");
+		//修改成功后删除验证成功凭证
+		String key = RedisKeyEnum.AUTHPASS.code + driver.get().getPhone() + "_" + param.getType();
+		JedisUtil.delKey(key);
+		key = RedisKeyEnum.AUTHCODE.code + driver.get().getPhone();
+		JedisUtil.delKey(key);
 		return result;
 	}
 
@@ -256,15 +261,18 @@ public class AccountService extends BaseService{
 	 * @return
 	 */
 	public JSONObject authOldPass(ChangePasswordParam param) {
-		String[] require = new String[]{"password","type"};
-		if(!checkeParam(param,getExceptElement(param, require))) {
+		String[] require = new String[]{"mobile","password","type"};
+		if(!checkeParam(param,getExceptElement(param, require,false))) {
 			return errorResult.get();
 		}
 		
 		param.setId(driver.get().getId());
 		if(!doAuthOldPass(param)) return errorResult.get();
 		JSONObject result = new JSONObject();
-
+		//如果验证通过,保存验证成功凭证
+		String key = RedisKeyEnum.AUTHPASS.code + driver.get().getPhone() + "_" + param.getType();
+		int timeout = 60 * 5;
+		JedisUtil.setString(key, timeout ,"SUCCESS");
 		return result;
 	}
 	
@@ -403,12 +411,17 @@ public class AccountService extends BaseService{
 	 * @return
 	 */
 	public JSONObject authSMSCode(LoginParam param){
-		String[] require = new String[]{"password"};
-		if(!checkeParam(param,getExceptElement(param, require))) return errorResult.get();
+		String[] require = new String[]{"mobile","password"};
+		if(!checkeParam(param,getExceptElement(param, require,false))) return errorResult.get();
 		JSONObject result = new JSONObject();
 		if(!doCompairSMSCode(param)) {
 			return errorResult.get();
 		}
+		
+		//如果验证通过,保存验证成功凭证
+		String key = RedisKeyEnum.AUTHCODE.code + driver.get().getPhone();
+		int timeout = 60 * 5;
+		JedisUtil.setString(key, timeout ,"SUCCESS");
 		return result;
 	}
 	/**********************************************************内部方法***************************************************************/
@@ -1661,6 +1674,23 @@ public class AccountService extends BaseService{
 			logger.error("redis控制获取验证码次数失败了",e);
 		}
     	return true;
+    }
+    
+    /**
+     * 校验是否存在验证成功凭证(修改密码时需要)
+     * @param mobile
+     * @return
+     */
+    @ValidateRule(msg="校验验证凭证失败")
+    private boolean checkAuthToken(String mobile){
+		//无论使用过哪种验证方式,只要通过了一种,就可以修改密码
+		String key = RedisKeyEnum.AUTHPASS.code + mobile + "_*";
+		Set<String> keys = JedisUtil.getKeys(key);
+		if(!keys.isEmpty()) return true;
+		key = RedisKeyEnum.AUTHCODE.code + mobile;
+		keys = JedisUtil.getKeys(key);
+		if(!keys.isEmpty()) return true;
+    	return false;
     }
     /**********************************************************工具方法***************************************************************/
     /**

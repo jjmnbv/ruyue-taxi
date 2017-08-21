@@ -1696,7 +1696,11 @@
 	
 	<select id="querySignCompanyByOrganid" resultType="java.util.Map">
 	    select companyid as companyId from org_organ_company_ref 
-	    where organid=#{id} and status=1
+	    where organid in 
+          (select id from org_organ where creditcode=
+          (select creditcode from org_organ where id=#{id} and status=1) 
+          and status=1) 
+          and status=1
 	</select>
 	
 	<select id="queryOperateid" resultType="string">

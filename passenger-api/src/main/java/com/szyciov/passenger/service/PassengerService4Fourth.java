@@ -2137,7 +2137,7 @@ private static final Logger logger = Logger.getLogger(PassengerService4Sec.class
             if(cost>couponmoney){
             	actualcost = new BigDecimal(cost).subtract(new BigDecimal(couponmoney)).doubleValue();
             }
-            obj.put("actualcost",actualcost);
+            obj.put("actualcost",StringUtil.formatNum(actualcost,1));
 		}catch(Exception e){
 			logger.error("乘客端异常",e);
 			res.put("status",Retcode.EXCEPTION.code);

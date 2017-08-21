@@ -9,6 +9,11 @@ public class ChangePasswordParam extends BaseParam {
 	 */
 	private String id;
 	/**
+	 * 司机手机号
+	 */
+	@SzycValid(rules={"checkNull","isMobile","checkUserCanLogin","checkAuthToken"})
+	private String mobile;
+	/**
 	 * 密码
 	 */
 	@SzycValid(rules={"checkNull"})
@@ -86,5 +91,21 @@ public class ChangePasswordParam extends BaseParam {
 	public void setEncrypted(boolean encrypted) {
 		this.encrypted = encrypted;
 	}
+
+	/**  
+	 * 获取司机手机号  
+	 * @return mobile 司机手机号  
+	 */
+	public String getMobile() {
+		return mobile;
+	}
 	
+
+	/**  
+	 * 设置司机手机号  
+	 * @param mobile 司机手机号  
+	 */
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
 }

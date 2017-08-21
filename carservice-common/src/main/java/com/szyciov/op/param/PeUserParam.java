@@ -12,5 +12,25 @@ import com.szyciov.org.param.OrgUserParam;
  * @date 2016年10月26日 下午5:25:41 
  */
 public class PeUserParam extends OrgUserParam {
+	/**
+	 * 用户手机号
+	 */
+	String userphone;
 
+	/**  
+	 * 获取用户手机号  
+	 * @return userphone 用户手机号  
+	 */
+	public String getUserphone() {
+		return userphone;
+	}
+	
+
+	/**  
+	 * 设置用户手机号  
+	 * @param userphone 用户手机号  
+	 */
+	public void setUserphone(String userphone) {
+		this.userphone = userphone;
+	}
 }

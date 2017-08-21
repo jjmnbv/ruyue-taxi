@@ -6,28 +6,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.szyciov.supervision.api.responce.EntityInfoList;
+import com.szyciov.supervision.api.responce.HttpContent;
+import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.util.ResourceUtils;
 
-import com.szyciov.supervision.api.basic.CompanyBaseInfo;
-import com.szyciov.supervision.api.basic.CompanyConcactInfo;
-import com.szyciov.supervision.api.basic.CompanyInvestorInfo;
-import com.szyciov.supervision.api.basic.CompanyOperateInfo;
-import com.szyciov.supervision.api.basic.CompanyOperatingPermit;
-import com.szyciov.supervision.api.basic.CompanyPayInfo;
-import com.szyciov.supervision.api.basic.CompanyServiceOrgan;
-import com.szyciov.supervision.api.basic.CompanyValuationWay;
-import com.szyciov.supervision.api.basic.DriverCntractInfo;
-import com.szyciov.supervision.api.basic.DriverInfo;
-import com.szyciov.supervision.api.basic.DriverMobileTerminalInfo;
-import com.szyciov.supervision.api.basic.DriverStatistics;
-import com.szyciov.supervision.api.basic.DriverTrainingInfo;
-import com.szyciov.supervision.api.basic.EnterpriseAccessInfo;
-import com.szyciov.supervision.api.basic.PassengerInfo;
-import com.szyciov.supervision.api.basic.PassengerStatus;
-import com.szyciov.supervision.api.basic.VehicleInsuranceInfo;
-import com.szyciov.supervision.api.basic.VehicleMileageLnfo;
-import com.szyciov.supervision.api.basic.Vehiclelnfo;
+import com.szyciov.supervision.api.dto.basic.CompanyBaseInfo;
+import com.szyciov.supervision.api.dto.basic.CompanyConcactInfo;
+import com.szyciov.supervision.api.dto.basic.CompanyInvestorInfo;
+import com.szyciov.supervision.api.dto.basic.CompanyOperateInfo;
+import com.szyciov.supervision.api.dto.basic.CompanyOperatingPermit;
+import com.szyciov.supervision.api.dto.basic.CompanyPayInfo;
+import com.szyciov.supervision.api.dto.basic.CompanyServiceOrgan;
+import com.szyciov.supervision.api.dto.basic.CompanyValuationWay;
+import com.szyciov.supervision.api.dto.basic.DriverCntractInfo;
+import com.szyciov.supervision.api.dto.basic.DriverInfo;
+import com.szyciov.supervision.api.dto.basic.DriverMobileTerminalInfo;
+import com.szyciov.supervision.api.dto.basic.DriverStatistics;
+import com.szyciov.supervision.api.dto.basic.DriverTrainingInfo;
+import com.szyciov.supervision.api.dto.basic.EnterpriseAccessInfo;
+import com.szyciov.supervision.api.dto.basic.PassengerInfo;
+import com.szyciov.supervision.api.dto.basic.PassengerStatus;
+import com.szyciov.supervision.api.dto.basic.VehicleInsuranceInfo;
+import com.szyciov.supervision.api.dto.basic.VehicleMileageLnfo;
+import com.szyciov.supervision.api.dto.basic.Vehiclelnfo;
 import com.szyciov.supervision.util.FileUtil;
 
 /**
@@ -41,7 +44,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.1	网约车平台公司基本信息(PTJB)
 	 */
 	@Test
-	public void testCompanyBaseInfo(){
+	public void testCompanyBaseInfo() throws IOException {
 		List<CompanyBaseInfo> list = new ArrayList<CompanyBaseInfo>();
 		CompanyBaseInfo companyBaseInfo=new CompanyBaseInfo();
 		companyBaseInfo.setSymbol(getSymbol());
@@ -72,7 +75,11 @@ public class BasicServiceTest extends ApiServiceTest
 		companyBaseInfo.setServiceItem("公车");
 		companyBaseInfo.setServicePromise("质量标准和承诺");
 		list.add(companyBaseInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
+
 	}
 
 	/**
@@ -91,14 +98,17 @@ public class BasicServiceTest extends ApiServiceTest
 		info.setFlag(1);
 		info.setUpdateTime(getNowTime());
 		list.add(info);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 *3.2.3	网约车平台公司支付信息(PTZF)
 	 */
 	@Test
-	public void testCompanyPayInfo(){
+	public void testCompanyPayInfo() throws IOException {
 		List<CompanyPayInfo> list = new ArrayList<CompanyPayInfo>();
 		CompanyPayInfo companyPayInfo=new CompanyPayInfo();
 		companyPayInfo.setSymbol(getSymbol());
@@ -112,7 +122,10 @@ public class BasicServiceTest extends ApiServiceTest
 		companyPayInfo.setFlag(1);
 		companyPayInfo.setUpdateTime(getNowTime());
 		list.add(companyPayInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 
 	}
 
@@ -120,7 +133,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.4	网约车平台公司服务机构(PTFWJG)
 	 */
 	@Test
-	public void testCompanyServiceOrgan(){
+	public void testCompanyServiceOrgan() throws IOException {
 		List<CompanyServiceOrgan> list = new ArrayList<CompanyServiceOrgan>();
 		CompanyServiceOrgan companyServiceOrgan=new CompanyServiceOrgan();
 		companyServiceOrgan.setSymbol(getSymbol());
@@ -139,14 +152,17 @@ public class BasicServiceTest extends ApiServiceTest
 		companyServiceOrgan.setFlag(1);
 		companyServiceOrgan.setUpdateTime(getNowTime());
 		list.add(companyServiceOrgan);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 * 3.2.5	网约车平台公司经营许可(CPTJYXK)
 	 */
 	@Test
-	public void testCompanyOperatingPermit(){
+	public void testCompanyOperatingPermit() throws IOException {
 		List<CompanyOperatingPermit> list = new ArrayList<CompanyOperatingPermit>();
 		CompanyOperatingPermit companyOperatingPermit=new CompanyOperatingPermit();
 		companyOperatingPermit.setSymbol(getSymbol());
@@ -163,14 +179,18 @@ public class BasicServiceTest extends ApiServiceTest
 		companyOperatingPermit.setUpdateTime(getNowTime());
 
 		list.add(companyOperatingPermit);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
+
 	}
 
 	/**
 	 * 3.2.6	网约车平台公司计程计价方式(
 	 */
 	@Test
-	public void testCompanyValuationWay(){
+	public void testCompanyValuationWay() throws IOException {
 		List<CompanyValuationWay> list = new ArrayList<CompanyValuationWay>();
 		CompanyValuationWay companyValuationWay=new CompanyValuationWay();
 		companyValuationWay.setSymbol(getSymbol());
@@ -211,7 +231,11 @@ public class BasicServiceTest extends ApiServiceTest
 
 
 		list.add(companyValuationWay);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
+
 	}
 
 
@@ -219,7 +243,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 *3.2.7	网约车车辆基本信息(CLJB)
 	 */
 	@Test
-	public void testVehiclelnfo(){
+	public void testVehiclelnfo() throws IOException {
 		List<Vehiclelnfo> list = new ArrayList<Vehiclelnfo>();
 		Vehiclelnfo vehiclelnfo=new Vehiclelnfo();
 		vehiclelnfo.setSymbol(getSymbol());
@@ -268,14 +292,17 @@ public class BasicServiceTest extends ApiServiceTest
 		vehiclelnfo.setLesseeCode("91440101MA59EE6A9M");
 
 		list.add(vehiclelnfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 * 3.2.8	网约车车辆保险信息(CLBX)
 	 */
 	@Test
-	public void testVehicleInsuranceInfo(){
+	public void testVehicleInsuranceInfo() throws IOException {
 		List<VehicleInsuranceInfo> list = new ArrayList<VehicleInsuranceInfo>();
 		VehicleInsuranceInfo vehicleInsuranceInfo=new VehicleInsuranceInfo();
 		vehicleInsuranceInfo.setSymbol(getSymbol());
@@ -290,14 +317,17 @@ public class BasicServiceTest extends ApiServiceTest
 		vehicleInsuranceInfo.setFlag(1);
 		vehicleInsuranceInfo.setUpdateTime(getNowTime());
 		list.add(vehicleInsuranceInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 * 3.2.9	网约车车辆里程信息(CLLC)
 	 */
 	@Test
-	public void testVehicleMileageLnfo(){
+	public void testVehicleMileageLnfo() throws IOException {
 		List<VehicleMileageLnfo> list = new ArrayList<VehicleMileageLnfo>();
 		VehicleMileageLnfo vehicleMileageLnfo=new VehicleMileageLnfo();
 		vehicleMileageLnfo.setSymbol(getSymbol());
@@ -308,14 +338,17 @@ public class BasicServiceTest extends ApiServiceTest
 		vehicleMileageLnfo.setFlag(1);
 		vehicleMileageLnfo.setUpdateTime(getNowTime());
 		list.add(vehicleMileageLnfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 * 3.2.10	网约车驾驶员基本信息(JSYJB)
 	 */
 	@Test
-	public void testDriverInfo(){
+	public void testDriverInfo() throws IOException {
 		List<DriverInfo> list = new ArrayList<DriverInfo>();
 		DriverInfo driverInfo=new DriverInfo();
 		driverInfo.setSymbol(getSymbol());
@@ -366,7 +399,10 @@ public class BasicServiceTest extends ApiServiceTest
 		driverInfo.setRewardPunishment("奖惩计算机上的还是");
 
 		list.add(driverInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 
 	}
 
@@ -375,7 +411,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.11	网约车驾驶员培训信息(JSYPX)
 	 */
 	@Test
-	public void testDriverTrainingInfo(){
+	public void testDriverTrainingInfo() throws IOException {
 		List<DriverTrainingInfo> list = new ArrayList<DriverTrainingInfo>();
 		DriverTrainingInfo driverTrainingInfo=new DriverTrainingInfo();
 		driverTrainingInfo.setSymbol(getSymbol());
@@ -390,14 +426,17 @@ public class BasicServiceTest extends ApiServiceTest
 		driverTrainingInfo.setUpdateTime(getNowTime());
 		driverTrainingInfo.setType("GQ");
 		list.add(driverTrainingInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 * 3.2.12	网约车驾驶员移动终端信息
 	 */
 	@Test
-	public void testDriverMobileTerminalInfo(){
+	public void testDriverMobileTerminalInfo() throws IOException {
 		List<DriverMobileTerminalInfo> list = new ArrayList<DriverMobileTerminalInfo>();
 		DriverMobileTerminalInfo driverMobileTerminalInfo=new DriverMobileTerminalInfo();
 		driverMobileTerminalInfo.setSymbol(getSymbol());
@@ -412,7 +451,10 @@ public class BasicServiceTest extends ApiServiceTest
 		driverMobileTerminalInfo.setUpdateTime(getNowTime());
 		driverMobileTerminalInfo.setMobileModel("18826252137");
 		list.add(driverMobileTerminalInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 
@@ -420,7 +462,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.13	网约车驾驶员统计信息(JSYTJ)
 	 */
 	@Test
-	public void testDriverStatistics(){
+	public void testDriverStatistics() throws IOException {
 		List<DriverStatistics> list = new ArrayList<DriverStatistics>();
 		DriverStatistics driverStatistics=new DriverStatistics();
 		driverStatistics.setSymbol(getSymbol());
@@ -436,14 +478,17 @@ public class BasicServiceTest extends ApiServiceTest
 		driverStatistics.setUpdateTime(getNowTime());
 
 		list.add(driverStatistics);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 * 3.2.14	网约车乘客基本信息(CKJB)
 	 */
 	@Test
-	public void  testPassengerInfo(){
+	public void  testPassengerInfo() throws IOException {
 		List<PassengerInfo> list = new ArrayList<PassengerInfo>();
 		PassengerInfo passengerInfo=new PassengerInfo();
 		passengerInfo.setSymbol(getSymbol());
@@ -455,7 +500,10 @@ public class BasicServiceTest extends ApiServiceTest
 		passengerInfo.setFlag(1);
 		passengerInfo.setUpdateTime(getNowTime());
 		list.add(passengerInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 
 	}
 
@@ -463,7 +511,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.15	网约车乘客状态信息(CKZT)
 	 */
 	@Test
-	public void testPassengerStatus(){
+	public void testPassengerStatus() throws IOException {
 		List<PassengerStatus> list = new ArrayList<PassengerStatus>();
 		PassengerStatus passengerStatus=new PassengerStatus();
 		passengerStatus.setSymbol(getSymbol());
@@ -475,7 +523,10 @@ public class BasicServiceTest extends ApiServiceTest
 		passengerStatus.setFlag(1);
 		passengerStatus.setUpdateTime(getNowTime());
 		list.add(passengerStatus);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 
@@ -483,7 +534,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.16	网约车平台投资人信息*(PTTZR)
 	 */
 	@Test
-	public void testCompanyInvestorInfo(){
+	public void testCompanyInvestorInfo() throws IOException {
 		List<CompanyInvestorInfo> list = new ArrayList<CompanyInvestorInfo>();
 		CompanyInvestorInfo companyInvestorInfo=new CompanyInvestorInfo();
 		companyInvestorInfo.setSymbol(getSymbol());
@@ -496,14 +547,17 @@ public class BasicServiceTest extends ApiServiceTest
 		companyInvestorInfo.setUpdateTime(getNowTime());
 
 		list.add(companyInvestorInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 * 3.2.17	网约车平台联系人信息*(PTLXR)
 	 */
 	@Test
-	public void testCompanyConcactInfo(){
+	public void testCompanyConcactInfo() throws IOException {
 		List<CompanyConcactInfo> list = new ArrayList<CompanyConcactInfo>();
 		CompanyConcactInfo companyConcactInfo=new CompanyConcactInfo();
 		companyConcactInfo.setSymbol(getSymbol());
@@ -513,7 +567,10 @@ public class BasicServiceTest extends ApiServiceTest
 		companyConcactInfo.setFlag(1);
 		companyConcactInfo.setUpdateTime(getNowTime());
 		list.add(companyConcactInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
@@ -521,7 +578,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 3.2.18	个体驾驶员合同信息*(GTJSYHT)
 	 */
 	@Test
-	public void testDriverCntractInfo() throws FileNotFoundException {
+	public void testDriverCntractInfo() throws IOException {
 		List<DriverCntractInfo> list = new ArrayList<DriverCntractInfo>();
 		DriverCntractInfo driverCntractInfo=new DriverCntractInfo();
 		driverCntractInfo.setSymbol(getSymbol());
@@ -548,14 +605,17 @@ public class BasicServiceTest extends ApiServiceTest
 		driverCntractInfo.setFlag(1);
 		driverCntractInfo.setUpdateTime(getNowTime());
 		list.add(driverCntractInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 
 	/**
 	 *3.2.19	普通企业接入信息*(PTQYJR)
 	 */
 	@Test
-	public void testEnterpriseAccessInfo(){
+	public void testEnterpriseAccessInfo() throws IOException {
 		List<EnterpriseAccessInfo> list = new ArrayList<EnterpriseAccessInfo>();
 		EnterpriseAccessInfo enterpriseAccessInfo=new EnterpriseAccessInfo();
 		enterpriseAccessInfo.setSymbol(getSymbol());
@@ -567,6 +627,9 @@ public class BasicServiceTest extends ApiServiceTest
 		enterpriseAccessInfo.setFlag(1);
 		enterpriseAccessInfo.setUpdateTime(getNowTime());
 		list.add(enterpriseAccessInfo);
-		messageSender.send(list);
+		HttpContent httpContent=baseApiService.sendApi(list);
+		System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+		Assert.assertEquals(httpContent.getStatus(),200);
 	}
 }

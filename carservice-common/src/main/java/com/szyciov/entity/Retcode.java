@@ -200,7 +200,11 @@ public enum Retcode {
     /**
      * 用车时间比当前时间早
      */
-    MANUAL_DRIVER_OFFLINE(2021,"您指派的司机已下线，请重新选择");
+    MANUAL_DRIVER_OFFLINE(2021,"您指派的司机已下线，请重新选择"),
+    /**
+     * 订单已经结束
+     */
+    ORDER_ALREADY_END(2022,"该行程已被管理员结束，如有疑问，请联系管理员");
 
 	
 	

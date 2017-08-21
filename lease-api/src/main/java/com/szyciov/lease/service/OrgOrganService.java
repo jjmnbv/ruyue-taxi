@@ -116,7 +116,7 @@ public class OrgOrganService {
 				po.setId(GUIDGenerator.newGUID());
 				po.setCompanyid(orgOrgan.getCompanyId());
 				po.setLeasecompanyid(s1[i]);
-				po.setOrganid(o.getId());
+				po.setOrganid(orgOrgan.getId());
 				po.setCreater(orgOrgan.getCreater());
 				po.setUpdater(orgOrgan.getUpdater());
 				dao.insertPubLeaseOrganRelation(po);
@@ -370,6 +370,14 @@ public class OrgOrganService {
 	public PageBean getOrgOrganByQuery(OrgOrganQueryParam orgOrganQueryParam) {
 		PageBean pageBean = new PageBean();
 		pageBean.setsEcho(orgOrganQueryParam.getsEcho());
+		if(orgOrganQueryParam.getQueryCustomertype() != null && !orgOrganQueryParam.getQueryCustomertype().equals("")){
+			String[] s = orgOrganQueryParam.getQueryCustomertype().split(",");
+			String[] s1 = new String[s.length];
+			for(int i=0;i<s.length;i++){
+				s1[i] = s[i];
+			}
+			orgOrganQueryParam.setQueryCustomertypes(s1);
+		}
 		List<OrgOrgan> list = getOrgOrganListByQuery(orgOrganQueryParam);
 		for(OrgOrgan o:list){
 			if(o.getBillType() != null){

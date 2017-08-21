@@ -7,11 +7,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 
 import com.szyciov.coupon.dao.PubCouponDao;
 import com.szyciov.coupon.dao.PubCouponUseCityDao;
+import com.szyciov.coupon.dto.CouponHavedDTO;
 import com.szyciov.coupon.dto.GenerateCouponDTO;
 import com.szyciov.coupon.factory.generate.GenerateCoupon;
 import com.szyciov.coupon.service.RedisService;
@@ -34,8 +36,6 @@ import com.szyciov.util.GsonUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Service;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -89,16 +89,21 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
             PubCouponRule rule = GsonUtil.fromJson(activity.getCouponrule(),PubCouponRule.class);
 
             GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,获取对应抵用券规则:【{}】",userId,GsonUtil.toJson(rule));
-            //验证通过，可以生成抵用券
-            if(canGenerate(activity,param,rule,userId)){
-                PubCoupon coupon = this.savePubCoupon(activity,userId);
-                this.savePubCouponActivityUseCity(activity.getCitys(),coupon.getId());
-                this.saveHaved(activity.getId(),userId,activity.getSendendtime());
-                GenerateCouponDTO dto = this.createDto(coupon);
-                GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,抵用券生成完毕，抵用券信息：【{}】",userId,GsonUtil.toJson(dto));
-                this.phshMessage(dto,param.getUserPhone(),userId);
-                dtoList.add(dto);
-                afterGenerated(dto);
+
+            //如果没有生成待派发任务，则为实时派发任务
+            if(!this.stayGenerate(activity,userId,param)) {
+
+                //验证通过，可以生成抵用券
+                if (canGenerate(activity, param, rule, userId)) {
+                    PubCoupon coupon = this.savePubCoupon(activity, userId);
+                    this.savePubCouponActivityUseCity(activity.getCitys(), coupon.getId());
+                    this.saveHaved(activity.getId(), userId, activity.getSendendtime());
+                    GenerateCouponDTO dto = this.createDto(coupon);
+                    GenerateLogUtil.writeInfoLog(logger, "用户ID：【{}】,抵用券生成完毕，抵用券信息：【{}】", userId, GsonUtil.toJson(dto));
+                    this.phshMessage(dto, param.getUserPhone(), userId);
+                    dtoList.add(dto);
+                    afterGenerated(dto);
+                }
             }
         }
         return dtoList;
@@ -126,12 +131,19 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
      */
     protected boolean validHaved(PubCouponActivityDto activity,String userId){
         String key = RedisKeyEnum.COUPON_HAVE.code+activity.getId();
-        String countStr = redisService.hmGet(key,userId);
+        String resultStr = redisService.hmGet(key,userId);
 
-        if(StringUtils.isNotEmpty(countStr)) {
-            Integer count = Integer.parseInt(countStr);
-            if (count != null && count == 1) {
+        if(StringUtils.isNotEmpty(resultStr)) {
+            CouponHavedDTO havedDTO = GsonUtil.fromJson(resultStr,CouponHavedDTO.class);
+            //如果获得券的总数大于等于1，则不继续发券
+            if(havedDTO.getAllCount()>=1){
                 return false;
+            }
+            //如果时间等于当天，且次数大于等于1，则为已领取，不继续发券
+            if(LocalDate.now().equals(havedDTO.getNowDate())){
+                if(havedDTO.getNowlCount()>=1){
+                    return false;
+                }
             }
         }
         return true;
@@ -180,13 +192,30 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
      * @param activityId
      * @param userId
      */
-    protected void saveHaved(String activityId,String userId,String sendendtime){
+    protected synchronized void saveHaved(String activityId,String userId,String sendendtime){
         String key = RedisKeyEnum.COUPON_HAVE.code+activityId;
         long expireTime = LocalDateTime.now().until(LocalDate.parse(sendendtime).atTime(23,59,59), SECONDS);
-        List<String> keys = new ArrayList<>();
-        keys.add(key);
-        keys.add(userId);
-        redisService.eval(new ResourceScriptSource(new ClassPathResource("/saveHaved.lua")),keys,expireTime+"");
+
+        String resultStr = redisService.hmGet(key,userId);
+        CouponHavedDTO havedDTO = null;
+        if (StringUtils.isEmpty(resultStr)) {
+            havedDTO = new CouponHavedDTO();
+            havedDTO.setNowDate(LocalDate.now());
+            havedDTO.setNowlCount(1);
+            havedDTO.setAllCount(1);
+            redisService.hmSet(key, userId, GsonUtil.toJson(havedDTO));
+            redisService.expire(key, expireTime, TimeUnit.SECONDS);
+        } else {
+            havedDTO = GsonUtil.fromJson(resultStr, CouponHavedDTO.class);
+            if(havedDTO.getNowDate()!=LocalDate.now()) {
+                havedDTO.setNowDate(LocalDate.now());
+                havedDTO.setNowlCount(1);
+            }else{
+                havedDTO.setNowlCount(havedDTO.getNowlCount()+1);
+            }
+            havedDTO.setAllCount(havedDTO.getAllCount() + 1);
+            redisService.hmSet(key, userId, GsonUtil.toJson(havedDTO));
+        }
     }
 
 
@@ -222,10 +251,7 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
         if(CouponActivityEnum.MONEY_TYPE_FIXED.code.equals(activity.getSendmoneytype())){
             money=  activity.getSendfixedmoney();
         }else{
-            /**
-             * 因范围 1-3 需包含3，所以在最大金额上+1,
-             */
-            double randomMoney = Math.random()*((activity.getSendhighmoney()+1)-activity.getSendlowmoney()) + activity.getSendlowmoney();
+            double randomMoney = Math.random()*(activity.getSendhighmoney()-activity.getSendlowmoney()) + activity.getSendlowmoney();
             //进行四舍五入取整
             money = BigDecimal.valueOf(randomMoney).divide(new BigDecimal(1),0, RoundingMode.HALF_DOWN).doubleValue();
         }
@@ -275,6 +301,7 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
             GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,活动ID:【{}】,用户获取该活动抵用券数量已达上限",userId,activity.getId());
             return false;
         }
+
         //验证发放时间
         if(!validTime(activity)){
             GenerateLogUtil.writeInfoLog(logger,"用户ID：【{}】,活动ID:【{}】,当前时间不在活动发放有效期之内，活动发放时间:【{}】",userId,activity.getId(),activity.getSendstarttime()+"至",activity.getSendendtime());
@@ -303,6 +330,12 @@ public abstract class AbstractGenerateCoupon implements GenerateCoupon {
     private boolean validTime(PubCouponActivityDto activity){
         return DateUtil.nowDateBetween(activity.getSendstarttime(),activity.getSendendtime());
     }
+
+    /**
+     * 待生成任务
+     */
+    protected abstract boolean stayGenerate(PubCouponActivityDto activity,String userId,GenerateCouponParam param);
+
 
     /**
      * 验证发放区域

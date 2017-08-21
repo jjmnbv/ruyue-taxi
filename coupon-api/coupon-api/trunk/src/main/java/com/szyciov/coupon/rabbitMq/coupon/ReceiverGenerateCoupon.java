@@ -10,12 +10,10 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.szyciov.coupon.factory.generate.GenerateCoupon;
-import com.szyciov.coupon.factory.generate.GenerateCouponFactory;
 import com.szyciov.coupon.rabbitMq.RabbitQueues;
 import com.szyciov.coupon.service.PubCouponService;
 import com.szyciov.coupon.task.GenerateCouponTask;
-import com.szyciov.param.coupon.GenerateCouponParam;
+import com.szyciov.dto.coupon.PubCouponActivityDto;
 import com.szyciov.util.GsonUtil;
 import com.szyciov.util.threadpool.CarServiceThreadPool;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -56,9 +54,10 @@ public class ReceiverGenerateCoupon {
 
         try{
             jsonStr = new String(data,"UTF-8");
-            couponService.aotuGenerateCoupon(jsonStr);
+            PubCouponActivityDto dto = GsonUtil.fromJson(jsonStr, PubCouponActivityDto.class);
+            couponService.aotuGenerateCoupon(dto);
         }catch (Exception e){
-
+            e.printStackTrace();
         }
         //System.out.println("coupon-auto-queue");
     }

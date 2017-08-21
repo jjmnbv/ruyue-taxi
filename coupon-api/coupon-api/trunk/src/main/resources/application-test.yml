@@ -45,3 +45,7 @@ security:
     enabled: false
 
 
+swagger:
+  enable: true
+
+

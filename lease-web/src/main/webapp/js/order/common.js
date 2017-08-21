@@ -1838,6 +1838,7 @@ function showCancelreason() {
         }
     }
     $("#cancelreason").html(html);
+	resetCancelForm();
 }
 
 /**
@@ -1856,6 +1857,15 @@ function showDutyparty() {
     }
     showCancelreason();
     $("#cancelreason").val(cancelreason);
+	resetCancelForm();
+}
+
+/**
+ * 表单校验重置
+ */
+function resetCancelForm() {
+	var form = $("#cancelpartyForm").validate();
+	form.resetForm();
 }
 
 /**

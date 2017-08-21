@@ -175,7 +175,10 @@
 							and org_organ.cooperationstatus = #{cooperationStatus}
 						</if>
 						<if test="queryCustomertype != null and queryCustomertype != ''">
-							and org_organ.id = #{queryCustomertype}
+							and org_organ.id in 
+							<foreach item="item" index="index" collection="queryCustomertypes" open="(" separator="," close=")">
+		                        #{item}
+	                		</foreach>
 						</if>
 						ORDER BY
 						CONVERT(citycaption USING gbk ) COLLATE gbk_chinese_ci ,
@@ -254,7 +257,10 @@
 							and org_organ.cooperationstatus = #{cooperationStatus}
 						</if>
 						<if test="queryCustomertype != null and queryCustomertype != ''">
-							and org_organ.customertype = #{queryCustomertype}
+							and org_organ.id in 
+							<foreach item="item" index="index" collection="queryCustomertypes" open="(" separator="," close=")">
+		                        #{item}
+	                		</foreach>
 						</if>
 						ORDER BY
 						CONVERT(citycaption USING gbk ) COLLATE gbk_chinese_ci ,
@@ -647,16 +653,19 @@
 			1 = 1
 		AND t.organid = #{id}
 		AND t.`status` = 1
+		ORDER BY IF((t.companyid = t.leasecompanyid),0,1)
   </select>
   <select id="getIndexList" parameterType="string" resultType="PubLeaseOrganRelation">
   	SELECT
-		t.*,t1.shortname AS shortName
+		group_concat(t.organid) AS id,
+		t1.shortname AS shortName
 	FROM
 		pub_lease_organ_relation t
 	LEFT JOIN le_leasescompany t1 ON (t.leasecompanyid = t1.id AND t1.`Status` = 1)
 	WHERE 1 =1 
 	AND t.`status` = 1
 	AND t.companyid = #{id}
+	GROUP BY t.leasecompanyid
   </select>
   <select id="getPubCoooperateSelect" resultType="map" parameterType="QueryParam">
   	SELECT

@@ -142,8 +142,8 @@ function initGrid() {
 	        		}
 	        		return html;
 	        	}
-	        },
-	        {mDataProp: "belongleasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true }
+	        }
+	        /*{mDataProp: "belongleasecompanyName", sTitle: "归属车企", sClass: "center", sortable: true }*/
         ]
     };
     

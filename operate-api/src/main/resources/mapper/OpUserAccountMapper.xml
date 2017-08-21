@@ -15,8 +15,9 @@
 	        IFNULL(pe_useraccount.balance,0) as balance,
 	        (select COUNT(pe_userexpenses.id) from pe_userexpenses where pe_userexpenses.userid = pe_user.id and pe_userexpenses.detailtype='0') as balanceCount,
 	        (select COUNT(pe_userexpenses.id) from pe_userexpenses where pe_userexpenses.userid = pe_user.id and (pe_userexpenses.detailtype='0' or pe_userexpenses.detailtype='1')) as dealCount,
-	        pe_user.registertime as registertime
+	        pe_user.registertime as registertime,IFNULL(pc.count,0) as couponcount
 	    from pe_user left join pe_useraccount on (pe_user.id = pe_useraccount.userid and pe_useraccount.status = 1)
+	                 left join (select pub_coupon.userid,count(*) as count from pub_coupon where pub_coupon.target = 3 and pub_coupon.couponstatus = 0 and pub_coupon.platformtype = 0 and pub_coupon.status = 1 group by pub_coupon.userid) pc on (pc.userid = pe_user.id)
 	    where pe_user.status = 1
 	    <if test="userId != null and userId != ''">
 	        and pe_user.id = #{userId}
@@ -211,4 +212,72 @@
 		1
 	);
 	</insert>
+	<!-- 查询抵用券明细 -->
+	<select id="getCouponDetailListByQuery" resultType="CouponDetail" parameterType="OrganUserAccountQueryParam">
+	    select t.* from
+	    (select (@rownum := @rownum + 1) as rownum,t1.* from
+	    (select pub_coupon.*
+	    from pub_coupon
+	    where pub_coupon.target = 3
+	      and pub_coupon.userid = #{userId}
+	      and pub_coupon.platformtype = 0
+	      and pub_coupon.status = 1
+	    <if test="expenseType != null and expenseType != ''">
+	        and pub_coupon.couponstatus = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pub_coupon.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_coupon.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pub_coupon.createtime desc) t1, (select @rownum := 0) r ) t
+	    <![CDATA[
+	    where t.rownum > #{iDisplayStart} and t.rownum <=  (#{iDisplayStart} +  #{iDisplayLength})
+	    ]]>
+	</select>
+	<select id="getCouponDetailListCountByQuery" resultType="int" parameterType="OrganUserAccountQueryParam">
+	    select count(*)
+	    from pub_coupon
+	    where pub_coupon.target = 3
+	      and pub_coupon.userid = #{userId}
+	      and pub_coupon.platformtype = 0
+	      and pub_coupon.status = 1
+	    <if test="expenseType != null and expenseType != ''">
+	        and pub_coupon.couponstatus = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pub_coupon.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_coupon.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	</select>
+	<!-- 查询抵用券使用城市 -->
+	<select id="getCouponUseCityById" resultType="String" parameterType="String">
+	    select pub_cityaddr.city
+	    from pub_coupon_use_city left join pub_cityaddr on (pub_coupon_use_city.city = pub_cityaddr.id)
+	    where pub_coupon_use_city.couponidref = #{couponid}
+	      and pub_coupon_use_city.platformtype = 0
+	      and pub_coupon_use_city.status = 1
+	</select>
+	<!-- 导出抵用券明细 -->
+	<select id="getCouponDetailListExport" resultType="CouponDetail" parameterType="OrganUserAccountQueryParam">
+	    select pub_coupon.*
+	    from pub_coupon
+	    where pub_coupon.target = 3
+	      and pub_coupon.userid = #{userId}
+	      and pub_coupon.platformtype = 0
+	      and pub_coupon.status = 1
+	    <if test="expenseType != null and expenseType != ''">
+	        and pub_coupon.couponstatus = #{expenseType}
+	    </if>  
+	    <if test="startTime != null and startTime != ''">
+	        and pub_coupon.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    <if test="endTime != null and endTime != ''">
+	        and pub_coupon.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endTime},1),'%Y-%m-%d %H:%i:%s')
+	    </if>
+	    order by pub_coupon.createtime desc
+	</select>
 </mapper>

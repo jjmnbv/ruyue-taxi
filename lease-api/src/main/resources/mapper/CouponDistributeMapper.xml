@@ -304,7 +304,8 @@
               and pc.platformtype=1
               and pc.status='1'
               and orguser.status='1'
-	           <if test="couponstatus != null and couponstatus != ''">
+              and org.status='1'
+	           <if test="couponstatus != null">
 	            and pc.couponstatus=#{couponstatus}
 	          </if>
 	          order by pc.createtime desc
@@ -316,15 +317,17 @@
       
       <select id="GetOrganUserReceivedCouponListCount" parameterType="pubreceivedcouponqueryparam" resultType="Integer">
           select count(*) from pub_coupon pc
-          inner join pe_user pu on pc.userid=pu.id
+          inner join org_user orguser on pc.userid=orguser.id
+          left join org_organ org on org.id=orguser.organid
           where pc.couponactivyidref=#{id}
             and pc.platformtype=1
             and pc.status='1'
-            and pu.status='1'
+            and orguser.status='1'
+            and org.status='1'
             <if test="account != null and account != ''">
 	            and pu.account=#{account}
 	          </if>
-	           <if test="couponstatus != null and couponstatus != ''">
+	           <if test="couponstatus != null">
 	            and pc.couponstatus=#{couponstatus}
 	          </if>
 	           <if test="sendstarttime != null and sendstarttime != ''">

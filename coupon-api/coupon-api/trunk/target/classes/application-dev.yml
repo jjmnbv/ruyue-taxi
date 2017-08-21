@@ -23,7 +23,7 @@ spring:
       checkTemplateLocation: false
     redis:
       host: 10.10.10.100
-      password:
+      password: yc@123456
       port: 6380
       pool:
         max-idle: 100
@@ -43,5 +43,9 @@ mybatis:
 security:
   basic:
     enabled: false
+
+
+swagger:
+  enable: true
 
 

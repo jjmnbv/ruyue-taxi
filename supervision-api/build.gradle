@@ -106,9 +106,6 @@ dependencies {
     compile('tk.mybatis:mapper-spring-boot-starter:1.1.1')
     compile('com.github.pagehelper:pagehelper-spring-boot-starter:1.1.1')
 
-    //lombok
-    compile 'org.projectlombok:lombok:1.16.16'
-
 
     compile ('com.szyciov.carservice:carservice-common:0.0.1-SNAPSHOT'){
         exclude module: 'slf4j-api'

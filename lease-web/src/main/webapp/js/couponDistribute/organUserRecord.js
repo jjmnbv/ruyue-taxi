@@ -53,8 +53,7 @@ function initGrid() {
 function search() {
 	var conditionArr = [
         {"name": "id", "value": $("#id").val()},
-		{ "name": "couponstatus", "value": $("#couponstatus").val() }
+		{"name": "couponstatus", "value": $("#couponstatus").val()}
 	];
 	dataGrid.fnSearch(conditionArr);
-
 }

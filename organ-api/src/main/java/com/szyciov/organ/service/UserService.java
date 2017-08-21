@@ -409,7 +409,7 @@ public class UserService {
 			registcouponparam.put("userType", CouponRuleTypeEnum.PERSONAL_USER.value);
 			registcouponparam.put("companyId", operateid);
 			registcouponparam.put("userPhone", userinfo.get("phone"));
-			registcouponparam.put("userId", userinfo.get("userid"));
+			registcouponparam.put("userId", userinfo.get("peuserid"));
 			registcouponparam.put("version", "V4.0.0");
 		try{
 			String paramstr = GsonUtil.toJson(registcouponparam);

@@ -3,6 +3,7 @@ package com.szyciov.operate.controller;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.szyciov.entity.Excel;
+import com.szyciov.enums.coupon.CouponEnum;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
 import com.szyciov.op.entity.OpUser;
 import com.szyciov.op.entity.PeUser;
@@ -239,6 +241,130 @@ public class OpUserAccountController extends BaseController {
 		peUser.setAccount(opUser.getId());
 		return templateHelper.dealRequestWithToken("/OpUserAccount/AdmoneyOk", HttpMethod.POST, userToken, peUser,
 				Map.class);
+	}
+	
+	@RequestMapping(value = "/OpUserAccount/CouponDetail")
+	public ModelAndView getCouponDetail(@RequestParam(value = "userId", required = true) String userId,
+			@RequestParam(value = "account", required = true) String account,
+			@RequestParam(value = "nickName", required = true) String nickName,
+			HttpServletRequest request) {
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("userId", userId);
+		mav.addObject("account", account);
+		mav.addObject("nickName", nickName);
+		mav.setViewName("resource/opUserAccount/couponDetail");
+		
+		return mav;
+	}
+	
+	@RequestMapping("/OpUserAccount/GetCouponDetailByQuery")
+	@ResponseBody
+	public PageBean getCouponDetailByQuery(@RequestParam(value = "userId", required = true) String userId,@RequestBody OrganUserAccountQueryParam queryParam, HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		response.setContentType("text/html;charset=utf-8");
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		queryParam.setUserId(userId);
+		if (queryParam.getStartTime() == null && StringUtils.isBlank(queryParam.getKey())) {
+			queryParam.setStartTime(request.getParameter("startTime"));
+		}
+		if (queryParam.getEndTime() == null && StringUtils.isBlank(queryParam.getKey())) {
+			queryParam.setEndTime(request.getParameter("endTime"));
+		}
+		
+		return templateHelper.dealRequestWithToken("/OpUserAccount/GetCouponDetailByQuery", HttpMethod.POST, userToken,
+				queryParam,PageBean.class);
+	}
+	
+	@RequestMapping("/OpUserAccount/GetCouponDetailCount")
+	@ResponseBody
+	public int getCouponDetailCount(@RequestParam(value = "userId", required = true) String userId,
+			@RequestBody OrganUserAccountQueryParam queryParam, HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		response.setContentType("text/html;charset=utf-8");
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		queryParam.setUserId(userId);
+		
+		return templateHelper.dealRequestWithToken("/OpUserAccount/GetCouponDetailCount", HttpMethod.POST, userToken,
+				queryParam,Integer.class);
+	}
+	
+	@RequestMapping("/OpUserAccount/CouponDetailListExport")
+	@SuppressWarnings("unchecked")
+	public void exportData(@RequestParam(value = "userId", required = true) String userId,
+			@RequestParam(value = "expenseType", required = false) String expenseType,
+			@RequestParam(value = "startTime", required = false) String startTime,
+			@RequestParam(value = "endTime", required = false) String endTime, 
+			HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String userToken = (String) request.getAttribute(Constants.REQUEST_USER_TOKEN);
+		Map<String, List<Object>> colData = new HashMap<String, List<Object>>();
+		List<Object> colData1 = new ArrayList<Object>();
+		List<Object> colData2 = new ArrayList<Object>();
+		List<Object> colData3 = new ArrayList<Object>();
+		List<Object> colData4 = new ArrayList<Object>();
+		List<Object> colData5 = new ArrayList<Object>();
+		List<Object> colData6 = new ArrayList<Object>();
+		OrganUserAccountQueryParam queryParam = new OrganUserAccountQueryParam();
+		queryParam.setUserId(userId);
+		queryParam.setExpenseType(expenseType);
+		queryParam.setStartTime(startTime);
+		queryParam.setEndTime(endTime);
+		List<Map> couponDetail = templateHelper.dealRequestWithToken("/OpUserAccount/GetCouponDetailListExport",
+				HttpMethod.POST, userToken, queryParam, List.class);
+		for (int i = 0; i < couponDetail.size(); i++) {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+			colData1.add(dateFormat.format(couponDetail.get(i).get("createtime")));
+			colData2.add((String) couponDetail.get(i).get("name"));
+			if (couponDetail.get(i).get("couponstatus") != null) {
+				if (CouponEnum.COUPON_STATUS_UN_USE.code.equals(couponDetail.get(i).get("couponstatus"))) {
+					colData3.add(CouponEnum.COUPON_STATUS_UN_USE.msg);
+				} else if (CouponEnum.COUPON_STATUS_USED.code.equals(couponDetail.get(i).get("couponstatus"))) {
+					colData3.add(CouponEnum.COUPON_STATUS_USED.msg);
+				} else if (CouponEnum.COUPON_STATUS_EXPIRE.code.equals(couponDetail.get(i).get("couponstatus"))) {
+					colData3.add(CouponEnum.COUPON_STATUS_EXPIRE.msg);
+				} else {
+					colData3.add("");
+				}
+			} else {
+				colData3.add("");
+			}
+			colData4.add(couponDetail.get(i).get("money"));
+			// 有效期
+			SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd");
+			String outimestart = dateFormat2.format(couponDetail.get(i).get("outimestart"));
+			outimestart = outimestart.replace("-", ".");
+			String outtimeend = dateFormat2.format(couponDetail.get(i).get("outtimeend"));
+			outtimeend = outtimeend.replace("-", ".");
+			if (outimestart.equals(outtimeend)) {
+				colData5.add(outimestart);
+			} else {
+				colData5.add(outimestart + "-" + outtimeend);
+			}
+			colData6.add(couponDetail.get(i).get("city"));
+		}
+		Excel excel = new Excel();
+		// excel文件
+		File tempFile = new File("用户账户-【"+request.getParameter("account")+"】抵用券详情.xls");
+		
+		List<String> colName = new ArrayList<String>();
+		colName.add("时间");
+		colName.add("抵用券名称");
+		colName.add("状态");
+		colName.add("金额(元)");
+		colName.add("有效期");
+		colName.add("限用地点");
+		excel.setColName(colName);
+		colData.put("时间", colData1);
+		colData.put("抵用券名称", colData2);
+		colData.put("状态", colData3);
+		colData.put("金额(元)", colData4);
+		colData.put("有效期", colData5);
+		colData.put("限用地点", colData6);
+		excel.setColData(colData);
+
+		ExcelExport ee = new ExcelExport(request,response,excel);
+		ee.setSheetName("用户账户");
+		ee.createExcel(tempFile);
 	}
 	
 }

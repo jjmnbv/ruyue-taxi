@@ -10,6 +10,8 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 
+import com.szyciov.entity.coupon.CouponDetail;
+import com.szyciov.enums.coupon.CouponActivityEnum;
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
 import com.szyciov.op.entity.PeUser;
@@ -115,4 +117,58 @@ public class OpUserAccountService {
 		}
 		 return ret;
 	}
+    
+    public PageBean getCouponDetailByQuery(OrganUserAccountQueryParam queryParam) {
+		PageBean pageBean = new PageBean();
+		pageBean.setsEcho(queryParam.getsEcho());
+		List<CouponDetail> list = getCouponDetailListByQuery(queryParam);
+		for (CouponDetail coupon : list) {
+			if (CouponActivityEnum.USE_TYPE_DESIGNATE.code.equals(coupon.getUsetype())) {
+				List<String> citylist = getCouponUseCityById(coupon.getId());
+				StringBuilder city = new StringBuilder();
+				for (String cityname : citylist) {
+					city.append(cityname).append("、");
+				}
+				coupon.setCity(city.toString().substring(0, city.length() - 1));
+			} else {
+				coupon.setCity("");
+			}
+		}
+		int iTotalRecords = getCouponDetailListCountByQuery(queryParam);
+		int iTotalDisplayRecords = iTotalRecords;
+		pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);
+		pageBean.setiTotalRecords(iTotalRecords);
+		pageBean.setAaData(list);
+
+		return pageBean;
+	}
+    
+    public List<CouponDetail> getCouponDetailListByQuery(OrganUserAccountQueryParam organUserAccountQueryParam) {
+    	return dao.getCouponDetailListByQuery(organUserAccountQueryParam);
+    }
+    
+    public int getCouponDetailListCountByQuery(OrganUserAccountQueryParam organUserAccountQueryParam) {
+    	return dao.getCouponDetailListCountByQuery(organUserAccountQueryParam);
+    }
+    
+    public List<String> getCouponUseCityById(String couponid) {
+    	return dao.getCouponUseCityById(couponid);
+    }
+    
+    public List<CouponDetail> getCouponDetailListExport(OrganUserAccountQueryParam organUserAccountQueryParam) {
+    	List<CouponDetail> list = dao.getCouponDetailListExport(organUserAccountQueryParam);
+    	for (CouponDetail coupon : list) {
+			if (CouponActivityEnum.USE_TYPE_DESIGNATE.code.equals(coupon.getUsetype())) {
+				List<String> citylist = getCouponUseCityById(coupon.getId());
+				StringBuilder city = new StringBuilder();
+				for (String cityname : citylist) {
+					city.append(cityname).append("、");
+				}
+				coupon.setCity(city.toString().substring(0, city.length() - 1));
+			} else {
+				coupon.setCity("");
+			}
+		}
+    	return list;
+    }
 }

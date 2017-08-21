@@ -5,13 +5,7 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxiOrderReview;
@@ -20,6 +14,12 @@ import com.szyciov.operate.service.TaxiOrderManageService;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.util.BaseController;
 import com.szyciov.util.PageBean;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class TaxiOrderManageController extends BaseController {
@@ -120,12 +120,9 @@ public class TaxiOrderManageController extends BaseController {
 	
 	/**
 	 * 人工派单
-     * 已于2017/05/27转移到carservice-api工程下
-     * 路径：api/TaxiOrderManage/ManualSendOrder
-	 * @param object o
-	 * @return r
+	 * @param object
+	 * @return
 	 */
-	@Deprecated
 	@RequestMapping(value = "api/TaxiOrderManage/ManualSendOrder")
 	@ResponseBody
 	public Map<String, String> manualSendOrder(@RequestBody OpTaxiOrder object) {
@@ -241,5 +238,27 @@ public class TaxiOrderManageController extends BaseController {
 	public List<Map<String, Object>> getBelongCompanySelect(@RequestBody OrderManageQueryParam queryParam) {
 		return orderService.getBelongCompanySelect(queryParam);
 	}
+
+    /**
+     * 查询订单取消规则明细
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "api/TaxiOrderManage/GetCancelPriceDetail")
+    @ResponseBody
+    public Map<String, Object> getCancelPriceDetail(@RequestBody Map<String, String> param) {
+        return orderService.getCancelPriceDetail(param);
+    }
+
+    /**
+     * 免责处理
+     * @param object
+     * @return
+     */
+    @RequestMapping(value = "api/TaxiOrderManage/ExemptionOrder")
+    @ResponseBody
+    public Map<String, Object> exemptionOrder(@RequestBody PubOrderCancel object) {
+        return orderService.exemptionOrder(object);
+    }
 	
 }

@@ -23,7 +23,7 @@ public enum PubPremiumRuleEnum {
     PLATFORMTYPE_OPERATE(0, "运管端"),
     PLATFORMTYPE_LEASE(1, "租赁端"),
 
-    WEEKDAY_SUN(0, "星期天"),
+    WEEKDAY_SUN(7, "星期天"),
     WEEKDAY_MON(1, "星期一"),
     WEEKDAY_TUES(2, "星期二"),
     WEEKDAY_WED(3, "星期三"),

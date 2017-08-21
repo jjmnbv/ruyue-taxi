@@ -34,10 +34,18 @@ public class OrgOrganQueryParam extends QueryParam{
 	public String organId;
 	
 	/**
-	 * 客户类型
+	 * 供车主体
 	 * */
 	public String queryCustomertype;
 	
+	private String[] queryCustomertypes;
+	
+	public String[] getQueryCustomertypes() {
+		return queryCustomertypes;
+	}
+	public void setQueryCustomertypes(String[] queryCustomertypes) {
+		this.queryCustomertypes = queryCustomertypes;
+	}
 	public String getQueryCustomertype() {
 		return queryCustomertype;
 	}

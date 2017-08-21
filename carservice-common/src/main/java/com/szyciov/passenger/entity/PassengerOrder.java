@@ -2,6 +2,8 @@ package com.szyciov.passenger.entity;
 
 import com.szyciov.entity.AbstractOrder;
 
+import net.sf.json.JSONObject;
+
 import java.util.Map;
 
 public class PassengerOrder extends AbstractOrder {
@@ -91,7 +93,7 @@ public class PassengerOrder extends AbstractOrder {
 	 */
 	private String orderstyle;
 	
-	private Map<String,Object> costinfo;
+	private JSONObject costinfo;
 	
 	/**
 	 * 取消费
@@ -284,11 +286,11 @@ public class PassengerOrder extends AbstractOrder {
 		this.orderstyle = orderstyle;
 	}
 
-	public Map<String, Object> getCostinfo() {
+	public JSONObject getCostinfo() {
 		return costinfo;
 	}
 
-	public void setCostinfo(Map<String, Object> costinfo) {
+	public void setCostinfo(JSONObject costinfo) {
 		this.costinfo = costinfo;
 	}
 

@@ -1,5 +1,7 @@
 package com.szyciov.param.coupon;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * 抵用券使用请求
  * @author LC
@@ -8,21 +10,25 @@ package com.szyciov.param.coupon;
 public class CouponUseParam {
 
 
+    @ApiModelProperty("用户token")
     private String userToken;
 
     /**
      * 用户ID
      */
+    @ApiModelProperty("用户ID")
     private String userId;
 
     /**
      * 订单ID
      */
+    @ApiModelProperty("订单ID")
     private String orderId;
 
     /**
      * 订单金额
      */
+    @ApiModelProperty("订单金额")
     private Double money;
 
     public String getUserToken() {

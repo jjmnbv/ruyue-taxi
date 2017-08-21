@@ -1,7 +1,8 @@
 package com.szyciov.supervision.token;
 
 import com.szyciov.supervision.SupervisionApplicationTests;
-import com.szyciov.supervision.token.service.TokenService;
+
+import com.szyciov.supervision.api.service.TokenService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,7 +16,8 @@ import static org.junit.Assert.assertThat;
  * Created by admin on 2017/7/7.
  */
 public class TokenServiceTest extends SupervisionApplicationTests{
-    private @Autowired TokenService tokenService;
+    private @Autowired
+    TokenService tokenService;
 
     @Test
     public void testToken() throws IOException {

@@ -20,7 +20,7 @@ function initGrid() {
         	sEmptyTable: "暂无发放记录"
         },
         columns: [
-            {mDataProp: "account", sTitle: "领取机构", sClass: "center", sortable: true},
+            {mDataProp: "organname", sTitle: "领取机构", sClass: "center", sortable: true},
             {mDataProp: "money", sTitle: "领取金额(元)", sClass: "center", sortable: true},
             {mDataProp: "createtime", sTitle: "发放时间", sClass: "center", sortable: true},
         ]

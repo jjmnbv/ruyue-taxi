@@ -61,7 +61,6 @@ import com.szyciov.entity.PlatformType;
 import com.szyciov.entity.PubDriver;
 import com.szyciov.entity.PubJpushlog;
 import com.szyciov.entity.PubOrderCancel;
-import com.szyciov.entity.PubOrderCancelRule;
 import com.szyciov.entity.PubSendrules;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.TaxiOrderCost;
@@ -1473,11 +1472,17 @@ public class OrderApiService {
 	/**
 	 * 检查用户最近完成的5单是否是同一城市
 	 * @param orderInfo
-	 * @return
+	 * @return true - 表示同一城市 false - 表示不同城市
 	 */
 	private boolean checkUserLastOrders(String userPhone){
 		List<OrderInfoDetail> list = dao.getLastOrders(userPhone);
-		if(list != null && list.size() > 1) return false;
+		if(list.size() < 5) return false;   //没有5单不更改
+		String cityId = list.get(0).getCityid();
+		for(OrderInfoDetail order : list){
+			if(!cityId.equals(order.getCityid())){
+				return false;
+			}
+		}
 		return true;
 	}
 	
@@ -1673,7 +1678,7 @@ public class OrderApiService {
 			String serviceType = param.getOrderprop() == 2 ? "1" : "2";
 			Map<String,Object> map = new HashMap<>();
 			map.put("serviceType", serviceType);   //使用业务 1-出租车 2-网约车
-			map.put("usetId", param.getUserid());
+			map.put("userId", param.getUserid());
 			map.put("companyId", param.getCompanyid());
 			map.put("cityCode", param.getCity());
 			map.put("version", "V4.0.0");
@@ -1930,11 +1935,15 @@ public class OrderApiService {
 			Map<String,Object> map = doCancelPunish(order);
 			poc = saveOrUpdateCancelInfo(order,param,map,result);
 		}
-		if(order.getOrderprop() == OrderVarietyEnum.LEASE_NET.icode){
+		if(order.getOrderprop() == OrderVarietyEnum.LEASE_NET.icode){  //租赁端网约车
 			cancellorder = doCancelOrgOrder(order,param);
-		} else if(order.getOrderprop() == OrderVarietyEnum.OPERATING_NET.icode) {
+		} else if(order.getOrderprop() == OrderVarietyEnum.OPERATING_NET.icode) {  //运管端网约车
 			cancellorder = doCancelOpOrder(order, param);
-		} else {
+		} else {   //运管出租车
+			if(poc.getCancelamount() > 0){  //如果取消费>0,出租车支付状态改为线上 未支付
+				order.setPaymethod(PayMethod.ONLINE.code);
+				order.setPaystatus(PayState.NOTPAY.state);
+			}
 			cancellorder = doCancelOpTaxiOrder(order, param);
 		}
 		
@@ -2212,8 +2221,12 @@ public class OrderApiService {
 		
 		if((order = checkParam(param,result)) == null) return result;
 		if(!canChangeOrderState(order,param,result)) return result;
-        //订单类型 网约车订单
-		order.setOrderstyle(VehicleEnum.VEHICLE_TYPE_CAR.code);
+        //订单类型 出租车 | 网约车订单
+		if(order.getOrderprop() == 2){
+			order.setOrderstyle(VehicleEnum.VEHICLE_TYPE_TAXI.code);
+		}else{
+			order.setOrderstyle(VehicleEnum.VEHICLE_TYPE_CAR.code);
+		}
 		if(OrderState.CANCEL.state.equals(param.getOrderstate())){
 			PubDriver pd = null;
 			//如果司机已接单
@@ -2564,6 +2577,13 @@ public class OrderApiService {
 			result.put("order", order);
 			result.put("status", Retcode.ORDERISCANCEL.code);
 			result.put("message", Retcode.ORDERISCANCEL.msg);
+			return false;
+		}
+		//如果订单已经是完成状态,都返回已完成(无论是客服完成还是司机完成)
+		if(OrderState.SERVICEDONE.state.equals(order.getStatus())){
+//			result.put("order", order);
+			result.put("status", Retcode.ORDER_ALREADY_END.code);
+			result.put("message", Retcode.ORDER_ALREADY_END.msg);
 			return false;
 		}
 		//如果请求转人工

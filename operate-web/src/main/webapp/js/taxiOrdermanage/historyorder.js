@@ -137,7 +137,12 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-					if(full.orderstatus == '7' && full.paymentstatus != "9" && full.shouldpayamount > 0 && full.actualpayamount > 0) {
+					var actualamount = full.actualamount;
+					if(null == actualamount) {
+						actualamount = 0;
+					}
+					if(full.orderstatus == '7' && full.reviewstatus != "1" && full.paymentstatus != "9" && ((parseFloat(full.actualpayamount) == parseFloat(actualamount)
+						&& full.reviewstatus != "2") || parseFloat(full.actualpayamount) > parseFloat(actualamount))) {
 						return "<button type='button' class='SSbtn red' onclick='applyReview(\"" + full.orderno + "\")'><i class='fa fa-paste'></i>申请复核</button>";
 					} else {
 						return "";
@@ -404,12 +409,11 @@ function search() {
  * @param {} orderno
  */
 function applyReview(orderno) {
-	$("#orderno").val(orderno);
-	
 	$("#cancelpartyFormDiv").show();
-	
+
 	showObjectOnForm("cancelpartyForm", null);
-	
+	$("#ordernoHide").val(orderno);
+
 	var editForm = $("#cancelpartyForm").validate();
 	editForm.resetForm();
 	editForm.reset();
@@ -421,13 +425,13 @@ function applyReview(orderno) {
 function save() {
 	var form = $("#cancelpartyForm");
 	if(!form.valid()) return;
-	
+
 	var formData = {
-		orderno: $("#orderno").val(),
+		orderno: $("#ordernoHide").val(),
 		orderreason: $("#reasonTextarea").val(),
 		reviewperson: $("#reviewpersonAgain").val()
 	}
-	
+
 	$.ajax({
 		type: "POST",
 		dataType: "json",
@@ -440,13 +444,13 @@ function save() {
 			if (result.status == "success") {
 				$("#cancelpartyFormDiv").hide();
 				toastr.options.onHidden = function() {
-            		window.location.href = $("#baseUrl").val() + "TaxiOrderManage/AbnormalOrderIndex";
-            	}
-            	toastr.success(message, "提示");
+					window.location.href = $("#baseUrl").val() + "TaxiOrderManage/AbnormalOrderIndex";
+				}
+				toastr.success(message, "提示");
 			} else {
-            	toastr.error(message, "提示");
+				toastr.error(message, "提示");
 			}
-			
+
 			dataGrid._fnReDraw();
 		}
 	});

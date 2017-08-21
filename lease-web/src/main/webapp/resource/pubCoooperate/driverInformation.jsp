@@ -75,6 +75,11 @@
 		.DTFC_ScrollWrapper{
 		margin-top:-20px;
 		}
+		.form .select2-container {
+		    width: 70%;
+		    float: left;
+		    margin-top: 0px;
+		}
 		</style>
 	</head>
 	<body class="leLeasescompany_css_body">

@@ -1,7 +1,7 @@
 package com.szyciov.supervision.api;
 
 import com.szyciov.supervision.SupervisionApplicationTests;
-import com.szyciov.supervision.api.service.BaseService;
+import com.szyciov.supervision.api.service.BaseApiService;
 import com.szyciov.supervision.mq.MessageSender;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,21 +14,10 @@ import java.util.Date;
 public class ApiServiceTest extends SupervisionApplicationTests {
 
 
-    @Autowired
-    protected  MessageSender messageSender;
+    protected  @Autowired BaseApiService baseApiService;
 
 
-    /**
-     * 获取现在时间
-     *
-     * @return 返回时间类型
-     */
-    public  String getNowTime() {
-        Date currentTime = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String dateString = formatter.format(currentTime);
-        return dateString;
-    }
+
 
 
     /**

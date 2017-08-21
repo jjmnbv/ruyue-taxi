@@ -648,8 +648,8 @@ public class PubVehicleController extends BaseController {
 		pubVehicle.setLeasesCompanyId(leasesCompanyId);
 		List<Map<String, Object>> brand = templateHelper.dealRequestWithToken("/PubVehcline/GetBrandCars", HttpMethod.POST,
 				userToken, pubVehicle, List.class);
-		List<Map<String,Object>> belongleasecompany = templateHelper.dealRequestWithToken("/Dictionary/GetDictionaryByType?type=租赁公司", HttpMethod.GET,
-				userToken, null, List.class,"租赁公司");
+		/*List<Map<String,Object>> belongleasecompany = templateHelper.dealRequestWithToken("/Dictionary/GetDictionaryByType?type=租赁公司", HttpMethod.GET,
+				userToken, null, List.class,"租赁公司");*/
 		colData1.add("网约车");
 		colData2.add("京A88888");
 		colData3.add(brand.get(0).get("text").toString());
@@ -697,10 +697,10 @@ public class PubVehicleController extends BaseController {
 		for(int i=0;i<brand.size();i++){
 			s1[i] = brand.get(i).get("text").toString();
 		}
-		String[] s2 = new String[belongleasecompany.size()];
-		for(int i=0;i<belongleasecompany.size();i++){
+		String[] s2 = new String[0];
+		/*for(int i=0;i<belongleasecompany.size();i++){
 			s2[i] = (String)belongleasecompany.get(i).get("text");
-		}
+		}*/
 		//起始行序号，序列值，起始列序号，终止列序号
 		ee.createExcel(tempFile,s,s1,s2);
 		

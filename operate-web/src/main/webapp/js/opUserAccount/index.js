@@ -47,6 +47,7 @@ function initGrid() {
                     if (full.balanceCount > 0) {
                     	html += '<button type="button" class="SSbtn pink"  onclick="searchBalanceDetail(' +"'"+ full.id + "','" + full.account + "','" + full.nickname +"'"+ ')"><i class="fa fa-times"></i>余额明细</button>';
                     }
+                    html += '&nbsp;<button type="button" class="SSbtn orange"  onclick="searchCouponDetail(' +"'"+ full.id + "','" + full.account + "','" + full.nickname +"'"+ ')"><i class="fa fa-times"></i>抵用券详情</button>';
                     return html;
                 }
             },
@@ -68,6 +69,7 @@ function initGrid() {
 	        {mDataProp: "account", sTitle: "账号", sClass: "center", sortable: true },
 	        {mDataProp: "sex", sTitle: "性别", sClass: "center", sortable: true },
 	        {mDataProp: "balance", sTitle: "账户余额(元)", sClass: "center", sortable: true },
+	        {mDataProp: "couponcount", sTitle: "抵用券(张)", sClass: "center", sortable: true },
 	        //{mDataProp: "registertime", sTitle: "注册时间", sClass: "center", sortable: true }
 	        {
 				mDataProp : "registertime",
@@ -190,6 +192,16 @@ function searchBalanceDetail(id,account,nickName) {
 
 	window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") + "OpUserAccount/AccountDetail?userId=" + id +"&account=" + account + "&nickName=" + nickName+"&detaills=yue";
 }
+
+/**
+ * 抵用券详情
+ * @param {} id
+ */
+function searchCouponDetail(id,account,nickName) {
+
+	window.location.href= document.getElementsByTagName("base")[0].getAttribute("href") + "OpUserAccount/CouponDetail?userId=" + id +"&account=" + account + "&nickName=" + nickName;
+}
+
 /**
  * 送积分
  * @param {} id

@@ -146,31 +146,31 @@
 			</div>
 			<table id="manualOrderdataGrid" class="table table-striped table-bordered" cellspacing="0" width="100%"></table>
 		</div>
-		
+
 		<div class="pop_box" id="cancelpartyFormDiv" style="display: none;">
 			<div class="tip_box_b">
-	            <h3>申请复核</h3>
-	            <img src="content/img/btn_guanbi.png" class="close" alt="关闭">
-	            <div class="w400">
-	            	<input type="hidden" id="orderno" name="orderno">
-	            	<form id="cancelpartyForm" method="get" class="form">
-	            		<div class="row" style="padding-bottom: 18px">
-		                <label style="float: left;">复核方<em class="asterisk"></em></label>
-		            		<select id="reviewpersonAgain" name="reviewpersonAgain" style="width: 60%">
-		            			<option value="">选择复核方</option>
-		            			<option value="1">司机</option>
-		            			<option value="2">下单人</option>
-		            		</select>
-		            	</div>
-		            	<div class="row">
-			                <label style="float: left;">申请原因<em class="asterisk"></em></label>
-			                <textarea id="reasonTextarea" name="reasonTextarea" style="width: 60%" rows="2" cols="3" maxlength="200" placeholder="填写申请复核原因"></textarea>
-			            </div>
-	            	</form>
-	                <button class="Lbtn red" onclick="save()">确定</button>
-	                <button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
-	            </div>
-	        </div>
+				<h3>申请复核</h3>
+				<img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+				<div class="w400">
+					<form id="cancelpartyForm" method="get" class="form">
+						<input type="hidden" id="ordernoHide">
+						<div class="row" style="padding-bottom: 18px">
+							<label style="float: left;">复核方<em class="asterisk"></em></label>
+							<select id="reviewpersonAgain" name="reviewpersonAgain" style="width: 60%">
+								<option value="">选择复核方</option>
+								<option value="1">司机</option>
+								<option value="2">乘客</option>
+							</select>
+						</div>
+						<div class="row">
+							<label style="float: left;">申请原因<em class="asterisk"></em></label>
+							<textarea id="reasonTextarea" name="reasonTextarea" style="width: 60%" rows="2" cols="3" maxlength="200" placeholder="填写申请复核原因"></textarea>
+						</div>
+					</form>
+					<button class="Lbtn red" onclick="save()">确定</button>
+					<button class="Lbtn grey" style="margin-left: 10%;" onclick="canel()">取消</button>
+				</div>
+			</div>
 		</div>
 		
 		<script type="text/javascript" src="js/taxiOrdermanage/waitgatheringorder.js"></script>

@@ -135,6 +135,11 @@ public class PeUser {
 	//org_user account 
 	public String orgUserAccount;
 	
+	/**
+	 * 抵用券数
+	 */
+	public int couponcount;
+	
 	
 	public String getOrgUserAccount() {
 		return orgUserAccount;
@@ -353,5 +358,13 @@ public class PeUser {
 
 	public void setRegistercity(String registercity) {
 		this.registercity = registercity;
+	}
+
+	public int getCouponcount() {
+		return couponcount;
+	}
+
+	public void setCouponcount(int couponcount) {
+		this.couponcount = couponcount;
 	}
 }

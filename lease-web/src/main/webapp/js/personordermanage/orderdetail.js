@@ -308,6 +308,20 @@ function renderPageByOrder(order) {
         pricecopy = JSON.parse(order.reviewpricecopy);
         reviewtype = order.reviewtype;
     }
+
+    //实时金额
+    var cost = order.cost;
+    if(order.orderstatus == 7) {
+        cost = order.shouldpayamount;
+    }
+    if(order.orderstatus == 6 || order.orderstatus == 7) {
+        var html = "￥" + cost;
+        html += "<button type='button' class='SSbtn red' style='float: right;' onclick='costDetail()'><i class='fa fa-paste'></i>费用明细</button>";
+        $("#ssje").html(html);
+    } else {
+        $("#ssje").text("/");
+    }
+
     if(order.orderstatus != 8) {
         $("#cffytd").text("");
         if(order.paymentstatus == "0") {
@@ -318,11 +332,11 @@ function renderPageByOrder(order) {
         if(null == order.actualamount || order.actualamount == 0) {
             actualamount = 0;
         }
-        $("#sfjeDetail").text((parseInt(pricecopy.cost) - parseInt(actualamount)) + "元");
+        $("#sfjeDetail").text((parseInt(cost) - parseInt(actualamount)) + "元");
         if(pricecopy.premiumrate > 1) {
             $("#xcfyDetailTitle").text("行程费用(溢价" + pricecopy.premiumrate + "倍)");
         }
-        $("#xcfyDetail").text(pricecopy.cost + "元");
+        $("#xcfyDetail").text(cost + "元");
         if(reviewtype == 1) {
             $("#qbjDetail").text(pricecopy.startprice + "元");
             $("#scDetail").text(convertMinute(showtime));
@@ -356,18 +370,6 @@ function renderPageByOrder(order) {
         } else {
             $("#yrfRuleDiv").hide();
         }
-    }
-    //实时金额
-    var cost = order.cost;
-    if(order.orderstatus == 7) {
-        cost = order.shouldpayamount;
-    }
-    if(order.orderstatus == 6 || order.orderstatus == 7) {
-        var html = "￥" + cost;
-        html += "<button type='button' class='SSbtn red' style='float: right;' onclick='costDetail()'><i class='fa fa-paste'></i>费用明细</button>";
-        $("#ssje").html(html);
-    } else {
-        $("#ssje").text("/");
     }
 
     //下单时间

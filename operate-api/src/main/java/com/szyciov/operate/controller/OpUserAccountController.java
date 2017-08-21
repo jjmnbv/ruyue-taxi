@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.szyciov.entity.coupon.CouponDetail;
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
 import com.szyciov.op.entity.PeUser;
@@ -108,4 +109,39 @@ public class OpUserAccountController extends BaseController {
 		return opUserAccountService.admoneyOk(peUser);
 	}
 	
+	/** 
+	 * <p>分页查询抵用券明细</p>
+	 *
+	 * @param queryParam 查询请求对象，封装需要查询的key和页码等信息
+	 * @return 返回一页查询结果
+	 */
+	@RequestMapping(value = "api/OpUserAccount/GetCouponDetailByQuery", method = RequestMethod.POST)
+	@ResponseBody
+	public PageBean getCouponDetailByQuery(@RequestBody OrganUserAccountQueryParam queryParam) {
+		return opUserAccountService.getCouponDetailByQuery(queryParam);
+	}
+	
+	/** 
+	 * <p>查询抵用券信息数量</p>
+	 *
+	 * @param OrganUserAccountQueryParam
+	 * @return
+	 */
+	@RequestMapping(value = "api/OpUserAccount/GetCouponDetailCount", method = RequestMethod.POST)
+	@ResponseBody
+	public int getCouponDetailCount(@RequestBody OrganUserAccountQueryParam queryParam) {
+		return opUserAccountService.getCouponDetailListCountByQuery(queryParam);
+	}
+	
+	/** 
+	 * <p>查询抵用券详情导出数据</p>
+	 *
+	 * @param OrganUserAccountQueryParam
+	 * @return
+	 */
+	@RequestMapping(value = "api/OpUserAccount/GetCouponDetailListExport", method = RequestMethod.POST)
+	@ResponseBody
+	public List<CouponDetail> getCouponDetailListExport(@RequestBody OrganUserAccountQueryParam queryParam) {
+		return opUserAccountService.getCouponDetailListExport(queryParam);
+	}
 }

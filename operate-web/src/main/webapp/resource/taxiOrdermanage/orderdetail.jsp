@@ -132,24 +132,22 @@
 					<td id="cph"></td>
 					<td class="grey_c">司机信息</td>
 					<td><span id="sjxx" class="font_grey"></span></td>
-					<%--<td class="grey_c">更新时间</td>--%>
-					<%--<td id="gxsjtd" style="border-top-style: none;"><span id="gxsj" class="font_grey"></span></td>--%>
-                    <td class="grey_c">服务车企</td>
-                    <td id="fwcqtd" style="border-top-style: none;"></td>
+					<td class="grey_c">更新时间</td>
+					<td id="gxsjtd" style="border-top-style: none;"><span id="gxsj" class="font_grey"></span></td>
 				</tr>
 				<tr id="qxtr">
 					<td class="grey_c">支付方式</td>
 					<td id="zffs"></td>
 					<td class="grey_c">调度费用(元)</td>
 					<td><span id="ddfy" class="font_red"></span></td>
-					<td class="grey_c">行程费用(元)</td>
+					<td class="grey_c" id="xcfyTd">行程费用(元)</td>
 					<td><span id="xcfy" class="font_red"></span></td>
 				</tr>
 				<tr>
-					<td class="grey_c">支付渠道</td>
+					<td class="grey_c" id="qxfTd">取消费</td>
+					<td id="qxf"></td>
+					<td class="grey_c" id="zfqdTd">支付渠道</td>
 					<td id="zfqd"></td>
-					<td class="grey_c"></td>
-					<td></td>
 					<td class="grey_c"></td>
 					<td></td>
 				</tr>
@@ -322,6 +320,58 @@
 	                <button class="Lbtn grey_b" style="margin-left: 10%;" onclick="canel()">取消</button>
 	            </div>
 	        </div>
+		</div>
+
+		<div class="pop_box" id="costDetailDiv" style="display: none;">
+			<div class="tip_box_e">
+				<h3>订单金额明细</h3>
+				<img src="content/img/btn_guanbi.png" class="close" alt="关闭">
+				<div class="e_con">
+					<form id="costDetailForm" method="get">
+						<div class="e_red">
+							<span id="sfjeDetailTitle">实付金额</span><span id="sfjeDetail"></span>
+						</div>
+						<div class="e_title">
+							<span id="xcfyDetailTitle">行程费用</span>
+							<div class="fr" id="xcfyDetail"></div>
+						</div>
+						<div class="e_title">
+							券已抵扣
+							<div class="fr" id="qydkDetail"></div>
+						</div>
+
+						<div class="e_title e_margin">
+							计费规则
+						</div>
+						<div class="e_box">
+							<div class="e_child">
+								<em>起步价</em>
+								<div class="fr" id="qbjRule"></div>
+							</div>
+							<div class="e_child">
+								<em>起租里程</em>
+								<div class="fr" id="qzlcRule"></div>
+							</div>
+							<div class="e_child">
+								<em>续租价</em>
+								<div class="fr" id="xzjRule"></div>
+							</div>
+							<div class="e_child">
+								<em>标准里程</em>
+								<div class="fr" id="bzlcRule"></div>
+							</div>
+							<div class="e_child">
+								<em>空驶费率</em>
+								<div class="fr" id="ksflRule"></div>
+							</div>
+							<div class="e_child">
+								<em>附加费</em>
+								<div class="fr" id="fjfRule"></div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
 		</div>
 		
 		<script type="text/javascript">

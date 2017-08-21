@@ -315,8 +315,8 @@ function search() {
         { "name": "workStatus", "value": $("#workStatus").val() },
         { "name": "modelId", "value": $("#modelId").val()},
         { "name": "lineName", "value": $("#lineName").select2('data')?$("#lineName").select2('data').text:""},
-        { "name": "platenoStr", "value": $("#platenoStr").val()},
-        { "name": "belongLeasecompany", "value": $("#belongLeasecompany").val()}
+        { "name": "platenoStr", "value": $("#platenoStr").val()}
+        // { "name": "belongLeasecompany", "value": $("#belongLeasecompany").val()}
     ];
     dataGrid.fnSearch(conditionArr);
 }
@@ -334,7 +334,7 @@ function clearOptions(){
     $("#modelId option:first").prop("selected", 'selected');
     $("#lineName").select2("val", "");
     $("#platenoStr").val("");
-    $("#belongLeasecompany option:first").prop("selected", 'selected');
+    // $("#belongLeasecompany option:first").prop("selected", 'selected');
     search();
 }
 
@@ -503,8 +503,8 @@ function query() {
     var conditionArr = [
         { "name": "platenoStr", "value": $("#queryPlateNo").val()},
         { "name": "lineName", "value": $("#queryBrandCars").select2('data')?$("#queryBrandCars").select2('data').text:''},
-        { "name": "qCity", "value": $("#cityId").val()},
-        { "name": "qBelongLeasecompany", "value": $("#leasecompanyId").val()}
+        { "name": "qCity", "value": $("#cityId").val()}
+        // { "name": "qBelongLeasecompany", "value": $("#leasecompanyId").val()}
 
      ];
     bindingVelDataGrid.fnSearch(conditionArr);
@@ -575,7 +575,9 @@ function bindingVelInitGrid() {
     gridObj = {
         id: "bindingVelDataGrid",
         sAjaxSource: "driverVehicleBind/listUnBindVehicle",
-        userQueryParam: [{name: "city", value: cityId},{name: "belongLeasecompany", value: belongleasecompany}],
+        userQueryParam: [{name: "city", value: cityId}
+            // ,{name: "belongLeasecompany", value: belongleasecompany}
+            ],
         //iLeftColumn: 1,//（固定表头，1代表固定几列）
         scrollX: true,//（加入横向滚动条）
         iDisplayLength:6,

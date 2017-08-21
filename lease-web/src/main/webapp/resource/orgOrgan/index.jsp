@@ -98,7 +98,7 @@
 						<select id="queryCustomertype" name="queryCustomertype">
 							<option value="">全部</option>
 							<c:forEach var="list" items="${list}">
-								<option value="${list.organid}">${list.shortName}</option>
+								<option value="${list.id}">${list.shortName}</option>
 							</c:forEach>
 						</select>
 						<input id="queryCustomertypes" name="queryCustomertypes" value="" type="hidden"/>

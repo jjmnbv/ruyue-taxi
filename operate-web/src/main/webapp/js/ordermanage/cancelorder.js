@@ -207,7 +207,7 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "责任方",
                 "mRender": function (data, type, full) {
-                    if(full.cancelparty == "1" || full.cancelparty == "4") {
+                    if(full.cancelparty == "3" || full.cancelparty == "4") {
                         return "/";
                     }
                     if(full.dutyparty == 1) {
@@ -228,7 +228,7 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "取消费用(元)",
                 "mRender": function (data, type, full) {
-                    if(full.cancelnature == 2) {
+                    if(null == full.cancelnature || full.cancelnature == 2) {
                         return "/";
                     }
                     if(null == full.cancelamount) {
@@ -306,7 +306,7 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "订单状态",
                 "mRender": function (data, type, full) {
-                    if(full.cancelnature == 2) {
+                    if(null == full.cancelnature || full.cancelnature == 2) {
                         return "已取消";
                     }
                     switch (full.paymentstatus) {

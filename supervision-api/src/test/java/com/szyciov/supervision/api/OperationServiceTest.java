@@ -1,15 +1,19 @@
 package com.szyciov.supervision.api;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.szyciov.supervision.api.responce.EntityInfoList;
+import com.szyciov.supervision.api.responce.HttpContent;
+import org.junit.Assert;
 import org.junit.Test;
 
-import com.szyciov.supervision.api.operation.OperationArrival;
-import com.szyciov.supervision.api.operation.OperationDeparture;
-import com.szyciov.supervision.api.operation.OperationPay;
-import com.szyciov.supervision.api.operation.VehicleOperationOffline;
-import com.szyciov.supervision.api.operation.VehicleOperationOnline;
+import com.szyciov.supervision.api.dto.operation.OperationArrival;
+import com.szyciov.supervision.api.dto.operation.OperationDeparture;
+import com.szyciov.supervision.api.dto.operation.OperationPay;
+import com.szyciov.supervision.api.dto.operation.VehicleOperationOffline;
+import com.szyciov.supervision.api.dto.operation.VehicleOperationOnline;
 
 /**
  * 3.4	经营信息数据
@@ -21,7 +25,7 @@ public class OperationServiceTest extends ApiServiceTest {
      *3.4.1	车辆营运上线(CLYYSX) 实时
      */
     @Test
-    public void testVehicleOperationOnline(){
+    public void testVehicleOperationOnline() throws IOException {
         List<VehicleOperationOnline> list =new ArrayList<VehicleOperationOnline>();
         VehicleOperationOnline  vehicleOperationOnline=new VehicleOperationOnline();
         vehicleOperationOnline.setLicenseId("shjshfsdsds");
@@ -33,7 +37,10 @@ public class OperationServiceTest extends ApiServiceTest {
         vehicleOperationOnline.setEncrypt("1");
         vehicleOperationOnline.setAddress("440100");
         list.add(vehicleOperationOnline);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
 
     }
 
@@ -41,7 +48,7 @@ public class OperationServiceTest extends ApiServiceTest {
      * 3.4.2	车辆营运下线(CLYYXX) 实时
      */
     @Test
-    public void testVehicleOperationOffline(){
+    public void testVehicleOperationOffline() throws IOException {
         List<VehicleOperationOffline> list =new ArrayList<VehicleOperationOffline>();
         VehicleOperationOffline  vehicleOperationOffline=new VehicleOperationOffline();
         vehicleOperationOffline.setLicenseId("shjshfsdsds");
@@ -53,7 +60,10 @@ public class OperationServiceTest extends ApiServiceTest {
         vehicleOperationOffline.setEncrypt("1");
         vehicleOperationOffline.setAddress("440100");
         list.add(vehicleOperationOffline);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
 
     }
 
@@ -62,7 +72,7 @@ public class OperationServiceTest extends ApiServiceTest {
      * 3.4.3	营运出发(YYCF) 实时
      */
     @Test
-    public void  testOperationDeparture(){
+    public void  testOperationDeparture() throws IOException {
         List<OperationDeparture> list =new ArrayList<OperationDeparture>();
         OperationDeparture operationDeparture=new OperationDeparture();
         operationDeparture.setOrderId("dhsdasdhshdshd");
@@ -85,14 +95,17 @@ public class OperationServiceTest extends ApiServiceTest {
         operationDeparture.setPassengerName("林大叔");
 
         list.add(operationDeparture);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
     }
 
     /**
      * 3.4.4	营运到达(YYDD) 实时
      */
     @Test
-    public void  testOperationArrival(){
+    public void  testOperationArrival() throws IOException {
         List<OperationArrival> list =new ArrayList<OperationArrival>();
         OperationArrival operationArrival=new OperationArrival();
         operationArrival.setOrderId("dskdisdsds");
@@ -118,14 +131,17 @@ public class OperationServiceTest extends ApiServiceTest {
         operationArrival.setPrice("155");
 
         list.add(operationArrival);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
     }
 
     /**
      * 3.4.5	营运支付(YYZF) 实时
      */
     @Test
-    public void testOperationPay(){
+    public void testOperationPay() throws IOException {
         List<OperationPay> list =new ArrayList<OperationPay>();
         OperationPay operationPay=new OperationPay();
         operationPay.setOrderId("dhshdshd");
@@ -173,7 +189,10 @@ public class OperationServiceTest extends ApiServiceTest {
         operationPay.setCallPrice("102");
         operationPay.setFareRuleUrl("http://qqq.dsd.dasd/fsmfs");
         list.add(operationPay);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
 
     }
 

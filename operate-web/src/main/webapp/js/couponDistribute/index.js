@@ -63,6 +63,8 @@ $(function () {
 	$(".addcitybtn").on('click',function(){
 		var top = $('.addcitybtn').offset().top;
 		var left = $('.addcitybtn').offset().left;
+		$("#pubCityaddr .kongjian_list").css("top",top+25+"px");
+		$("#pubCityaddr .kongjian_list").css("left",left+"px");
 		getSelectCitys(); 
 	})
 	//发放业务改变时，需要重新加载选择城市控件
@@ -529,11 +531,12 @@ $('#sendstarttime,#sendendtime').datetimepicker({
     language: 'zh-CN', //汉化
     weekStart: 1,
     autoclose: 1,
-    todayHighlight: 1,
+    todayHighlight: false,
     startView: 2,
     minView: 2,
     forceParse: 0,
-    clearBtn: true
+    clearBtn: true,
+    initialDate :date
 });
 $('#fixedstarttime,#fixedendtime').datetimepicker({
     format: "yyyy-mm-dd", //选择日期后，文本框显示的日期格式
@@ -541,11 +544,12 @@ $('#fixedstarttime,#fixedendtime').datetimepicker({
     language: 'zh-CN', //汉化
     weekStart: 1,
     autoclose: 1,
-    todayHighlight: 1,
+    todayHighlight: false,
     startView: 2,
     minView: 2,
     forceParse: 0,
     clearBtn: true,
+    initialDate :date,
     pickerPosition:'top-right'
 });
 }

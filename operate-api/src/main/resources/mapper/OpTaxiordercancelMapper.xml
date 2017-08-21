@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.operate.mapper.OpTaxiordercancelMapper">
+
+    <!-- 查询订单取消信息 -->
+    <select id="getOpTaxiordercancel" parameterType="PubOrdercancel" resultType="PubOrdercancel">
+        select
+          *
+        from
+          op_taxiordercancel
+        where
+          status = 1
+          <if test='null != orderno and "" != orderno'>
+              and orderno = #{orderno}
+          </if>
+          <if test='null != identifying and "" != identifying'>
+              and identifying = #{identifying}
+          </if>
+        limit 1
+    </select>
+
+    <update id="updateOpTaxiordercancelById" parameterType="PubOrdercancel">
+        insert into op_taxiordercancel(id, orderno, dutyparty, cancelamount, cancelnature, cancelreason, canceloperator, exemption, exemptionoperator,
+          cancelrule, identifying, createtime, updatetime, status)
+        values(#{id}, #{orderno}, #{dutyparty}, #{cancelamount}, #{cancelnature}, #{cancelreason}, #{canceloperator}, #{exemption}, #{exemptionoperator},
+          #{cancelrule}, #{identifying}, now(), now(), 1)
+        on duplicate key update
+          dutyparty = #{dutyparty}, cancelamount = #{cancelamount}, cancelnature = #{cancelnature}, cancelreason = #{cancelreason},
+          canceloperator = #{canceloperator}, exemption = #{exemption}, exemptionoperator = #{exemptionoperator}, cancelrule = #{cancelrule},
+          identifying = #{identifying}, updatetime = now()
+    </update>
+
+</mapper>

@@ -254,7 +254,7 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "取消费用(元)",
                 "mRender": function (data, type, full) {
-                    if(full.cancelnature == 2) {
+                    if(null == full.cancelnature || full.cancelnature == 2) {
                         return "/";
                     }
                     if(null == full.cancelamount) {
@@ -332,7 +332,7 @@ function manualOrderdataGrid() {
                 "sClass": "center",
                 "sTitle": "订单状态",
                 "mRender": function (data, type, full) {
-                    if(full.cancelnature == 2) {
+                    if(null == full.cancelnature || full.cancelnature == 2) {
                         return "已取消";
                     }
                     switch (full.paymentstatus) {

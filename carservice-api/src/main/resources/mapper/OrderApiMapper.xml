@@ -211,63 +211,59 @@
 	</select>
 	
 	<select id="getLastOrders" resultType="OrderInfoDetail" parameterType="String">
-		#获取用户最后5单是否同一城市(返回数超过2表示不再同一城市)
-		SELECT orders.* FROM 
+		#获取用户最后5单是否同一城市
+		SELECT lastfive.* FROM 
 		(
-			SELECT lastfive.* FROM 
 			(
-				(
-					SELECT
-						oo.orderno,
-						oo.oncity cityid,
-						oo.undertime
-					FROM
-						op_order oo,
-						pe_user pu
-					WHERE 1=1
-					AND oo.`status` = 1
-					AND pu.`status` = 1
-					AND oo.userid = pu.id
-					AND oo.orderstatus = '7'
-					AND pu.account = #{userphone}
-				)
-				UNION
-				(
-					SELECT
-						oo.orderno,
-						oo.oncity cityid,
-						oo.undertime
-					FROM
-						op_taxiorder oo,
-						pe_user pu
-					WHERE 1=1
-					AND oo.`status` = 1
-					AND pu.`status` = 1
-					AND oo.userid = pu.id
-					AND oo.orderstatus = '7'
-					AND pu.account = #{userphone}
-				)
-				UNION
-				(
-					SELECT
-						oo.orderno,
-						oo.oncity cityid,
-						oo.undertime
-					FROM
-						org_order oo,
-						org_user ou
-					WHERE 1=1
-					AND oo.`status` = 1
-					AND ou.`Status` = 1
-					AND oo.userid = ou.id
-					AND oo.orderstatus = '7'
-					AND ou.account = #{userphone}
-				)
-			) lastfive
-			ORDER BY lastfive.undertime DESC
-			LIMIT 5
-		) orders
-		GROUP BY orders.cityid
+				SELECT
+					oo.orderno,
+					oo.oncity cityid,
+					oo.undertime
+				FROM
+					op_order oo,
+					pe_user pu
+				WHERE 1=1
+				AND oo.`status` = 1
+				AND pu.`status` = 1
+				AND oo.userid = pu.id
+				AND oo.orderstatus = '7'
+				AND pu.account = #{userphone}
+			)
+			UNION
+			(
+				SELECT
+					oo.orderno,
+					oo.oncity cityid,
+					oo.undertime
+				FROM
+					op_taxiorder oo,
+					pe_user pu
+				WHERE 1=1
+				AND oo.`status` = 1
+				AND pu.`status` = 1
+				AND oo.userid = pu.id
+				AND oo.orderstatus = '7'
+				AND pu.account = #{userphone}
+			)
+			UNION
+			(
+				SELECT
+					oo.orderno,
+					oo.oncity cityid,
+					oo.undertime
+				FROM
+					org_order oo,
+					org_user ou
+				WHERE 1=1
+				AND oo.`status` = 1
+				AND ou.`Status` = 1
+				AND oo.userid = ou.id
+				AND oo.orderstatus = '7'
+				AND ou.account = #{userphone}
+			)
+		) lastfive
+		ORDER BY lastfive.undertime DESC
+		LIMIT 5
 	</select>
 	
 	<select id="getOpTaxiSendRule" resultType="OpTaxisendrules" parameterType="GetSendInfoParam">

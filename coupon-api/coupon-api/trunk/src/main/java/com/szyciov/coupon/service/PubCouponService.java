@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 
@@ -23,6 +25,7 @@ import com.szyciov.entity.coupon.PubCouponUse;
 import com.szyciov.entity.coupon.PubCouponUseCity;
 import com.szyciov.enums.CouponRuleTypeEnum;
 import com.szyciov.enums.DataStateEnum;
+import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.enums.coupon.CouponEnum;
 import com.szyciov.param.coupon.CouponExpenseParam;
 import com.szyciov.param.coupon.CouponReserveParam;
@@ -96,27 +99,52 @@ public class PubCouponService {
      * @param param
      */
     public synchronized boolean couponReserve(CouponReserveParam param)throws Exception{
+        //如果选择了抵用券才需要锁定
+        if(StringUtils.isNotEmpty(param.getCouponId())) {
+            //是否可使用
+            if (!this.canUse(param.getCouponId())) {
+                return false;
+            }
 
-        //是否可使用
-        if(!this.canUse(param.getCouponId())){
-            return false;
+            PubCouponUse pubCouponUse = new PubCouponUse();
+            pubCouponUse.setId(GUIDGenerator.newGUID());
+            pubCouponUse.setCouponidref(param.getCouponId());
+            pubCouponUse.setBillingorderid(param.getOrderId());
+            pubCouponUse.setCouponmoney(param.getMoney());
+            pubCouponUse.setDiscountamount(param.getMoney());
+            pubCouponUse.setUsestate(CouponEnum.LOCK_STATE_LOCKED.code);
+            pubCouponUse.setUsetype(param.getUseType());
+            pubCouponUse.setStatus(DataStateEnum.SUCCESS.code);
+            pubCouponUse.setCreater(param.getUserId());
+            pubCouponUse.setCreatetime(LocalDateTime.now());
+
+            couponUseDao.saveCouponUse(pubCouponUse);
+        }
+        return true;
+    }
+
+    /**
+     * 执行待生成抵用券
+     * @param userId
+     */
+    public void executeStayGenerate(String userId,String cityCode){
+        String keyStr = RedisKeyEnum.COUPON_STAY_SEND+userId;
+
+        Map<Object, Object> allMap = redisService.hGetAll(keyStr);
+
+        for(Entry<Object,Object> entry: allMap.entrySet()){
+            String key = (String)entry.getKey();
+            String val = (String)entry.getValue();
+            GenerateCouponParam couponParam = GsonUtil.fromJson(val,GenerateCouponParam.class);
+            if(StringUtils.isEmpty(couponParam.getCityCode())){
+                couponParam.setCityCode(cityCode);
+            }
+
+            //放入队列执行生成抵用券
+            senderCouponQueue.pushGenerateMsg(GsonUtil.toJson(couponParam));
+            redisService.hmDel(keyStr,key);
         }
 
-        PubCouponUse pubCouponUse = new PubCouponUse();
-        pubCouponUse.setId(GUIDGenerator.newGUID());
-        pubCouponUse.setCouponidref(param.getCouponId());
-        pubCouponUse.setBillingorderid(param.getOrderId());
-        pubCouponUse.setCouponmoney(param.getMoney());
-        pubCouponUse.setDiscountamount(param.getMoney());
-        pubCouponUse.setUsestate(CouponEnum.LOCK_STATE_LOCKED.code);
-        pubCouponUse.setUsetype(param.getUseType());
-        pubCouponUse.setStatus(DataStateEnum.SUCCESS.code);
-        pubCouponUse.setCreater(param.getUserId());
-        pubCouponUse.setCreatetime(LocalDateTime.now());
-
-        couponUseDao.saveCouponUse(pubCouponUse);
-
-        return true;
     }
 
 
@@ -126,17 +154,26 @@ public class PubCouponService {
      * @param param
      */
     public synchronized boolean couponExpense(CouponExpenseParam param)throws Exception{
+        //预约过的ID是否为空
+        boolean isOldCouponId = StringUtils.isEmpty(param.getOldCouponId());
+        //新的抵用券ID是否为空
+        boolean isCouponId = StringUtils.isEmpty(param.getCouponId());
+
 
         //如果预约过的抵用券ID为空，则需新增记录
-        if(StringUtils.isEmpty(param.getOldCouponId())){
+        if(isOldCouponId&&!isCouponId){
             if(!this.canUse(param.getCouponId())){
                 return false;
             }
             //保存使用信息记录
             this.saveCouponUseByExpense(param);
 
+        //如果预约过的抵用券ID不为空，新抵用券ID为空，则为解除预约
+        }else if(isCouponId&&!isOldCouponId){
+            //取消预约
+            this.unReserve(param);
         //两次抵用券ID不一致，则为支付时修改抵用券，支付同时需解除之前抵用券的预约
-        }else if(!param.getOldCouponId().equals(param.getCouponId())){
+        } if(!param.getOldCouponId().equals(param.getCouponId())){
             if(!this.canUse(param.getCouponId())){
                 return false;
             }
@@ -327,12 +364,12 @@ public class PubCouponService {
     }
 
     /**
-     * 自动生成抵用券
-     * @param jsonStr
+     * 自动生成抵用券  主要针对机构活动、个人发券
+     * @param dto
      */
-    public void aotuGenerateCoupon(String jsonStr){
+    public void aotuGenerateCoupon(PubCouponActivityDto dto){
 
-        PubCouponActivityDto dto = GsonUtil.fromJson(jsonStr,PubCouponActivityDto.class);
+        //PubCouponActivityDto dto = GsonUtil.fromJson(jsonStr,PubCouponActivityDto.class);
 
         if(CouponRuleTypeEnum.ACTIVITY.value.equals(dto.getSendruletype())){
             generateOrganCoupon(dto);

@@ -1750,7 +1750,7 @@
         select id, shortname text from le_leasescompany
         where id in
           (select belongleasecompany from org_order left join org_ordercancel on org_order.orderno = org_ordercancel.orderno
-            where org_order.status = 1 and org_ordercancel.status = 1 and org_order.companyid = #{leasescompanyid}
+            where org_order.status = 1 and org_order.companyid = #{leasescompanyid}
                   and org_order.usetype = #{usetype}
                 <if test='"2" == type'>
                     and org_order.orderstatus in ('2', '3', '4', '5', '6')

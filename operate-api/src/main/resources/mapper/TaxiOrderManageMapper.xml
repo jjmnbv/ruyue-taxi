@@ -30,7 +30,7 @@
 	<select id="getOpLabourTaxiOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
 		select
 			op_taxiorder.orderno, op_taxiorder.userid, pe_user.nickname, pe_user.account, op_taxiorder.passengers, op_taxiorder.passengerphone,
-            op_taxiorder.undertime, op_taxiorder.usetime, op_taxiorder.schedulefee,
+            op_taxiorder.undertime, op_taxiorder.usetime, op_taxiorder.schedulefee, op_taxiorder.ordertype, op_taxiorder.usetype,
             getCityStr(op_taxiorder.oncity) oncityname, op_taxiorder.oncity, op_taxiorder.onaddress,
             getCityStr(op_taxiorder.offcity) offcityname, op_taxiorder.offcity, op_taxiorder.offaddress
 		from
@@ -96,7 +96,7 @@
 	<!-- 当前订单 -->
 	<select id="getOpCurrentTaxiOrderListByQuery" resultType="map" parameterType="OrderManageQueryParam">
 		select
-			op_taxiorder.orderno, op_taxiorder.orderstatus, op_taxiorder.userid, pe_user.nickname, pe_user.account,
+			op_taxiorder.orderno, op_taxiorder.orderstatus, op_taxiorder.userid, pe_user.nickname, pe_user.account, op_taxiorder.ordertype, op_taxiorder.usetype,
 			op_taxiorder.passengers, op_taxiorder.passengerphone, op_taxiorder.driverid, op_taxiorder.usetime, op_taxiorder.meterrange,
 			(select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = op_taxiorder.driverid) drivername,
             getCityStr(op_taxiorder.oncity) oncityname, op_taxiorder.oncity, op_taxiorder.onaddress,
@@ -387,7 +387,7 @@
 			op_taxiorder.schedulefee, op_taxiorder.userid, pe_user.nickname, pe_user.account, op_taxiorder.passengers, op_taxiorder.passengerphone,
 			op_taxiorder.driverid, op_taxiorder.reviewstatus, op_taxiorder.orderstatus, op_taxiorder.usetime, op_taxiorder.shouldpayamount,
 			(select concat(pub_driver.name, " ", pub_driver.phone) from pub_driver where pub_driver.id = op_taxiorder.driverid) drivername,
-			getCityStr(op_taxiorder.oncity) oncityname, op_taxiorder.oncity, op_taxiorder.onaddress, op_taxiorder.expensetype,
+			getCityStr(op_taxiorder.oncity) oncityname, op_taxiorder.oncity, op_taxiorder.onaddress, op_taxiorder.expensetype, op_taxiorder.actualpayamount,
 			getCityStr(op_taxiorder.offcity) offcityname, op_taxiorder.offcity, op_taxiorder.offaddress, op_taxiordercancel.cancelamount,
 			(select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_taxiorder.belongleasecompany) belongcompanyname
 		from
@@ -782,16 +782,16 @@
 	<select id="getOpTaxiOrderByOrderno" resultType="map" parameterType="string">
 		select
 			op_taxiorder.*, pe_user.nickname, pe_user.account, pub_driver.name drivername, pub_driver.phone driverphone,
-			(select city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.oncity) oncityName, 
-			(select city from pub_cityaddr where pub_cityaddr.id = op_taxiorder.offcity) offcityName,
-			ifnull(tmp.price, 0) price,
-			case when op_taxiorder.driverid is null or op_taxiorder.driverid = '' then '/' else ifnull(pub_dictionary.text, '运管平台') end belongleasecompanytext
+			getCityStr(op_taxiorder.oncity) oncityName, getCityStr(op_taxiorder.offcity) offcityName,
+			ifnull(tmp.price, 0) price, op_taxiordercancel.cancelnature, op_taxiordercancel.cancelamount, pub_coupon_use.actualamount,
+			(select le_leasescompany.shortname from le_leasescompany where le_leasescompany.id = op_taxiorder.belongleasecompany) belongleasecompanytext
 		from
 			op_taxiorder left join pe_user on op_taxiorder.userid = pe_user.id
 			left join (select * from (select * from op_taxiorderreview order by createtime desc) review group by orderno) tmp
 				on op_taxiorder.orderno = tmp.orderno
 			left join pub_driver on op_taxiorder.driverid = pub_driver.id
-			left join pub_dictionary on pub_dictionary.id = op_taxiorder.belongleasecompany
+			left join op_taxiordercancel on op_taxiorder.orderno = op_taxiordercancel.orderno
+			left join pub_coupon_use on op_taxiorder.orderno = pub_coupon_use.billingorderid and pub_coupon_use.usestate = 1 and pub_coupon_use.usetype = 2
 		where
 			op_taxiorder.status = 1 and op_taxiorder.orderno = #{orderno} limit 1
 	</select>
@@ -909,21 +909,20 @@
 		select
 			pub_vehicle.id, pub_vehicle.driverid, pub_driver.workstatus, pub_driver.lat, pub_driver.lng, pub_driver.phone,
 			pub_driver.headportraitmin, pub_driver.headportraitmax, pub_vehicle.leasescompanyid, pub_driver.name, pub_driver.phone,
-			concat(
-				(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenoprovince = pub_dictionary.value and pub_dictionary.type = "车牌省"),
-				(select pub_dictionary.text from pub_dictionary where pub_vehicle.platenocity = pub_dictionary.value and pub_dictionary.type = "车牌市"),
-				pub_vehicle.plateno
-			) plateno
+			pub_vehicle.fullplateno plateno
 		from
 			pub_vehicle left join pub_driver on pub_vehicle.driverid = pub_driver.id
 			left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-			left join le_leasescompany on pub_vehicle.leasescompanyid = le_leasescompany.id and le_leasescompany.tocstate = '2'
+			left join pub_cooresource on pub_vehicle.id = pub_cooresource.vehicleid
+			left join pub_coooperate on pub_cooresource.coooperateid = pub_coooperate.id
 		where
 			pub_driver.jobstatus = '0' and pub_driver.workstatus in ("0", "1", "2") and pub_driver.vehicletype = '1' and pub_driver.boundstate = 1
 			and pub_vehicle.vehicletype = '1' and pub_vehicle.vehiclestatus = '0' and pub_vehicle.boundstate = '1'
 			and (pub_vehicle_scope.cityid = #{oncity} or pub_vehicle_scope.cityid = #{offcity})
 			and pub_driver.phone not in (select account from pe_user where pe_user.id = #{userId} and pe_user.status = 1)
-			and pub_driver.passworkstatus != "3" and pub_driver.passworkstatus != "4"
+			and pub_driver.passworkstatus != "3" and pub_driver.passworkstatus != "4" and ((pub_cooresource.status = 1 and pub_cooresource.enabled = 0
+			and pub_coooperate.status = 1 and pub_coooperate.cootype = 1 and pub_coooperate.servicetype = 1 and pub_coooperate.coostate = 1
+			and pub_cooresource.companyid = #{leasescompanyid}) or pub_vehicle.leasescompanyid = #{leasescompanyid})
 			<if test='null != isusenow and isusenow == 1'>
 				and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 1 and op_taxiorder.orderstatus in ('2', '3', '4', '6'))
 				and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 0 and op_taxiorder.orderstatus in ('2', '3', '4', '6')
@@ -972,42 +971,45 @@
 			from
 				pub_vehicle left join pub_driver on pub_vehicle.driverid = pub_driver.id
 				left join pub_vehicle_scope on pub_vehicle.id = pub_vehicle_scope.vehicleid
-				left join le_leasescompany on pub_vehicle.leasescompanyid = le_leasescompany.id and le_leasescompany.tocstate = '2'
+				left join pub_cooresource on pub_vehicle.id = pub_cooresource.vehicleid
+				left join pub_coooperate on pub_cooresource.coooperateid = pub_coooperate.id
 			where
-				pub_driver.jobstatus = '0' and pub_driver.workstatus = '0' and pub_driver.vehicletype = '1' and pub_driver.boundstate = 1
+				pub_driver.jobstatus = '0' and pub_driver.workstatus in ("0", "1", "2") and pub_driver.vehicletype = '1' and pub_driver.boundstate = 1
 				and pub_vehicle.vehicletype = '1' and pub_vehicle.vehiclestatus = '0' and pub_vehicle.boundstate = '1'
 				and (pub_vehicle_scope.cityid = #{oncity} or pub_vehicle_scope.cityid = #{offcity})
 				and pub_driver.phone not in (select account from pe_user where pe_user.id = #{userId} and pe_user.status = 1)
-				and pub_driver.passworkstatus != "3" and pub_driver.passworkstatus != "4"
+				and pub_driver.passworkstatus != "3" and pub_driver.passworkstatus != "4" and ((pub_cooresource.status = 1 and pub_cooresource.enabled = 0
+				and pub_coooperate.status = 1 and pub_coooperate.cootype = 1 and pub_coooperate.servicetype = 1 and pub_coooperate.coostate = 1
+				and pub_cooresource.companyid = #{leasescompanyid}) or pub_vehicle.leasescompanyid = #{leasescompanyid})
 				<if test='null != isusenow and isusenow == 1'>
 					and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 1 and op_taxiorder.orderstatus in ('2', '3', '4', '6'))
 					and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 0 and op_taxiorder.orderstatus in ('2', '3', '4', '6')
 					<![CDATA[
-						and op_taxiorder.usetime <= date_format(#{estimatedEndtime}, '%Y-%m-%d %H:%i')
-					]]>)
+							and op_taxiorder.usetime <= date_format(#{estimatedEndtime}, '%Y-%m-%d %H:%i')
+						]]>)
 				</if>
 				<if test='null != isusenow and isusenow == 0'>
 					and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 1 and op_taxiorder.orderstatus in ('2', '3', '4', '6')
 					<![CDATA[
-						and date_add(op_taxiorder.usetime, interval (1) hour) <= #{usetime}
-					]]>)
+							and date_add(op_taxiorder.usetime, interval (1) hour) <= #{usetime}
+						]]>)
 					and pub_driver.id not in (select pub_driver.id from op_taxiorder left join pub_driver on op_taxiorder.driverid = pub_driver.id where op_taxiorder.isusenow = 0 and op_taxiorder.orderstatus in ('2', '3', '4', '6')
 					<![CDATA[
-						and date_format(op_taxiorder.usetime, '%Y-%m-%d') = date_format(#{usetime}, '%Y-%m-%d')
-					]]>)
+							and date_format(op_taxiorder.usetime, '%Y-%m-%d') = date_format(#{usetime}, '%Y-%m-%d')
+						]]>)
 				</if>
 				<if test="driverState != null and driverState != ''">
 					and pub_driver.workstatus = #{driverState}
 				</if>
 				<if test="minLat != null and minLat != '' and maxLat != null and maxLat != ''">
 					<![CDATA[
-						and pub_driver.lat >= ${minLat} and pub_driver.lat <= ${maxLat}
-					]]>
+							and pub_driver.lat >= ${minLat} and pub_driver.lat <= ${maxLat}
+						]]>
 				</if>
 				<if test="minLon != null and minLon != '' and maxLon != null and maxLon != ''">
 					<![CDATA[
-						and pub_driver.lng >= ${minLon} and pub_driver.lng <= ${maxLon}
-					]]>
+							and pub_driver.lng >= ${minLon} and pub_driver.lng <= ${maxLon}
+						]]>
 				</if>
 				<if test='null != vehicleid and "" != vehicleid'>
 					and pub_vehicle.id = #{vehicleid}

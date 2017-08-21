@@ -1,8 +1,8 @@
 package com.szyciov.supervision.aop;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.szyciov.supervision.util.BasicRequest;
-import com.szyciov.supervision.util.EntityInfoList;
+import com.szyciov.supervision.api.request.BasicRequest;
+import com.szyciov.supervision.api.responce.EntityInfoList;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
 import org.aspectj.lang.JoinPoint;
@@ -50,7 +50,8 @@ public class LogAspect {
         Object[] args = joinPoint.getArgs();
         //TODO 日志记录
 		EntityInfoList result = getResult(args);
-		logger.info("请求后置拦截,request:{}, isAllSuccess:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)), result.isAllSuccess(), JSONUtil.toJackson(result));
+		if(result!=null)
+		    logger.info("请求后置拦截,request:{}, isAllSuccess:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)), result.isAllSuccess(), JSONUtil.toJackson(result));
 
     }
 

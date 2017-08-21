@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 @Service("activityGenerateCoupon")
 public class ActivityGenerateCoupon extends AbstractGenerateCoupon {
 
-    private TemplateHelper templateHelper = new TemplateHelper();
 
 
     @Override
@@ -45,6 +44,12 @@ public class ActivityGenerateCoupon extends AbstractGenerateCoupon {
             return LocalDate.now();
         }
         return super.getCouponEndDate(activity);
+    }
+
+    @Override
+    protected boolean stayGenerate(PubCouponActivityDto activity, String userId, GenerateCouponParam param) {
+
+        return false;
     }
 }
  

@@ -313,55 +313,7 @@ function renderPageByOrder(order) {
         pricecopy = JSON.parse(order.reviewpricecopy);
         reviewtype = order.reviewtype;
     }
-    if(order.orderstatus != 8) {
-        $("#cffytd").text("");
-        if(order.paymentstatus == "0") {
-            $("#sfjeDetailTitle").text("应付金额");
-        }
 
-        var actualamount = order.actualamount;
-        if(null == order.actualamount || order.actualamount == 0) {
-            actualamount = 0;
-        }
-        $("#sfjeDetail").text((parseInt(pricecopy.cost) - parseInt(actualamount)) + "元");
-        if(pricecopy.premiumrate > 1) {
-            $("#xcfyDetailTitle").text("行程费用(溢价" + pricecopy.premiumrate + "倍)");
-        }
-        $("#xcfyDetail").text(pricecopy.cost + "元");
-        if(reviewtype == 1) {
-            $("#qbjDetail").text(pricecopy.startprice + "元");
-            $("#scDetail").text(convertMinute(showtime));
-            $("#scfDetail").text(timecost + "元");
-            $("#lcDetail").text(mileage + "公里");
-            $("#lcfDetail").text(rangecost + "元");
-        } else {
-            $("#qbjDetail").text("/元");
-            $("#scDetail").text("/分钟");
-            $("#scfDetail").text("/元");
-            $("#lcDetail").text("/公里");
-            $("#lcfDetail").text("/元");
-        }
-        if(null == order.actualamount || order.actualamount == 0) {
-            $("#qydkDetail").text("0元");
-        } else {
-            $("#qydkDetail").text("-" + order.actualamount + "元");
-        }
-        $("#qbjRule").text(pricecopy.startprice + "元");
-        $("#lcfRule").text(pricecopy.rangeprice + "元/公里");
-        $("#sjbtRule").text(pricecopy.timeprice + "元/分钟");
-        $("#yjsdRule").text(pricecopy.nightstarttime + "-" + pricecopy.nightendtime);
-        $("#yjfRule").text(pricecopy.nighteprice + "元/公里");
-        if(order.isusenow == 0) {
-            var reversefee = 0;
-            if(null != pricecopy.reversefee && "" != pricecopy.reversefee) {
-                reversefee = pricecopy.reversefee;
-            }
-            $("#yrfRule").text(reversefee + "元");
-            $("#yrfRuleDiv").show();
-        } else {
-            $("#yrfRuleDiv").hide();
-        }
-    }
     //实时金额
     var cost = order.cost;
     if(order.orderstatus == 7) {
@@ -374,6 +326,56 @@ function renderPageByOrder(order) {
     } else {
         $("#ssje").text("/");
     }
+
+	if(order.orderstatus != 8) {
+		$("#cffytd").text("");
+		if(order.paymentstatus == "0") {
+			$("#sfjeDetailTitle").text("应付金额");
+		}
+
+		var actualamount = order.actualamount;
+		if(null == order.actualamount || order.actualamount == 0) {
+			actualamount = 0;
+		}
+		$("#sfjeDetail").text((parseInt(cost) - parseInt(actualamount)) + "元");
+		if(pricecopy.premiumrate > 1) {
+			$("#xcfyDetailTitle").text("行程费用(溢价" + pricecopy.premiumrate + "倍)");
+		}
+		$("#xcfyDetail").text(cost + "元");
+		if(reviewtype == 1) {
+			$("#qbjDetail").text(pricecopy.startprice + "元");
+			$("#scDetail").text(convertMinute(showtime));
+			$("#scfDetail").text(timecost + "元");
+			$("#lcDetail").text(mileage + "公里");
+			$("#lcfDetail").text(rangecost + "元");
+		} else {
+			$("#qbjDetail").text("/元");
+			$("#scDetail").text("/分钟");
+			$("#scfDetail").text("/元");
+			$("#lcDetail").text("/公里");
+			$("#lcfDetail").text("/元");
+		}
+		if(null == order.actualamount || order.actualamount == 0) {
+			$("#qydkDetail").text("0元");
+		} else {
+			$("#qydkDetail").text("-" + order.actualamount + "元");
+		}
+		$("#qbjRule").text(pricecopy.startprice + "元");
+		$("#lcfRule").text(pricecopy.rangeprice + "元/公里");
+		$("#sjbtRule").text(pricecopy.timeprice + "元/分钟");
+		$("#yjsdRule").text(pricecopy.nightstarttime + "-" + pricecopy.nightendtime);
+		$("#yjfRule").text(pricecopy.nighteprice + "元/公里");
+		if(order.isusenow == 0) {
+			var reversefee = 0;
+			if(null != pricecopy.reversefee && "" != pricecopy.reversefee) {
+				reversefee = pricecopy.reversefee;
+			}
+			$("#yrfRule").text(reversefee + "元");
+			$("#yrfRuleDiv").show();
+		} else {
+			$("#yrfRuleDiv").hide();
+		}
+	}
 	
 	//下单时间
 	var xdsjHtmlArr = [];

@@ -101,6 +101,11 @@ public class OrderService extends BaseService{
 		}else if (OrderState.CANCEL.state.equals(oid.getStatus())) {
 			json.put("status", Retcode.ORDERISCANCEL.code);
 			json.put("message", Retcode.ORDERISCANCEL.msg);
+		}else if(OrderState.SERVICEDONE.state.equals(oid.getStatus())){
+			//如果订单已经是完成状态,都返回已完成(无论是客服完成还是司机完成)
+//			result.put("order", order);
+			json.put("status", Retcode.ORDER_ALREADY_END.code);
+			json.put("message", Retcode.ORDER_ALREADY_END.msg);
 		}else{
 			json.put("order",oid);
 			json.put("status", Retcode.OK.code);

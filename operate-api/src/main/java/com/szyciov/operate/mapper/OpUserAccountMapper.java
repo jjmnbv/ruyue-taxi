@@ -3,6 +3,7 @@ package com.szyciov.operate.mapper;
 import java.util.List;
 import java.util.Map;
 
+import com.szyciov.entity.coupon.CouponDetail;
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
 import com.szyciov.op.entity.PeUser;
@@ -27,5 +28,13 @@ public interface OpUserAccountMapper {
 	
 	void admoneyOk(PeUser peUser);
 	void addPeuserexpenses(PeUserExpenses peUserExpenses);
-     void insertAccount(PeUseraccount peUseraccount);
+    void insertAccount(PeUseraccount peUseraccount);
+     
+    List<CouponDetail> getCouponDetailListByQuery(OrganUserAccountQueryParam organUserAccountQueryParam);
+    
+    int getCouponDetailListCountByQuery(OrganUserAccountQueryParam organUserAccountQueryParam);
+    
+    List<String> getCouponUseCityById(String couponid);
+    
+    List<CouponDetail> getCouponDetailListExport(OrganUserAccountQueryParam organUserAccountQueryParam);
 }

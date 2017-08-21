@@ -295,11 +295,10 @@ function initSearch() {
  * 取消订单
  */
 function cancelOrder(orderno, ordertype, usetype) {
+    showObjectOnForm("cancelpartyForm", null);
     $("#ordernoHide").val(orderno);
     $("#ordertypeHide").val(ordertype);
     $("#usetypeHide").val(usetype);
-
-    showObjectOnForm("cancelpartyForm", null);
     showCancelreason();
     var editForm = $("#cancelpartyForm").validate();
     editForm.resetForm();
@@ -434,7 +433,7 @@ function save(){
         data: JSON.stringify(data),
         contentType: "application/json; charset=utf-8",
         async: false,
-        success: function (result) {debugger
+        success: function (result) {
             if (result.status == "success") {
                 toastr.success(result.message, "提示");
             } else {
@@ -466,9 +465,12 @@ function endOrder(orderno) {
             if (result.status == 0) {
                 toastr.success("操作成功", "提示");
                 dataGrid._fnReDraw();
+            } else if(result.status == 2007) {
+                toastr.error("该订单行程已结束", "提示");
             } else {
                 toastr.error(result.message, "提示");
             }
+            dataGrid._fnReDraw();
         }
     });
 }
@@ -518,6 +520,7 @@ function showCancelreason() {
         }
     }
     $("#cancelreason").html(html);
+    resetCancelForm();
 }
 
 /**
@@ -536,4 +539,13 @@ function showDutyparty() {
     }
     showCancelreason();
     $("#cancelreason").val(cancelreason);
+    resetCancelForm();
+}
+
+/**
+ * 表单校验重置
+ */
+function resetCancelForm() {
+    var form = $("#cancelpartyForm").validate();
+    form.resetForm();
 }

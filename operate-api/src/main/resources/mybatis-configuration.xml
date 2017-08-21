@@ -194,5 +194,10 @@
 		<typeAlias type="com.szyciov.dto.pubOrderCancelRule.PubOrderCancelRuleHistory" alias="PubOrderCancelRuleHistory"/>
         <typeAlias type="com.szyciov.driver.entity.OrderInfoDetail" alias="OrderInfoDetail"/>
         <typeAlias type="com.szyciov.entity.PubOrderCancel" alias="PubOrderCancel"/>
+        
+        <typeAlias type="com.szyciov.entity.coupon.CouponDetail" alias="CouponDetail"/>
+                
+         <typeAlias type="com.szyciov.op.param.PlatformOrderManagementParam" alias="PlatformOrderManagementParam"/>
+        
 	</typeAliases>
 </configuration>

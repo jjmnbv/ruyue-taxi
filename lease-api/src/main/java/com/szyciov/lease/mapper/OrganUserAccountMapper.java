@@ -32,4 +32,6 @@ public interface OrganUserAccountMapper {
 	String getBusinessCitys(String lecompanyid);
 
 	List<String> getActivitysInBusinessCity(List<OrganUserCouponInfo> coupons);
+
+	List<OrganUserCouponInfo> exportCouponData(OrganUserCouponQueryParam queryParam);
 }

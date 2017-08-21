@@ -1,27 +1,30 @@
 package com.szyciov.supervision.api;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.supervision.enums.CommandEnum;
+import com.supervision.enums.InterfaceType;
+import com.szyciov.supervision.api.request.BasicRequest;
+import com.szyciov.supervision.api.responce.HttpContent;
+import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.szyciov.supervision.api.order.DriverOffWork;
-import com.szyciov.supervision.api.order.DriverOnWork;
-import com.szyciov.supervision.api.order.OrderBreach;
-import com.szyciov.supervision.api.order.OrderCancel;
-import com.szyciov.supervision.api.order.OrderInitiation;
-import com.szyciov.supervision.api.order.OrderSuccess;
-import com.szyciov.supervision.api.order.OrderSupplements;
-import com.szyciov.supervision.api.order.OrderSupplementsRequest;
+import com.szyciov.supervision.api.dto.order.DriverOffWork;
+import com.szyciov.supervision.api.dto.order.DriverOnWork;
+import com.szyciov.supervision.api.dto.order.OrderBreach;
+import com.szyciov.supervision.api.dto.order.OrderCancel;
+import com.szyciov.supervision.api.dto.order.OrderInitiation;
+import com.szyciov.supervision.api.dto.order.OrderSuccess;
+import com.szyciov.supervision.api.dto.order.OrderSupplements;
+import com.szyciov.supervision.api.dto.order.OrderSupplementsRequest;
 import com.szyciov.supervision.config.CacheHelper;
-import com.szyciov.supervision.enums.CommandEnum;
-import com.szyciov.supervision.enums.InterfaceType;
 import com.szyciov.supervision.enums.RequestType;
-import com.szyciov.supervision.util.BasicRequest;
-import com.szyciov.supervision.util.EntityInfoList;
-import com.szyciov.supervision.util.GzwycApi;
-import com.szyciov.supervision.util.HttpContent;
+
+import com.szyciov.supervision.api.responce.EntityInfoList;
+import com.szyciov.supervision.util.GzwycApiUtil;
 import com.xunxintech.ruyue.coach.io.json.JSONUtil;
 
 /**
@@ -33,7 +36,7 @@ public class OrderServiceTest extends ApiServiceTest {
      *3.3.1	订单发起(DDFQ) 实时
      */
     @Test
-    public void testOrderInitiation(){
+    public void testOrderInitiation() throws IOException {
         List<OrderInitiation> list=new ArrayList<OrderInitiation>();
         OrderInitiation orderInitiation=new OrderInitiation();
         orderInitiation.setAddress("440100");
@@ -70,14 +73,18 @@ public class OrderServiceTest extends ApiServiceTest {
         orderInitiation.setDepartCity("440110");
         orderInitiation.setDestCity("440400");
         list.add(orderInitiation);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
+
     }
 
     /***
      * 3.3.2	订单成功(DDCG) 实时
      */
     @Test
-    public void testOrderSuccess(){
+    public void testOrderSuccess() throws IOException {
         List<OrderSuccess> list=new ArrayList<OrderSuccess>();
         OrderSuccess orderSuccess=new OrderSuccess();
         orderSuccess.setAddress("440100");
@@ -108,14 +115,17 @@ public class OrderServiceTest extends ApiServiceTest {
         orderSuccess.setResStatus("响应");
         orderSuccess.setResTime("154545454");
         list.add(orderSuccess);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
     }
 
     /**
      * 3.3.3	订单撤销(DDCX) 实时
      */
     @Test
-    public void testOrderCancel(){
+    public void testOrderCancel() throws IOException {
         List<OrderCancel> list=new ArrayList<OrderCancel>();
         OrderCancel orderCancel=new  OrderCancel();
         orderCancel.setAddress("440100");
@@ -126,7 +136,10 @@ public class OrderServiceTest extends ApiServiceTest {
         orderCancel.setCancelTypeCode("1");
         orderCancel.setCancelReason("撤销原因");
         list.add(orderCancel);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
     }
 
     /**
@@ -134,7 +147,8 @@ public class OrderServiceTest extends ApiServiceTest {
      * 3.3.4	订单补传请求*(DDBCQQ)
      *
      */
-    @Autowired GzwycApi gzwycApi;
+    @Autowired
+    GzwycApiUtil gzwycApiUtil;
 
     @Test
     public void testOrderSupplementsRequest() throws Exception {
@@ -153,7 +167,7 @@ public class OrderServiceTest extends ApiServiceTest {
         InterfaceType interfaceType = list.get(0).getApiType();
         BasicRequest req = new BasicRequest(result, interfaceType, commandEnum, RequestType.REQ, token);
 //http://120.76.199.119:8098/api/order/supplements
-        HttpContent httpContent=gzwycApi.sendMsg("http://120.76.199.119:8098/api/order/supplements",req,false);
+        HttpContent httpContent= gzwycApiUtil.sendMsg("http://120.76.199.119:8098/api/order/supplements",req,false);
         System.out.println("响应内容："+httpContent);
 
 
@@ -163,7 +177,7 @@ public class OrderServiceTest extends ApiServiceTest {
      * 3.3.5	订单补传*(DDBC) 实时
      */
     @Test
-    public void testOrderSupplements(){
+    public void testOrderSupplements() throws IOException {
         List<OrderSupplements> list=new ArrayList<OrderSupplements>();
         OrderSupplements orderSupplements=new OrderSupplements();
         orderSupplements.setAddress("440100");
@@ -210,14 +224,17 @@ public class OrderServiceTest extends ApiServiceTest {
 
 
         list.add(orderSupplements);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
     }
 
     /**
      * 3.3.6	订单违约*(DDWY) 实时
      */
     @Test
-    public void  testOrderBreach(){
+    public void  testOrderBreach() throws IOException {
         List<OrderBreach> list=new ArrayList<OrderBreach>();
         OrderBreach orderBreach=new OrderBreach();
         orderBreach.setAddress("440100");
@@ -230,14 +247,17 @@ public class OrderServiceTest extends ApiServiceTest {
         orderBreach.setPsgTel("88888888");
         orderBreach.setBreakTime("20170705121415");
         list.add(orderBreach);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
     }
 
     /**
      * 3.3.7	驾驶员上班*(JSYSB) 实时
      */
     @Test
-    public void testDriverOnWork(){
+    public void testDriverOnWork() throws IOException {
         List<DriverOnWork> list=new ArrayList<DriverOnWork>();
         DriverOnWork driverOnWork=new  DriverOnWork();
         driverOnWork.setAddress("440100");
@@ -252,15 +272,17 @@ public class OrderServiceTest extends ApiServiceTest {
         driverOnWork.setOnWorkTime("20170714112526");
 
         list.add(driverOnWork);
-        messageSender.send(list);
-
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
     }
 
     /**
      * 3.3.8	驾驶员下班*(JSYXB) 实时
      */
     @Test
-    public void testDriverOffWork(){
+    public void testDriverOffWork() throws IOException {
         List<DriverOffWork> list=new ArrayList<DriverOffWork>();
         DriverOffWork driverOffWork=new  DriverOffWork();
         driverOffWork.setAddress("440100");
@@ -280,7 +302,11 @@ public class OrderServiceTest extends ApiServiceTest {
         driverOffWork.setFactPrice("1230");
 
         list.add(driverOffWork);
-        messageSender.send(list);
+        HttpContent httpContent=baseApiService.sendApi(list);
+        System.out.println(httpContent);
+//		如果状态码不是200，测试失败
+        Assert.assertEquals(httpContent.getStatus(),200);
+
     }
 
 

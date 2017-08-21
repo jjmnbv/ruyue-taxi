@@ -384,21 +384,21 @@ function saveCancelparty(){
         contentType: "application/json; charset=utf-8",
         async: false,
         success: function (result) {
+            var url;
+            if(orderObj.type == "1") {
+                url = $("#baseUrl").val() + "OrderManage/PersonOrderIndex";
+            } else {
+                url = $("#baseUrl").val() + "OrderManage/PersonCurrentOrderIndex";
+            }
+            toastr.options.onHidden = function() {
+                window.location.href = url;
+            }
             if (result.status == "success") {
-                $("#cancelpartyFormDiv").hide();
                 toastr.success(result.message, "提示");
-                var url;
-                if(orderObj.type == "1") {
-                    url = $("#baseUrl").val() + "OrderManage/PersonOrderIndex";
-                } else {
-                    url = $("#baseUrl").val() + "OrderManage/PersonCurrentOrderIndex";
-                }
-                toastr.options.onHidden = function() {
-                    window.location.href = url;
-                }
             } else {
                 toastr.error(result.message, "提示");
             }
+            $("#cancelpartyFormDiv").hide();
         }
     });
 }
@@ -448,6 +448,7 @@ function showCancelreason() {
         }
     }
     $("#cancelreason").html(html);
+    resetCancelForm();
 }
 
 /**
@@ -466,6 +467,15 @@ function showDutyparty() {
     }
     showCancelreason();
     $("#cancelreason").val(cancelreason);
+    resetCancelForm();
+}
+
+/**
+ * 表单校验重置
+ */
+function resetCancelForm() {
+    var form = $("#cancelpartyForm").validate();
+    form.resetForm();
 }
 
 /**

@@ -109,7 +109,7 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-					if(full.orderstatus == '7') {
+					if(full.orderstatus == "7" && full.reviewstatus != "1" && full.paymentstatus != "9" && ((full.actualpayamount == 0 && full.reviewstatus != "2") || full.actualpayamount > 0)) {
 						return "<button type='button' class='SSbtn red' onclick='applyReview(\"" + full.orderno + "\")'><i class='fa fa-paste'></i>申请复核</button>";
 					} else {
 						return "";
@@ -355,12 +355,11 @@ function search() {
  * @param {} orderno
  */
 function applyReview(orderno) {
-	$("#orderno").val(orderno);
-	
 	$("#cancelpartyFormDiv").show();
-	
+
 	showObjectOnForm("cancelpartyForm", null);
-	
+	$("#ordernoHide").val(orderno);
+
 	var editForm = $("#cancelpartyForm").validate();
 	editForm.resetForm();
 	editForm.reset();
@@ -372,9 +371,9 @@ function applyReview(orderno) {
 function save() {
 	var form = $("#cancelpartyForm");
 	if(!form.valid()) return;
-	
+
 	var formData = {
-		orderno: $("#orderno").val(),
+		orderno: $("#ordernoHide").val(),
 		orderreason: $("#reasonTextarea").val(),
 		reviewperson: $("#reviewpersonAgain").val()
 	}
@@ -390,14 +389,14 @@ function save() {
 			if (result.status == "success") {
 				$("#cancelpartyFormDiv").hide();
 				toastr.options.onHidden = function() {
-            		window.location.href = $("#baseUrl").val() + "TaxiOrderManage/AbnormalOrderIndex";
-            	}
-            	toastr.success(message, "提示");
+					window.location.href = $("#baseUrl").val() + "TaxiOrderManage/AbnormalOrderIndex";
+				}
+				toastr.success(message, "提示");
 			} else {
-            	toastr.error(message, "提示");
-            	$("#cancelpartyFormDiv").hide();
+				toastr.error(message, "提示");
+				$("#cancelpartyFormDiv").hide();
 			}
-			
+
 			dataGrid._fnReDraw();
 		}
 	});

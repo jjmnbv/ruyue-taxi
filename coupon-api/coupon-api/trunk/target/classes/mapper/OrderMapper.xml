@@ -14,6 +14,7 @@
         t.endtime BETWEEN #{startDt} AND #{endDt}
         <if test="tbName=='org_order'">
             and t.companyid = #{companyid}
+            and exists (select 1 from org_user a where a.id = t.userid and a.status ='1')
         </if>
         and t.oncity = #{cityCode}
         and t.orderstatus = '7'
@@ -30,6 +31,7 @@
         and t.oncity = #{cityCode}
         <if test="tbName=='org_order'">
             and t.companyid = #{companyid}
+            and exists (select 1 from org_user a where a.id = t.userid and a.status ='1')
         </if>
         and t.userid = #{userId} and t.`status` = '1'
     </select>
@@ -45,6 +47,7 @@
           and t.oncity = #{cityCode}
             <if test="tbName=='org_order'">
                 and t.companyid = #{companyid}
+                and exists (select 1 from org_user a where a.id = t.userid and a.status ='1')
             </if>
           and t.`status` = '1'
         group by companyid,userid
@@ -60,6 +63,7 @@
           and t.oncity = #{cityCode}
           <if test="tbName=='org_order'">
             and t.companyid = #{companyid}
+            and exists (select 1 from org_user a where a.id = t.userid and a.status ='1')
           </if>
           and t.orderstatus = '7'
         group by companyid,userid
@@ -78,6 +82,7 @@
         and t.orderstatus = '7'
         <if test="tbName=='org_order'">
             and t.companyid = #{companyid}
+            and exists (select 1 from org_user a where a.id = t.userid and a.status ='1')
         </if>
         group by userid,oncity
     </select>

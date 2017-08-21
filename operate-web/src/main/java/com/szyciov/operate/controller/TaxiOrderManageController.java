@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.szyciov.entity.CancelParty;
-import com.szyciov.enums.OrderEnum;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxiOrderReview;
@@ -153,13 +153,11 @@ public class TaxiOrderManageController extends BaseController {
 	 */
 	@RequestMapping(value = "/TaxiOrderManage/CancelOpTaxiOrder")
 	@ResponseBody
-	public Map<String, Object> cancelOpTaxiOrder(@RequestParam String orderno, HttpServletRequest request) {
+	public Map<String, Object> cancelOpTaxiOrder(@RequestBody OrderApiParam param, HttpServletRequest request) {
 		String userToken = getUserToken(request);
-		OrderApiParam param = new OrderApiParam();
-		param.setOrderno(orderno);
+		OpUser user = getLoginOpUser(request);
+		param.setCanceloperator(user.getId());
 		param.setOrderstate("8");
-		param.setUsetype(OrderEnum.USETYPE_PERSONAL.code);
-		param.setOrdertype(OrderEnum.ORDERTYPE_TAXI.code);
 		param.setReqsrc(CancelParty.OPERATOR.code);
 		return orderService.cancelOpTaxiOrder(param, userToken);
 	}
@@ -501,7 +499,7 @@ public class TaxiOrderManageController extends BaseController {
     public List<Map<String, Object>> getBelongCompanySelect(
 		@RequestParam(value = "belongleasecompany", required = false) String belongleasecompany,
 		@RequestParam(value = "type") String type,
-		HttpServletRequest request, TaxiOrderManageService taxiOrderManageService) {
+		HttpServletRequest request) {
         String userToken = getUserToken(request);
         OpUser user = getLoginOpUser(request);
         OrderManageQueryParam queryParam = new OrderManageQueryParam();
@@ -509,6 +507,34 @@ public class TaxiOrderManageController extends BaseController {
         queryParam.setType(type);
         queryParam.setOpUserId(user.getId());
         queryParam.setUsertype(user.getUsertype());
-        return taxiOrderManageService.getBelongCompanySelect(queryParam, userToken);
+        return orderService.getBelongCompanySelect(queryParam, userToken);
     }
+
+	/**
+	 * 查询订单取消规则
+	 * @param param
+	 * @return
+	 */
+	@RequestMapping(value = "TaxiOrderManage/GetCancelPriceDetail")
+	@ResponseBody
+	public Map<String, Object> getCancelPriceDetail(@RequestBody Map<String, String> param, HttpServletRequest request) {
+		String userToken = getUserToken(request);
+		return orderService.getCancelPriceDetail(param, userToken);
+	}
+
+    /**
+     * 订单免责处理
+     * @param object
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "TaxiOrderManage/ExemptionOrder")
+    @ResponseBody
+    public Map<String, Object> exemptionOrder(@RequestBody PubOrderCancel object, HttpServletRequest request) {
+        String userToken = getUserToken(request);
+        OpUser user = getLoginOpUser(request);
+        object.setExemptionoperator(user.getId());
+        return orderService.exemptionOrder(object, userToken);
+    }
+
 }

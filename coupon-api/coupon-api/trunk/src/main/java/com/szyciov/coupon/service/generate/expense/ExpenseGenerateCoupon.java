@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 
 import com.szyciov.coupon.dao.OrderDao;
+import com.szyciov.coupon.dto.CouponHavedDTO;
 import com.szyciov.coupon.dto.CouponOrderCacheDTO;
 import com.szyciov.coupon.dto.GenerateCouponDTO;
 import com.szyciov.coupon.param.OrderQueryParam;
@@ -194,7 +195,7 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
     @Override
     protected boolean validHaved(PubCouponActivityDto activity, String userId) {
         String key = RedisKeyEnum.COUPON_HAVE.code+activity.getId();
-        String countStr = redisService.hmGet(key,userId);
+        String resultStr = redisService.hmGet(key,userId);
 
         //获取活动发放开始时间
         LocalDate startDt = LocalDate.parse(activity.getSendstarttime());
@@ -203,17 +204,27 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
         //因活动有效截止日期为截止日期的23:59:59，则应在时间差上+1天
         long days = startDt.until(endDt,DAYS)+1;
 
-        if(StringUtils.isNotEmpty(countStr)) {
-            Integer count = Integer.parseInt(countStr);
-            //消费模式下，可获得券的最大数量为活动发放天数
-            if (count != null && count >= days) {
+        if(StringUtils.isNotEmpty(resultStr)) {
+            CouponHavedDTO havedDTO = GsonUtil.fromJson(resultStr,CouponHavedDTO.class);
+            //消费模式下，可获得券的最大数量为活动发放天数，则不继续发券
+            if(havedDTO.getAllCount()>=days){
                 return false;
+            }
+            //如果时间等于当天，且次数大于等于1，则为已领取，不继续发券
+            if(LocalDate.now().equals(havedDTO.getNowDate())){
+                if(havedDTO.getNowlCount()>=1){
+                    return false;
+                }
             }
         }
         return true;
     }
 
+    @Override
+    protected boolean stayGenerate(PubCouponActivityDto activity, String userId, GenerateCouponParam param) {
 
+        return false;
+    }
 
     private boolean validOrderMoney(PubCouponRule rule,
                                        OrderQueryParam param1,
@@ -245,6 +256,7 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
                                     OrderQueryParam param1,
                                     PubCouponActivityDto activity){
 
+        System.out.println("-----------------验证周期金额和开始-------------------");
         boolean isValid = false;
         String userId = param1.getUserId();
 
@@ -261,7 +273,7 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
             if(!dto.getDate().equals(LocalDate.now().minusDays(BEFORE_NOW_DAYS))){
                 redisService.hmDel(key,userId);
                 //如果缓存中的周期>=规则设置的周期，则需要重新查询数据库
-            }if(dto.getCycleday()>=rule.getCycleday()){
+            }else if(dto.getCycleday()>=rule.getCycleday()){
                 param1.setStartDt(this.getStartDt(activity,rule));
             }else{
                 sumCache = dto.getMoney();
@@ -328,20 +340,26 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
      * @param param1        参数
      * @param activity      活动
      */
-    private void savePouconOrderMoneyOnce(PubCouponRule rule,
-                                       OrderQueryParam param1,
-                                       PubCouponActivityDto activity){
-
-
-        boolean isSaved = false;
-        //从数据库获取订单次数
-        List<Double> moneyList = orderDao.listOrderMoney(param1);
-        if(moneyList!=null && moneyList.size()>0){
-            for (Double money : moneyList) {
-                if(money!=null) {
-                    if (validOrderMoney(rule, money)&&!isSaved) {
-                        isSaved = true;
-                        this.saveMoneyCoupon(activity, param1.getUserId(),param1.getUserPhone());
+    private void savePouconOrderMoneyOnce(final PubCouponRule rule,
+                                       final OrderQueryParam param1,
+                                       final PubCouponActivityDto activity){
+        //临时DTO
+        PubCouponActivityDto activityDtoTmp = new PubCouponActivityDto();
+        activityDtoTmp.setId(activity.getId()+"_moneyOnce");
+        activityDtoTmp.setSendstarttime(activity.getSendstarttime());
+        activityDtoTmp.setSendendtime(activity.getSendendtime());
+        //如果验证通过
+        if(this.validHaved(activityDtoTmp,param1.getUserId())) {
+            //如果当前时间等于存储时间，或没有保存过，则进行保存
+            //从数据库获取订单次数
+            List<Double> moneyList = orderDao.listOrderMoney(param1);
+            if (moneyList != null && moneyList.size() > 0) {
+                for (Double money : moneyList) {
+                    if (money != null) {
+                        //如果金额条件满足
+                        if (validOrderMoney(rule, money)) {
+                            this.saveMoneyCoupon(activity, param1.getUserId(), param1.getUserPhone(),activityDtoTmp.getId());
+                        }
                     }
                 }
             }
@@ -369,11 +387,10 @@ public class ExpenseGenerateCoupon extends AbstractGenerateCoupon {
      * @param userId
      */
     private void saveMoneyCoupon(PubCouponActivityDto activity,
-                                 String userId,String phone){
-
+                                 String userId,String phone,String tmpId){
         PubCoupon coupon = this.savePubCoupon(activity,userId);
         this.savePubCouponActivityUseCity(activity.getCitys(),coupon.getId());
-        this.saveHaved(activity.getId(),userId,activity.getSendendtime());
+        this.saveHaved(tmpId,userId,activity.getSendendtime());
         GenerateCouponDTO dto = this.createDto(coupon);
         super.phshMessage(dto,phone,userId);
     }

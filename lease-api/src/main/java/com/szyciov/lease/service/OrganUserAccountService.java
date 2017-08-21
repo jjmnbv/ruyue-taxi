@@ -124,7 +124,7 @@ public class OrganUserAccountService {
 	}
 
 	public List<OrganUserCouponInfo> exportCouponData(OrganUserCouponQueryParam queryParam) {
-		List<OrganUserCouponInfo> coupons=dao.getOrganUserCouponInfoList(queryParam);
+		List<OrganUserCouponInfo> coupons=dao.exportCouponData(queryParam);
 		//对于抵扣券活动使用区域在业务城市的记录，需要填入
 		//因为只是统计机构客户，所以只查询网约车业务城市即可
 		if(coupons.size()>0){

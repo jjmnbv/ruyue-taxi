@@ -78,6 +78,10 @@ public enum DriverEnum {
 	 * 发送短信类型 - 改变密码
 	 */
 	SMS_TYPE_CHANGEPASS("1","改变密码"),
+	/**
+	 * 发送短信类型 - 忘记密码
+	 */
+	SMS_TYPE_FORGETPASS("2","忘记密码"),
 	
 	/**
 	 * 交接班类型 - 自主

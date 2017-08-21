@@ -7,6 +7,7 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Repository;
 
+import com.szyciov.entity.coupon.CouponDetail;
 import com.szyciov.lease.entity.OrgUserExpenses;
 import com.szyciov.lease.param.OrganUserAccountQueryParam;
 import com.szyciov.op.entity.PeUser;
@@ -61,4 +62,20 @@ public class OpUserAccountDao {
     public void insertAccount(PeUseraccount peUseraccount) {
 		 mapper.insertAccount(peUseraccount);
 	}
+    
+    public List<CouponDetail> getCouponDetailListByQuery(OrganUserAccountQueryParam organUserAccountQueryParam) {
+    	return mapper.getCouponDetailListByQuery(organUserAccountQueryParam);
+    }
+    
+    public int getCouponDetailListCountByQuery(OrganUserAccountQueryParam organUserAccountQueryParam) {
+    	return mapper.getCouponDetailListCountByQuery(organUserAccountQueryParam);
+    }
+    
+    public List<String> getCouponUseCityById(String couponid) {
+    	return mapper.getCouponUseCityById(couponid);
+    }
+    
+    public List<CouponDetail> getCouponDetailListExport(OrganUserAccountQueryParam organUserAccountQueryParam) {
+    	return mapper.getCouponDetailListExport(organUserAccountQueryParam);
+    }
 }

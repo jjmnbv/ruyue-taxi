@@ -209,11 +209,11 @@ public class LeLeasescompanyService {
 	
 	public Map<String, String> createLeLeasescompany(LeLeasescompany leLeasescompany){
 		Map<String, String> ret = new HashMap<String, String>();
-		if(dao.checkLeLeasescompany()>1){
-			ret.put("ResultSign", "Error");
-			ret.put("MessageKey", "租赁端当前仅允许创建一个服务车企作为B2B业务运营方");
-			return ret;
-		}
+//		if(dao.checkLeLeasescompany()>1){
+//			ret.put("ResultSign", "Error");
+//			ret.put("MessageKey", "租赁端当前仅允许创建一个服务车企作为B2B业务运营方");
+//			return ret;
+//		}
 		ret.put("ResultSign", "Successful");
 		ret.put("MessageKey", leLeasescompany.getAccount()+"账号对应的随机密码已发送至对方的手机号"+leLeasescompany.getPhone()+"，请提醒用户注意查收。");
 		

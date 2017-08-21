@@ -275,11 +275,10 @@ function manualSendOrder(orderno) {
  * 取消订单
  */
 function cancelOrder(orderno, ordertype, usetype) {
+    showObjectOnForm("cancelpartyForm", null);
     $("#ordernoHide").val(orderno);
     $("#ordertypeHide").val(ordertype);
     $("#usetypeHide").val(usetype);
-
-    showObjectOnForm("cancelpartyForm", null);
     showCancelreason();
     var editForm = $("#cancelpartyForm").validate();
     editForm.resetForm();
@@ -492,6 +491,7 @@ function showCancelreason() {
         }
     }
     $("#cancelreason").html(html);
+    resetCancelForm();
 }
 
 /**
@@ -510,5 +510,14 @@ function showDutyparty() {
     }
     showCancelreason();
     $("#cancelreason").val(cancelreason);
+    resetCancelForm();
+}
+
+/**
+ * 表单校验重置
+ */
+function resetCancelForm() {
+    var form = $("#cancelpartyForm").validate();
+    form.resetForm();
 }
 

@@ -6,56 +6,43 @@
 	
 	<!-- 查询车辆保险信息 -->
 	<select id="getPubVehInsurListByQuery" parameterType="QueryParam" resultType="com.szyciov.dto.pubVehInsur.PubVehInsurQueryDto">
-		SELECT
-			t.*
-		FROM
-			(
-				SELECT
-					    (@rownum := @rownum + 1) AS indexnum,
-						m.*
-					FROM
-						(
-							select	pvi.id, 
-									pvi.vehicleid, 
-									pv.fullplateno,
-									IFNULL(pv.engineid,'') as engineid,
-									IFNULL(pv.vin, '') as vin,
-									IFNULL(pvi.insurcom, '') as insurcom,
-									IFNULL(dic.text,'') as insurtypename,
-									IFNULL(pvi.insurnum, '') as insurnum,
-									IFNULL(pvi.insurcount, '') as insurcount,
-									CONCAT(DATE_FORMAT(pvi.insureff,"%Y/%m/%d"),' - ',DATE_FORMAT(pvi.insurexp,"%Y/%m/%d")) as insurvalidate
-										
-							from	pub_vehicle_insurance pvi 
-									left join  pub_vehicle pv on pvi.vehicleid = pv.id
-									left join pub_dictionary dic on pvi.insurtype = dic.value and dic.type = '保险类型' 
-			        		where	pv.`Status` = 1
-							and		pvi.`status` = 1	
-			        		<if test = "queryVehicleType != null and queryVehicleType != '' ">
-								and pv.vehicletype = #{queryVehicleType}
-			        		</if>
-			        		<if test = "queryinsurType != null and queryinsurType !='' ">
-			        			and pvi.insurtype = #{queryinsurType} 
-			        		</if>
-			        		<if test="queryPlateNo != null and queryPlateNo !='' ">
-								and pv.fullplateno like "%"#{queryPlateNo}"%"
-							</if>
-			       			<if test = "queryVin != null and queryVin != '' ">
-			       				and pv.vin like "%"#{queryVin}"%"
-			       			</if>
-			       			<if test = "queryInsurNum != null and queryInsurNum != ''">
-			       				and pvi.insurnum like "%"#{queryInsurNum}"%"
-			       			</if>
-			       			<if test ="queryInsurCom != null and queryInsurCom != '' ">
-			       				and pvi.insurcom like "%"#{queryInsurCom}"%"
-			       			</if>
-			       			order by pv.fullplateno, pvi.insurcom,dic.text,pvi.insurnum,pvi.insurcount
-							) m,(SELECT @rownum := 0) r
-		) t
-		WHERE
-		<![CDATA[
-		t.indexnum > #{iDisplayStart} and t.indexnum <=  (#{iDisplayStart} +  #{iDisplayLength})
-		]]>
+
+		select	pvi.id, 
+				pvi.vehicleid, 
+				pv.fullplateno,
+				IFNULL(pv.engineid,'') as engineid,
+				IFNULL(pv.vin, '') as vin,
+				IFNULL(pvi.insurcom, '') as insurcom,
+				IFNULL(dic.text,'') as insurtypename,
+				IFNULL(pvi.insurnum, '') as insurnum,
+				IFNULL(pvi.insurcount, '') as insurcount,
+				CONCAT(DATE_FORMAT(pvi.insureff,"%Y/%m/%d"),' - ',DATE_FORMAT(pvi.insurexp,"%Y/%m/%d")) as insurvalidate
+					
+		from	pub_vehicle_insurance pvi 
+				left join  pub_vehicle pv on pvi.vehicleid = pv.id
+				left join pub_dictionary dic on pvi.insurtype = dic.value and dic.type = '保险类型' 
+	     		where	pv.`Status` = 1
+		and		pvi.`status` = 1	
+   		<if test = "queryVehicleType != null and queryVehicleType != '' ">
+			and pv.vehicletype = #{queryVehicleType}
+   		</if>
+   		<if test = "queryinsurType != null and queryinsurType !='' ">
+   			and pvi.insurtype = #{queryinsurType} 
+   		</if>
+   		<if test="queryPlateNo != null and queryPlateNo !='' ">
+			and pv.fullplateno like "%"#{queryPlateNo}"%"
+		</if>
+		<if test = "queryVin != null and queryVin != '' ">
+			and pv.vin like "%"#{queryVin}"%"
+		</if>
+		<if test = "queryInsurNum != null and queryInsurNum != ''">
+			and pvi.insurnum like "%"#{queryInsurNum}"%"
+		</if>
+		<if test ="queryInsurCom != null and queryInsurCom != '' ">
+			and pvi.insurcom like "%"#{queryInsurCom}"%"
+		</if>
+		order by pv.fullplateno, pvi.insurcom,dic.text,pvi.insurnum,pvi.insurcount
+		limit  #{iDisplayStart} , #{iDisplayLength}
 	</select>	
 	
 	<!-- 查询车辆保险信息返回结果数 -->

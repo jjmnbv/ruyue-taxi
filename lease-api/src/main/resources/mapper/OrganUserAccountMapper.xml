@@ -591,6 +591,33 @@
 		  </if>
     </select>
     
+      <select id="exportCouponData" resultType ="OrganUserCouponInfo" parameterType="OrganUserCouponQueryParam">
+         select 
+               pc.couponactivyidref as id,
+               pc.name,
+               pc.couponstatus,
+               DATE_FORMAT(pc.createtime,'%Y-%m-%d %H:%i') as sendtime,
+		       pc.money as amount,
+		       DATE_FORMAT(pc.outimestart,'%Y.%m.%d') as usestarttime,
+		       DATE_FORMAT(pc.outtimeend,'%Y.%m.%d') useendtime,
+			   GROUP_CONCAT(city.city SEPARATOR ',') as usecity
+		from pub_coupon pc
+		left join pub_coupon_activity_use_city pcauc on pc.couponactivyidref=pcauc.couponactivityidref 
+		left join pub_cityaddr city on city.id=pcauc.city
+		where pc.lecompanyid=#{lecompanyid} and pc.platformtype=1
+		  and pc.target=2 and pc.userid=#{userid}
+		  <if test="couponstatus != null">
+		   and pc.couponstatus=#{couponstatus}
+		  </if>
+		  <if test="starttime != null and starttime !=''">
+		   and pc.createtime <![CDATA[ >= ]]> STR_TO_DATE(#{starttime},'%Y-%m-%d %H:%i:%s')
+		  </if>
+		  <if test="endtime != null and endtime !=''">
+		   and pc.createtime <![CDATA[ < ]]> STR_TO_DATE(ADDDATE(#{endtime},1),'%Y-%m-%d %H:%i:%s')
+		  </if>
+		  group by pc.id
+    </select>
+    
     <select id="getBusinessCitys" resultType="string" parameterType="string">
             select GROUP_CONCAT(city SEPARATOR ',') from pub_cityaddr where id in 
           (select distinct ps.city from pub_sendrules ps,le_accountrules oa

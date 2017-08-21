@@ -229,6 +229,7 @@ public class PubVehicleService {
 		PageBean pageBean = new PageBean();
 		pageBean.setsEcho(pubVehicleQueryParam.getsEcho());
 		List<PubVehicle> list = getPubVehicleListByQuery(pubVehicleQueryParam);
+		if(list.size()>0){
 		List<PubVehicleScope> l1 = getVehicleidByVehicleScope(list);
 		for(PubVehicle v:list){
 			for(PubVehicleScope s:l1){
@@ -238,19 +239,7 @@ public class PubVehicleService {
 				}
 			}
 		}
-	/*	for(PubVehicle l : list){
-			List<PubVehicleScope> l1 = getVehicleidByVehicleScope(list);
-			String cityName = "";
-			if(l1.size()>0){
-				for(PubVehicleScope ll : l1){
-					cityName+=ll.getCityName()+",";
-				}
-				l.setBusinessScope(cityName.substring(0, cityName.length()-1));
-			}else{
-				l.setBusinessScope("");
-			}
-			
-		}*/
+		}
 		int iTotalRecords = getPubVehicleListCountByQuery(pubVehicleQueryParam);
 		int iTotalDisplayRecords = iTotalRecords;
 		pageBean.setiTotalDisplayRecords(iTotalDisplayRecords);

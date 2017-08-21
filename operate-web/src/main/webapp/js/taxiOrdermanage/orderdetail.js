@@ -21,6 +21,9 @@ $(document).ready(function() {
         	commentDataGrid.fnSearch({});
         }
     });
+
+	$(this).css("background-image","url(img/orgordermanage/btn_up.png)");
+	$(".e_box").show();
 	
     initOrder();
     rangeNameInit();
@@ -197,10 +200,7 @@ function renderPageByOrder(order) {
 		$("#sjxx").text(order.drivername + " " + order.driverphone);
 	}
 	//更新时间
-	// $("#gxsj").text(timeStamp2String(order.updatetime));
-
-    // 服务车企
-    $("#fwcqtd").text(order.belongleasecompanytext);
+	$("#gxsj").text(timeStamp2String(order.updatetime));
 
 	//支付方式
 	var paymentmethod = order.paymentmethod;
@@ -212,14 +212,7 @@ function renderPageByOrder(order) {
 	$("#zffs").text(paymentmethod);
 	//调度费用
 	$("#ddfy").text(order.schedulefee);
-	//行程费用
-	if(order.orderstatus == "7") {
-		$("#xcfy").text(order.shouldpayamount);
-	} else if(order.orderstatus == "9") {
-		$("#xcfy").text(order.orderamount);
-	} else {
-		$("#xcfy").text("/");
-	}
+
 	//支付渠道
 	var paytype = order.paytype;
 	switch(paytype) {
@@ -228,7 +221,56 @@ function renderPageByOrder(order) {
 		case "3": paytype = "支付宝支付";break;
 		default: paytype = "/";
 	}
-	$("#zfqd").text(paytype);
+
+	//行程费用
+	var orderamount = order.orderamount;
+	if(order.orderstatus == "7") {
+		orderamount = order.shouldpayamount;
+	} else if(order.orderstatus == "9") {
+		orderamount = order.orderamount;
+	} else {
+		orderamount = "/";
+	}
+	var html = orderamount;
+	if(order.orderstatus == "7" || order.orderstatus == "9") {
+		if(order.paymentstatus == "0") {
+			$("#sfjeDetailTitle").text("应付金额");
+		} else {
+			$("#sfjeDetailTitle").text("实付金额");
+		}
+		$("#xcfyDetail").text(orderamount + "元");
+		if(null == order.actualamount || order.actualamount == 0) {
+			$("#qydkDetail").text("0元");
+		} else {
+			$("#qydkDetail").text("-" + order.actualamount + "元");
+		}
+		var pricecopy = order.pricecopy;
+		if(null != pricecopy) {
+			pricecopy = JSON.parse(pricecopy);
+			$("#qbjRule").text(pricecopy.startprice + "元");
+			$("#qzlcRule").text(pricecopy.startrange + "公里");
+			$("#xzjRule").text(pricecopy.renewalprice + "元/公里");
+			$("#bzlcRule").text(pricecopy.standardrange + "公里");
+			$("#ksflRule").text(pricecopy.emptytravelrate + "%");
+			$("#fjfRule").text(pricecopy.surcharge + "元");
+		}
+		html += "<button type='button' class='SSbtn red' style='float: right;' onclick='costDetail()'><i class='fa fa-paste'></i>费用明细</button>";
+	}
+	$("#xcfy").html(html);
+	if(order.orderstatus == "8") {
+		$("#xcfyTd").text("处罚金额(元)");
+		$("#qxfTd").text("支付渠道");
+		$("#qxf").text(paytype);
+		$("#zfqdTd").text("");
+		var cancelamount = order.cancelamount;
+		if(null == cancelamount) {
+			cancelamount = 0;
+		}
+		$("#xcfy").text(cancelamount);
+	} else {
+		$("#qxf").text("/");
+		$("#zfqd").text(paytype);
+	}
 	
 	//下单时间
 	var xdsjHtmlArr = [];
@@ -327,6 +369,13 @@ function renderPageByOrder(order) {
 	} else {
 		$("#jssjDiv").remove();
 	}
+}
+
+/**
+ * 显示费用明细
+ */
+function costDetail() {
+	$("#costDetailDiv").show();
 }
 
 /**

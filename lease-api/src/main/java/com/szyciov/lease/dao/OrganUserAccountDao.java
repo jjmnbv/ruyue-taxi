@@ -69,4 +69,8 @@ public class OrganUserAccountDao {
 	public List<String> getActivitysInBusinessCity(List<OrganUserCouponInfo> coupons) {
 		return mapper.getActivitysInBusinessCity(coupons);
 	}
+
+	public List<OrganUserCouponInfo> exportCouponData(OrganUserCouponQueryParam queryParam) {
+		return mapper.exportCouponData(queryParam);
+	}
 }

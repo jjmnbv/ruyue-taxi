@@ -108,7 +108,7 @@ function manualOrderdataGrid() {
                 "bSearchable": false,
                 "sortable": false,
                 "mRender": function (data, type, full) {
-                    if(full.orderstatus == '7' && full.paymentstatus == "0") {
+                    if(full.orderstatus == '7' && full.reviewstatus != "1" && full.paymentstatus == "0") {
                         return "<button type='button' class='SSbtn red' onclick='applyReview(\"" + full.orderno + "\")'><i class='fa fa-paste'></i>申请复核</button>";
                     } else {
                         return "";

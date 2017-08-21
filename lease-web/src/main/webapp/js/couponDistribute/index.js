@@ -396,11 +396,12 @@ function initDataPicker(){
 	    language: 'zh-CN', //汉化
 	    weekStart: 1,
 	    autoclose: 1,
-	    todayHighlight: 1,
+	    todayHighlight: false,
 	    startView: 2,
 	    minView: 2,
 	    forceParse: 0,
-	    clearBtn: true
+	    clearBtn: true,
+	    initialDate :date
 	});
 	$('#fixedstarttime,#fixedendtime').datetimepicker({
 	    format: "yyyy-mm-dd", //选择日期后，文本框显示的日期格式
@@ -408,11 +409,12 @@ function initDataPicker(){
 	    language: 'zh-CN', //汉化
 	    weekStart: 1,
 	    autoclose: 1,
-	    todayHighlight: 1,
+	    todayHighlight: false,
 	    startView: 2,
 	    minView: 2,
 	    forceParse: 0,
 	    clearBtn: true,
+	    initialDate :date,
 	    pickerPosition:'top-right'
 	});
 }

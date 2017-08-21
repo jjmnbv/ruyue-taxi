@@ -110,4 +110,21 @@ public class PubSupervisionLog {
     public void setUpdatetime(Date updatetime) {
         this.updatetime = updatetime;
     }
+
+    @Override
+    public String toString() {
+        return "PubSupervisionLog{" +
+                "id='" + id + '\'' +
+                ", direct=" + direct +
+                ", interfaceType='" + interfaceType + '\'' +
+                ", interfaceCommand='" + interfaceCommand + '\'' +
+                ", requestHeader='" + requestHeader + '\'' +
+                ", requestParam='" + requestParam + '\'' +
+                ", responceCode=" + responceCode +
+                ", responceContent='" + responceContent + '\'' +
+                ", status=" + status +
+                ", createtime=" + createtime +
+                ", updatetime=" + updatetime +
+                '}';
+    }
 }

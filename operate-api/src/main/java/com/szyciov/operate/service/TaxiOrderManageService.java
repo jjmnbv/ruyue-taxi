@@ -17,21 +17,26 @@ import com.szyciov.driver.enums.ReviewState;
 import com.szyciov.entity.CancelParty;
 import com.szyciov.entity.OrderMessageFactory;
 import com.szyciov.entity.OrderMessageFactory.OrderMessageType;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.entity.Retcode;
 import com.szyciov.entity.UserNews;
 import com.szyciov.enums.DriverEnum;
+import com.szyciov.enums.PubOrdercancelEnum;
+import com.szyciov.enums.ServiceState;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.message.TaxiOrderMessage;
+import com.szyciov.op.entity.OpPlatformInfo;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxiOrderReview;
 import com.szyciov.op.entity.OpTaxidriverchanges;
 import com.szyciov.op.entity.OpTaxiordercomment;
 import com.szyciov.op.entity.OpTaxisendrecord;
 import com.szyciov.op.entity.OpTaxivehiclechanges;
-import com.szyciov.op.entity.OpUser;
 import com.szyciov.op.entity.PeUserRefund;
 import com.szyciov.op.entity.PubDriver;
 import com.szyciov.op.entity.PubVehicle;
+import com.szyciov.operate.dao.OpInformationSetDao;
+import com.szyciov.operate.dao.OpTaxiordercancelDao;
 import com.szyciov.operate.dao.PubDriverDao;
 import com.szyciov.operate.dao.PubVehicleDao;
 import com.szyciov.operate.dao.TaxiOrderManageDao;
@@ -39,6 +44,7 @@ import com.szyciov.operate.dao.TaxiSendrulesDao;
 import com.szyciov.param.BaiduApiQueryParam;
 import com.szyciov.param.OrdercommentQueryParam;
 import com.szyciov.param.UserNewsParam;
+import com.szyciov.param.coupon.CouponUseParam;
 import com.szyciov.passenger.util.MessageUtil;
 import com.szyciov.util.Constants;
 import com.szyciov.util.GUIDGenerator;
@@ -56,31 +62,25 @@ import org.springframework.stereotype.Service;
 public class TaxiOrderManageService {
 	
 	private TemplateHelper templateHelper = new TemplateHelper();
-	
-	private TaxiOrderManageDao dao;
+
 	@Resource(name = "TaxiOrderManageDao")
-	public void setDao(TaxiOrderManageDao dao) {
-		this.dao = dao;
-	}
-	
-	private PubVehicleDao vehicleDao;
+	private TaxiOrderManageDao dao;
+
 	@Resource(name = "PubVehicleDao")
-	public void setVehicleDao(PubVehicleDao vehicleDao) {
-		this.vehicleDao = vehicleDao;
-	}
-	
-	private TaxiSendrulesDao sendrulesDao;
+	private PubVehicleDao vehicleDao;
+
 	@Resource(name = "TaxiSendrulesDao")
-	public void setSendrulesDao(TaxiSendrulesDao sendrulesDao) {
-		this.sendrulesDao = sendrulesDao;
-	}
-	
-	private PubDriverDao driverDao;
+	private TaxiSendrulesDao sendrulesDao;
+
 	@Resource(name = "PubDriverDao")
-	public void setDriverDao(PubDriverDao driverDao) {
-		this.driverDao = driverDao;
-	}
-	
+	private PubDriverDao driverDao;
+
+	@Resource(name = "OpTaxiordercancelDao")
+	private OpTaxiordercancelDao taxiordercancelDao;
+
+	@Resource(name = "OpInformationSetDao")
+	private OpInformationSetDao informationSetDao;
+
 	/**
 	 * 分页查询订单列表
 	 * @param queryParam
@@ -181,11 +181,28 @@ public class TaxiOrderManageService {
 		result.put("message", "操作成功");
 		
 		//验证当前订单状态
-		OpTaxiOrder order = dao.getOpTaxiOrder(object.getOrderno());
-		if (!OrderState.SERVICEDONE.state.equals(order.getOrderstatus())
-				|| ReviewState.WAITFORREVIEW.state.equals(order.getReviewstatus())) {
+		Map<String, Object> order = dao.getOpTaxiOrderByOrderno(object.getOrderno());
+		String orderstatus = order.get("orderstatus").toString();
+		String reviewstatus = order.get("reviewstatus").toString();
+		if (!OrderState.SERVICEDONE.state.equals(orderstatus)
+				|| ReviewState.WAITFORREVIEW.state.equals(reviewstatus)) {
 			result.put("status", "fail");
 			result.put("message", "当前订单状态不允许申请复核");
+			return result;
+		}
+
+		//如果(订单金额为0或乘客实际支付金额为0)且订单复核状态为已支付时，不允许申请复核
+		double shouldpayamount = Double.valueOf(order.get("shouldpayamount").toString());
+		double actualpayamount = Double.valueOf(order.get("actualpayamount").toString());
+		double actualamount = 0;
+		Object actualamountObj = order.get("actualamount");
+		if(null != actualamountObj) {
+			actualamount = Double.valueOf(actualamountObj.toString());
+		}
+		if((shouldpayamount == 0 || actualpayamount == 0 || (actualpayamount - actualamount) == 0)
+			&& reviewstatus.equals(ReviewState.REVIEWED.state)) {
+			result.put("status", "fail");
+			result.put("message", "当前订单不允许申请复核");
 			return result;
 		}
 		
@@ -216,97 +233,133 @@ public class TaxiOrderManageService {
 	 * @param object
 	 * @return
 	 */
-	public Map<String, Object> opTaxiOrderReview(OpTaxiOrderReview object) {
+	public Map<String, Object> opTaxiOrderReview(OpTaxiOrderReview review) {
 		Map<String, Object> result = new HashMap<String, Object>();
 		
-		OpTaxiOrder order = dao.getOpTaxiOrder(object.getOrderno());
+		OpTaxiOrder order = dao.getOpTaxiOrder(review.getOrderno());
 		//判断当前订单状态
 		if(!ReviewState.WAITFORREVIEW.state.equals(order.getReviewstatus())) {
 			result.put("status", "fail");
 			result.put("message", "当前订单状态无法复核");
 			return result;
 		}
-		int schedulefee = order.getSchedulefee(); //调度费
-		//订单实际行程费用金额
-		Double actualpayamount = order.getActualpayamount();
-		if(null == actualpayamount) {
-			actualpayamount = order.getOrderamount();
+		//初始化复核数据
+		initOrderreview(review, order);
+		double driverPrice = order.getShouldpayamount() - review.getReviewedprice();
+		//重置订单金额
+		double differPrice = resetOrderCost(review, order);
+		//发送司机消息
+		order.setOrderamount(review.getReviewedprice());
+		if ("1".equals(review.getReviewperson())) {
+			createDriverNews(order, driverPrice, OrderMessageFactory.OrderMessageType.REVIEWORDER);
 		}
-		//订单应付行程费用金额
-		Double shouldpayamount = order.getShouldpayamount();
-		if(null == shouldpayamount) {
-			shouldpayamount = order.getOrderamount();
-		}
-		//复核后的金额比实际支付金额小时，需要给乘客退款，此时实际金额不一定与订单金额相等
-		if(object.getReviewedprice() < actualpayamount) {
-			order.setActualpayamount(object.getReviewedprice());
-		}
-		//复核后的金额就是应付金额
-		order.setShouldpayamount(object.getReviewedprice());
-		//实际差异金额
-		double differPrice = actualpayamount - object.getReviewedprice();
-		//订单未支付时修改订单数据
-		if(StringUtils.isBlank(order.getPaymentstatus()) || PayState.NOTPAY.state.equals(order.getPaymentstatus())) {
-			order.setOrderamount(object.getReviewedprice());
-			order.setActualpayamount(object.getReviewedprice());
-			//此时订单总金额为0时，修改当前订单状态未已支付
-			if(order.getOrderamount() == 0 && schedulefee == 0) {
-				order.setPaymentstatus(PayState.PAYED.state);
-			}
-		}
-		order.setReviewstatus(ReviewState.REVIEWED.state);
-		//更新订单复核记录数据
-		object.setId(GUIDGenerator.newGUID());
-		object.setStarttime(order.getStarttime());
-		object.setEndtime(order.getEndtime());
-		int times = (int) Math.ceil((order.getEndtime().getTime() - order.getStarttime().getTime())/1000.0/60); //服务时长
-		object.setTimes((double) times * 60);
-		object.setMileage(order.getMileage());
-		object.setReviewperson(order.getReviewperson());
-		object.setReason(order.getOrderreason());
-		//更新数据库
-		dao.updateOpTaxiorderReview(order);
-		//查询最近一次复核记录
-		OpTaxiOrderReview orderReview = dao.getOpTaxiOrderreviewLastByOrderno(object.getOrderno());
-		if(null != orderReview) {
-			object.setRaworderamount(orderReview.getReviewedprice());
-		} else {
-			object.setRaworderamount(order.getOriginalorderamount());
-		}
-		object.setPrice(StringUtil.formatNum(order.getShouldpayamount() - order.getActualpayamount(), 1));
-		dao.insertOpTaxiOrderReview(object);
-		
-		//添加司机消息类
-		if("1".equals(object.getReviewperson())) {
-			createDriverNews(order, differPrice, OrderMessageType.REVIEWORDER);
-		}
-		
-		//已支付且乘客多给钱才需要添加退款信息
-		if(!PayState.NOTPAY.state.equals(order.getPaymentstatus()) && differPrice > 0) {
-			//添加退款信息
-			PeUserRefund userRefund = new PeUserRefund();
-			userRefund.setId(GUIDGenerator.newGUID());
-			userRefund.setUserId(order.getUserid());
-			userRefund.setOrderNo(object.getOrderno());
-			userRefund.setAmount(BigDecimal.valueOf(differPrice));
-			userRefund.setRefundStatus("0");
-			userRefund.setRemark(object.getOpinion());
-			userRefund.setCreater(object.getOperator());
-			userRefund.setUpdater(object.getOperator());
-			userRefund.setStatus(1);
-			dao.insertPeUserRefund(userRefund);
-		}
-		
+		//退款处理
+		orderRefund(order, review, differPrice);
+
 		//复核短信额外参数
 		Map<String, Object> smsParams = new HashMap<String, Object>();
 		smsParams.put("price", differPrice);
-		order.setOrderamount(object.getReviewedprice());
+		order.setOrderamount(review.getReviewedprice());
 		TaxiOrderMessage message = new TaxiOrderMessage(order, TaxiOrderMessage.TAXI_EXCEPTIONORDER, smsParams);
 		MessageUtil.sendMessage(message);
-		
+
 		result.put("status", "success");
 		result.put("message", "操作成功");
 		return result;
+	}
+
+	/**
+	 * 初始化订单复核数据
+	 * @param review
+	 * @param order
+	 */
+	private void initOrderreview(OpTaxiOrderReview review, OpTaxiOrder order) {
+		review.setId(GUIDGenerator.newGUID());
+		review.setReason(order.getOrderreason());
+		review.setStatus(1);
+		review.setRaworderamount(order.getOriginalorderamount());
+
+		//查询最近一次复核记录
+		OpTaxiOrderReview orderReview = dao.getOpTaxiOrderreviewLastByOrderno(review.getOrderno());
+		if(null != orderReview) {
+			review.setRaworderamount(orderReview.getReviewedprice());
+		}
+	}
+
+	/**
+	 * 重置订单相关金额
+	 * @param review
+	 * @param order
+	 * @return 返回乘客支付的差异金额
+	 */
+	private double resetOrderCost(OpTaxiOrderReview review, OpTaxiOrder order) {
+		double price = review.getReviewedprice(), differPrice; //复核后金额、退款金额
+		if(order.getPaymentstatus().equals(PayState.NOTPAY.state)) { //未支付
+			differPrice = 0;
+			order.setActualpayamount(price);
+			order.setOrderamount(price);
+			if(price == 0 && order.getSchedulefee() == 0) { //复核后金额为0且没有调度费时，订单支付状态改为已关闭
+				order.setPaymentstatus(PayState.CLOSE.state);
+			}
+		} else {
+			double actualamountCoupon = 0, discountamountCoupon = 0;
+			if(order.getPaymentstatus().equals(PayState.PAYED.state)) { //已支付
+				//调用优惠券接口查询实际抵扣金额
+				CouponUseParam useParam = new CouponUseParam();
+				useParam.setOrderId(order.getOrderno());
+				useParam.setMoney(review.getReviewedprice());
+				String couponRet = templateHelper.dealRequestWithFullUrlToken(SystemConfig.getSystemProperty("couponapi") + "/coupon/update/actualamount",
+					HttpMethod.POST, null, useParam, String.class);
+				if(StringUtils.isNotBlank(couponRet)) {
+					JSONObject retData = JSONObject.fromObject(couponRet);
+					if(retData.getInt("status") == ServiceState.SUCCESS.code) {
+						JSONObject data = JSONObject.fromObject(retData.getString("data"));
+						actualamountCoupon = data.getDouble("actualamount");
+						discountamountCoupon = data.getDouble("discountamount");
+					}
+				}
+			}
+			double disPayamount = order.getActualpayamount() - discountamountCoupon; //复核前乘客实际支付的金额(优惠后)
+			double payamount = review.getReviewedprice() - actualamountCoupon; //复核后乘客应该支付的金额(优惠后)
+			if(payamount >= disPayamount) {
+				order.setActualpayamount(disPayamount + actualamountCoupon);
+			} else {
+				order.setActualpayamount(payamount + actualamountCoupon);
+			}
+			differPrice = disPayamount - payamount;
+			if((payamount == 0 || price == 0) && (order.getPaymentstatus().equals(PayState.PAYED.state)
+					|| order.getPaymentstatus().equals(PayState.STATEMENTED.state) || order.getPaymentstatus().equals(PayState.PAYOVER.state))) { //复核后
+				order.setPaymentstatus(PayState.CLOSE.state);
+			}
+		}
+		order.setShouldpayamount(price);
+		review.setPrice(order.getShouldpayamount() - order.getActualpayamount());
+		order.setReviewstatus(ReviewState.REVIEWED.state);
+		dao.updateOpTaxiorderReview(order);
+		dao.insertOpTaxiOrderReview(review);
+		return differPrice;
+	}
+
+	/**
+	 * 退款处理
+	 * @param order
+	 * @param review
+	 * @param differPrice
+	 */
+	private void orderRefund(OpTaxiOrder order, OpTaxiOrderReview review, double differPrice) {
+		if (!order.getPaymentstatus().equals("0") && differPrice > 0) {
+			PeUserRefund userRefund = new PeUserRefund();
+			userRefund.setId(GUIDGenerator.newGUID());
+			userRefund.setUserId(order.getUserid());
+			userRefund.setOrderNo(review.getOrderno());
+			userRefund.setAmount(BigDecimal.valueOf(differPrice));
+			userRefund.setRefundStatus("0");
+			userRefund.setRemark(review.getOpinion());
+			userRefund.setCreater(review.getOperator());
+			userRefund.setUpdater(review.getOperator());
+			userRefund.setStatus(1);
+			dao.insertPeUserRefund(userRefund);
+		}
 	}
 	
 	/**
@@ -329,6 +382,12 @@ public class TaxiOrderManageService {
 		queryParam.setUsetime(order.getUsetime());
 		queryParam.setEstimatedEndtime(StringUtil.addDate(order.getUsetime(), (order.getEstimatedtime() + 60) * 60));
 		queryParam.setUserId(order.getUserid());
+
+		//查询运管端id
+		OpPlatformInfo info = informationSetDao.getOpPlatformInfo();
+		if(null != info) {
+			queryParam.setLeasescompanyid(info.getId());
+		}
 		
 		PageBean pageBean = new PageBean();
 		pageBean.setsEcho(queryParam.getsEcho());
@@ -383,39 +442,27 @@ public class TaxiOrderManageService {
 	
 	/**
 	 * 人工派单
-     * 已于2017/05/27转移到carservice-api工程下
-     * 路径：api/TaxiOrderManage/ManualSendOrder
 	 * @param object
 	 * @return
 	 */
-	@Deprecated
 	public Map<String, String> manualSendOrder(OpTaxiOrder object) {
 		Map<String, String> result = new HashMap<String, String>();
-		
+
 		OpTaxiOrder order = dao.getOpTaxiOrder(object.getOrderno());
 		//验证订单是否已取消
-		if(OrderState.CANCEL.state.equals(order.getOrderstatus())) {
-			result.put("status", "fail");
-			result.put("message", "人工派单超时，订单已取消");
-			return result;
-		}
-		//验证当前是否有系统+人工模式
-		OpUser user = new OpUser();
-		user.setId(object.getOperator());
-		int ruleCount = sendrulesDao.getOpSendmodelCountByUser(user);
-		if(ruleCount == 0) {
+		if (OrderState.CANCEL.state.equals(order.getOrderstatus())) {
 			result.put("status", "fail");
 			result.put("message", "人工派单超时，订单已取消");
 			return result;
 		}
 		//验证当前订单是否已被其他客服处理
-		if(!OrderState.MANTICSEND.state.equals(order.getOrderstatus())) {
+		if (!OrderState.MANTICSEND.state.equals(order.getOrderstatus())) {
 			result.put("status", "fail");
 			result.put("message", "该订单已被其他客服处理");
 			return result;
 		}
 		//验证当前司机是否符合条件
-		if(!checkDriver(order, object.getVehicleid())) {
+		if (!checkDriver(order, object.getVehicleid())) {
 			result.put("status", "fail");
 			result.put("message", "该司机已接其他订单，请更换司机指派");
 			return result;
@@ -431,11 +478,11 @@ public class TaxiOrderManageService {
 		taxisendrecord.setOperator(object.getOperator());
 		taxisendrecord.setReason(object.getOrderreason());
 		dao.insertOpTaxisendrecord(taxisendrecord);
-		
+
 		//发送消息
-		createDriverNews(order, 0, OrderMessageType.MANTICORDER);
+		createDriverNews(order, 0, OrderMessageFactory.OrderMessageType.MANTICORDER);
 		TaxiOrderMessage message = new TaxiOrderMessage(order, TaxiOrderMessage.TAXI_MANTICORDER);
-		if(!order.isIsusenow()) { //预约订单查询司机是否正在服务
+		if (!order.isIsusenow()) { //预约订单查询司机是否正在服务
 			message.setRunTime(getDriverEndtime(order.getDriverid()));
 		}
 		MessageUtil.sendMessage(message);
@@ -492,7 +539,9 @@ public class TaxiOrderManageService {
 		String beforeplateno = order.getPlateno();
 		String beforeDriverid = order.getDriverid();
 		//验证当前订单状态
-		if(!OrderState.WAITSTART.state.equals(order.getOrderstatus())) {
+		if(!OrderState.WAITSTART.state.equals(order.getOrderstatus())
+			&& ((OrderState.START.state.equals(order.getOrderstatus()) || OrderState.ARRIVAL.state.equals(order.getOrderstatus()))
+				&& order.getMeterrange() > 0)) {
 			result.put("status", "fail");
 			result.put("message", "该订单当前状态不可更换车辆");
 			return result;
@@ -679,7 +728,7 @@ public class TaxiOrderManageService {
 		order.setCompanyid(pubVehicle.getLeasesCompanyId());
 		order.setVehicleid(object.getVehicleid());
 		order.setDriverid(pubVehicle.getDriverId());
-		order.setPlateno(pubVehicle.getPlateNoProvinceName() + pubVehicle.getPlateNoCityName() + pubVehicle.getPlateNo());
+		order.setPlateno(pubVehicle.getFullplateno());
 		String[] brandCars = pubVehicle.getBrandCars().split(" ");
 		if(brandCars.length == 2) {
 			order.setVehcbrandname(brandCars[0]);
@@ -801,5 +850,71 @@ public class TaxiOrderManageService {
 	public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam queryParam) {
         return dao.getBelongCompanySelect(queryParam);
     }
+
+	/**
+	 * 查询订单取消规则明细
+	 * @param param
+	 * @return
+	 */
+	public Map<String, Object> getCancelPriceDetail(Map<String, String> param) {
+		//查询订单取消规则信息
+		Map<String, Object> ret = templateHelper.dealRequestWithTokenCarserviceApiUrl("/OrderCancelRule/GetCancelPriceDetail", HttpMethod.POST, null, param, Map.class);
+		if(null == ret || ret.isEmpty() || !ret.get("status").equals(Retcode.OK.code)) {
+			return ret;
+		}
+
+		//查询订单取消信息是否已存在
+		PubOrderCancel orderCancel = new PubOrderCancel();
+		orderCancel.setOrderno(param.get("orderno"));
+		orderCancel = taxiordercancelDao.getOpTaxiordercancel(orderCancel);
+		if(null == orderCancel) {
+			orderCancel = new PubOrderCancel();
+			orderCancel.setId(GUIDGenerator.newGUID());
+			orderCancel.setOrderno(param.get("orderno"));
+		}
+		orderCancel.setCancelamount((int) ret.get("price"));
+		int pricereason = (int) ret.get("pricereason");
+		orderCancel.setCancelnature(PubOrdercancelEnum.getCancelnature(pricereason).code);
+		orderCancel.setCancelrule(StringUtil.parseBeanToJSON(ret.get("ordercancelrule")));
+		orderCancel.setIdentifying(GUIDGenerator.newGUID());
+		taxiordercancelDao.updateOpTaxiordercancelById(orderCancel);
+
+		ret.put("identifying", orderCancel.getIdentifying());
+		return ret;
+	}
+
+	/**
+	 * 免责处理
+	 * @param object
+	 * @return
+	 */
+	public Map<String, Object> exemptionOrder(PubOrderCancel object) {
+		Map<String, Object> ret = new HashMap<String, Object>();
+
+		OpTaxiOrder order = dao.getOpTaxiOrder(object.getOrderno());
+		PubOrderCancel orderCancel = taxiordercancelDao.getOpTaxiordercancel(object);
+		if(null == order || null == orderCancel) {
+			ret.put("status", "fail");
+			ret.put("message", "订单不存在");
+			return ret;
+		}
+		if(!PayState.NOTPAY.state.equals(order.getPaymentstatus()) || PubOrdercancelEnum.CANCELNATURE_NODUTY.code == orderCancel.getCancelnature()) {
+			ret.put("status", "fail");
+			ret.put("message", "当前订单状态无法免责处理");
+			return ret;
+		}
+		//设置订单支付状态为已关闭
+		order.setPaymentstatus(PayState.CLOSE.state);
+		dao.updateOpTaxiOrderByOrderno(order);
+
+		//修改取消信息
+		orderCancel.setExemption(object.getExemption());
+		orderCancel.setExemptionoperator(object.getExemptionoperator());
+		taxiordercancelDao.updateOpTaxiordercancelById(orderCancel);
+
+		ret.put("status", "success");
+		ret.put("message", "操作成功");
+		return ret;
+	}
 	
 }

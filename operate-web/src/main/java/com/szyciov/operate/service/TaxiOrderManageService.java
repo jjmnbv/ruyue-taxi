@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.szyciov.entity.Excel;
+import com.szyciov.entity.PubOrderCancel;
 import com.szyciov.lease.param.OrderManageQueryParam;
 import com.szyciov.op.entity.OpTaxiOrder;
 import com.szyciov.op.entity.OpTaxiOrderReview;
@@ -84,7 +85,7 @@ public class TaxiOrderManageService {
 	
 	@SuppressWarnings("unchecked")
 	public Map<String, String> manualSendOrder(OpTaxiOrder object, String userToken) {
-		return templateHelper.dealRequestWithTokenCarserviceApiUrl("/TaxiOrderManage/ManualSendOrder", HttpMethod.POST, userToken, object, Map.class);
+		return templateHelper.dealRequestWithToken("/TaxiOrderManage/ManualSendOrder", HttpMethod.POST, userToken, object, Map.class);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -136,6 +137,16 @@ public class TaxiOrderManageService {
 	public List<Map<String, Object>> getBelongCompanySelect(OrderManageQueryParam queryParam, String userToken) {
 		return templateHelper.dealRequestWithToken("/TaxiOrderManage/GetBelongCompanySelect", HttpMethod.POST, userToken, queryParam, List.class);
 	}
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getCancelPriceDetail(Map<String, String> param, String userToken) {
+        return templateHelper.dealRequestWithToken("/TaxiOrderManage/GetCancelPriceDetail", HttpMethod.POST, userToken, param, Map.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> exemptionOrder(PubOrderCancel object, String userToken) {
+        return templateHelper.dealRequestWithToken("/TaxiOrderManage/ExemptionOrder", HttpMethod.POST, userToken, object, Map.class);
+    }
 	
 	/**
 	 * 订单导出

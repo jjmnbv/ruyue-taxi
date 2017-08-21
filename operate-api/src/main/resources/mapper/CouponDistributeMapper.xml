@@ -334,7 +334,7 @@
             <if test="account != null and account != ''">
 	            and pu.account=#{account}
 	          </if>
-	           <if test="couponstatus != null and couponstatus != ''">
+	           <if test="couponstatus != null">
 	            and pc.couponstatus=#{couponstatus}
 	          </if>
 	           <if test="sendstarttime != null and sendstarttime != ''">

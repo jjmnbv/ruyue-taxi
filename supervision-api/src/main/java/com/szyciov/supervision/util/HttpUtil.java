@@ -1,5 +1,6 @@
 package com.szyciov.supervision.util;
 
+import com.szyciov.supervision.api.responce.HttpContent;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * http工具
+ * http工具类，返回响应内容和响应状态
  * Created by 林志伟 on 2017/7/13.
  */
 public class HttpUtil {
