@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.szyciov.supervision.mapper.OperationMapper">
+
+    <!--车辆营运上线-->
+    <select id="vehicleOperationOnline" parameterType="string" resultType="com.szyciov.supervision.api.dto.operation.VehicleOperationOnline">
+        SELECT
+        pv.fullplateno vehicleNo,
+        pv.color plateColor,
+        pd.driversnum licenseId,
+        (SELECT address FROM  pub_cityaddr where id=pd.city) address
+        FROM  pub_driver pd
+        JOIN pub_vehicle pv on pv.Status=1 JOIN pub_driver_vehicle_ref pdvr  ON pdvr.status=1 AND pdvr.vehicleid=pv.id AND pdvr.driverid=pd.id
+        WHERE pd.id=#{driverid} and pd.Status=1
+    </select>
+
+    <!--车辆营运下线-->
+    <select id="vehicleOperationOffline" parameterType="string" resultType="com.szyciov.supervision.api.dto.operation.VehicleOperationOffline">
+        SELECT
+        pv.fullplateno vehicleNo,
+        pv.color plateColor,
+        pd.driversnum licenseId,
+        (SELECT address FROM  pub_cityaddr where id=pd.city) address
+        FROM  pub_driver pd
+        JOIN pub_vehicle pv on pv.Status=1 JOIN pub_driver_vehicle_ref pdvr  ON pdvr.status=1 AND pdvr.vehicleid=pv.id AND pdvr.driverid=pd.id
+        WHERE pd.id=#{driverid} and pd.Status=1
+    </select>
+
+</mapper>

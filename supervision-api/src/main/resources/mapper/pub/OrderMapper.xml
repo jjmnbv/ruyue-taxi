@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 引入接口，只要实现接口的方法就会调用对应接口方法的 select id -->
+<mapper namespace="com.szyciov.supervision.mapper.OrderMapper">
+
+    <!--司机上班查询信息-->
+    <select id="driverOnWork" parameterType="string" resultType="com.szyciov.supervision.api.dto.order.DriverOnWork">
+        SELECT pd.name driverName,pd.idcardnum driverIDCard,pd.jobnum driverCertCard,pd.phone driverPhone,
+        pv.fullplateno vehicleNo,pv.color plateColor,
+        (SELECT creditno FROM  le_leasescompany where pd.leasescompanyid=id  )identifier,
+        (SELECT pvb.`Name` FROM pub_vehcline pvl  JOIN pub_vehcbrand pvb ON pvl.vehcBrandID=pvb.id   WHERE pvl.id=pv.vehclineid ) brand,
+        (SELECT address FROM  pub_cityaddr where id=pd.city) address
+        FROM  pub_driver pd
+        JOIN pub_vehicle pv on pv.Status=1 JOIN pub_driver_vehicle_ref pdvr  ON pdvr.status=1 AND pdvr.vehicleid=pv.id AND pdvr.driverid=pd.id
+        WHERE pd.id=#{driverid} and pd.Status=1
+    </select>
+
+    <!--司机下班-->
+    <select id="driverOffWork" parameterType="string" resultType="com.szyciov.supervision.api.dto.order.DriverOffWork">
+        SELECT pd.name driverName,pd.idcardnum driverIDCard,pd.jobnum driverCertCard,pd.phone driverPhone,
+        pv.fullplateno vehicleNo,pv.color plateColor,pd.drivemile driveMile,pd.drivetime driveTime,price,factprice factPrice,ordercount driveCount,
+        (SELECT creditno FROM  le_leasescompany where pd.leasescompanyid=id  )identifier,
+        (SELECT address FROM  pub_cityaddr where id=pd.city) address
+        FROM  pub_driver pd
+        JOIN pub_vehicle pv on pv.Status=1 JOIN pub_driver_vehicle_ref pdvr  ON pdvr.status=1 AND pdvr.vehicleid=pv.id AND pdvr.driverid=pd.id
+        WHERE pd.id=#{driverid} and pd.Status=1
+    </select>
+
+</mapper>

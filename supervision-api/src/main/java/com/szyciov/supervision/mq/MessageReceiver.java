@@ -3,10 +3,9 @@ package com.szyciov.supervision.mq;
 
 
 import com.supervision.dto.SupervisionDto;
-import com.szyciov.supervision.api.dto.order.DriverOffWork;
-import com.szyciov.supervision.api.dto.order.DriverOnWork;
+import com.szyciov.supervision.api.dto.BaseApi;
 import com.szyciov.supervision.api.responce.HttpContent;
-import com.szyciov.supervision.serivice.PubDriverService;
+import com.szyciov.supervision.serivice.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -16,9 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.szyciov.supervision.api.service.BaseApiService;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -33,8 +29,20 @@ public class MessageReceiver {
 
     @Autowired
     private BaseApiService baseApiService;
+
+
     @Autowired
-    private PubDriverService pubDriverService;
+    private OrderService orderService;
+    @Autowired
+    private GpsService gpsService;
+    @Autowired
+    private EvaluteService evaluteService;
+    @Autowired
+    private OperationService operationService;
+    @Autowired
+    private RelationshipService relationshipService;
+    @Autowired
+    private BasicService basicService;
 
 
     /**
@@ -52,36 +60,36 @@ public class MessageReceiver {
             return;
         }
         HttpContent httpContent=null;
+        BaseApi baseApi=null;
        switch ( supervisionDto.getInterfaceType()){
            case ORDER:
-               switch (supervisionDto.getCommandEnum()){
-                   case DriverOnWork:
-                       DriverOnWork driverOnWork=pubDriverService.onWork(supervisionDto.getDataMap());
-                       if(driverOnWork==null){//查询不到数据
-                           return;
-                       }
-                       httpContent=baseApiService.sendApi(driverOnWork);
-
-                       break;
-                   case DriverOffWork:
-                       DriverOffWork driverOffWork=pubDriverService.offWork(supervisionDto.getDataMap());
-                       if(driverOffWork==null){//查询不到数据
-                           return;
-                       }
-                        httpContent=baseApiService.sendApi(driverOffWork);
-               }
+               //营运订单相关数据，统一调用
+               baseApi = orderService.execute(supervisionDto.getCommandEnum(),supervisionDto.getDataMap());
                break;
            case BASIC:
+               baseApi =  basicService.execute(supervisionDto.getCommandEnum(),supervisionDto.getDataMap());
                break;
            case EVALUATE:
+               baseApi=evaluteService.execute(supervisionDto.getCommandEnum(),supervisionDto.getDataMap());
                break;
+           case GPS:
+               baseApi = gpsService.execute(supervisionDto.getCommandEnum(),supervisionDto.getDataMap());
+               break;
+           case OPERATION:
+               baseApi = operationService.execute(supervisionDto.getCommandEnum(),supervisionDto.getDataMap());
+               break;
+           case RELATIONSHIP:
+               baseApi=relationshipService.execute(supervisionDto.getCommandEnum(),supervisionDto.getDataMap());
+               break;
+
            default:
+
        }
-
+        if(baseApi==null){//查询不到数据
+            return;
+        }
+        httpContent=baseApiService.sendApi(baseApi);
         logger.info("处理数据："+httpContent);
-
-
-
     }
 
     /**

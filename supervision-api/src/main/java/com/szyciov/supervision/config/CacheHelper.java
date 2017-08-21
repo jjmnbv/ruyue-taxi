@@ -20,6 +20,7 @@ public class CacheHelper implements InitializingBean{
     private@Value("${service.company.key}") String key;
 
     public @Value("${service.company.open-token}") String openToken;
+    public @Value("${service.map-encrypt}") String mapEncrypt;
 
     private@Value("${spring.http.timeout.connect:60000}") int connectTimeout;
 
@@ -40,6 +41,7 @@ public class CacheHelper implements InitializingBean{
         p_companyId = companyId;
         p_key = key;
         p_openToken=openToken;
+        p_mapEncrypt=mapEncrypt;
         HttpClientUtil.initHttpClient(socketTimeout,connectTimeout,writeTimeout,null,maxRequests, maxRequestsPerHost, compression);
     }
 
@@ -48,6 +50,7 @@ public class CacheHelper implements InitializingBean{
     private static String p_companyId;
     private static String p_key;
     private static String p_openToken;
+    private static String p_mapEncrypt;
     public static String getServiceUrl(){
         return p_serviceUrl;
     }
@@ -60,6 +63,10 @@ public class CacheHelper implements InitializingBean{
 
     public static String getOpenToken(){
         return p_openToken;
+    }
+
+    public static String getMapEncrypt(){
+        return p_mapEncrypt;
     }
 
 }

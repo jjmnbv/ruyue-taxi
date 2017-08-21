@@ -43,6 +43,7 @@ public class HttpUtil {
             httpContent.setStatus(response.getStatusLine().getStatusCode());
             //utf8編碼
             String content=EntityUtils.toString(response.getEntity(),"UTF-8");
+            content=new String(content.getBytes("ISO-8859-1"),"UTF-8");
             httpContent.setContent(content);
         } catch (Exception e) {
             logger.error(e.toString());

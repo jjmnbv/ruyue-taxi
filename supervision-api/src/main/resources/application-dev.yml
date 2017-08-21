@@ -13,6 +13,8 @@ spring:
     queue-default-validtime:  300000
 service:
   url: http://120.76.199.119:8099/api/transfer
+  #地图坐标类型
+  map-encrypt:  3
   company:
     code: RY
     key: SLj16Qq7FK9nbyi4
