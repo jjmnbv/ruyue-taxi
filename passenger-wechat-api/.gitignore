@@ -23,3 +23,7 @@ dist/
 nbdist/
 .nb-gradle/
 /bin/
+
+*.class
+supervision/
+supervision-testing/
