@@ -1,10 +1,12 @@
 package com.xxkj.passenger.wechat.service.impl;
 
+import com.szyciov.entity.PubSmsToken;
 import com.szyciov.entity.Retcode;
 import com.szyciov.enums.RedisKeyEnum;
 import com.szyciov.op.entity.PeUser;
 import com.szyciov.org.entity.OrgUser;
 import com.szyciov.passenger.param.LoginParam;
+import com.szyciov.passenger.param.RegisterParam;
 import com.szyciov.util.*;
 import com.xxkj.passenger.wechat.Const;
 import com.xxkj.passenger.wechat.entity.User;
@@ -46,9 +48,154 @@ public class UserAccessService implements IUserAccessService {
     }
 
     @Override
-    public Map<String, Object> bindUserWithOpenId(User user) {
-        userAccessDao.bindUserWithOpenId(user);
+    public Map<String, Object> registerAndLogin(String phoneNum, String smsCode, String openId) {
+        // 校验验证码
+        Map<String, Object> res = verifySMSCode(phoneNum, smsCode);
+        if (!res.get("status").equals(Retcode.OK.code)){
+            // 校验码错误
+            return res;
+        }
+
+        // 用户是否存在，不存在则注册
+        User hasregister = userAccessDao.getUser4Op(phoneNum);
+        if (hasregister != null){
+            // 存在则绑定openId
+            userAccessDao.bindUserWithOpenId(hasregister);
+        }else {
+            //  不存在则注册用户
+//            User registerUser = new User();
+//            registerUser.setAccount(phoneNum);
+//            registerUser.setWechatopenid(openId);
+
+            RegisterParam registerParam = new RegisterParam();
+            registerParam.setPhone(phoneNum);
+            doRegister(registerParam, openId);
+        }
+
+        // 登陆
+//        login(hasregister, "");
         return null;
+    }
+
+    /**
+     * 校验验证码
+     * @param params
+     * @return
+     */
+    public Map<String, Object> verifySMSCode(String phone, String verificationcode) {
+        Map<String, Object> res = new HashMap<String,Object>();
+        try{
+            String smscodeerrortimesstr = SystemConfig.getSystemProperty("smscodeerrortimes");
+            int smscodeerrortimes = parseInt(smscodeerrortimesstr)<=0?5:parseInt(smscodeerrortimesstr);
+            String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+            //redis错误次数是5，就直接返回false
+            if(parseDouble(errortimes)>=smscodeerrortimes){
+                res.put("status", Retcode.EXCEPTION.code);
+                res.put("message", "错误次数超限!");
+                return res;
+            }
+        }catch (Exception e){
+            logger.error("获取redis信息出错",e);
+        }
+        Map<String,Object> param = new HashMap<String,Object>();
+        param.put("phone", phone);
+        param.put("usertype", Const.USERTOKENTYPE_PEUSER);
+        param.put("smstype", Const.SMSTYPE_REGISTER);
+        PubSmsToken smsobj = userAccessDao.getSMSInfo(param);
+        if(smsobj==null){
+            res.put("status", Retcode.SMSCODEINVALID.code);
+            res.put("message", Retcode.SMSCODEINVALID.msg);
+        }else{
+            String smscode = smsobj.getSmscode();
+            Date savetime = smsobj.getUpdatetime();
+            Date temptime = new Date(savetime.getTime() + (long)Const.SMSCODEVALITIME * 60 * 1000);
+            Date currentime = new Date();
+            if(currentime.after(temptime)){
+                res.put("status", Retcode.SMSCODEOUTTIME.code);
+                res.put("message", Retcode.SMSCODEOUTTIME.msg);
+            }else if(smscode==null||!smscode.equals(verificationcode)){
+                res.put("status", Retcode.SMSCODEINVALID.code);
+                res.put("message", Retcode.SMSCODEINVALID.msg);
+                try{
+                    String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+                    JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+                    if(parseDouble(errortimes)<=0){
+                        String smscodeerrorouttimestr = SystemConfig.getSystemProperty("smscodeerrorouttime");
+                        int smscodeerrorouttime = parseInt(smscodeerrorouttimestr)<=0?5:parseInt(smscodeerrorouttimestr);
+                        JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone,smscodeerrorouttime*60);
+                    }
+                }catch (Exception e){
+                    logger.error("获取redis出错");
+                }
+            }else{
+                try{
+                    JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_REGISTER_ERRORTIMES.code+phone);
+                    JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_REGISTER.code+phone);
+                }catch (Exception e){
+                    logger.error("清除redis出错",e);
+                }
+                res.put("status", Retcode.OK.code);
+                res.put("message", Retcode.OK.msg);
+            }
+        }
+        return res;
+    }
+
+
+    /**
+     * 注册个人用户账户, 用户不存在，所以不需要判断是否存在用户
+     * @param registerparam
+     * @return
+     */
+    public Map<String, Object> doRegister(RegisterParam registerparam, String openId) {
+        Map<String, Object> res = new HashMap<String,Object>();
+        Map<String,Object> loginlog = new HashMap<String,Object>();
+        loginlog.put("id", GUIDGenerator.newGUID());
+//        loginlog.put("device", registerparam.getDevice());
+//        loginlog.put("version", registerparam.getVersion());
+//        loginlog.put("appversion", registerparam.getAppversion());
+//        loginlog.put("phonebrand", registerparam.getPhonebrand());
+//        loginlog.put("phonemodel", registerparam.getPhonemodel());
+//        loginlog.put("browserversion", registerparam.getBrowserversion());
+//        loginlog.put("browsertype", registerparam.getBrowsertype());
+
+        User peuser = new User();
+        String phone = registerparam.getPhone();
+
+        peuser.setWechatopenid(openId);
+        peuser.setAccount(phone);
+        String userid = GUIDGenerator.newGUID();
+        loginlog.put("userid", userid);
+        peuser.setId(userid);
+        peuser.setUserpassword(registerparam.getPassword());
+        encodePwd(peuser);
+        try{
+            peuser.setNickname("");
+            userAccessDao.registerPeUser(peuser);
+            loginlog.put("loginstatus", Const.LOGINSTATUS_OK);
+            res.put("status", Retcode.OK.code);
+            res.put("message", Retcode.OK.msg);
+//            addUserInfo(res,registerparam.getUuid(), peuser);
+
+            addUserInfo(res,"", peuser);
+        }catch(Exception e){
+            loginlog.put("loginstatus", Const.LOGINSTATUS_ERROR);
+            res.put("status", Retcode.EXCEPTION.code);
+            res.put("message", Retcode.EXCEPTION.msg);
+        }
+//        userAccessDao.addLog4Pe(loginlog);
+        return res;
+    }
+
+    private void encodePwd(User peuser){
+        if(peuser==null){
+            return ;
+        }
+        String pwd = peuser.getUserpassword();
+        if(pwd==null||"".equalsIgnoreCase(pwd)){
+            return ;
+        }
+        peuser.setUserpassword(PasswordEncoder.encode(pwd));
     }
 
     @Override
@@ -82,85 +229,16 @@ public class UserAccessService implements IUserAccessService {
             return res;
         }
         loginfo.put("userid", peuser.getId());
-        if(Const.CODELOGIN.equalsIgnoreCase(loginparam.getLogintype())){
-            //验证码登录
-            /*try{
-                String smscodeerrortimesstr = SystemConfig.getSystemProperty("smscodeerrortimes");
-                int smscodeerrortimes = parseInt(smscodeerrortimesstr)<=0?5:parseInt(smscodeerrortimesstr);
-                String errortimes = JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code);
-                if(StringUtils.isNotBlank(errortimes)){
-                    //redis错误次数是5，就直接返回false
-                    if(parseDouble(errortimes)>=smscodeerrortimes){
-                        res.put("status", Retcode.FAILED.code);
-                        res.put("message", "错误次数超限!");
-                        return res;
-                    }
-                }
-            }catch (Exception e){
-                logger.error("获取redis错误次数失败",e);
-            }
+//        if(Const.CODELOGIN.equalsIgnoreCase(loginparam.getLogintype())){
+//            //验证码登录
+//
+//        }else{
+//            // 静默登陆
+//            addUserInfo(res,uuid,peuser);
+//        }
 
-            Map<String,Object> params = new HashMap<String,Object>();
-            params.put("phone", account);
-            params.put("usertype", Const.USERTOKENTYPE_PEUSER);
-            params.put("smstype", Const.SMSTYPE_LOGIN);
-            //验证码登录判断
-            Map<String, Object> smsobj = userAccessDao.getSMSInfo(params);
-            if(smsobj==null){
-                res.put("status", Retcode.SMSCODEINVALID.code);
-                res.put("message", "请输入正确的验证码");
-                loginfo.put("loginstatus", Const.LOGINSTATUS_FAIL);
-            }else{
-                String smscode = (String) smsobj.get("smscode");
-                Date savetime = (Date)smsobj.get("updatetime");
-                Date temptime = new Date(savetime.getTime() + (long)Const.SMSCODEVALITIME * 60 * 1000);
-                Date currentime = new Date();
-                if(smscode==null||!smscode.equals(loginparam.getValidatecode())){
-                    res.put("status", Retcode.SMSCODEINVALID.code);
-                    res.put("message", "请输入正确的验证码");
-                    loginfo.put("loginstatus", Const.LOGINSTATUS_FAIL);
-                    try{
-                        boolean shouldsetexpire = false;
-                        if(StringUtils.isBlank(JedisUtil.getString(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code))){
-                            shouldsetexpire = true;
-                        }
-                        JedisUtil.getFlowNO(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code);
-                        if(shouldsetexpire){
-                            String smscodeerrorouttimestr = SystemConfig.getSystemProperty("smscodeerrorouttime");
-                            int smscodeerrorouttime = parseInt(smscodeerrorouttimestr)<=0?5:parseInt(smscodeerrorouttimestr);
-                            JedisUtil.expire(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code,smscodeerrorouttime*60);
-                        }
-                    }catch (Exception e){
-                        logger.error("记录redis错误次数失败",e);
-                    }
-                }else if(currentime.after(temptime)){
-                    res.put("status", Retcode.SMSCODEOUTTIME.code);
-                    res.put("message", "验证码已失效，请重新获取验证码");
-                    loginfo.put("loginstatus", Const.LOGINSTATUS_FAIL);
-                }else{
-                    try{
-                        res.put("status", Retcode.OK.code);
-                        res.put("message", Retcode.OK.msg);
-                        addUserInfo(res,uuid,peuser);
-                        deleteSMSCode(account, Const.USERTOKENTYPE_PEUSER, Const.SMSTYPE_LOGIN);
-                        loginfo.put("loginstatus", Const.LOGINSTATUS_OK);
-                        try{
-                            JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN_ERRORTIMES.code+account);
-                            JedisUtil.delKey(RedisKeyEnum.SMS_PASSENGER_LOGIN.code+account);
-                        }catch (Exception e){
-                            logger.error("清除redis数据",e);
-                        }
-                    }catch(Exception e){
-                        res.put("status", Retcode.EXCEPTION.code);
-                        res.put("message", Retcode.EXCEPTION.msg);
-                        logger.error("微信端异常",e);
-                    }
-                }
-            }*/
-        }else{
-            // 静默登陆
-            addUserInfo(res,uuid,peuser);
-        }
+        // 静默登陆
+        addUserInfo(res,uuid,peuser);
         //记录日志
         userAccessDao.addLog4Pe(loginfo);
         return res;
@@ -198,7 +276,6 @@ public class UserAccessService implements IUserAccessService {
         }
         return Double.parseDouble(String.valueOf(value));
     }
-
 
     private void addUserInfo(Map<String, Object> res,String uuid, User peuser) throws NoSuchAlgorithmException {
         String usertoken = UserTokenManager.createUserToken(UserTokenManager.PERSONNALUSER,peuser.getAccount(), SystemConfig.getSystemProperty("securityKey"));

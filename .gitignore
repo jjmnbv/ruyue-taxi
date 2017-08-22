@@ -38,3 +38,4 @@ passenger-wechat-api/classes/
 meterservice-api/out/
 meterservice-api/classes/
 rebel.xml
+*/target/

@@ -11,7 +11,9 @@ public interface IUserAccessService {
 
     User getUserByOpenId(String openId);
 
-    Map<String, Object> bindUserWithOpenId(User user);
+    Map<String, Object> registerAndLogin(String phoneNum, String smsCode, String openId);
+
+//    Map<String, Object> bindUserWithOpenId(User user);
 
     Map<String, Object> login(User user, String loginType) throws NoSuchAlgorithmException;
 }

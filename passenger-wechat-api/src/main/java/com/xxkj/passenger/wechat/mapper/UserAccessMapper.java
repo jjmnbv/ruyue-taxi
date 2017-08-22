@@ -1,5 +1,6 @@
 package com.xxkj.passenger.wechat.mapper;
 
+import com.szyciov.entity.PubSmsToken;
 import com.szyciov.org.entity.OrgUser;
 import com.xxkj.passenger.wechat.entity.User;
 import org.apache.ibatis.annotations.Mapper;
@@ -18,7 +19,14 @@ public interface UserAccessMapper {
 
     User getUserByOpenId(String openId);
 
+    /**
+     * 手机号是否已注册
+     * */
+//    boolean hasRegister(String phone);
+
     void bindUserWithOpenId(User user);
+
+    void registerPeUser(User peuser);
 
     void createOrUpdateUsertoken(Map<String, Object> tokeninfo);
 
@@ -32,5 +40,5 @@ public interface UserAccessMapper {
     /**
      * 获取验证码
      * */
-    Map<String, Object> getSMSInfo(Map<String, Object> params);
+    PubSmsToken getSMSInfo(Map<String, Object> params);
 }
