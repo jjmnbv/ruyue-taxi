@@ -11,6 +11,7 @@ import java.util.Map;
  */
 @Mapper
 public interface OrderMapper {
-     DriverOnWork driverOnWork(String driverId);
-     DriverOffWork driverOffWork(String driverId);
+    DriverOnWork driverOnWork(String driverId);
+
+    DriverOffWork driverOffWork(String driverId);
 }
