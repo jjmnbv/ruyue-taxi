@@ -19,10 +19,19 @@ service:
     key: SLj16Qq7FK9nbyi4
 server:
   port: 8098
+security:
+  basic:
+    enabled: false
+management:
+  security:
+    enabled: false
 wxpub:
   pay: 
     businessno: 9999
     payurl: http://epay.xunxintech.com:8001/WebTest/WXPayJsAPI.aspx
     #TODO to be confirmed 1.respurl 2.callbackurl host
     respurl: html?orderno=
-    callbackurl: http://szycwh.f3322.net:8004/passenger-wechat-api/PassengerWechat/DillWXPubPayed4Op
+    callbackurl: http://rytaxiapi.xunxintech.com/passenger-wechat-api/PassengerWechat/DillWXPubPayed4Op
+  appid: wx7930eb47d68e7019
+  appsecret: 8f41847f651171ec690d36f974884958
+  

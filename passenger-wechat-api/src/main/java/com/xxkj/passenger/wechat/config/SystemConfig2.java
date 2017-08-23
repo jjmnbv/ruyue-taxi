@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Component
-@PropertySource("classpath:web.properties")
+@PropertySource(value={"classpath:web.properties"}, ignoreResourceNotFound=true)
 public class SystemConfig2 implements ApplicationContextAware {
 	
 	private static ApplicationContext applicationContext;
