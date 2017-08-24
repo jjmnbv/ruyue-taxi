@@ -1,20 +1,27 @@
 package com.xxkj.passenger.wechat.controller;
 
-import com.xxkj.passenger.wechat.Const;
-import com.xxkj.passenger.wechat.entity.User;
-import com.xxkj.passenger.wechat.service.IUserAccessService;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-import java.security.NoSuchAlgorithmException;
-import java.util.Map;
+import com.alibaba.fastjson.JSON;
+import com.xxkj.passenger.wechat.Const;
+import com.xxkj.passenger.wechat.entity.User;
+import com.xxkj.passenger.wechat.resp.WechatWebAccessTokenResp;
+import com.xxkj.passenger.wechat.service.IUserAccessService;
+import com.xxkj.passenger.wechat.util.HttpsUtil;
 
 
 /**
@@ -23,18 +30,51 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class UserAccessController {
-    @Autowired
-    IUserAccessService userAccessService;
 
     private static Logger logger = LoggerFactory.getLogger(UserAccessController.class);
+    
+    private static final String WECHAT_WEB_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code";
+    
+    @Autowired
+    private IUserAccessService userAccessService;
+    
+    @Value("${wxpub.appid}")
+    private String wechatAppId;
+    
+    @Value("${wxpub.appsecret}")
+    private String wechatAppSecrect;
 
     /**
-     *  校验是否已注册和绑定了openId
+     *  获取code 去换openid， 然后校验是否已注册和绑定了openId
      * */
     @RequestMapping(value = "/Verify", method = RequestMethod.GET)
-    public String verifyOpenId(HttpServletResponse response, String openId) throws NoSuchAlgorithmException {
-//        boolean isBindOpenId = userAccessService.verifyOpenId(openId);
-//        return  isBindOpenId ? "是" : "否";
+    @ResponseBody
+    public String getWechatCode(@RequestParam(name="code",required=false)String code,
+                                @RequestParam(name="state")String state) throws NoSuchAlgorithmException{
+
+        logger.info("-----收到公众号发送的请求:code=" + code + " state=" + state);
+        
+        String openId = "";
+
+        //通过code换取网页授权openId
+        if(code != null && !"".equals(code)){
+            //替换字符串，获得请求URL
+        	String accessTokenUrl = String.format(WECHAT_WEB_ACCESS_TOKEN_URL, wechatAppId, wechatAppSecrect, code);
+        	
+            //通过https方式请求获得web_access_token
+            String response = HttpsUtil.httpsRequestToString(accessTokenUrl, "GET", null);
+            logger.info("-----get web access token result:" + response);
+            
+            WechatWebAccessTokenResp accessTokenResp = JSON.parseObject(response, WechatWebAccessTokenResp.class);
+            
+            if(accessTokenResp.getErrcode() != null && accessTokenResp.getErrcode() != 0) {
+            	return "获取openid失败";
+            }
+            else {
+            	openId = accessTokenResp.getOpenid();
+            }
+        }
+
         User user = userAccessService.getUserByOpenId(openId);
 
         if (user != null) {
@@ -42,28 +82,21 @@ public class UserAccessController {
             Map<String, Object> res = userAccessService.login(user, Const.DELLOGIN);
 
             logger.info("用已注册与绑定openid，跳转首页");
-            return "redirect:/home";
+//            return "redirect:/home";
+            return "静默登陆成功，跳转到首页!";
         }else{
             // 没绑定openId或是没注册, 则跳转到登陆绑定界面
             logger.info("没绑定openId或是没注册, 跳转到登陆绑定");
-            return "redirect:/Login";
+//            return "redirect:/Login";
+            return "未绑定openId或用户不存在，跳转登陆界面" + openId;
         }
     }
 
     @RequestMapping(value="/Login")
-    public User bindUserWithOpenId(HttpServletResponse response, String userId, String openId) {
-        User user = new User();
-        user.setId(userId);
-        user.setWechatopenid(openId);
-        userAccessService.bindUserWithOpenId(user);
+    @ResponseBody
+    public String bindUserWithOpenId(HttpServletResponse response, String phone, String smsCode, String openId) {
+        userAccessService.registerAndLogin(phone, smsCode, openId);
 
-
-        // 保存usertoken到cookie中
-        Cookie cookie = new Cookie("usertoken", "usertoken");
-        cookie.setMaxAge(30 * 60);// 设置为30min
-        cookie.setPath("/");
-        System.out.println("已添加===============");
-        response.addCookie(cookie);
-        return user;
+        return "redirect to home";
     }
 }

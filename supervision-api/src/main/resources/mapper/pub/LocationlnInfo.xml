@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szyciov.supervision.mapper.LocationlnInfoMapper">
+
+        <!-- 驾驶员定位信息 -->
+        <select id="driverLocationInfo" resultType="java.util.Map" parameterType="com.szyciov.supervision.api.dto.gps.DriverLocationInfo">
+            SELECT	DISTINCT (SELECT address FROM pub_cityaddr where id =pd.city)address,
+			pd.address driverRegionCode,
+			pv.fullplateno vehicleNo,
+			case when pv.color LIKE '%红%' THEN '9' WHEN pv.color LIKE '%蓝%' THEN '1'
+			WHEN pv.color LIKE '%黄%' THEN '2' WHEN pv.color LIKE '%黑%'
+			THEN '3' WHEN pv.color LIKE '%白%' THEN '4' END plateColor,
+			pv.address vehicleRegionCode,
+			pd.gpstime positionTime,
+			pd.gpsdirection speed,
+			pd.gpsspeed direction,
+			CASE pd.maptype WHEN 1 THEN 3 WHEN 2 THEN 1 END encrypt,
+			ot.orderno orderId,
+			pd.`name` driverName,
+			pd.jobnum driverCertCard,
+			pv.vehicletype vehicleType,
+			CASE pd.workstatus WHEN '0' THEN 'SJSB' WHEN '1' THEN 'AUTO' ELSE 'SJXB' END positionType
+			FROM
+			pub_driver pd
+			LEFT JOIN pub_vehicle pv ON pd.id = pv.driverid
+			LEFT JOIN #{orader} ot ON ot.driverid = pd.id
+			WHERE pd.`Status`='1' AND pd.id =#{driverId} ORDER BY ot.ordertime DESC LIMIT 1
+        </select>
+
+        <!-- 乘客定位信息 -->
+        <select id="passengerLocationInfo" resultType="java.util.Map" parameterType="com.szyciov.supervision.api.dto.gps.PassengerLocationInfo">
+			SELECT DISTINCT
+				(SELECT address FROM pub_cityaddr where id =oo.oncity)address,
+				CASE WHEN oo.paymentstatus='1' THEN '0' WHEN oo.paymentstatus='0' THEN oo.orderno END orderId,
+				pd.`name` driverName,
+				pd.phone driverPhone,
+				pd.idcardnum driverIDCard,
+				pd.jobnum driverCertCard,
+				oo.passengerphone passengerPhone,
+				pv.fullplateno vehicleNo,
+				case when pv.color LIKE '%红%' THEN '9' WHEN pv.color LIKE '%蓝%' THEN '1'
+				WHEN pv.color LIKE '%黄%' THEN '2' WHEN pv.color LIKE '%黑%'
+					THEN '3' WHEN pv.color LIKE '%白%' THEN '4' END plateColor,
+				oo.vehcbrandname brand,
+				CASE pd.maptype WHEN 1 THEN 3 WHEN 2 THEN 1 END encrypt,
+				pd.gpsdirection speed,
+				pd.gpstime positionTime,
+				oo.`status` validity
+			FROM
+				#{orader} oo
+				LEFT JOIN pub_driver pd ON pd.id = oo.driverid
+				LEFT JOIN pub_vehicle pv ON pv.driverid = oo.driverid
+			WHERE oo.`status`='1' AND oo.driverid =#{driverId} ORDER BY oo.undertime DESC LIMIT 1
+
+        </select>
+
+
+</mapper>

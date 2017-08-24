@@ -49,9 +49,3 @@ pagehelper:
   reasonable: true
   supportMethodsArguments: true
   params: count=countSql
-security:
-  basic:
-    enabled: false
-management:
-  security:
-    enabled: false

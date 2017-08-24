@@ -38,8 +38,8 @@ public class PassengerWechatPayOrderTest {
     	logger.info("start test payOrder");
     	
     	Map<String, Object> requestMap = new HashMap<String, Object>();
-    	requestMap.put("usertoken", "Nzc0NjNiYjMzYmU5ZmUzZjg3NzMzYWM0ZWU0MDZkMGUyMDE3MDgwMTExNDU1MTI5NzAxMzAyNjM1MzIwNg==");
-    	requestMap.put("orderno", "CGI1708011100001");
+    	requestMap.put("usertoken", "ZWI2OTI1MTM2MjcxNDRmYmYxMDUxZGM5MDMxOGMxZGIyMDE3MDgwMzA0MTMxNTc0ODAxNTgyMDI2NDU4NA==");
+    	requestMap.put("orderno", "CGI1708031600001");
     	requestMap.put("paytype", "4");
     	requestMap.put("ordertype", "0");
     	requestMap.put("usetype", "2");

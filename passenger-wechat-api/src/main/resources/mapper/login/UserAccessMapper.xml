@@ -2,6 +2,17 @@
 <!DOCTYPE mapper PUBLIC
         "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.xxkj.passenger.wechat.mapper.UserAccessMapper">
+    <resultMap type="com.szyciov.entity.PubSmsToken" id="smsobj">
+        <id column="id" property="id" javaType="String"></id>
+        <result column="smstype" property="smstype" javaType="String"></result>
+        <result column="usertype" property="usertype" javaType="String"></result>
+        <result column="username" property="username" javaType="String"></result>
+        <result column="smscode" property="smscode" javaType="String"></result>
+        <result column="createtime" property="createtime" javaType="Date"></result>
+        <result column="updatetime" property="updatetime" javaType="Date"></result>
+        <result column="status" property="status" javaType="int"></result>
+    </resultMap>
+
     <select id="getUserById" parameterType="String" resultType="com.xxkj.passenger.wechat.entity.User">
         SELECT  * FROM pe_user WHERE id = #{userId}
     </select>
@@ -39,6 +50,10 @@
         AND usertype = #{usertype}
     </select>
 
+    <!-- 用户是否已经注册了 -->
+    <!--<select id="hasRegister" parameterType="String" resultType="com.xxkj.passenger.wechat.entity.User">-->
+        <!--SELECT * from pe_user where pe_user.status=1 and pe_user.account=#{phone}-->
+    <!--</select>-->
 
     <!-- 添加或者更新用户的token -->
     <insert id="createOrUpdateUsertoken" parameterType="HashMap">
@@ -82,6 +97,55 @@
     <update id="bindUserWithOpenId" parameterType="com.xxkj.passenger.wechat.entity.User">
         UPDATE pe_user SET wechatopenid = #{wechatopenid} WHERE id = #{id}
     </update>
+
+    <!-- 个人用户注册 -->
+    <insert id="registerPeUser" parameterType="com.xxkj.passenger.wechat.entity.User">
+        INSERT INTO pe_user(
+        id,
+        account,
+        email,
+        nickname,
+        userpassword,
+        sex,
+        specialstate,
+        registertime,
+        disablestate,
+        disablehis,
+        usetimes,
+        gpsspeed,
+        gpsdirection,
+        lng,
+        lat,
+        createtime,
+        updatetime,
+        STATUS,
+        wdpwdchangestate,
+        wechatopenid
+        )
+        VALUES
+        (
+        #{id},
+        #{account},
+        #{email},
+        #{nickname},
+        #{userpassword},
+        #{sex},
+        '0',
+        now(),
+        '0',
+        '0',
+        0,
+        #{gpsspeed},
+        #{gpsdirection},
+        #{lng},
+        #{lat},
+        now(),
+        now(),
+        1,
+        0,
+        #{wechatopenid}
+        )
+    </insert>
 
     <insert id="addLog4Pe" parameterType="HashMap">
         INSERT INTO pe_userloginlog (
@@ -135,15 +199,15 @@
     </update>
 
     <!-- 获取验证码 -->
-    <!--<select id="getSMSInfo" parameterType="HashMap" resultMap="smsobj" >-->
-        <!--SELECT-->
-        <!--*-->
-        <!--FROM-->
-        <!--pub_smstoken-->
-        <!--WHERE-->
-        <!--pub_smstoken.usertype = #{usertype}-->
-        <!--AND pub_smstoken.smstype = #{smstype}-->
-        <!--AND pub_smstoken.username = #{phone}-->
-        <!--AND pub_smstoken.status = 1-->
-    <!--</select>-->
+    <select id="getSMSInfo" parameterType="HashMap" resultMap="smsobj" >
+        SELECT
+        *
+        FROM
+        pub_smstoken
+        WHERE
+        usertype = #{usertype}
+        AND smstype = #{smstype}
+        AND username = #{phone}
+        AND status = 1
+    </select>
 </mapper>
