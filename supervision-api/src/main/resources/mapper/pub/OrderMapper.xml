@@ -27,5 +27,168 @@
         JOIN pub_vehicle pv on pv.Status=1 JOIN pub_driver_vehicle_ref pdvr  ON pdvr.status=1 AND pdvr.vehicleid=pv.id AND pdvr.driverid=pd.id
         WHERE pd.id=#{driverid} and pd.Status=1
     </select>
+    
+    <!-- 机构端订单发起 -->
+    <select id = "orgOrderInitiation" parameterType = "Map" resultType = "com.szyciov.supervision.api.dto.order.OrderInitiation">
+    	select		oo.orderno as orderId, 	        IFNULL(pco.address,0) as address,	   DATE_FORMAT(oo.usetime,'%Y%m%d%H%I%s') as departTime,		DATE_FORMAT(oo.undertime,'%Y%m%d%H%I%s') as orderTime,		
+    				oo.passengerphone as passengerPhone,'无乘客备注' as passengerNote, 			   oo.onaddress as departure,				                oo.onaddrlng as depLongitude,							
+    				oo.onaddrlat as depLatitude,	oo.offaddress as destination,		   oo.offaddrlng as destLongitude,	                        oo.offaddrlat as destLatitude,								
+    				left(IFNULL(la.id,0),15) as fareType,	
+    				case when ordersource in ('00','01','02')	then 	0	when ordersource IN   ('10','20','30')  then  1 else 4 end as orderSource,
+					oo.passengers as psgName,       0 as psgGender,		                   '1' as psgTotal,											'ZC' as vehType,							
+					case oo.isusenow when 0 then 1 else 0 end as isReserve, 
+					0 as isVoice,					oo.estimatedmileage as preMile,		     oo.estimatedtime as preTime,						    oo.estimatedcost as preFare,			
+					DATE_FORMAT(oo.usetime,'%Y%m%d%H%I%s') as useTime,		  oo.onaddress	 as	useLocale,		oo.onaddrlng as useLon,		        oo.onaddrlng as useLat,
+
+					case oo.selectedmodelname when '舒适型' then 0	when '商务型' then 1 when '豪华型' then 2 else 3 end as taxiTypeCode,	
+					case oo.ordertype when '1' then '约车' when '2' then '接机' when '3' then '送机' end as serviceTypeCode,
+					IFNULL(pco.address,0) as departCity ,IFNULL(pcf.address,0) as destCity
+					
+		from org_order oo
+		LEFT JOIN op_accountrules la on  la.vehiclemodelsid = oo.selectedmodel  and  la.rulestype = oo.usetype
+		LEFT JOIN pub_cityaddr pco on  pco.id = oo.oncity 
+		LEFT JOIN pub_cityaddr pcf on  pcf.id = oo.offcity 
+		where oo.orderno = #{orderno}
+		and oo.ordertype = #{ordertype}
+		and oo.usetype = #{usetype}
+		limit 1
+    </select>
+    
+    <!-- 运营订单发起 -->
+    <select id = "opOrderInitiation" parameterType = "Map" resultType = "com.szyciov.supervision.api.dto.order.OrderInitiation">
+    	select		oo.orderno as orderId, 	        IFNULL(pco.address,0) as address,	   DATE_FORMAT(oo.usetime,'%Y%m%d%H%I%s') as departTime,  DATE_FORMAT(oo.undertime,'%Y%m%d%H%I%s') as orderTime,		
+    				oo.passengerphone as passengerPhone,'无乘客备注' as passengerNote, 			   oo.onaddress as departure,				      oo.onaddrlng as depLongitude,							
+    				oo.onaddrlat as depLatitude,	oo.offaddress as destination,		   oo.offaddrlng as destLongitude,	                       oo.offaddrlat as destLatitude,			
+    				left(IFNULL(oa.id,0),15) as fareType,	
+    				case when ordersource in ('00','01','02')	then 	0	when ordersource IN   ('10','20','30')  then  1 else 4 end as orderSource,
+					oo.passengers as psgName,       0 as psgGender,		                   '1' as psgTotal,											'ZC' as vehType,							
+					case oo.isusenow when 0 then 1 else 0 end as isReserve, 
+					0 as isVoice,					oo.estimatedmileage as preMile,		   oo.estimatedtime as preTime,						         oo.estimatedcost as preFare,			
+					DATE_FORMAT(oo.usetime,'%Y%m%d%H%I%s') as useTime,		  oo.onaddress	 as	useLocale,		oo.onaddrlng as useLon,		oo.onaddrlng as useLat,
+
+					case oo.selectedmodelname when '舒适型' then 0	when '商务型' then 1 when '豪华型' then 2 else 3 end as taxiTypeCode,	
+					case oo.ordertype when '1' then '约车' when '2' then '接机' when '3' then '送机' end as serviceTypeCode,
+					IFNULL(pco.address,0) as departCity ,IFNULL(pcf.address,0) as destCity
+					
+		from op_order oo
+		LEFT JOIN op_accountrules oa on  oa.vehiclemodelsid = oo.selectedmodel  and  oa.rulestype = oo.usetype
+		LEFT JOIN pub_cityaddr pco on  pco.id = oo.oncity 
+		LEFT JOIN pub_cityaddr pcf on  pcf.id = oo.offcity 
+		where oo.orderno = #{orderno}
+		and oo.ordertype = #{ordertype}
+		and oo.usetype = #{usetype}
+		limit 1
+    </select>
+    
+    <!-- 出租车订单发起 -->
+    <select id = "taxiOrderInitiation" parameterType = "Map" resultType = "com.szyciov.supervision.api.dto.order.OrderInitiation">
+    	select		oo.orderno as orderId, 				IFNULL(pco.address,0) as address,	DATE_FORMAT(oo.usetime,'%Y%m%d%H%I%s') as departTime,		DATE_FORMAT(oo.undertime,'%Y%m%d%H%I%s') as orderTime,		
+					oo.passengerphone as passengerPhone,'无乘客备注' as passengerNote, 			    oo.onaddress as departure,								oo.onaddrlng as depLongitude,																					
+					oo.onaddrlat as depLatitude,		oo.offaddress as destination,		oo.offaddrlng as destLongitude,							oo.offaddrlat as destLatitude,		
+					left(IFNULL(ota.id,0),15) as fareType,									             
+				 	case when ordersource in ('00','01','02')	then 	0	when ordersource IN   ('10','20','30')  then  1 else 4 end as orderSource,
+
+				 	oo.passengers as psgName,            0 as psgGender,					'1' as psgTotal,										'KC' as vehType,															
+					case oo.isusenow when 0 then 1 else 0 end as isReserve,    0 as isVoice,	oo.estimatedmileage,			      			     oo.estimatedtime,																			  
+					oo.estimatedmileage as preMile,		oo.estimatedtime as preTime,		 oo.estimatedcost as preFare,							DATE_FORMAT(oo.usetime,'%Y%m%d%H%I%s') as useTime,		   	 
+				 	oo.onaddress	 as	useLocale,		oo.onaddrlng as useLon,		         oo.onaddrlng as useLat,        						3  as taxiTypeCode,	           							
+				 	'出租车' as serviceTypeCode,         IFNULL(pco.address,0) as departCity,   IFNULL(pcf.address,0) as destCity
+					
+		from op_taxiorder oo
+		LEFT JOIN op_taxiaccountrules ota on   ota.city = oo.oncity
+		LEFT JOIN pub_cityaddr pco on  pco.id = oo.oncity 
+		LEFT JOIN pub_cityaddr pcf on  pcf.id = oo.offcity 
+		where oo.orderno = #{orderno}
+		and oo.ordertype = #{ordertype}
+		and oo.usetype = #{usetype}
+		limit 1
+    </select>
+    
+    <!-- 订单成功  包括机构订单,运营订单,出租车订单-->
+    <select id = "orderSuccess" parameterType = "Map"   resultType = "com.szyciov.supervision.api.dto.order.OrderSuccess">
+    	select  IFNULL(pco.address,0) as address,							oo.orderno as orderId, 					pd.lng as longitude, 						pd.lat as latitude, 		
+				pd.driversnum as licenseId,									pd.phone as driverPhone,				pv.fullplateno as vehicleNo,
+				case when  INSTR(pv.color,'蓝') > 0 then  1 
+					 when INSTR(pv.color,'黄') > 0 then 2 
+					 when INSTR(pv.color,'黑') > 0 then  3 
+					 when INSTR(pv.color,'白') > 0  then  4 
+					 else 9 end as plateColor,
+				DATE_FORMAT(oo.ordertime,'%Y%m%d%H%I%s') as distributeTime,	DATE_FORMAT(oo.undertime,'%Y%m%d%H%I%s') as orderTime,	pv.certificate as carCertNo,			
+				pd.name as driverName,										pd.idcardnum as idNo,					pd.certificatea as driCertNo,				IFNULL(pco.address,0) as departCity,   
+				IFNULL(pcf.address,0) as destCity,							oo.onaddress as departLocale, 			CONCAT(IFNULL(pco.city,0), oo.onaddress) as departLocaleDetail,
+				oo.onaddrlng as departLon,									oo.onaddrlat as departLat,				oo.offaddress as desLocale,					CONCAT(IFNULL(pcf.city,0),	oo.offaddress) as desLocaleDetail,
+				oo.offaddrlng as desLon,									oo.offaddrlat as desLat,				'已响应' as resStatus,						TIMESTAMPDIFF(SECOND , oo.undertime,oo.ordertime)	as resTime			
+		from ${table} oo
+		LEFT JOIN  pub_driver pd on pd.id = oo.driverid
+		LEFT JOIN pub_cityaddr pco on  pco.id = oo.oncity 
+		LEFT JOIN pub_cityaddr pcf on  pcf.id = oo.offcity 
+		LEFT JOIN pub_vehicle pv on pv.id = oo.vehicleid
+		where oo.orderno = #{orderno}
+		and oo.ordertype = #{ordertype}
+		and oo.usetype = #{usetype}
+		limit 1			
+    </select>
+    
+    <!-- 订单取消 -->
+    <select id = "orderCancel" parameterType = "Map"   resultType = "com.szyciov.supervision.api.dto.order.OrderCancel">
+    	select IFNULL(pco.address,0) as address, oo.orderno as orderId,	DATE_FORMAT(oo.undertime,'%Y%m%d%H%I%s')as orderTime,  DATE_FORMAT(oo.canceltime,'%Y%m%d%H%I%s') as cancelTime,
+				case  when ooc.dutyparty  > 2 then 3 else ooc.dutyparty end as initiator, 
+				case  when ooc.dutyparty = 1 then case when ooc.cancelnature = 1 then 4 else 1 end 
+							when ooc.dutyparty = 2 then case when ooc.cancelnature = 1 then 5 else 2 END
+							when ooc.dutyparty > 2 then 3 end as cancelTypeCode,
+				case ooc.cancelreason 
+							when 1 then '不再需要用车'
+							when 2 then '乘客迟到违约'
+							when 3 then '司机迟到违约'
+							when 4 then '司机不愿接乘客'
+							when 5 then '业务操作错误'
+							when 6 then '暂停供车服务'
+							when 7 then '系统派单失败'
+							when 8 then '行程有变，不再需要用车'
+							when 9 then '司机没来接我，联系不上司机'
+              				else cancelreason end as cancelReason
+		from ${table_order} oo
+		LEFT JOIN ${table_cancel} ooc on  ooc.orderno = oo.orderno 
+		LEFT JOIN pub_cityaddr pco on  pco.id = oo.oncity 
+		where oo.orderno = #{orderno}
+		and oo.ordertype = #{ordertype}
+		and oo.usetype = #{usetype}
+		limit 1	
+    </select>
+    
+    <!-- 订单违约 -->
+    <select id = "orderBreak" parameterType = "Map"  resultType = "com.szyciov.supervision.api.dto.order.OrderBreach">
+    	select 	IFNULL(pco.address,0) as address, 
+    			oo.orderno as orderId,	
+    			DATE_FORMAT(oo.undertime,'%Y%m%d%H%I%s')as orderTime,  
+    			pd.certificatea as driCertNo,
+				pv.fullplateno as vehicleNo,		
+				case  when ooc.dutyparty  > 2 then 3 else ooc.dutyparty end as breakPart, 
+				case ooc.cancelreason 
+							when 1 then '不再需要用车'
+							when 2 then '乘客迟到违约'
+							when 3 then '司机迟到违约'
+							when 4 then '司机不愿接乘客'
+							when 5 then '业务操作错误'
+							when 6 then '暂停供车服务'
+							when 7 then '系统派单失败'
+							when 8 then '行程有变，不再需要用车'
+							when 9 then '司机没来接我，联系不上司机'
+              				else IFNULL(ooc.cancelreason,'有责违约') end as breakReason, 
+				oo.passengerphone as psgTel,
+				DATE_FORMAT(oo.canceltime,'%Y%m%d%H%I%s') as breakTime
+		from ${table_order} oo
+		LEFT JOIN ${table_cancel} ooc on ooc.orderno = oo.orderno 
+		LEFT JOIN pub_cityaddr pco on  pco.id = oo.oncity 
+		LEFT JOIN  pub_driver pd on pd.id = oo.driverid
+		LEFT JOIN pub_vehicle pv on pv.id = oo.vehicleid
+		where oo.orderno = #{orderno}
+		and oo.ordertype = #{ordertype}
+		and oo.usetype = #{usetype}
+		and ooc.cancelnature = 1
+		limit 1
+    </select>
+    
+    
 
 </mapper>

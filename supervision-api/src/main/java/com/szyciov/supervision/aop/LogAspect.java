@@ -42,7 +42,7 @@ public class LogAspect {
 
         Object[] args = joinPoint.getArgs();
         //TODO 日志记录
-        logger.info("请求前置拦截,request:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)) ,JSONUtil.toJackson(getResult(args)));
+//        logger.info("请求前置拦截,request:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)) ,JSONUtil.toJackson(getResult(args)));
     }
 
     @After(value = "aspect()")
@@ -50,8 +50,8 @@ public class LogAspect {
         Object[] args = joinPoint.getArgs();
         //TODO 日志记录
 		EntityInfoList result = getResult(args);
-		if(result!=null)
-		    logger.info("请求后置拦截,request:{}, isAllSuccess:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)), result.isAllSuccess(), JSONUtil.toJackson(result));
+//		if(result!=null)
+//		    logger.info("请求后置拦截,request:{}, isAllSuccess:{}, result:{}", JSONUtil.toJackson(getBasicRequest(args)), result.isAllSuccess(), JSONUtil.toJackson(result));
 
     }
 

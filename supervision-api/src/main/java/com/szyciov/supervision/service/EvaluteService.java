@@ -1,4 +1,4 @@
-package com.szyciov.supervision.serivice;
+package com.szyciov.supervision.service;
 
 
 import com.szyciov.supervision.api.dto.evaluate.DriverCreditInfo;

@@ -1,10 +1,10 @@
-package com.szyciov.supervision.serivice.impl;
+package com.szyciov.supervision.service.impl;
 
 import com.supervision.enums.CommandEnum;
 import com.szyciov.supervision.api.dto.BaseApi;
 import com.szyciov.supervision.api.dto.relationship.HumanVehicleInfo;
 import com.szyciov.supervision.mapper.RelationshipMapper;
-import com.szyciov.supervision.serivice.RelationshipService;
+import com.szyciov.supervision.service.RelationshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

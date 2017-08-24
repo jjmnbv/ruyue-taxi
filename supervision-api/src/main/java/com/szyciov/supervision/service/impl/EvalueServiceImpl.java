@@ -1,4 +1,4 @@
-package com.szyciov.supervision.serivice.impl;
+package com.szyciov.supervision.service.impl;
 
 import com.supervision.enums.CommandEnum;
 import com.szyciov.supervision.api.dto.BaseApi;
@@ -7,8 +7,7 @@ import com.szyciov.supervision.api.dto.evaluate.DriverPenaltyInfo;
 import com.szyciov.supervision.api.dto.evaluate.PassengerComplaintInfo;
 import com.szyciov.supervision.api.dto.evaluate.PassengerEvaluationInformation;
 import com.szyciov.supervision.mapper.EvaluteMapper;
-import com.szyciov.supervision.serivice.EvaluteService;
-import org.apache.velocity.runtime.directive.Evaluate;
+import com.szyciov.supervision.service.EvaluteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

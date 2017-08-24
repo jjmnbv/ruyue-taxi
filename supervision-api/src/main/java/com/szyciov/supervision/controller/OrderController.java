@@ -9,8 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.supervision.enums.CommandEnum;
 import com.supervision.enums.InterfaceType;
-import com.szyciov.supervision.serivice.PubSupervisionLogService;
-import com.szyciov.supervision.serivice.impl.PubSupervisionLogServiceImpl;
+import com.szyciov.supervision.service.PubSupervisionLogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -577,7 +577,7 @@ public class BasicServiceTest extends ApiServiceTest
 	 * 未打通 ContractPhoto 需要base64编码
 	 * 3.2.18	个体驾驶员合同信息*(GTJSYHT)
 	 */
-	@Test
+//	@Test
 	public void testDriverCntractInfo() throws IOException {
 		List<DriverCntractInfo> list = new ArrayList<DriverCntractInfo>();
 		DriverCntractInfo driverCntractInfo=new DriverCntractInfo();

@@ -1,8 +1,7 @@
-package com.szyciov.supervision.serivice;
+package com.szyciov.supervision.service;
 
 import com.szyciov.supervision.SupervisionApplicationTests;
 import com.szyciov.supervision.entity.PubSupervisionLog;
-import com.szyciov.supervision.serivice.impl.PubSupervisionLogServiceImpl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

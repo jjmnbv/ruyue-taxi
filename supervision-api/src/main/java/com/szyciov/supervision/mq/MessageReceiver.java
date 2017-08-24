@@ -5,7 +5,7 @@ package com.szyciov.supervision.mq;
 import com.supervision.dto.SupervisionDto;
 import com.szyciov.supervision.api.dto.BaseApi;
 import com.szyciov.supervision.api.responce.HttpContent;
-import com.szyciov.supervision.serivice.*;
+import com.szyciov.supervision.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -57,6 +57,7 @@ public class MessageReceiver {
     {
         logger.info("接收到数据："+supervisionDto);
         if(!isValid(supervisionDto.getTimestamp())){
+            logger.info("消息超时失效："+supervisionDto);
             return;
         }
         HttpContent httpContent=null;

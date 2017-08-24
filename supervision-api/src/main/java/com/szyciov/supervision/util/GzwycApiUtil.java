@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.szyciov.supervision.api.responce.HttpContent;
 import com.szyciov.supervision.api.request.BasicRequest;
-import com.szyciov.supervision.serivice.PubSupervisionLogService;
+import com.szyciov.supervision.service.PubSupervisionLogService;
 import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.client.methods.HttpPost;

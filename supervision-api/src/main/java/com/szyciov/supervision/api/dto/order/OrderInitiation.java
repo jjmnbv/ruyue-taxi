@@ -1,6 +1,7 @@
 package com.szyciov.supervision.api.dto.order;
 
 import com.supervision.enums.CommandEnum;
+import com.szyciov.supervision.config.CacheHelper;
 
 /**
  * 3.3.1	订单发起(DDFQ) 实时
@@ -39,7 +40,7 @@ public class OrderInitiation extends OrderApi {
 //    预计目的地点纬度
     private String destLatitude;
 //  坐标加密标识
-    private String encrypt;
+    private String encrypt = CacheHelper.MAPTYPE;
 
 //    运价类型编码
     private String fareType;

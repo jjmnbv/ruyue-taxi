@@ -1,9 +1,7 @@
-package com.szyciov.supervision.serivice;
+package com.szyciov.supervision.service;
 
 import com.szyciov.supervision.SupervisionApplicationTests;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by lzw on 2017/8/21.

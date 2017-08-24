@@ -21,3 +21,4 @@ service:
     open-token: dsjjaAGJDJ224JD
 server:
   port: 8098
+carservice-api: http://localhost:8080/carservice-api/api

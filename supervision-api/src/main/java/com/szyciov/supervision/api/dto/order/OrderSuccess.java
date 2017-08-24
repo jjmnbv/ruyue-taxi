@@ -1,6 +1,7 @@
 package com.szyciov.supervision.api.dto.order;
 
 import com.supervision.enums.CommandEnum;
+import com.szyciov.supervision.config.CacheHelper;
 
 /**
  * 订单成功
@@ -33,7 +34,7 @@ public class OrderSuccess extends OrderApi {
         4：CGCS2000 北斗标准0：其他
 
      */
-    private String encrypt;
+    private String encrypt = CacheHelper.MAPTYPE;
 //    机动车驾驶证号
     private String licenseId;
 //    驾驶员联系电话

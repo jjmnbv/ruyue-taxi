@@ -1,10 +1,10 @@
-package com.szyciov.supervision.serivice.impl;
+package com.szyciov.supervision.service.impl;
 
 import com.supervision.enums.CommandEnum;
 import com.szyciov.supervision.api.dto.BaseApi;
 import com.szyciov.supervision.api.dto.basic.*;
 import com.szyciov.supervision.mapper.BasicMapper;
-import com.szyciov.supervision.serivice.BasicService;
+import com.szyciov.supervision.service.BasicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

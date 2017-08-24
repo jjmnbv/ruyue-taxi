@@ -1,9 +1,9 @@
-package com.szyciov.supervision.serivice.impl;
+package com.szyciov.supervision.service.impl;
 
 import com.szyciov.supervision.entity.PubSupervisionLog;
 
 import com.szyciov.supervision.mapper.PubSupervisionLogMapper;
-import com.szyciov.supervision.serivice.PubSupervisionLogService;
+import com.szyciov.supervision.service.PubSupervisionLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

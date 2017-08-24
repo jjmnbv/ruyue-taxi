@@ -1,11 +1,11 @@
-package com.szyciov.supervision.serivice.impl;
+package com.szyciov.supervision.service.impl;
 
 import com.supervision.enums.CommandEnum;
 import com.szyciov.supervision.api.dto.BaseApi;
 import com.szyciov.supervision.api.dto.gps.DriverLocationInfo;
 import com.szyciov.supervision.api.dto.gps.PassengerLocationInfo;
 import com.szyciov.supervision.mapper.GpsMapper;
-import com.szyciov.supervision.serivice.GpsService;
+import com.szyciov.supervision.service.GpsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

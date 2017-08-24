@@ -1,4 +1,4 @@
-package com.szyciov.supervision.serivice;
+package com.szyciov.supervision.service;
 
 import com.szyciov.supervision.api.dto.operation.*;
 
@@ -43,4 +43,6 @@ public interface OperationService extends CommonApiService  {
      * @return
      */
     OperationArrival operationArrival(Map<String,String> map);
+
+
 }

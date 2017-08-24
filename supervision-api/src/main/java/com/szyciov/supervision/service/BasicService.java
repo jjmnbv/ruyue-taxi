@@ -1,7 +1,6 @@
-package com.szyciov.supervision.serivice;
+package com.szyciov.supervision.service;
 
 import com.szyciov.supervision.api.dto.basic.*;
-import com.szyciov.supervision.api.dto.gps.DriverLocationInfo;
 
 import java.util.Map;
 

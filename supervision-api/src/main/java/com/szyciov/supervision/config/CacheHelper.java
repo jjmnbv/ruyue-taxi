@@ -33,6 +33,8 @@ public class CacheHelper implements InitializingBean{
     private@Value("${spring.http.dispatcher.maxRequestsPerHost:50}") int maxRequestsPerHost;
 
     private @Value("${spring.http.compression:false}")boolean compression;
+    
+    public static String MAPTYPE; //地图类型 1：GCJ-02 测绘局标准 2：WGS84 GPS标准 3：BD-09 百度标准 4：CGCS2000 北斗标准 0：其他 目前使用百度
 
 
     @Override
@@ -68,5 +70,9 @@ public class CacheHelper implements InitializingBean{
     public static String getMapEncrypt(){
         return p_mapEncrypt;
     }
-
+    
+    @Value("${maptype:3}")
+    public void setMaptype(String type){
+    	MAPTYPE = type;
+    }
 }

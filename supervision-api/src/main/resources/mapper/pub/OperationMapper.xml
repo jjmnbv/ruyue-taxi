@@ -8,10 +8,10 @@
     <!--车辆营运上线-->
     <select id="vehicleOperationOnline" parameterType="string" resultType="com.szyciov.supervision.api.dto.operation.VehicleOperationOnline">
         SELECT
-        pv.fullplateno vehicleNo,
-        pv.color plateColor,
-        pd.driversnum licenseId,
-        (SELECT address FROM  pub_cityaddr where id=pd.city) address
+          pv.fullplateno vehicleNo,
+          pv.color plateColor,
+          pd.driversnum licenseId,
+          (SELECT address FROM  pub_cityaddr where id=pd.city) address
         FROM  pub_driver pd
         JOIN pub_vehicle pv on pv.Status=1 JOIN pub_driver_vehicle_ref pdvr  ON pdvr.status=1 AND pdvr.vehicleid=pv.id AND pdvr.driverid=pd.id
         WHERE pd.id=#{driverid} and pd.Status=1
@@ -20,13 +20,181 @@
     <!--车辆营运下线-->
     <select id="vehicleOperationOffline" parameterType="string" resultType="com.szyciov.supervision.api.dto.operation.VehicleOperationOffline">
         SELECT
-        pv.fullplateno vehicleNo,
-        pv.color plateColor,
-        pd.driversnum licenseId,
-        (SELECT address FROM  pub_cityaddr where id=pd.city) address
+          pv.fullplateno vehicleNo,
+          pv.color plateColor,
+          pd.driversnum licenseId,
+          (SELECT address FROM  pub_cityaddr where id=pd.city) address
         FROM  pub_driver pd
         JOIN pub_vehicle pv on pv.Status=1 JOIN pub_driver_vehicle_ref pdvr  ON pdvr.status=1 AND pdvr.vehicleid=pv.id AND pdvr.driverid=pd.id
         WHERE pd.id=#{driverid} and pd.Status=1
+    </select>
+    <!--营运出发-->
+    <select id="operationDeparture" parameterType="string" resultType="com.szyciov.supervision.api.dto.operation.OperationDeparture">
+         select
+          co.orderno orderId,
+          (select driversnum from pub_driver WHERE co.driverid=id) licenseId,
+          co.passengerphone passengerPhone,
+          (SELECT  fullplateno from pub_vehicle where id=co.vehicleid) vehicleNo,
+          (SELECT  color from pub_vehicle where id=co.vehicleid) plateColor,
+          co.startlng depLongitude,
+          co.startllat depLatitude,
+          co.pricemodel fareType,
+          DATE_FORMAT(starttime,'%Y%m%d%H%i%s') depTime,
+          (UNIX_TIMESTAMP(co.arrivaltime)-UNIX_TIMESTAMP(co.departuretime)) passengerWaitTime,
+          (UNIX_TIMESTAMP(co.starttime)-UNIX_TIMESTAMP(co.arrivaltime)) driveWaitTime,
+          (select address from pub_cityaddr where id=co.oncity) address,
+          (select `name` from pub_driver WHERE co.driverid=id) driverName,
+          (select `idcardnum` from pub_driver WHERE co.driverid=id) driverIDCard,
+          (select `jobnum` from pub_driver WHERE co.driverid=id) driverCertCard
+        from
+          <if test="ordertype=='4'.toString()">
+              op_taxiorder
+          </if>
+          <if test="ordertype!='4'.toString()">
+              <if test="usetype=='0'.toString() or usetype=='1'.toString()">
+                org_order
+              </if>
+              <if test="usetype=='2'.toString()">
+                op_order
+             </if>
+          </if>
+           co
+        WHERE  co.status = '1' and co.orderno=#{orderno}
+    </select>
+
+    <!--计算空驾驶里程-->
+    <select id="getWaitMile" parameterType="string" resultType="map">
+        select
+          startlng,
+          startllat,
+          departurelng,
+          departurelat
+        from
+          <if test="ordertype=='4'.toString()">
+            op_taxiorder
+          </if>
+          <if test="ordertype!='4'.toString()">
+            <if test="usetype=='0'.toString() or usetype=='1'.toString()">
+                org_order
+            </if>
+            <if test="usetype=='2'.toString()">
+                op_order
+            </if>
+          </if>
+          co
+        WHERE  co.status = '1' and co.orderno=#{orderno}
+    </select>
+    <!--营运到达-->
+    <select id="operationArrival" parameterType="string" resultType="com.szyciov.supervision.api.dto.operation.OperationArrival">
+        select
+          co.orderno orderId,
+          co.endlng destLongitude,
+          co.endllat destLatitude,
+          DATE_FORMAT(co.endtime,'%Y%m%d%H%i%s') destTime,
+          co.mileage driveMile,
+          (UNIX_TIMESTAMP(co.endtime)-UNIX_TIMESTAMP(co.starttime)) driveTime,
+          (select address from pub_cityaddr where id=co.oncity) address,
+          (select `name` from pub_driver WHERE co.driverid=id) driverName,
+          (select `phone` from pub_driver WHERE co.driverid=id) driverPhone,
+          (select `idcardnum` from pub_driver WHERE co.driverid=id) driverIDCard,
+          (select `jobnum` from pub_driver WHERE co.driverid=id) driverCertCard,
+          (SELECT  fullplateno from pub_vehicle where id=co.vehicleid) vehicleNo,
+          DATE_FORMAT(co.starttime,'%Y%m%d%H%i%s') depTime,
+          co.startlng depLongitude,
+          co.startllat depLatitude,
+          (UNIX_TIMESTAMP(co.arrivaltime)-UNIX_TIMESTAMP(co.departuretime)) waitTime,
+          co.passengerphone passengerPhone,
+          co.shouldpayamount price
+        from
+          <if test="ordertype=='4'.toString()">
+            op_taxiorder
+          </if>
+          <if test="ordertype!='4'.toString()">
+            <if test="usetype=='0'.toString() or usetype=='1'.toString()">
+                org_order
+            </if>
+            <if test="usetype=='2'.toString()">
+                op_order
+            </if>
+          </if>
+          co
+        WHERE  co.status = '1' and co.orderno=#{orderno}
+    </select>
+
+    <!--营运支付-->
+    <select id="operationPay" parameterType="string" resultType="com.szyciov.supervision.api.dto.operation.OperationPay">
+        select
+          co.orderno orderId,
+          (select address from pub_cityaddr where id=co.oncity) onArea,
+          (select `name` from pub_driver WHERE co.driverid=id) driverName,
+          (select driversnum from pub_driver WHERE co.driverid=id) licenseId,
+          co.pricemodel fareType,
+          (SELECT  fullplateno from pub_vehicle where id=co.vehicleid) vehicleNo,
+          (SELECT  color from pub_vehicle where id=co.vehicleid) plateColor,
+          DATE_FORMAT(co.undertime,'%Y%m%d%H%i%s') bookDepTime,
+          (UNIX_TIMESTAMP(co.arrivaltime)-UNIX_TIMESTAMP(co.departuretime)) waitTime,
+          co.startlng depLongitude,
+          co.startllat depLatitude,
+          co.onaddress depArea,
+          DATE_FORMAT(co.starttime,'%Y%m%d%H%i%s') depTime,
+          co.endlng destLongitude,
+          co.endllat destLatitude,
+          co.offaddress destArea,
+          DATE_FORMAT(co.endtime,'%Y%m%d%H%i%s') destTime,
+          (select `name` FROM
+            <if test="usetype=='0'.toString() or usetype=='1'.toString()">
+              le_vehiclemodels
+            </if>
+            <if test="usetype=='2'.toString()">
+              op_vehiclemodels
+            </if>
+            WHERE  Id=co.selectedmodel)  bookModel,
+          (select `name` FROM
+            <if test="usetype=='0'.toString() or usetype=='1'.toString()">
+              le_vehiclemodels
+            </if>
+            <if test="usetype=='2'.toString()">
+              op_vehiclemodels
+            </if>
+            WHERE  Id=co.factmodel) model,
+          co.mileage driveMile,
+          (UNIX_TIMESTAMP(co.endtime)-UNIX_TIMESTAMP(co.starttime)) driveTime,
+          co.actualpayamount factPrice,
+          co.shouldpayamount price,
+          0 farUpPrice,
+          0 otherUpPrice,
+          case co.paymentstatus
+            when 1 then '已支付'
+            when 0 then '未支付'
+            else paymentstatus end as  payState,
+          DATE_FORMAT(co.completetime,'%Y%m%d%H%i%s') orderMatchTime,
+          2 invoiceStatus,
+          (select `idcardnum` from pub_driver WHERE co.driverid=id) driverIDCard,
+          (select `jobnum` from pub_driver WHERE co.driverid=id) driverCertCard,
+          0 callPrice,
+          pricecopy  fareRuleUrl,
+          0 linePrice,
+          0 cashprice,
+          0 posPrice,
+          0 benfitPrice,
+          0 bookTip,
+          0 passengerTip,
+          0 peakUpPrice,
+          0 nightUpPrice
+        from
+          <if test="ordertype=='4'.toString()">
+              op_taxiorder
+           </if>
+          <if test="ordertype!='4'.toString()">
+            <if test="usetype=='0'.toString() or usetype=='1'.toString()">
+                org_order
+            </if>
+            <if test="usetype=='2'.toString()">
+                op_order
+            </if>
+          </if>
+          co
+        WHERE  co.status = '1' and co.orderno=#{orderno}
     </select>
 
 </mapper>

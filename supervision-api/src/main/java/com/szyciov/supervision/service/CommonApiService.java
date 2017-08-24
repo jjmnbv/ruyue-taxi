@@ -1,4 +1,4 @@
-package com.szyciov.supervision.serivice;
+package com.szyciov.supervision.service;
 
 import com.supervision.enums.CommandEnum;
 import com.szyciov.supervision.api.dto.BaseApi;
